@@ -7,11 +7,23 @@ type Vec* {.pure, final.} = tuple[
 proc vec*[T: SomeNumber](x, y: T): Vec =
   (x.float, y.float)
 
-proc `+`*(a, b: Vec): Vec =
-  vec(a.x + b.x, a.y + b.y)
+template vecf(op: expr): expr =
+  proc op*(a, b: Vec): Vec =
+    vec(op(a.x, b.x),
+        op(a.y, b.y))
 
-proc `+=`*(v: var Vec, delta: Vec) =
-  v = v + delta
+template vecf_assign(op: expr): expr =
+  proc op*(v: var Vec, delta: Vec) =
+    v = v + delta
+
+vecf `+`
+vecf `-`
+vecf `*`
+vecf `/`
+vecf_assign `+=`
+vecf_assign `-=`
+vecf_assign `*=`
+vecf_assign `/=`
 
 proc rect*(pos, size: Vec): Rect =
   rect(
