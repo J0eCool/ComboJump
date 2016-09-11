@@ -1,4 +1,4 @@
-import sdl2
+import macros, sdl2
 
 type Vec* {.pure, final.} = tuple[
   x, y: float
@@ -6,24 +6,26 @@ type Vec* {.pure, final.} = tuple[
 
 proc vec*[T: SomeNumber](x, y: T): Vec =
   (x.float, y.float)
+proc vec*[T: SomeNumber](s: T): Vec =
+  (s.float, s.float)
 
-template vecf(op: expr): expr =
+template vecf(op, assignOp: expr): expr =
   proc op*(a, b: Vec): Vec =
     vec(op(a.x, b.x),
         op(a.y, b.y))
+  proc op*(s: SomeNumber, v: Vec): Vec =
+    vec(op(s.float, v.x),
+        op(s.float, v.y))
+  proc op*(v: Vec, s: SomeNumber): Vec {.inline.} =
+    op(s, v)
 
-template vecf_assign(op: expr): expr =
-  proc op*(v: var Vec, delta: Vec) =
-    v = v + delta
+  proc assignOp*(v: var Vec, delta: Vec) =
+    v = op(v, delta)
 
-vecf `+`
-vecf `-`
-vecf `*`
-vecf `/`
-vecf_assign `+=`
-vecf_assign `-=`
-vecf_assign `*=`
-vecf_assign `/=`
+vecf `+`, `+=`
+vecf `-`, `-=`
+vecf `*`, `*=`
+vecf `/`, `/=`
 
 proc rect*(pos, size: Vec): Rect =
   rect(
