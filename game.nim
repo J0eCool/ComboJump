@@ -26,9 +26,13 @@ proc draw*(render: RendererPtr, game: Game) =
 
   render.present()
 
-proc update*(game: Game, dt: float) =
+proc update*(game: var Game, dt: float) =
   game.input.update()
   if game.input.isPressed(Input.exit):
     game.isRunning = false
+  if game.input.isPressed(Input.restart):
+    let input = game.input
+    game = newGame()
+    game.input = input
 
   game.player.update(dt, game.input)

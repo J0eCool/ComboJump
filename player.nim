@@ -8,7 +8,7 @@ type Player* = ref object of GameObject
 
 proc newPlayer*(): Player =
   Player(
-    pos: vec(500, 700),
+    pos: vec(500, 600),
     size: vec(80, 100),
     color: color(55, 38, 255, 255),
   )
@@ -43,8 +43,8 @@ proc update*(player: Player, dt: float, input: InputManager) =
   if player.started:
     player.vel.y += gravity * dt
     if player.vel.y < 0 and not input.isHeld(Input.jump):
-      player.vel.y += 2 * gravity * dt
-  if player.pos.y >= 900 and player.vel.y > 0:
+      player.vel.y += 1.5 * gravity * dt
+  if player.pos.y >= 800 and player.vel.y > 0:
     player.vel.y = jumpSpeed
 
   let toMove = player.vel * dt

@@ -9,6 +9,7 @@ type
     right,
     jump,
     menu,
+    restart,
     exit,
 
   InputState = enum
@@ -28,6 +29,7 @@ proc keyToInput(key: Scancode): Input =
   of SDL_SCANCODE_A: left
   of SDL_SCANCODE_D: right
   of SDL_SCANCODE_K: jump
+  of SDL_SCANCODE_R: restart
   of SDL_SCANCODE_ESCAPE: exit
   else: none
 
