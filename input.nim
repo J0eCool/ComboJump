@@ -7,6 +7,7 @@ type
     none,
     left,
     right,
+    jump,
     menu,
     exit,
 
@@ -26,6 +27,7 @@ proc keyToInput(key: Scancode): Input =
   case key
   of SDL_SCANCODE_A: left
   of SDL_SCANCODE_D: right
+  of SDL_SCANCODE_K: jump
   of SDL_SCANCODE_ESCAPE: exit
   else: none
 
