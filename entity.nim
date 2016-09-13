@@ -1,21 +1,18 @@
 import sdl2
 
-import vec
+import component/component, vec
 
 type Entity* = ref object of RootObj
-  pos*, size*: Vec
-  color*: Color
+  components: seq[Component]
 
-proc newEntity*(pos, size: Vec): Entity =
+proc newEntity*(components: seq[Component]): Entity =
   new result
-  result.pos = pos
-  result.size = size
-  result.color = color(255, 32, 32, 255)
+  result.components = components
 
-proc move*(obj: Entity, dpos: Vec) =
-  obj.pos += dpos
+proc getComponent_impl[T: Component](entity: Entity): T =
+  for c in entity.components:
+    if c of T:
+      return T(c)
 
-proc draw*(renderer: RendererPtr, obj: Entity) =
-  var rect = rect(obj.pos, obj.size)
-  renderer.setDrawColor(obj.color)
-  renderer.fillRect(rect)
+template getComponent*(entity, t: expr): expr =
+  getComponent_impl[t](entity)
