@@ -1,8 +1,8 @@
 import math, sdl2
 
-import game_object, input, vec, util
+import entity, input, vec, util
 
-type Player* = ref object of GameObject
+type Player* = ref object of Entity
   started: bool
   vel: Vec
 

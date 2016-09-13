@@ -1,6 +1,6 @@
 import math, sdl2
 
-import input, game_object, player, vec
+import entity, input, player, vec
 
 type Game = ref object
   input: InputManager
