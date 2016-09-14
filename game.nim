@@ -1,8 +1,14 @@
 import math, sdl2
 
 import entity, input, vec
-import component/transform, component/sprite
-import system/render
+import component/movement,
+       component/player_control,
+       component/sprite,
+       component/transform
+import system/render,
+       system/physics,
+       system/player_input,
+       system/player_movement
 
 type Game = ref object
   input: InputManager
@@ -14,6 +20,8 @@ proc newGame*(): Game =
     player = newEntity(@[
       Transform(pos: vec(30, 30),
                 size: vec(20, 80)),
+      Movement(),
+      PlayerControl(),
       Sprite(color: color(12, 255, 12, 255)),
     ])
     box = newEntity(@[
@@ -33,12 +41,6 @@ proc draw*(render: RendererPtr, game: Game) =
 
   renderSystem(game.entities, render)
 
-  # var r = rect(cint(400 + 200 * sin(t)), 20, 100, 100)
-  # render.setDrawColor(64, 212, 110)
-  # render.fillRect(r)
-
-  # render.draw(game.player)
-
   render.present()
 
 proc update*(game: var Game, dt: float) =
@@ -50,4 +52,7 @@ proc update*(game: var Game, dt: float) =
     game = newGame()
     game.input = input
 
-  # game.player.update(dt, game.input)
+  playerInput(game.entities, game.input)
+  playerMovement(game.entities, dt)
+  physics(game.entities, dt)
+

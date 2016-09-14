@@ -2,7 +2,6 @@ import sdl2,
 
        game,
        input,
-       player,
        util,
        vec
 
