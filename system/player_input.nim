@@ -1,6 +1,6 @@
-import ../component/player_control,
-       ../entity,
-       ../input
+import component/player_control,
+       entity,
+       input
 
 proc playerInput*(entities: seq[Entity], input: InputManager) =
   for e in entities:

@@ -1,9 +1,9 @@
 import sdl2
 
-import ../component/transform,
-       ../component/sprite,
-       ../entity,
-       ../vec
+import component/transform,
+       component/sprite,
+       entity,
+       vec
 
 proc renderSystem*(entities: seq[Entity], renderer: RendererPtr) =
   for e in entities:

@@ -1,7 +1,7 @@
-import ../component/movement,
-       ../component/transform,
-       ../entity,
-       ../vec
+import component/movement,
+       component/transform,
+       entity,
+       vec
 
 proc physics*(entities: seq[Entity], dt: float) =
   for e in entities:

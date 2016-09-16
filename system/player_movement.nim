@@ -1,11 +1,11 @@
 import math
 
-import ../component/player_control,
-       ../component/movement,
-       ../component/transform,
-       ../entity,
-       ../vec,
-       ../util
+import component/player_control,
+       component/movement,
+       component/transform,
+       entity,
+       vec,
+       util
 
 
 const
