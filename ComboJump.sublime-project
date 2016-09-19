@@ -1,0 +1,11 @@
+{
+    "folders": [{
+        "path": ".",
+        "folder_exclude_patterns": ["nimcache"]
+    }],
+    "build_systems": [{
+        "name": "Nim build",
+        "cmd": ["nim", "c", "-r", "--parallelBuild:0", "--out:out/game", "main.nim"],
+        "working_dir": "$project_path"
+    }]
+}
