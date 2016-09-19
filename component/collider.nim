@@ -14,12 +14,10 @@ type
     layer*: Layer
     collisions*: seq[Entity]
 
-const layerMask: array[Layer, set[Layer]] = [
-  {},
-  { floor, enemy },
-  { floor, player, bullet },
-  {},
-]
+proc initLayerMask(): array[Layer, set[Layer]] =
+  result[player] = { floor, enemy }
+  result[enemy] = { floor, player, bullet }
+const layerMask = initLayerMask()
 
 proc canCollideWith*(obj, other: Layer): bool =
   layerMask[obj].contains(other)
