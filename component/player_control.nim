@@ -2,5 +2,5 @@ import input, component
 
 type PlayerControl* = ref object of Component
   moveDir*: int
-  jumpHeld*: bool
+  jumpReleased*: bool
   jumpPressed*: bool

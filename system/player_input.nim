@@ -4,10 +4,8 @@ import component/player_control,
 
 proc playerInput*(entities: seq[Entity], input: InputManager) =
   forComponents(entities, e, [PlayerControl, p]):
-    p.jumpPressed = false
-    if input.isPressed(Input.jump):
-      p.jumpPressed = true
-    p.jumpHeld = input.isHeld(Input.jump)
+    p.jumpPressed = input.isPressed(Input.jump)
+    p.jumpReleased = input.isReleased(Input.jump)
 
     var dir = 0
     if input.isHeld(Input.left):

@@ -1,5 +1,6 @@
 import
   component/collider,
+  component/movement,
   component/transform,
   entity,
   rect
@@ -23,3 +24,7 @@ proc checkCollisisons*(entities: seq[Entity]) =
     ]):
       if a != b and a_c.layer.canCollideWith(b_c.layer) and a_t.rect.collidesWith(b_t.rect):
         a_c.collisions.add(b)
+    a.withComponent(Movement, m):
+      m.onGround = a_c.collisions.len > 0
+      if m.onGround:
+        m.vel.y = 0

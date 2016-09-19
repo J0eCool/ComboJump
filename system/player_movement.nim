@@ -11,10 +11,10 @@ import
 
 
 const
-  speed = 280.0
-  accel = 1_400.0
-  gravity = 2_100.0
-  jumpHeight = 500.0
+  speed = 320.0
+  accelTime = 0.1
+  accel = speed / accelTime
+  jumpHeight = 250.0
   jumpSpeed = -sign(gravity).float * sqrt(2 * jumpHeight * abs(gravity))
 
 proc playerMovement*(entities: seq[Entity], dt: float) =
@@ -33,11 +33,9 @@ proc playerMovement*(entities: seq[Entity], dt: float) =
     if p.moveDir == 0 and preSign != sign(m.vel.x):
       m.vel.x = 0
 
-    if not m.onGround:
-      m.vel.y += gravity * dt
-    if m.vel.y < 0 and not p.jumpHeld:
-      m.vel.y += 1.5 * gravity * dt
+    if m.vel.y < 0 and p.jumpReleased:
+      m.vel.y *= 0.25
 
     t.pos.x = clamp(t.pos.x, 0, 1200 - t.size.x)
-    if t.pos.y >= 800 or c.collisions.len > 0:
+    if t.pos.y >= 800 or p.jumpPressed and m.onGround:
       m.vel.y = jumpSpeed

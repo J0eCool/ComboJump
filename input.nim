@@ -63,3 +63,6 @@ proc isPressed*(manager: InputManager, key: Input): bool =
 proc isHeld*(manager: InputManager, key: Input): bool =
   let curState = manager.inputs[key]
   curState == pressed or curState == held
+
+proc isReleased*(manager: InputManager, key: Input): bool =
+  manager.inputs[key] == released
