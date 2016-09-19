@@ -23,7 +23,7 @@ proc newGame*(): Game =
     input: newInputManager(),
     isRunning: true,
     entities: @[
-      newEntity(@[ #player
+      newEntity("Player", [
         Transform(pos: vec(30, 30),
                   size: vec(40, 80)),
         Movement(),
@@ -31,13 +31,13 @@ proc newGame*(): Game =
         Sprite(color: color(12, 255, 12, 255)),
         Collider(layer: Layer.player),
       ]),
-      newEntity(@[
+      newEntity("Enemy", [
         Transform(pos: vec(400, 640),
                   size: vec(60, 60)),
         Sprite(color: color(155, 16, 24, 255)),
         Collider(layer: Layer.enemy),
       ]),
-      newEntity(@[
+      newEntity("Ground", [
         Transform(pos: vec(150, 800),
                   size: vec(900, 35)),
         Sprite(color: color(192, 192, 192, 255)),

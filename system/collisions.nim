@@ -21,5 +21,5 @@ proc checkCollisisons*(entities: seq[Entity]) =
       Transform, b_t,
       Collider, b_c,
     ]):
-      if a_c.layer.canCollideWith(b_c.layer) and a_t.rect.collidesWith(b_t.rect):
+      if a != b and a_c.layer.canCollideWith(b_c.layer) and a_t.rect.collidesWith(b_t.rect):
         a_c.collisions.add(b)

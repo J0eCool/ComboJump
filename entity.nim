@@ -3,11 +3,17 @@ import macros, sdl2
 import component/component, vec
 
 type Entity* = ref object of RootObj
+  id*: int
+  name: string
   components: seq[Component]
 
-proc newEntity*(components: seq[Component]): Entity =
+var nextId = 0
+proc newEntity*(name: string, components: openarray[Component]): Entity =
   new result
-  result.components = components
+  result.id = nextId
+  nextId += 1
+  result.name = name
+  result.components = @components
 
 proc getComponent_impl[T: Component](entity: Entity): T =
   for c in entity.components:
@@ -41,3 +47,6 @@ macro forComponents*(entities, e: expr, components: seq[expr], body: stmt): stmt
     forList.add(ifNode)
   forList.add(body)
   result.add(forList)
+
+proc `$`*(e: Entity): string =
+  e.name & " (id=" & $e.id & ")"
