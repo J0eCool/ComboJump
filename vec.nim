@@ -1,4 +1,4 @@
-import macros
+import macros, math
 
 type Vec* {.pure, final.} =
   tuple[x, y: float]
@@ -15,8 +15,9 @@ template vecf(op, assignOp: expr): expr =
   proc op*(s: SomeNumber, v: Vec): Vec =
     vec(op(s.float, v.x),
         op(s.float, v.y))
-  proc op*(v: Vec, s: SomeNumber): Vec {.inline.} =
-    op(s, v)
+  proc op*(v: Vec, s: SomeNumber): Vec =
+    vec(op(v.x, s.float),
+        op(v.y, s.float))
 
   proc assignOp*(v: var Vec, delta: Vec) =
     v = op(v, delta)
@@ -25,3 +26,6 @@ vecf `+`, `+=`
 vecf `-`, `-=`
 vecf `*`, `*=`
 vecf `/`, `/=`
+
+proc unitVec*(angle: float): Vec =
+  vec(cos(angle), sin(angle))

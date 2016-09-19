@@ -7,6 +7,7 @@ proc playerInput*(entities: seq[Entity], input: InputManager) =
     p.jumpPressed = input.isPressed(Input.jump)
     p.jumpReleased = input.isReleased(Input.jump)
     p.shootPressed = input.isPressed(Input.shoot)
+    p.specialPressed = input.isPressed(Input.special)
 
     var dir = 0
     if input.isHeld(Input.left):

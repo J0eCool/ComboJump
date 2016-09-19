@@ -1,4 +1,4 @@
-import macros
+import macros, random
 
 macro dprint*(exprs: varargs[expr]): expr =
   result = newCall("echo")
@@ -21,3 +21,6 @@ proc sign*(x: SomeNumber): int =
     -1
   else:
     0
+
+proc random*(lo, hi: float): float =
+  random(hi - lo) + lo

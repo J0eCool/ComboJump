@@ -6,3 +6,4 @@ type PlayerControl* = ref object of Component
   jumpReleased*: bool
   jumpPressed*: bool
   shootPressed*: bool
+  specialPressed*: bool
