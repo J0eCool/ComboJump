@@ -1,11 +1,13 @@
 import math
 
-import component/player_control,
-       component/movement,
-       component/transform,
-       entity,
-       vec,
-       util
+import
+  component/collider,
+  component/movement,
+  component/player_control,
+  component/transform,
+  entity,
+  vec,
+  util
 
 
 const
@@ -20,6 +22,7 @@ proc playerMovement*(entities: seq[Entity], dt: float) =
     Movement, m,
     PlayerControl, p,
     Transform, t,
+    Collider, c,
   ]):
     var dir = p.moveDir.float
     let preSign = sign(m.vel.x)
@@ -34,5 +37,7 @@ proc playerMovement*(entities: seq[Entity], dt: float) =
       m.vel.y += gravity * dt
     if m.vel.y < 0 and not p.jumpHeld:
       m.vel.y += 1.5 * gravity * dt
-    if t.pos.y >= 800 and m.vel.y > 0:
+
+    t.pos.x = clamp(t.pos.x, 0, 1200 - t.size.x)
+    if t.pos.y >= 800 or c.collisions.len > 0:
       m.vel.y = jumpSpeed
