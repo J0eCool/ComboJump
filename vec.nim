@@ -1,8 +1,7 @@
-import macros, sdl2
+import macros
 
-type Vec* {.pure, final.} = tuple[
-  x, y: float
-]
+type Vec* {.pure, final.} =
+  tuple[x, y: float]
 
 proc vec*[T: SomeNumber](x, y: T): Vec =
   (x.float, y.float)
@@ -26,9 +25,3 @@ vecf `+`, `+=`
 vecf `-`, `-=`
 vecf `*`, `*=`
 vecf `/`, `/=`
-
-proc rect*(pos, size: Vec): Rect =
-  rect(
-    pos.x.cint, pos.y.cint,
-    size.x.cint, size.y.cint,
-  )

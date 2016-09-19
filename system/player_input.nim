@@ -7,7 +7,6 @@ proc playerInput*(entities: seq[Entity], input: InputManager) =
     p.jumpPressed = false
     if input.isPressed(Input.jump):
       p.jumpPressed = true
-      p.jumpStarted = true
     p.jumpHeld = input.isHeld(Input.jump)
 
     var dir = 0

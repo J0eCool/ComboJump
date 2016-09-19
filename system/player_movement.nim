@@ -30,7 +30,7 @@ proc playerMovement*(entities: seq[Entity], dt: float) =
     if p.moveDir == 0 and preSign != sign(m.vel.x):
       m.vel.x = 0
 
-    if p.jumpStarted:
+    if not m.onGround:
       m.vel.y += gravity * dt
     if m.vel.y < 0 and not p.jumpHeld:
       m.vel.y += 1.5 * gravity * dt
