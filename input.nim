@@ -8,6 +8,7 @@ type
     left,
     right,
     jump,
+    shoot,
     menu,
     restart,
     exit,
@@ -29,6 +30,7 @@ proc keyToInput(key: Scancode): Input =
   of SDL_SCANCODE_A: left
   of SDL_SCANCODE_D: right
   of SDL_SCANCODE_K: jump
+  of SDL_SCANCODE_J: shoot
   of SDL_SCANCODE_R: restart
   of SDL_SCANCODE_ESCAPE: exit
   else: none

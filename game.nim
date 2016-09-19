@@ -7,10 +7,12 @@ import
   component/player_control,
   component/sprite,
   component/transform,
+  system/bullet_update,
   system/collisions,
   system/physics,
   system/player_input,
   system/player_movement,
+  system/player_shoot,
   system/render
 
 type Game = ref object
@@ -25,7 +27,7 @@ proc newGame*(): Game =
     entities: @[
       newEntity("Player", [
         Transform(pos: vec(30, 30),
-                  size: vec(40, 80)),
+                  size: vec(50, 75)),
         Movement(usesGravity: true),
         PlayerControl(),
         Sprite(color: color(12, 255, 12, 255)),
@@ -75,3 +77,5 @@ proc update*(game: var Game, dt: float) =
   physics(game.entities, dt)
   checkCollisisons(game.entities)
 
+  updateBullets(game.entities, dt)
+  game.entities &= playerShoot(game.entities)

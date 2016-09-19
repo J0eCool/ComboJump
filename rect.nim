@@ -20,3 +20,6 @@ proc top*(rect: Rect): float =
   rect.y
 proc bottom*(rect: Rect): float =
   rect.y + rect.h
+
+proc center*(rect: Rect): Vec =
+  vec(rect.x, rect.y) + 0.5 * vec(rect.w, rect.h)
