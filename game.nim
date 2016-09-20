@@ -3,10 +3,12 @@ import math, sdl2
 import entity, input, vec
 import
   component/collider,
+  component/health,
   component/movement,
   component/player_control,
   component/sprite,
   component/transform,
+  system/bullet_hit,
   system/bullet_update,
   system/collisions,
   system/physics,
@@ -26,7 +28,7 @@ proc newGame*(): Game =
     isRunning: true,
     entities: @[
       newEntity("Player", [
-        Transform(pos: vec(30, 30),
+        Transform(pos: vec(180, 500),
                   size: vec(50, 75)),
         Movement(usesGravity: true),
         PlayerControl(),
@@ -34,9 +36,10 @@ proc newGame*(): Game =
         Collider(layer: Layer.player),
       ]),
       newEntity("Enemy", [
-        Transform(pos: vec(400, 400),
+        Transform(pos: vec(600, 400),
                   size: vec(60, 60)),
         Movement(usesGravity: true),
+        newHealth(4),
         Sprite(color: color(155, 16, 24, 255)),
         Collider(layer: Layer.enemy),
       ]),
@@ -47,7 +50,7 @@ proc newGame*(): Game =
         Collider(layer: Layer.floor),
       ]),
       newEntity("Wall", [
-        Transform(pos: vec(600, 600),
+        Transform(pos: vec(900, 600),
                   size: vec(50, 200)),
         Sprite(color: color(192, 192, 192, 255)),
         Collider(layer: Layer.floor),
@@ -78,4 +81,5 @@ proc update*(game: var Game, dt: float) =
   checkCollisisons(game.entities)
 
   updateBullets(game.entities, dt)
+  updateBulletDamage(game.entities)
   game.entities &= playerShoot(game.entities)

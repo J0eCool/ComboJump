@@ -2,6 +2,7 @@ import math, random, sdl2
 
 import
   component/bullet,
+  component/collider,
   component/movement,
   component/player_control,
   component/transform,
@@ -31,6 +32,7 @@ proc playerShoot*(entities: seq[Entity]): seq[Entity] =
       newEntity("Bullet", [
         Transform(pos: shotPoint, size: size),
         Movement(),
+        Collider(layer: Layer.bullet),
         Sprite(color: color(255, 255, 32, 255)),
         newBullet(
           damage=1,
@@ -43,7 +45,7 @@ proc playerShoot*(entities: seq[Entity]): seq[Entity] =
       result.add bulletAtDir(vec(p.facing, 0))
     if p.specialPressed:
       for i in 0..<specialNumBullets div 2:
-        var ang = (2.0 * i.float / (specialNumBullets div 2 - 1).float - 1.0) * specialAngle / 2
+        var ang = (2.0 * i.float / (specialNumBullets.float / 2 - 1) - 1.0) * specialAngle / 2
         if p.facing != 1:
           ang += 180.0
         ang += random(-specialRandAngPer, specialRandAngPer)
