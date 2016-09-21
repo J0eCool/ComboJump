@@ -17,7 +17,7 @@ type
 proc initLayerMask(): array[Layer, set[Layer]] =
   result[player] = { floor, enemy }
   result[enemy] = { floor, player, bullet }
-  result[bullet] = { floor, enemy }
+  result[bullet] = { enemy }
 const layerMask = initLayerMask()
 
 proc canCollideWith*(obj, other: Layer): bool =

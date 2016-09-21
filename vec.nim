@@ -29,3 +29,20 @@ vecf `/`, `/=`
 
 proc unitVec*(angle: float): Vec =
   vec(cos(angle), sin(angle))
+
+proc length2*(v: Vec): float =
+  v.x * v.x + v.y * v.y
+proc length*(v: Vec): float =
+  v.length2().sqrt()
+
+proc distance2*(a, b: Vec): float =
+  (b - a).length2()
+proc distance*(a, b: Vec): float =
+  (b - a).length()
+
+proc unit*(v: Vec): Vec =
+  let mag = v.length()
+  if mag == 0:
+    vec(0)
+  else:
+    v / mag
