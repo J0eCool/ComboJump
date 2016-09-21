@@ -15,5 +15,8 @@ proc updateBulletDamage*(entities: var seq[Entity]) =
         h.curHealth -= b.damage
         if h.curHealth <= 0:
           toRemove.add(e)
+          break
   for e in toRemove:
-    entities.del(entities.find(e))
+    let idx = entities.find(e)
+    if idx >= 0:
+      entities.del(idx)
