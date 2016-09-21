@@ -24,3 +24,8 @@ proc sign*(x: SomeNumber): int =
 
 proc random*(lo, hi: float): float =
   random(hi - lo) + lo
+
+proc remove*[T](list: var seq[T], item: T) =
+  let index = list.find(item)
+  if index >= 0:
+    list.del(index)

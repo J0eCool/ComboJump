@@ -2,7 +2,8 @@ import
   component/bullet,
   component/collider,
   component/health,
-  entity
+  entity,
+  util
 
 proc updateBulletDamage*(entities: var seq[Entity]) =
   var toRemove: seq[Entity] = @[]
@@ -17,6 +18,4 @@ proc updateBulletDamage*(entities: var seq[Entity]) =
           toRemove.add(e)
           break
   for e in toRemove:
-    let idx = entities.find(e)
-    if idx >= 0:
-      entities.del(idx)
+    entities.remove(e)

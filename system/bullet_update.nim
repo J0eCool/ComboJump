@@ -4,6 +4,7 @@ import
   component/health,
   component/movement,
   entity,
+  util,
   vec
 
 proc updateBullets*(entities: var seq[Entity], dt: float) =
@@ -20,4 +21,4 @@ proc updateBullets*(entities: var seq[Entity], dt: float) =
     if b.isSpecial:
       m.vel = b.vel * (b.timeLeft / b.liveTime)
   for e in toRemove:
-    entities.del(entities.find(e))
+    entities.remove(e)
