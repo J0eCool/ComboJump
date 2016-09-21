@@ -5,8 +5,8 @@ import
   entity,
   util
 
-proc updateBulletDamage*(entities: var seq[Entity]) =
-  var toRemove: seq[Entity] = @[]
+proc updateBulletDamage*(entities: seq[Entity]): seq[Entity] =
+  result = @[]
   forComponents(entities, e, [
     Collider, c,
     Health, h,
@@ -15,7 +15,5 @@ proc updateBulletDamage*(entities: var seq[Entity]) =
       other.withComponent Bullet, b:
         h.curHealth -= b.damage
         if h.curHealth <= 0:
-          toRemove.add(e)
+          result.add(e)
           break
-  for e in toRemove:
-    entities.remove(e)

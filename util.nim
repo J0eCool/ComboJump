@@ -29,3 +29,7 @@ proc remove*[T](list: var seq[T], item: T) =
   let index = list.find(item)
   if index >= 0:
     list.del(index)
+
+proc removeAll*[T](list: var seq[T], items: seq[T]) =
+  for i in items:
+    list.remove(i)

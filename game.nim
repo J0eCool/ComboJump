@@ -1,6 +1,5 @@
 import math, sdl2
 
-import entity, input, vec
 import
   component/collider,
   component/health,
@@ -15,7 +14,11 @@ import
   system/player_input,
   system/player_movement,
   system/player_shoot,
-  system/render
+  system/render,
+  entity,
+  input,
+  vec,
+  util
 
 type Game = ref object
   input: InputManager
@@ -80,6 +83,7 @@ proc update*(game: var Game, dt: float) =
   physics(game.entities, dt)
   checkCollisisons(game.entities)
 
-  updateBullets(game.entities, dt)
-  updateBulletDamage(game.entities)
-  game.entities &= playerShoot(game.entities)
+  game.entities.removeAll updateBullets(game.entities, dt)
+  game.entities.removeAll updateBulletDamage(game.entities)
+  game.entities &= playerShoot(game.entities) 
+

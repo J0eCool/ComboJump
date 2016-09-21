@@ -7,8 +7,8 @@ import
   util,
   vec
 
-proc updateBullets*(entities: var seq[Entity], dt: float) =
-  var toRemove: seq[Entity] = @[]
+proc updateBullets*(entities: var seq[Entity], dt: float): seq[Entity] =
+  result = @[]
   forComponents(entities, e, [
     Bullet, b,
     Collider, c,
@@ -17,8 +17,7 @@ proc updateBullets*(entities: var seq[Entity], dt: float) =
     m.vel = b.vel
     b.timeLeft -= dt
     if b.timeLeft <= 0.0 or c.collisions.len > 0:
-      toRemove.add(e)
+      result.add(e)
     if b.isSpecial:
       m.vel = b.vel * (b.timeLeft / b.liveTime)
-  for e in toRemove:
-    entities.remove(e)
+
