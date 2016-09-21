@@ -15,7 +15,6 @@ import
 
 const
   speed = 1500.0
-  size = vec(20, 20)
   specialNumBullets = 6
   specialAngle = 40.0
   specialRandAngPer = 5.0
@@ -26,9 +25,9 @@ proc playerShoot*(entities: seq[Entity]): seq[Entity] =
     Transform, t,
   ]):
     result = @[]
-    let
-      shotPoint = t.rect.center + vec(t.size.x * 0.5 * p.facing.float - size.x / 2, -size.y / 2)
-    proc bulletAtDir(dir: Vec, isSpecial: bool = false): Entity =
+    proc bulletAtDir(dir: Vec, isSpecial = false, size = vec(20, 20)): Entity =
+      let
+        shotPoint = t.rect.center + vec(t.size.x * 0.5 * p.facing.float - size.x / 2, -size.y / 2)
       newEntity("Bullet", [
         Transform(pos: shotPoint, size: size),
         Movement(),
@@ -41,17 +40,19 @@ proc playerShoot*(entities: seq[Entity]): seq[Entity] =
           vel=speed * dir,
         ),
       ])
-    if p.shootPressed:
-      result.add bulletAtDir(vec(p.facing, 0))
-    if p.specialPressed:
+    if p.spell1Pressed:
+      result.add bulletAtDir(dir=vec(p.facing, 0))
+    if p.spell2Pressed:
       for i in 0..<specialNumBullets div 2:
         var ang = (2.0 * i.float / (specialNumBullets.float / 2 - 1) - 1.0) * specialAngle / 2
         if p.facing != 1:
           ang += 180.0
         ang += random(-specialRandAngPer, specialRandAngPer)
-        result.add bulletAtDir(unitVec(ang.degToRad), isSpecial=true)
+        result.add bulletAtDir(dir=unitVec(ang.degToRad), isSpecial=true)
 
         ang = random(random(-specialAngle, 0.0), random(0.0, specialAngle))
         if p.facing != 1:
           ang += 180.0
-        result.add bulletAtDir(unitVec(ang.degToRad)*random(0.8, 1.2), isSpecial=true)
+        result.add bulletAtDir(dir=unitVec(ang.degToRad)*random(0.8, 1.2), isSpecial=true)
+    if p.spell3Pressed:
+      result.add bulletAtDir(dir=vec(p.facing, 0), size=vec(40))

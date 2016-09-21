@@ -6,8 +6,9 @@ proc playerInput*(entities: seq[Entity], input: InputManager) =
   forComponents(entities, e, [PlayerControl, p]):
     p.jumpPressed = input.isPressed(Input.jump)
     p.jumpReleased = input.isReleased(Input.jump)
-    p.shootPressed = input.isPressed(Input.shoot)
-    p.specialPressed = input.isPressed(Input.special)
+    p.spell1Pressed = input.isPressed(Input.spell1)
+    p.spell2Pressed = input.isPressed(Input.spell2)
+    p.spell3Pressed = input.isPressed(Input.spell3)
 
     var dir = 0
     if input.isHeld(Input.left):

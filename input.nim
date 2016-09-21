@@ -8,8 +8,9 @@ type
     left,
     right,
     jump,
-    shoot,
-    special,
+    spell1,
+    spell2,
+    spell3,
     menu,
     restart,
     exit,
@@ -31,8 +32,9 @@ proc keyToInput(key: Scancode): Input =
   of SDL_SCANCODE_A: left
   of SDL_SCANCODE_D: right
   of SDL_SCANCODE_K: jump
-  of SDL_SCANCODE_J: shoot
-  of SDL_SCANCODE_I: special
+  of SDL_SCANCODE_J: spell1
+  of SDL_SCANCODE_I: spell2
+  of SDL_SCANCODE_L: spell3
   of SDL_SCANCODE_R: restart
   of SDL_SCANCODE_ESCAPE: exit
   else: none
