@@ -33,11 +33,14 @@ proc updateBullets*(entities: var seq[Entity], dt: float): seq[Entity] =
     e.withComponent HomingBullet, h:
       let
         target = findNearestTarget(entities, t.pos)
-        dir = (target - t.pos).unit()
-      b.vel += dir * h.accel * dt
+        delta = target - t.pos 
+        s = sign(b.vel.cross(delta)).float
+        baseTurn = s * h.turnRate * dt
+        turn = lerp((1 - b.lifePct) * 5, 0, baseTurn)
+      b.vel = b.vel.rotate(turn)
     m.vel = b.vel
     b.timeLeft -= dt
     if b.timeLeft <= 0.0 or c.collisions.len > 0:
       result.add(e)
     if b.isSpecial:
-      m.vel = b.vel * (b.timeLeft / b.liveTime)
+      m.vel = b.vel * b.lifePct

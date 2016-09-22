@@ -33,3 +33,7 @@ proc remove*[T](list: var seq[T], item: T) =
 proc removeAll*[T](list: var seq[T], items: seq[T]) =
   for i in items:
     list.remove(i)
+
+proc lerp*(t, lo, hi: float): float =
+  let u = clamp(t, 0, 1)
+  return u * (hi - lo) + lo

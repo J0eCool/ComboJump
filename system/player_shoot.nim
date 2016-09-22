@@ -38,7 +38,8 @@ proc playerShoot*(entities: seq[Entity]): seq[Entity] =
                  else:
                   newHomingBullet(
                     damage=1,
-                    vel=speed * dir,
+                    vel=0.35 * speed * dir,
+                    turnRate=random(350.0, 500.0),
                   )
 
       newEntity("Bullet", [

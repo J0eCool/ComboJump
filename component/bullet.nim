@@ -1,3 +1,4 @@
+import math
 import component, vec
 
 type Bullet* = ref object of Component
@@ -16,15 +17,18 @@ proc newBullet*(vel: Vec, damage: int, liveTime: float, isSpecial: bool): Bullet
     timeLeft: liveTime,
   )
 
-type HomingBullet* = ref object of Bullet
-  accel*: float
+proc lifePct*(b: Bullet): float =
+  b.timeLeft / b.liveTime
 
-proc newHomingBullet*(vel: Vec, damage: int): Bullet =
+type HomingBullet* = ref object of Bullet
+  turnRate*: float
+
+proc newHomingBullet*(vel: Vec, damage: int, turnRate: float): Bullet =
   let liveTime = 2.5
   HomingBullet(
     damage: damage,
     vel: vel,
     liveTime: liveTime,
     timeLeft: liveTime,
-    accel: 3_500.0
+    turnRate: turnRate.degToRad
   )

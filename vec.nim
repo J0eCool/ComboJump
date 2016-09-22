@@ -46,3 +46,14 @@ proc unit*(v: Vec): Vec =
     vec(0)
   else:
     v / mag
+
+proc angle*(v: Vec): float =
+  arctan2(v.y, v.x)
+
+proc rotate*(v: Vec, ang: float): Vec =
+  v.length * unitVec(v.angle + ang)
+
+proc dot*(a, b: Vec): float =
+  a.x * b.x + a.y * b.y
+proc cross*(a, b: Vec): float =
+  a.x * b.y - a.y * b.x
