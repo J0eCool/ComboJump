@@ -48,5 +48,10 @@ macro forComponents*(entities, e: expr, components: seq[expr], body: stmt): stmt
   forList.add(body)
   result.add(forList)
 
+proc firstEntityByName*(entities: seq[Entity], name: string): Entity =
+  for e in entities:
+    if e.name == name:
+      return e
+
 proc `$`*(e: Entity): string =
   e.name & " (id=" & $e.id & ")"

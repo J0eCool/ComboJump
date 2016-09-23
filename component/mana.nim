@@ -9,3 +9,6 @@ proc newMana*(maxMana: int): Mana =
   result.max = maxMana
   result.cur = maxMana
   result.partial = 0
+
+proc pct*(mana: Mana): float =
+  clamp(mana.cur.float / mana.max.float, 0, 1)
