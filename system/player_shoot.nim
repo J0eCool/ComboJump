@@ -3,6 +3,7 @@ import math, random, sdl2
 import
   component/bullet,
   component/collider,
+  component/mana,
   component/movement,
   component/player_control,
   component/transform,
@@ -20,11 +21,12 @@ const
   specialRandAngPer = 5.0
 
 proc playerShoot*(entities: seq[Entity]): seq[Entity] =
+  result = @[]
   forComponents(entities, e, [
     PlayerControl, p,
+    Mana, m,
     Transform, t,
   ]):
-    result = @[]
     proc bulletAtDir(dir: Vec, isSpecial = false, isHoming = false, size = vec(20, 20)): Entity =
       let
         shotPoint = t.rect.center + vec(t.size.x * 0.5 * p.facing.float - size.x / 2, -size.y / 2)
@@ -38,7 +40,7 @@ proc playerShoot*(entities: seq[Entity]): seq[Entity] =
                  else:
                   newHomingBullet(
                     damage=1,
-                    vel=0.35 * speed * dir,
+                    vel=0.5 * speed * dir,
                     turnRate=random(350.0, 500.0),
                   )
 
@@ -49,9 +51,14 @@ proc playerShoot*(entities: seq[Entity]): seq[Entity] =
         Sprite(color: color(255, 255, 32, 255)),
         bullet,
       ])
-    if p.spell1Pressed:
+    proc trySpend(cost: int): bool =
+      if m.cur >= cost:
+        m.cur -= cost
+        return true
+      return false
+    if p.spell1Pressed and trySpend(5):
       result.add bulletAtDir(dir=vec(p.facing, 0))
-    if p.spell2Pressed:
+    if p.spell2Pressed and trySpend(18):
       for i in 0..<specialNumBullets div 2:
         var ang = (2.0 * i.float / (specialNumBullets.float / 2 - 1) - 1.0) * specialAngle / 2
         if p.facing != 1:
@@ -63,7 +70,7 @@ proc playerShoot*(entities: seq[Entity]): seq[Entity] =
         if p.facing != 1:
           ang += 180.0
         result.add bulletAtDir(dir=unitVec(ang.degToRad)*random(0.8, 1.2), isSpecial=true)
-    if p.spell3Pressed:
+    if p.spell3Pressed and trySpend(40):
       for i in 0..<specialNumBullets div 2:
         var ang = (2.0 * i.float / (specialNumBullets.float / 2 - 1) - 1.0) * specialAngle / 2
         if p.facing == 1:

@@ -13,7 +13,7 @@ proc updateBulletDamage*(entities: seq[Entity]): seq[Entity] =
   ]):
     for other in c.collisions:
       other.withComponent Bullet, b:
-        h.curHealth -= b.damage
-        if h.curHealth <= 0:
+        h.cur -= b.damage
+        if h.cur <= 0:
           result.add(e)
           break

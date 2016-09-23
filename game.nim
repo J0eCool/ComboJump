@@ -3,6 +3,7 @@ import math, sdl2
 import
   component/collider,
   component/health,
+  component/mana,
   component/movement,
   component/player_control,
   component/sprite,
@@ -10,6 +11,7 @@ import
   system/bullet_hit,
   system/bullet_update,
   system/collisions,
+  system/mana_regen,
   system/physics,
   system/player_input,
   system/player_movement,
@@ -34,6 +36,7 @@ proc newGame*(): Game =
         Transform(pos: vec(180, 500),
                   size: vec(50, 75)),
         Movement(usesGravity: true),
+        newMana(100),
         PlayerControl(),
         Sprite(color: color(12, 255, 12, 255)),
         Collider(layer: Layer.player),
@@ -83,7 +86,9 @@ proc update*(game: var Game, dt: float) =
   physics(game.entities, dt)
   checkCollisisons(game.entities)
 
+  game.entities.regenMana(dt)
+
   game.entities.removeAll updateBullets(game.entities, dt)
   game.entities.removeAll updateBulletDamage(game.entities)
-  game.entities &= playerShoot(game.entities) 
+  game.entities &= playerShoot(game.entities)
 

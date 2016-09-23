@@ -3,9 +3,9 @@ import
   util
 
 type Health* = ref object of Component
-  maxHealth*, curHealth*: int
+  max*, cur*: int
 
 proc newHealth*(maxHealth: int): Health =
   new result
-  result.maxHealth = maxHealth
-  result.curHealth = maxHealth
+  result.max = maxHealth
+  result.cur = maxHealth
