@@ -31,23 +31,21 @@ proc playerShoot*(entities: seq[Entity]): seq[Entity] =
     proc bulletAtDir(dir: Vec, isSpecial = false, isHoming = false, size = vec(20, 20)): Entity =
       let
         shotPoint = t.rect.center + vec(t.size.x * 0.5 * p.facing.float - size.x / 2, -size.y / 2)
-        bullet = newBullet(
-          damage=1,
-          liveTime= if isSpecial: random(0.3, 0.6) else: 1.5,
-          isSpecial=isSpecial,
-        )
         vel = speed * dir * (if not isHoming: 1.0 else: 0.5)
-      if isSpecial:
-        bullet.baseVel = vel
       var components: seq[Component] = @[
           Transform(pos: shotPoint, size: size),
           Movement(vel: vel),
           Collider(layer: Layer.bullet),
           Sprite(color: color(255, 255, 32, 255)),
-          bullet,
+          newBullet(
+            damage=1,
+            liveTime= if isSpecial: random(0.3, 0.6) else: 1.5,
+          )
         ]
       if isHoming:
-        components.add(HomingBullet(turnRate: random(350.0, 500.0)))
+        components.add HomingBullet(turnRate: random(350.0, 500.0))
+      if isSpecial:
+        components.add SpreadBullet(baseVel: vel)
 
       return newEntity("Bullet", components)
     proc trySpend(cost: int): bool =

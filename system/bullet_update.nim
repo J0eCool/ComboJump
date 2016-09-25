@@ -24,24 +24,40 @@ proc findNearestTarget(entities: seq[Entity], pos: Vec): Vec =
       maxDist = dist
   return target
 
+proc updateSpreadBullets(entities: seq[Entity]) =
+  entities.forComponents e, [
+    Bullet, b,
+    Movement, m,
+    SpreadBullet, s,
+  ]:
+    m.vel = s.baseVel * b.lifePct
+
+
+proc updateHomingBullets(entities: seq[Entity], dt: float) =
+  entities.forComponents e, [
+    Bullet, b,
+    HomingBullet, h,
+    Movement, m,
+    Transform, t,
+  ]:
+    let
+      target = findNearestTarget(entities, t.pos)
+      delta = target - t.pos 
+      s = sign(m.vel.cross(delta)).float
+      baseTurn = s * h.turnRate.degToRad * dt
+      turn = lerp((1 - b.lifePct) * 5, 0, baseTurn)
+    m.vel = m.vel.rotate(turn)
+
 proc updateBullets*(entities: seq[Entity], dt: float): seq[Entity] =
   result = @[]
   forComponents(entities, e, [
     Bullet, b,
     Collider, c,
     Movement, m,
-    Transform, t,
   ]):
-    e.withComponent HomingBullet, h:
-      let
-        target = findNearestTarget(entities, t.pos)
-        delta = target - t.pos 
-        s = sign(m.vel.cross(delta)).float
-        baseTurn = s * h.turnRate.degToRad * dt
-        turn = lerp((1 - b.lifePct) * 5, 0, baseTurn)
-      m.vel = m.vel.rotate(turn)
     b.timeLeft -= dt
     if b.timeLeft <= 0.0 or c.collisions.len > 0:
       result.add(e)
-    if b.isSpecial:
-      m.vel = b.baseVel * b.lifePct
+
+  entities.updateHomingBullets dt
+  entities.updateSpreadBullets

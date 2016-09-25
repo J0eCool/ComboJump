@@ -5,19 +5,19 @@ type Bullet* = ref object of Component
   damage*: int
   liveTime*: float
   timeLeft*: float
-  isSpecial*: bool
-  baseVel*: Vec
 
-proc newBullet*(damage: int, liveTime: float, isSpecial: bool): Bullet =
+proc newBullet*(damage: int, liveTime: float): Bullet =
   Bullet(
     damage: damage,
-    isSpecial: isSpecial,
     liveTime: liveTime,
     timeLeft: liveTime,
   )
 
 proc lifePct*(b: Bullet): float =
   b.timeLeft / b.liveTime
+
+type SpreadBullet* = ref object of Component
+  baseVel*: Vec
 
 type HomingBullet* = ref object of Component
   turnRate*: float
