@@ -1,3 +1,5 @@
+import math
+
 import
   component/bullet,
   component/collider,
@@ -34,13 +36,12 @@ proc updateBullets*(entities: seq[Entity], dt: float): seq[Entity] =
       let
         target = findNearestTarget(entities, t.pos)
         delta = target - t.pos 
-        s = sign(b.vel.cross(delta)).float
-        baseTurn = s * h.turnRate * dt
+        s = sign(m.vel.cross(delta)).float
+        baseTurn = s * h.turnRate.degToRad * dt
         turn = lerp((1 - b.lifePct) * 5, 0, baseTurn)
-      b.vel = b.vel.rotate(turn)
-    m.vel = b.vel
+      m.vel = m.vel.rotate(turn)
     b.timeLeft -= dt
     if b.timeLeft <= 0.0 or c.collisions.len > 0:
       result.add(e)
     if b.isSpecial:
-      m.vel = b.vel * b.lifePct
+      m.vel = b.baseVel * b.lifePct

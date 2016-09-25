@@ -6,12 +6,11 @@ type Bullet* = ref object of Component
   liveTime*: float
   timeLeft*: float
   isSpecial*: bool
-  vel*: Vec
+  baseVel*: Vec
 
-proc newBullet*(vel: Vec, damage: int, liveTime: float, isSpecial: bool): Bullet =
+proc newBullet*(damage: int, liveTime: float, isSpecial: bool): Bullet =
   Bullet(
     damage: damage,
-    vel: vel,
     isSpecial: isSpecial,
     liveTime: liveTime,
     timeLeft: liveTime,
@@ -20,15 +19,5 @@ proc newBullet*(vel: Vec, damage: int, liveTime: float, isSpecial: bool): Bullet
 proc lifePct*(b: Bullet): float =
   b.timeLeft / b.liveTime
 
-type HomingBullet* = ref object of Bullet
+type HomingBullet* = ref object of Component
   turnRate*: float
-
-proc newHomingBullet*(vel: Vec, damage: int, turnRate: float): Bullet =
-  let liveTime = 2.5
-  HomingBullet(
-    damage: damage,
-    vel: vel,
-    liveTime: liveTime,
-    timeLeft: liveTime,
-    turnRate: turnRate.degToRad
-  )
