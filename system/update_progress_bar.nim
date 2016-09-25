@@ -1,6 +1,5 @@
 import
-  component/health,
-  component/mana,
+  component/limited_quantity,
   component/progress_bar,
   component/transform,
   entity,
@@ -17,7 +16,5 @@ proc updateProgressBars*(entities: seq[Entity]) =
     if target == nil:
       t.size.x = 0
     else:
-      target.withComponent Health, h:
-        t.size.x = b.baseSize * h.pct
-      target.withComponent Mana, m:
-        t.size.x = b.baseSize * m.pct
+      target.withComponent LimitedQuantity, q:
+        t.size.x = b.baseSize * q.pct

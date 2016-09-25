@@ -1,14 +1,7 @@
-import
-  component,
-  util
+import component/limited_quantity
 
-type Health* = ref object of Component
-  max*, cur*: int
+type Health* = ref object of LimitedQuantity
 
 proc newHealth*(maxHealth: int): Health =
   new result
-  result.max = maxHealth
-  result.cur = maxHealth
-
-proc pct*(health: Health): float =
-  clamp(health.cur.float / health.max.float, 0, 1)
+  result.init maxHealth

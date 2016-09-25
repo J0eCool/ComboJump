@@ -52,8 +52,8 @@ proc playerShoot*(entities: seq[Entity]): seq[Entity] =
         bullet,
       ])
     proc trySpend(cost: int): bool =
-      if m.cur >= cost:
-        m.cur -= cost
+      if m.cur >= cost.float:
+        m.cur -= cost.float
         return true
       return false
     if p.spell1Pressed and trySpend(5):

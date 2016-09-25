@@ -12,11 +12,11 @@ import
   system/bullet_hit,
   system/bullet_update,
   system/collisions,
-  system/mana_regen,
   system/physics,
   system/player_input,
   system/player_movement,
   system/player_shoot,
+  system/quantity_regen,
   system/render,
   system/update_progress_bar,
   entity,
@@ -89,12 +89,12 @@ proc newGame*(): Game =
   )
 
 proc draw*(render: RendererPtr, game: Game) =
-  game.entities.updateProgressBars
+  game.entities.updateProgressBars()
 
   render.setDrawColor(110, 132, 174)
   render.clear()
 
-  renderSystem(game.entities, render)
+  game.entities.renderSystem(render)
 
   render.present()
 
@@ -107,12 +107,12 @@ proc update*(game: var Game, dt: float) =
     game = newGame()
     game.input = input
 
-  playerInput(game.entities, game.input)
-  playerMovement(game.entities, dt)
-  physics(game.entities, dt)
-  checkCollisisons(game.entities)
+  game.entities.playerInput(game.input)
+  game.entities.playerMovement(dt)
+  game.entities.physics(dt)
+  game.entities.checkCollisisons()
 
-  game.entities.regenMana(dt)
+  game.entities.regenLimitedQuantities(dt)
 
   game.entities.removeAll updateBullets(game.entities, dt)
   game.entities.removeAll updateBulletDamage(game.entities)

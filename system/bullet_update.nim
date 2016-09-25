@@ -22,7 +22,7 @@ proc findNearestTarget(entities: seq[Entity], pos: Vec): Vec =
       maxDist = dist
   return target
 
-proc updateBullets*(entities: var seq[Entity], dt: float): seq[Entity] =
+proc updateBullets*(entities: seq[Entity], dt: float): seq[Entity] =
   result = @[]
   forComponents(entities, e, [
     Bullet, b,

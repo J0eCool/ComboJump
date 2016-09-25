@@ -1,14 +1,8 @@
-import component
+import component/limited_quantity
 
-type Mana* = ref object of Component
-  max*, cur*: int
-  partial*: float
+type Mana* = ref object of LimitedQuantity
 
 proc newMana*(maxMana: int): Mana =
   new result
-  result.max = maxMana
-  result.cur = maxMana
-  result.partial = 0
-
-proc pct*(mana: Mana): float =
-  clamp(mana.cur.float / mana.max.float, 0, 1)
+  result.init maxMana
+  result.regenPerSecond = 10
