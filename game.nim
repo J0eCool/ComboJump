@@ -47,7 +47,7 @@ proc newGame*(): Game =
         Transform(pos: vec(600, 400),
                   size: vec(60, 60)),
         Movement(usesGravity: true),
-        newHealth(4),
+        newHealth(20),
         Sprite(color: color(155, 16, 24, 255)),
         Collider(layer: Layer.enemy),
       ]),

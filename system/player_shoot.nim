@@ -15,11 +15,46 @@ import
   util
 
 
-const
-  speed = 1500.0
-  specialNumBullets = 6
-  specialAngle = 40.0
-  specialRandAngPer = 5.0
+type Gun* = object
+  damage: int
+  speed: float
+  numBullets: int
+  angle: float
+  angleOffset: float
+  randAngPer: float
+  size: Vec
+  liveTime: float
+  randomLiveTime: float
+  extraComponents: seq[Component]
+
+let
+  normal = Gun(
+    damage: 3,
+    speed: 1_500,
+    numBullets: 1,
+    size: vec(20),
+    liveTime: 1.5,
+    )
+  spread = Gun(
+    damage: 1,
+    speed: 950,
+    size: vec(15),
+    numBullets: 6,
+    angle: 40,
+    liveTime: 0.45,
+    randomLiveTime: 0.15,
+    extraComponents: C(SpreadBullet()),
+    )
+  homing = Gun(
+    damage: 1,
+    speed: 750,
+    size: vec(25),
+    numBullets: 6,
+    angle: 90,
+    angleOffset: 180,
+    liveTime: 2.5,
+    extraComponents: C(HomingBullet()),
+    )
 
 proc playerShoot*(entities: seq[Entity]): seq[Entity] =
   result = @[]
@@ -28,54 +63,49 @@ proc playerShoot*(entities: seq[Entity]): seq[Entity] =
     Mana, m,
     Transform, t,
   ]):
-    proc bulletAtDir(dir: Vec, isSpecial = false, isHoming = false, size = vec(20, 20)): Entity =
+    proc bulletAtDir(gun: Gun, dir: Vec): Entity =
       let
-        shotPoint = t.rect.center + vec(t.size.x * 0.5 * p.facing.float - size.x / 2, -size.y / 2)
-        vel = speed * dir * (if not isHoming: 1.0 else: 0.5)
+        shotPoint = t.rect.center + vec(t.size.x * 0.5 * p.facing.float, 0) - gun.size / 2
+        vel = gun.speed * dir
+        liveTime = gun.liveTime + random(-gun.randomLiveTime, gun.randomLiveTime)
       var components: seq[Component] = @[
-          Transform(pos: shotPoint, size: size),
-          Movement(vel: vel),
-          Collider(layer: Layer.bullet),
-          Sprite(color: color(255, 255, 32, 255)),
-          newBullet(
-            damage=1,
-            liveTime= if isSpecial: random(0.3, 0.6) else: 1.5,
-          )
-        ]
-      if isHoming:
-        components.add HomingBullet(turnRate: random(350.0, 500.0))
-      if isSpecial:
-        components.add SpreadBullet(baseVel: vel)
+        Transform(pos: shotPoint, size: gun.size),
+        Movement(vel: vel),
+        Collider(layer: Layer.bullet),
+        Sprite(color: color(255, 255, 32, 255)),
+        newBullet(
+          damage=gun.damage,
+          liveTime=liveTime,
+        ),
+      ]
+      for c in gun.extraComponents:
+        components.add(c.copy)
 
       return newEntity("Bullet", components)
+
     proc trySpend(cost: int): bool =
       if m.cur >= cost.float:
         m.cur -= cost.float
         return true
       return false
+
+    proc shoot(gun: Gun): seq[Entity] =
+      result = @[]
+      for i in 0..<gun.numBullets:
+        var ang =
+          if gun.numBullets > 1:
+            (i.float / (gun.numBullets.float - 1) - 0.5) * gun.angle
+          else:
+            0
+        if p.facing != 1:
+          ang += 180.0
+        ang += random(-gun.randAngPer, gun.randAngPer)
+        ang += gun.angleOffset
+        result.add gun.bulletAtDir(unitVec(ang.degToRad))
+
     if p.spell1Pressed and trySpend(5):
-      result.add bulletAtDir(dir=vec(p.facing, 0))
-    if p.spell2Pressed and trySpend(18):
-      for i in 0..<specialNumBullets div 2:
-        var ang = (2.0 * i.float / (specialNumBullets.float / 2 - 1) - 1.0) * specialAngle / 2
-        if p.facing != 1:
-          ang += 180.0
-        ang += random(-specialRandAngPer, specialRandAngPer)
-        result.add bulletAtDir(dir=unitVec(ang.degToRad), isSpecial=true)
-
-        ang = random(random(-specialAngle, 0.0), random(0.0, specialAngle))
-        if p.facing != 1:
-          ang += 180.0
-        result.add bulletAtDir(dir=unitVec(ang.degToRad)*random(0.8, 1.2), isSpecial=true)
-    if p.spell3Pressed and trySpend(40):
-      for i in 0..<specialNumBullets div 2:
-        var ang = (2.0 * i.float / (specialNumBullets.float / 2 - 1) - 1.0) * specialAngle / 2
-        if p.facing == 1:
-          ang += 180.0
-        ang += random(-specialRandAngPer, specialRandAngPer)
-        result.add bulletAtDir(dir=unitVec(ang.degToRad), isHoming=true)
-
-        ang = random(random(-specialAngle, 0.0), random(0.0, specialAngle))
-        if p.facing == 1:
-          ang += 180.0
-        result.add bulletAtDir(dir=unitVec(ang.degToRad)*random(0.8, 1.2), isHoming=true)
+      result = normal.shoot()
+    elif p.spell2Pressed and trySpend(18):
+      result = spread.shoot()
+    elif p.spell3Pressed and trySpend(40):
+      result = homing.shoot()

@@ -11,9 +11,9 @@ var nextId = 0
 proc newEntity*(name: string, components: openarray[Component]): Entity =
   new result
   result.id = nextId
-  nextId += 1
   result.name = name
   result.components = @components
+  nextId += 1
 
 proc getComponent_impl[T: Component](entity: Entity): T =
   for c in entity.components:

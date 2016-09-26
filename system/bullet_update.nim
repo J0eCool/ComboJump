@@ -30,6 +30,8 @@ proc updateSpreadBullets(entities: seq[Entity]) =
     Movement, m,
     SpreadBullet, s,
   ]:
+    if s.baseVel.length2 < 1.0:
+      s.baseVel = m.vel
     m.vel = s.baseVel * b.lifePct
 
 
@@ -40,6 +42,8 @@ proc updateHomingBullets(entities: seq[Entity], dt: float) =
     Movement, m,
     Transform, t,
   ]:
+    if h.turnRate <= 0:
+      h.turnRate = random(350.0, 500.0)
     let
       target = findNearestTarget(entities, t.pos)
       delta = target - t.pos 
