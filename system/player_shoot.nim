@@ -41,7 +41,7 @@ type Gun* = object
 let
   normal = Gun(
     damage: S(base: 3, scale: 0.1, exp: 1),
-    speed: S(base: 1_500, scale: 25, exp: 0.75),
+    speed: S(base: 1_000, scale: 500, exp: 0.65),
     numBullets: S(base: 1, scale: 0, exp: 1),
     size: SV(base: vec(20), scale: vec(6.0, 1.5), exp: 0.65),
     liveTime: S(base: 1.5, scale: 0, exp: 1),
@@ -67,7 +67,7 @@ let
     extraComponents: C(HomingBullet()),
     )
 
-proc playerShoot*(entities: seq[Entity]): seq[Entity] =
+proc playerShoot*(entities: seq[Entity], dt: float): seq[Entity] =
   result = @[]
   forComponents(entities, e, [
     PlayerControl, p,
@@ -94,9 +94,9 @@ proc playerShoot*(entities: seq[Entity]): seq[Entity] =
 
       return newEntity("Bullet", components)
 
-    proc trySpend(cost: int): bool =
-      if m.cur >= cost.float:
-        m.cur -= cost.float
+    proc trySpend(cost: float): bool =
+      if m.cur >= cost:
+        m.cur -= cost
         return true
       return false
 
@@ -114,10 +114,14 @@ proc playerShoot*(entities: seq[Entity]): seq[Entity] =
         ang += gun.angleOffset.amt(mana)
         result.add gun.bulletAtDir(unitVec(ang.degToRad), mana)
 
-    let gun = normal
-    if p.spell1Pressed and trySpend(5):
-      result = gun.shoot(5)
-    elif p.spell2Pressed and trySpend(18):
-      result = gun.shoot(18)
-    elif p.spell3Pressed and trySpend(40):
-      result = gun.shoot(40)
+    if p.heldSpell != 0:
+      p.heldMana += 75.0 * dt
+      p.heldMana = min(p.heldMana, m.cur)
+    if p.spellReleased:
+      if p.heldSpell == 1 and trySpend(p.heldMana):
+        result = normal.shoot(p.heldMana)
+      elif p.heldSpell == 2 and trySpend(p.heldMana):
+        result = spread.shoot(p.heldMana)
+      elif p.heldSpell == 3 and trySpend(p.heldMana):
+        result = homing.shoot(p.heldMana)
+      p.heldMana = 0

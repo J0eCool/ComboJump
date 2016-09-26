@@ -5,6 +5,6 @@ type PlayerControl* = ref object of Component
   moveDir*: int
   jumpReleased*: bool
   jumpPressed*: bool
-  spell1Pressed*: bool
-  spell2Pressed*: bool
-  spell3Pressed*: bool
+  heldSpell*: int
+  spellReleased*: bool
+  heldMana*: float

@@ -1,14 +1,26 @@
-import component/player_control,
-       entity,
-       input
+import
+  component/player_control,
+  entity,
+  input
+
+const spells = @[Input.spell1, Input.spell2, Input.spell3]
 
 proc playerInput*(entities: seq[Entity], input: InputManager) =
   forComponents(entities, e, [PlayerControl, p]):
     p.jumpPressed = input.isPressed(Input.jump)
     p.jumpReleased = input.isReleased(Input.jump)
-    p.spell1Pressed = input.isPressed(Input.spell1)
-    p.spell2Pressed = input.isPressed(Input.spell2)
-    p.spell3Pressed = input.isPressed(Input.spell3)
+
+    if p.spellReleased:
+      p.spellReleased = false
+      p.heldSpell = 0
+    if p.heldSpell != 0:
+      if input.isReleased spells[p.heldSpell - 1]:
+        p.spellReleased = true
+    else:
+      for i in 0..<spells.len:
+        if input.isPressed spells[i]:
+          p.heldSpell = i + 1
+          break
 
     var dir = 0
     if input.isHeld(Input.left):
