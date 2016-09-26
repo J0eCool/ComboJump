@@ -26,6 +26,7 @@ vecf `+`, `+=`
 vecf `-`, `-=`
 vecf `*`, `*=`
 vecf `/`, `/=`
+vecf pow, `pow=`
 
 proc unitVec*(angle: float): Vec =
   vec(cos(angle), sin(angle))
