@@ -72,7 +72,12 @@ proc newGame*(): Game =
         Transform(pos: vec(100, 200),
                   size: vec(300, 40)),
         Sprite(color: color(32, 32, 255, 255)),
-        newProgressBar("Player"),
+        newProgressBar("Player", "PlayerManaBarHeld"),
+      ]),
+      newEntity("PlayerManaBarHeld", [
+        Transform(pos: vec(100, 200),
+                  size: vec(300, 40)),
+        Sprite(color: color(125, 232, 255, 255)),
       ]),
       newEntity("EnemyHealthBarBG", [
         Transform(pos: vec(795, 195),

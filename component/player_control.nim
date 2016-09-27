@@ -7,4 +7,3 @@ type PlayerControl* = ref object of Component
   jumpPressed*: bool
   heldSpell*: int
   spellReleased*: bool
-  heldMana*: float

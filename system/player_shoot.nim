@@ -39,14 +39,14 @@ type Gun* = object
   extraComponents: seq[Component]
 
 let
-  normal = Gun(
+  normalGun = Gun(
     damage: S(base: 3, scale: 0.1, exp: 1),
     speed: S(base: 1_000, scale: 500, exp: 0.65),
     numBullets: S(base: 1, scale: 0, exp: 1),
     size: SV(base: vec(20), scale: vec(6.0, 1.5), exp: 0.65),
     liveTime: S(base: 1.5, scale: 0, exp: 1),
     )
-  spread = Gun(
+  spreadGun = Gun(
     damage: S(base: 1, scale: 0.04, exp: 1),
     speed: S(base: 950, scale: 10, exp: 1),
     size: SV(base: vec(15), scale: vec(1.5), exp: 0.65),
@@ -56,7 +56,7 @@ let
     randomLiveTime: S(base: 0.15, scale: 0, exp: 1),
     extraComponents: C(SpreadBullet()),
     )
-  homing = Gun(
+  homingGun = Gun(
     damage: S(base: 1, scale: 0, exp: 1),
     speed: S(base: 750, scale: 0, exp: 1),
     size: SV(base: vec(25), scale: vec(0), exp: 1),
@@ -115,13 +115,13 @@ proc playerShoot*(entities: seq[Entity], dt: float): seq[Entity] =
         result.add gun.bulletAtDir(unitVec(ang.degToRad), mana)
 
     if p.heldSpell != 0:
-      p.heldMana += 75.0 * dt
-      p.heldMana = min(p.heldMana, m.cur)
+      m.held += 75.0 * dt
+      m.held = min(m.held, m.cur)
     if p.spellReleased:
-      if p.heldSpell == 1 and trySpend(p.heldMana):
-        result = normal.shoot(p.heldMana)
-      elif p.heldSpell == 2 and trySpend(p.heldMana):
-        result = spread.shoot(p.heldMana)
-      elif p.heldSpell == 3 and trySpend(p.heldMana):
-        result = homing.shoot(p.heldMana)
-      p.heldMana = 0
+      if p.heldSpell == 1 and trySpend(m.held):
+        result = normalGun.shoot(m.held)
+      elif p.heldSpell == 2 and trySpend(m.held):
+        result = spreadGun.shoot(m.held)
+      elif p.heldSpell == 3 and trySpend(m.held):
+        result = homingGun.shoot(m.held)
+      m.held = 0

@@ -4,6 +4,7 @@ type LimitedQuantity* = ref object of Component
   max*: float
   cur*: float
   regenPerSecond*: float
+  held*: float
 
 proc init*(limited: LimitedQuantity, max: int) =
   limited.max = max.float
@@ -11,6 +12,8 @@ proc init*(limited: LimitedQuantity, max: int) =
 
 proc pct*(limited: LimitedQuantity): float =
   clamp(limited.cur / limited.max, 0, 1)
+proc heldPct*(limited: LimitedQuantity): float =
+  clamp(limited.held / limited.max, 0, 1)
 
 template regen*(limited: LimitedQuantity, dt: float) =
   limited.cur += limited.regenPerSecond * dt
