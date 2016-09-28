@@ -16,8 +16,5 @@ proc newBullet*(damage: int, liveTime: float): Bullet =
 proc lifePct*(b: Bullet): float =
   b.timeLeft / b.liveTime
 
-type SpreadBullet* = ref object of Component
-  baseVel*: Vec
-
 type HomingBullet* = ref object of Component
   turnRate*: float

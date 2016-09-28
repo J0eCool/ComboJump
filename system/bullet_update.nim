@@ -24,17 +24,6 @@ proc findNearestTarget(entities: seq[Entity], pos: Vec): Vec =
       maxDist = dist
   return target
 
-proc updateSpreadBullets(entities: seq[Entity]) =
-  entities.forComponents e, [
-    Bullet, b,
-    Movement, m,
-    SpreadBullet, s,
-  ]:
-    if s.baseVel.length2 < 1.0:
-      s.baseVel = m.vel
-    m.vel = s.baseVel * b.lifePct
-
-
 proc updateHomingBullets(entities: seq[Entity], dt: float) =
   entities.forComponents e, [
     Bullet, b,
@@ -64,4 +53,3 @@ proc updateBullets*(entities: seq[Entity], dt: float): seq[Entity] =
       result.add(e)
 
   entities.updateHomingBullets dt
-  entities.updateSpreadBullets

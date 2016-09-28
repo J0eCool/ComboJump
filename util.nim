@@ -37,3 +37,15 @@ proc removeAll*[T](list: var seq[T], items: seq[T]) =
 proc lerp*(t, lo, hi: float): float =
   let u = clamp(t, 0, 1)
   return u * (hi - lo) + lo
+
+proc copy*[T: ref object](c: T): T =
+  new result
+  deepCopy(result, c)
+
+proc `$`*[T: enum, V](list: array[T, V]): string =
+  result = "["
+  for i in T:
+    if ord(i) != 0:
+      result &= ", "
+    result &= $i & ":" & $list[i]
+  result &= "]"

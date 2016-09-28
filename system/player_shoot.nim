@@ -38,34 +38,60 @@ type Gun* = object
   randomLiveTime: ManaScale[float]
   extraComponents: seq[Component]
 
+type
+  RuneKind* = enum
+    damage
+    spread
+    homing
+
+  Rune* = tuple[kind: RuneKind, cost: float]
+
+
+proc createSpell*(baseGun: Gun, runes: varargs[Rune]): Gun =
+  const constCostRunes: set[RuneKind] = {}
+  var totalCost = 0.0
+  for r in runes:
+    if not (r.kind in constCostRunes):
+      totalCost += r.cost
+  var scaledCosts: array[RuneKind, float]
+  for r in runes:
+    scaledCosts[r.kind] = r.cost / totalCost
+
+  result.deepCopy baseGun
+  if result.extraComponents == nil:
+    result.extraComponents = @[]
+  for r in runes:
+    let c = scaledCosts[r.kind]
+    case r.kind
+    of damage:
+      result.damage.scale += c * 0.15
+    of spread:
+      result.numBullets.base += 4 * c
+      result.numBullets.scale += 0.1 * c
+      result.speed.base -= 300 * c
+      result.angle.base += 60 * c
+      result.angle.scale += 5 * c
+      result.randomLiveTime.base += 0.7 * c
+    of homing:
+      result.speed.base -= 400 * c
+      result.angle.base += 90 * c
+      result.randAngPer.base += 4 * c
+      result.extraComponents.add HomingBullet(turnRate: 600 * c)
+      discard
+
 let
-  normalGun = Gun(
+  projectileBase = Gun(
     damage: S(base: 3, scale: 0.1, exp: 1),
-    speed: S(base: 1_000, scale: 500, exp: 0.65),
+    speed: S(base: 1_000, scale: 500, exp: 0.5),
     numBullets: S(base: 1, scale: 0, exp: 1),
-    size: SV(base: vec(20), scale: vec(6.0, 1.5), exp: 0.65),
+    size: SV(base: vec(15), scale: vec(3, 3), exp: 0.5),
+    angle: S(base: 0, scale: 0, exp: 0.5),
     liveTime: S(base: 1.5, scale: 0, exp: 1),
     )
-  spreadGun = Gun(
-    damage: S(base: 1, scale: 0.04, exp: 1),
-    speed: S(base: 950, scale: 10, exp: 1),
-    size: SV(base: vec(15), scale: vec(1.5), exp: 0.65),
-    numBullets: S(base: 5, scale: 0.12, exp: 1),
-    angle: S(base: 40, scale: 1.5, exp: 1),
-    liveTime: S(base: 0.45, scale: 0, exp: 1),
-    randomLiveTime: S(base: 0.15, scale: 0, exp: 1),
-    extraComponents: C(SpreadBullet()),
-    )
-  homingGun = Gun(
-    damage: S(base: 1, scale: 0, exp: 1),
-    speed: S(base: 750, scale: 0, exp: 1),
-    size: SV(base: vec(25), scale: vec(0), exp: 1),
-    numBullets: S(base: 6, scale: 0, exp: 1),
-    angle: S(base: 90, scale: 0, exp: 1),
-    angleOffset: S(base: 180, scale: 0, exp: 1),
-    liveTime: S(base: 2.5, scale: 0, exp: 1),
-    extraComponents: C(HomingBullet()),
-    )
+  
+  normalSpell = projectileBase.createSpell((damage, 100.0))
+  spreadSpell = projectileBase.createSpell((damage, 40.0), (spread, 60.0))
+  homingSpell = projectileBase.createSpell((damage, 20.0), (spread, 40.0), (homing, 40.0))
 
 proc playerShoot*(entities: seq[Entity], dt: float): seq[Entity] =
   result = @[]
@@ -119,9 +145,9 @@ proc playerShoot*(entities: seq[Entity], dt: float): seq[Entity] =
       m.held = min(m.held, m.cur)
     if p.spellReleased:
       if p.heldSpell == 1 and trySpend(m.held):
-        result = normalGun.shoot(m.held)
+        result = normalSpell.shoot(m.held)
       elif p.heldSpell == 2 and trySpend(m.held):
-        result = spreadGun.shoot(m.held)
+        result = spreadSpell.shoot(m.held)
       elif p.heldSpell == 3 and trySpend(m.held):
-        result = homingGun.shoot(m.held)
+        result = homingSpell.shoot(m.held)
       m.held = 0
