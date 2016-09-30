@@ -25,6 +25,14 @@ proc sign*(x: SomeNumber): int =
 proc random*(lo, hi: float): float =
   random(hi - lo) + lo
 
+proc randomNormal*(lo, hi: float): float =
+  let
+    a = random(lo, hi)
+    b = random(lo, hi)
+    l = min(a, b)
+    h = max(a, b)
+  random(l, h)
+
 proc remove*[T](list: var seq[T], item: T) =
   let index = list.find(item)
   if index >= 0:

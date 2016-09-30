@@ -29,6 +29,7 @@ proc amt[T](scale: ManaScale[T], mana: float): T =
 type Gun* = object
   damage: ManaScale[float]
   speed: ManaScale[float]
+  randSpeed: ManaScale[float]
   numBullets: ManaScale[float]
   angle: ManaScale[float]
   angleOffset: ManaScale[float]
@@ -89,6 +90,7 @@ proc createSpell*(baseGun: Gun, runes: varargs[Rune]): Gun =
     of spread:
       result.numBullets.base += 5 * c
       result.numBullets.scale += 0.2 * c
+      result.randSpeed.base += 500 * c
       result.speed.base -= 500 * c
       result.angle.base += 70 * c
       result.angle.scale += 7 * c
@@ -96,6 +98,7 @@ proc createSpell*(baseGun: Gun, runes: varargs[Rune]): Gun =
       result.randomLiveTime.base += 0.6 * c
     of homing:
       result.speed.base -= 600 * c
+      result.randSpeed.base += 200 * c
       result.angle.base += 150 * c
       result.randAngPer.base += 10 * c
       result.liveTime.scale += 0.06 * c
@@ -121,7 +124,7 @@ let
     )
 
   normalSpell = projectileBase.createSpell((damage, 100.0), (fiery, 50.0))
-  spreadSpell = projectileBase.createSpell((damage, 40.0), (spread, 60.0), (fiery, 50.0))
+  spreadSpell = projectileBase.createSpell((damage, 40.0), (spread, 60.0))
   homingSpell = projectileBase.createSpell((damage, 20.0), (spread, 40.0), (homing, 40.0), (fiery, 50.0))
 
   spells = [normalSpell, spreadSpell, homingSpell]
@@ -136,7 +139,9 @@ proc playerShoot*(entities: seq[Entity], dt: float): seq[Entity] =
     proc bulletAtDir(gun: Gun, dir: Vec, mana: float): Entity =
       let
         shotPoint = t.rect.center + vec(t.size.x * 0.5 * p.facing.float, 0) - gun.size.amt(mana) / 2
-        vel = gun.speed.amt(mana) * dir
+        randSpeed = gun.randSpeed.amt(mana)
+        speed = gun.speed.amt(mana) + randomNormal(-randSpeed, randSpeed)
+        vel = speed * dir
         liveTime = gun.liveTime.amt(mana) + random(-gun.randomLiveTime.amt(mana), gun.randomLiveTime.amt(mana))
       var components: seq[Component] = @[
         Transform(pos: shotPoint, size: gun.size.amt(mana)),
