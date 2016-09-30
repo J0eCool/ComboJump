@@ -37,6 +37,8 @@ type Gun* = object
   liveTime: ManaScale[float]
   randomLiveTime: ManaScale[float]
   extraComponents: seq[Component]
+  manaChargeRate: float
+  manaEfficiency: float
 
 type
   RuneKind* = enum
@@ -48,50 +50,74 @@ type
 
 
 proc createSpell*(baseGun: Gun, runes: varargs[Rune]): Gun =
+  proc calcFlatCosts(): array[RuneKind, float] =
+    result[spread] = 40
+    result[homing] = 60
+  const flatRuneCosts = calcFlatCosts()
   const constCostRunes: set[RuneKind] = {}
+  var rawTotalCost = 0.0
   var totalCost = 0.0
+  var extraCost = 100.0
   for r in runes:
     if not (r.kind in constCostRunes):
+      rawTotalCost += r.cost
       totalCost += r.cost
+    totalCost += flatRuneCosts[r.kind]
+
   var scaledCosts: array[RuneKind, float]
   for r in runes:
-    scaledCosts[r.kind] = r.cost / totalCost
+    let
+      s = r.cost / rawTotalCost
+    scaledCosts[r.kind] = s
+    extraCost += flatRuneCosts[r.kind] * s
 
   result.deepCopy baseGun
+
+  let s = extraCost / 100.0
+  result.manaEfficiency /= s
+  result.manaChargeRate *= sqrt(s)
+
   if result.extraComponents == nil:
     result.extraComponents = @[]
   for r in runes:
     let c = scaledCosts[r.kind]
     case r.kind
     of damage:
-      result.damage.scale += c * 0.15
+      result.damage.base += 3 * c
+      result.damage.scale += 0.4 * c
     of spread:
-      result.numBullets.base += 4 * c
-      result.numBullets.scale += 0.1 * c
-      result.speed.base -= 300 * c
-      result.angle.base += 60 * c
-      result.angle.scale += 5 * c
-      result.randomLiveTime.base += 0.7 * c
+      result.numBullets.base += 5 * c
+      result.numBullets.scale += 0.2 * c
+      result.speed.base -= 500 * c
+      result.angle.base += 70 * c
+      result.angle.scale += 7 * c
+      result.liveTime.base -= 1.2 * c
+      result.randomLiveTime.base += 0.6 * c
     of homing:
-      result.speed.base -= 400 * c
-      result.angle.base += 90 * c
-      result.randAngPer.base += 4 * c
-      result.extraComponents.add HomingBullet(turnRate: 600 * c)
+      result.speed.base -= 600 * c
+      result.angle.base += 150 * c
+      result.randAngPer.base += 10 * c
+      result.liveTime.scale += 0.06 * c
+      result.extraComponents.add HomingBullet(turnRate: 800 * c)
       discard
 
 let
   projectileBase = Gun(
-    damage: S(base: 3, scale: 0.1, exp: 1),
-    speed: S(base: 1_000, scale: 500, exp: 0.5),
+    damage: S(base: 1, scale: 0, exp: 1),
+    speed: S(base: 1_000, scale: 300, exp: 0.5),
     numBullets: S(base: 1, scale: 0, exp: 1),
-    size: SV(base: vec(15), scale: vec(3, 3), exp: 0.5),
+    size: SV(base: vec(12.5), scale: vec(4, 4), exp: 0.5),
     angle: S(base: 0, scale: 0, exp: 0.5),
     liveTime: S(base: 1.5, scale: 0, exp: 1),
+    manaChargeRate: 25.0,
+    manaEfficiency: 1.0,
     )
-  
+
   normalSpell = projectileBase.createSpell((damage, 100.0))
   spreadSpell = projectileBase.createSpell((damage, 40.0), (spread, 60.0))
   homingSpell = projectileBase.createSpell((damage, 20.0), (spread, 40.0), (homing, 40.0))
+
+  spells = [normalSpell, spreadSpell, homingSpell]
 
 proc playerShoot*(entities: seq[Entity], dt: float): seq[Entity] =
   result = @[]
@@ -127,6 +153,7 @@ proc playerShoot*(entities: seq[Entity], dt: float): seq[Entity] =
       return false
 
     proc shoot(gun: Gun, mana: float): seq[Entity] =
+      let mana = mana * gun.manaEfficiency
       result = @[]
       for i in 0..<gun.numBullets.amt(mana).int:
         var ang =
@@ -141,13 +168,10 @@ proc playerShoot*(entities: seq[Entity], dt: float): seq[Entity] =
         result.add gun.bulletAtDir(unitVec(ang.degToRad), mana)
 
     if p.heldSpell != 0:
-      m.held += 75.0 * dt
+      let spell = spells[p.heldSpell - 1]
+      m.held += spell.manaChargeRate * dt
       m.held = min(m.held, m.cur)
-    if p.spellReleased:
-      if p.heldSpell == 1 and trySpend(m.held):
-        result = normalSpell.shoot(m.held)
-      elif p.heldSpell == 2 and trySpend(m.held):
-        result = spreadSpell.shoot(m.held)
-      elif p.heldSpell == 3 and trySpend(m.held):
-        result = homingSpell.shoot(m.held)
-      m.held = 0
+      if p.spellReleased:
+        if trySpend(m.held):
+          result = spell.shoot(m.held)
+        m.held = 0
