@@ -42,15 +42,15 @@ proc newFieryBullet*(interval: float): FieryBullet =
 proc findNearestTarget(entities: seq[Entity], pos: Vec): Vec =
   var
     target = pos
-    maxDist = 0.0
+    minDist = -1.0
   forComponents(entities, e, [
     Transform, t,
     Health, h,
   ]):
     let dist = distance2(pos, t.pos)
-    if dist > maxDist:
+    if minDist < 0.0 or dist < minDist:
       target = t.pos
-      maxDist = dist
+      minDist = dist
   return target
 
 proc updateHomingBullets(entities: seq[Entity], dt: float) =

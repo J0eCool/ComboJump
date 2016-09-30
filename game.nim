@@ -51,15 +51,17 @@ proc newGame*(): Game =
         Sprite(color: color(155, 16, 24, 255)),
         Collider(layer: Layer.enemy),
       ]),
+      newEntity("Enemy", [
+        Transform(pos: vec(1000, 500),
+                  size: vec(60, 60)),
+        Movement(usesGravity: true),
+        newHealth(20),
+        Sprite(color: color(155, 16, 24, 255)),
+        Collider(layer: Layer.enemy),
+      ]),
       newEntity("Ground", [
         Transform(pos: vec(150, 800),
                   size: vec(900, 35)),
-        Sprite(color: color(192, 192, 192, 255)),
-        Collider(layer: Layer.floor),
-      ]),
-      newEntity("Wall", [
-        Transform(pos: vec(900, 600),
-                  size: vec(50, 200)),
         Sprite(color: color(192, 192, 192, 255)),
         Collider(layer: Layer.floor),
       ]),
