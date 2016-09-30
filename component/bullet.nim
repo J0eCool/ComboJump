@@ -30,11 +30,15 @@ type HomingBullet* = ref object of Component
 
 type FieryBullet = ref object of Component
   timer, interval: float
+  liveTime: float
+  size: float
 
-proc newFieryBullet*(interval: float): FieryBullet =
+proc newFieryBullet*(mana: float): FieryBullet =
   FieryBullet(
     timer: 0.0,
-    interval: interval,
+    interval: lerp(mana, 0.05, 0.005),
+    liveTime: lerp(mana, 0.1, 0.9),
+    size: lerp(mana, 0.4, 0.9),
   )
 
 ############################################################
@@ -78,15 +82,19 @@ proc updateFieryBullets*(entities: seq[Entity], dt: float): seq[Entity] =
     Transform, t,
   ]:
     f.timer += dt
-    if f.timer >= f.interval:
+    assert f.interval > 0
+    while f.timer >= f.interval:
       f.timer -= f.interval
       let vel = m.vel.rotate(random(-PI/3, PI/3) - PI) * 0.15
       result.add newEntity("Flare", [
-        Transform(pos: t.pos + randomVec(t.size.length), size: t.size*0.65),
+        Transform(
+          pos: t.pos + randomVec(t.size.length),
+          size: t.size * f.size,
+        ),
         Sprite(color: color(255, 128, 32, 255)),
         Collider(),
         Movement(vel: vel),
-        newBullet(damage=0, liveTime=0.5),
+        newBullet(damage=0, liveTime=f.liveTime),
       ])
 
 proc updateBullets*(entities: seq[Entity], dt: float): seq[Entity] =

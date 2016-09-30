@@ -109,7 +109,7 @@ proc createSpell*(baseGun: Gun, runes: varargs[Rune]): Gun =
       result.speed.base -= 100 * c
       result.speed.scale -= 200 * c
       result.liveTime.scale += 0.05 * c
-      result.extraComponents.add newFieryBullet(interval=lerp(c, 0.05, 0.005))
+      result.extraComponents.add newFieryBullet(c)
 
 let
   projectileBase = Gun(
@@ -125,7 +125,7 @@ let
 
   normalSpell = projectileBase.createSpell((damage, 100.0), (fiery, 50.0))
   spreadSpell = projectileBase.createSpell((damage, 40.0), (spread, 60.0))
-  homingSpell = projectileBase.createSpell((damage, 20.0), (spread, 40.0), (homing, 40.0), (fiery, 50.0))
+  homingSpell = projectileBase.createSpell((damage, 20.0), (spread, 40.0), (homing, 40.0), (fiery, 20.0))
 
   spells = [normalSpell, spreadSpell, homingSpell]
 
