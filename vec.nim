@@ -1,4 +1,4 @@
-import macros, math
+import macros, math, random
 
 type Vec* {.pure, final.} =
   tuple[x, y: float]
@@ -58,3 +58,6 @@ proc dot*(a, b: Vec): float =
   a.x * b.x + a.y * b.y
 proc cross*(a, b: Vec): float =
   a.x * b.y - a.y * b.x
+
+proc randomVec*(r: float): Vec =
+  unitVec(random(2 * PI)) * random(r)

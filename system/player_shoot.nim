@@ -45,6 +45,7 @@ type
     damage
     spread
     homing
+    fiery
 
   Rune* = tuple[kind: RuneKind, cost: float]
 
@@ -99,7 +100,13 @@ proc createSpell*(baseGun: Gun, runes: varargs[Rune]): Gun =
       result.randAngPer.base += 10 * c
       result.liveTime.scale += 0.06 * c
       result.extraComponents.add HomingBullet(turnRate: 800 * c)
-      discard
+    of fiery:
+      result.damage.base += 2 * c
+      result.damage.scale += 0.25 * c
+      result.speed.base -= 100 * c
+      result.speed.scale -= 200 * c
+      result.liveTime.scale += 0.05 * c
+      result.extraComponents.add newFieryBullet(interval=lerp(c, 0.05, 0.005))
 
 let
   projectileBase = Gun(
@@ -113,9 +120,9 @@ let
     manaEfficiency: 1.0,
     )
 
-  normalSpell = projectileBase.createSpell((damage, 100.0))
-  spreadSpell = projectileBase.createSpell((damage, 40.0), (spread, 60.0))
-  homingSpell = projectileBase.createSpell((damage, 20.0), (spread, 40.0), (homing, 40.0))
+  normalSpell = projectileBase.createSpell((damage, 100.0), (fiery, 50.0))
+  spreadSpell = projectileBase.createSpell((damage, 40.0), (spread, 60.0), (fiery, 50.0))
+  homingSpell = projectileBase.createSpell((damage, 20.0), (spread, 40.0), (homing, 40.0), (fiery, 50.0))
 
   spells = [normalSpell, spreadSpell, homingSpell]
 

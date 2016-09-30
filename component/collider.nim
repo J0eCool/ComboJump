@@ -5,6 +5,7 @@ import
 
 type
   Layer* = enum
+    none
     floor
     player
     enemy

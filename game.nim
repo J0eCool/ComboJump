@@ -122,4 +122,4 @@ proc update*(game: var Game, dt: float) =
   game.entities.removeAll updateBullets(game.entities, dt)
   game.entities.removeAll updateBulletDamage(game.entities)
   game.entities &= playerShoot(game.entities, dt)
-
+  game.entities &= updateFieryBullets(game.entities, dt)
