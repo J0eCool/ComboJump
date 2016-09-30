@@ -1,6 +1,7 @@
 import math, sdl2
 
 import
+  component/bullet,
   component/collider,
   component/health,
   component/mana,
@@ -10,7 +11,6 @@ import
   component/sprite,
   component/transform,
   system/bullet_hit,
-  system/bullet_update,
   system/collisions,
   system/physics,
   system/player_input,
