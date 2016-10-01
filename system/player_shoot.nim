@@ -72,6 +72,7 @@ proc createSpell*(baseGun: Gun, runes: varargs[Rune]): Gun =
   for r in runes:
     let
       s = r.cost / rawTotalCost
+    assert scaledCosts[r.kind] == 0, "Duplicate runes aren't allowed"
     scaledCosts[r.kind] = s
     extraCost += flatRuneCosts[r.kind] * s
 
