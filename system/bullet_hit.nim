@@ -3,9 +3,10 @@ import
   component/collider,
   component/health,
   entity,
+  event,
   util
 
-proc updateBulletDamage*(entities: seq[Entity]): seq[Entity] =
+proc updateBulletDamage*(entities: seq[Entity]): seq[Event] =
   result = @[]
   forComponents(entities, e, [
     Collider, c,
@@ -15,5 +16,5 @@ proc updateBulletDamage*(entities: seq[Entity]): seq[Entity] =
       other.withComponent Bullet, b:
         h.cur -= b.damage.float
         if h.cur <= 0:
-          result.add(e)
+          result.add Event(kind: removeEntity, entity: e)
           break

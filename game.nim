@@ -20,6 +20,7 @@ import
   system/render,
   system/update_progress_bar,
   entity,
+  event,
   input,
   vec,
   util
@@ -95,6 +96,14 @@ proc newGame*(): Game =
     ],
   )
 
+proc process(game: var Game, events: seq[event.Event]) =
+  for event in events:
+    case event.kind
+    of addEntity:
+      game.entities.add event.entity
+    of removeEntity:
+      game.entities.remove event.entity
+
 proc draw*(render: RendererPtr, game: Game) =
   game.entities.updateProgressBars()
 
@@ -121,7 +130,7 @@ proc update*(game: var Game, dt: float) =
 
   game.entities.regenLimitedQuantities(dt)
 
-  game.entities.removeAll updateBullets(game.entities, dt)
-  game.entities.removeAll updateBulletDamage(game.entities)
-  game.entities &= playerShoot(game.entities, dt)
-  game.entities &= updateFieryBullets(game.entities, dt)
+  game.process updateBullets(game.entities, dt)
+  game.process updateBulletDamage(game.entities)
+  game.process playerShoot(game.entities, dt)
+  game.process updateFieryBullets(game.entities, dt)

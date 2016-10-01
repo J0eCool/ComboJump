@@ -1,4 +1,5 @@
-import math, random, sdl2
+import math, random
+from sdl2 import color
 
 import
   component/component,
@@ -10,6 +11,7 @@ import
   component/transform,
   component/sprite,
   entity,
+  event,
   rect,
   vec,
   util
@@ -129,7 +131,7 @@ let
 
   spells = [normalSpell, spreadSpell, homingSpell]
 
-proc playerShoot*(entities: seq[Entity], dt: float): seq[Entity] =
+proc playerShoot*(entities: seq[Entity], dt: float): seq[Event] =
   result = @[]
   forComponents(entities, e, [
     PlayerControl, p,
@@ -164,7 +166,7 @@ proc playerShoot*(entities: seq[Entity], dt: float): seq[Entity] =
         return true
       return false
 
-    proc shoot(gun: Gun, mana: float): seq[Entity] =
+    proc shoot(gun: Gun, mana: float): seq[Event] =
       let mana = mana * gun.manaEfficiency
       result = @[]
       for i in 0..<gun.numBullets.amt(mana).int:
@@ -177,7 +179,8 @@ proc playerShoot*(entities: seq[Entity], dt: float): seq[Entity] =
           ang += 180.0
         ang += random(-gun.randAngPer.amt(mana), gun.randAngPer.amt(mana))
         ang += gun.angleOffset.amt(mana)
-        result.add gun.bulletAtDir(unitVec(ang.degToRad), mana)
+        let bullet = gun.bulletAtDir(unitVec(ang.degToRad), mana)
+        result.add Event(kind: addEntity, entity: bullet)
 
     if p.heldSpell != 0:
       let spell = spells[p.heldSpell - 1]

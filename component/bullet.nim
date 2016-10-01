@@ -1,4 +1,6 @@
-import math, sdl2
+import math
+from sdl2 import color
+
 import
   component/component,
   component/collider,
@@ -7,6 +9,7 @@ import
   component/transform,
   component/sprite,
   entity,
+  event,
   util,
   vec
 
@@ -74,7 +77,7 @@ proc updateHomingBullets(entities: seq[Entity], dt: float) =
       turn = lerp((1 - b.lifePct) * 5, 0, baseTurn)
     m.vel = m.vel.rotate(turn)
 
-proc updateFieryBullets*(entities: seq[Entity], dt: float): seq[Entity] =
+proc updateFieryBullets*(entities: seq[Entity], dt: float): seq[Event] =
   result = @[]
   entities.forComponents e, [
     FieryBullet, f,
@@ -85,19 +88,21 @@ proc updateFieryBullets*(entities: seq[Entity], dt: float): seq[Entity] =
     assert f.interval > 0
     while f.timer >= f.interval:
       f.timer -= f.interval
-      let vel = m.vel.rotate(random(-PI/3, PI/3) - PI) * 0.15
-      result.add newEntity("Flare", [
-        Transform(
-          pos: t.pos + randomVec(t.size.length),
-          size: t.size * f.size,
-        ),
-        Sprite(color: color(255, 128, 32, 255)),
-        Collider(),
-        Movement(vel: vel),
-        newBullet(damage=0, liveTime=f.liveTime),
-      ])
+      let
+        vel = m.vel.rotate(random(-PI/3, PI/3) - PI) * 0.15
+        flare = newEntity("Flare", [
+          Transform(
+            pos: t.pos + randomVec(t.size.length),
+            size: t.size * f.size,
+          ),
+          Sprite(color: color(255, 128, 32, 255)),
+          Collider(),
+          Movement(vel: vel),
+          newBullet(damage=0, liveTime=f.liveTime),
+        ])
+      result.add Event(kind: addEntity, entity: flare)
 
-proc updateBullets*(entities: seq[Entity], dt: float): seq[Entity] =
+proc updateBullets*(entities: seq[Entity], dt: float): seq[Event] =
   result = @[]
   forComponents(entities, e, [
     Bullet, b,
@@ -106,6 +111,6 @@ proc updateBullets*(entities: seq[Entity], dt: float): seq[Entity] =
   ]):
     b.timeLeft -= dt
     if b.timeLeft <= 0.0 or c.collisions.len > 0:
-      result.add(e)
+      result.add(Event(kind: removeEntity, entity: e))
 
   entities.updateHomingBullets dt
