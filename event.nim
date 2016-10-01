@@ -8,3 +8,4 @@ type
     case kind*: EventKind
     of addEntity, removeEntity:
       entity*: Entity
+  Events* = seq[Event]

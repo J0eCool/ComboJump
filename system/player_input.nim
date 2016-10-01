@@ -1,11 +1,12 @@
 import
   component/player_control,
   entity,
+  event,
   input
 
 const spells = @[Input.spell1, Input.spell2, Input.spell3]
 
-proc playerInput*(entities: seq[Entity], input: InputManager) =
+proc playerInput*(entities: seq[Entity], input: InputManager): Events =
   forComponents(entities, e, [PlayerControl, p]):
     p.jumpPressed = input.isPressed(Input.jump)
     p.jumpReleased = input.isReleased(Input.jump)

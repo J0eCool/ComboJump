@@ -6,6 +6,7 @@ import
   component/player_control,
   component/transform,
   entity,
+  event,
   vec,
   util
 
@@ -17,7 +18,7 @@ const
   jumpHeight = 250.0
   jumpSpeed = -sign(gravity).float * sqrt(2 * jumpHeight * abs(gravity))
 
-proc playerMovement*(entities: seq[Entity], dt: float) =
+proc playerMovement*(entities: seq[Entity], dt: float): Events =
   forComponents(entities, e, [
     Movement, m,
     PlayerControl, p,

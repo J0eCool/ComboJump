@@ -3,6 +3,7 @@ import
   component/movement,
   component/transform,
   entity,
+  event,
   rect
 
 proc collidesWith(a, b: Rect): bool =
@@ -12,7 +13,7 @@ proc collidesWith(a, b: Rect): bool =
     a.top <= b.bottom and
     a.bottom >= b.top
 
-proc checkCollisisons*(entities: seq[Entity]) =
+proc checkCollisisons*(entities: seq[Entity]): Events =
   forComponents(entities, a, [
     Transform, a_t,
     Collider, a_c,
