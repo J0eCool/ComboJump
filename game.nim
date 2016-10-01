@@ -1,4 +1,4 @@
-import math, sdl2
+import math, macros, sdl2
 
 import
   component/bullet,
@@ -104,6 +104,14 @@ proc process(game: var Game, events: seq[event.Event]) =
     of removeEntity:
       game.entities.remove event.entity
 
+macro processAll(game, entities: expr, body: untyped): stmt =
+  result = newNimNode(nnkStmtList)
+  for node in body:
+    let callNode = newCall(node[0], entities)
+    for i in 1..<node.len:
+      callNode.add node[i]
+    result.add(newCall(!"process", game, callNode))
+
 proc draw*(render: RendererPtr, game: Game) =
   game.entities.updateProgressBars()
 
@@ -130,7 +138,8 @@ proc update*(game: var Game, dt: float) =
 
   game.entities.regenLimitedQuantities(dt)
 
-  game.process updateBullets(game.entities, dt)
-  game.process updateBulletDamage(game.entities)
-  game.process playerShoot(game.entities, dt)
-  game.process updateFieryBullets(game.entities, dt)
+  game.processAll game.entities:
+      updateBullets(dt)
+      updateBulletDamage()
+      playerShoot(dt)
+      updateFieryBullets(dt)
