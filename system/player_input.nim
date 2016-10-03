@@ -11,23 +11,21 @@ proc playerInput*(entities: seq[Entity], input: InputManager): Events =
     p.jumpPressed = input.isPressed(Input.jump)
     p.jumpReleased = input.isReleased(Input.jump)
 
-    if p.spellReleased:
-      p.spellReleased = false
-      p.heldSpell = 0
     if p.heldSpell != 0:
-      if input.isReleased spells[p.heldSpell - 1]:
-        p.spellReleased = true
+      p.isSpellHeld = input.isHeld spells[p.heldSpell - 1]
     else:
       for i in 0..<spells.len:
         if input.isPressed spells[i]:
           p.heldSpell = i + 1
+          p.isSpellHeld = true
           break
 
     var dir = 0
-    if input.isHeld(Input.left):
-      dir -= 1
-    if input.isHeld(Input.right):
-      dir += 1
+    if not p.isCasting:
+      if input.isHeld(Input.left):
+        dir -= 1
+      if input.isHeld(Input.right):
+        dir += 1
     p.moveDir = dir
 
     if p.moveDir != 0:

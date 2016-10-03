@@ -6,4 +6,7 @@ type PlayerControl* = ref object of Component
   jumpReleased*: bool
   jumpPressed*: bool
   heldSpell*: int
-  spellReleased*: bool
+  isSpellHeld*: bool
+
+proc isCasting*(control: PlayerControl): bool =
+  control.heldSpell != 0

@@ -42,6 +42,7 @@ type Gun* = object
   extraComponents: seq[Component]
   manaChargeRate: float
   manaEfficiency: float
+  minCost: float
 
 type
   RuneKind* = enum
@@ -54,6 +55,8 @@ type
 
 
 proc createSpell*(baseGun: Gun, runes: varargs[Rune]): Gun =
+  result.deepCopy baseGun
+
   proc calcFlatCosts(): array[RuneKind, float] =
     result[spread] = 40
     result[homing] = 60
@@ -76,11 +79,10 @@ proc createSpell*(baseGun: Gun, runes: varargs[Rune]): Gun =
     scaledCosts[r.kind] = s
     extraCost += flatRuneCosts[r.kind] * s
 
-  result.deepCopy baseGun
-
   let s = extraCost / 100.0
   result.manaEfficiency /= s
   result.manaChargeRate *= sqrt(s)
+  result.minCost *= s / result.manaEfficiency
 
   if result.extraComponents == nil:
     result.extraComponents = @[]
@@ -124,6 +126,7 @@ let
     liveTime: S(base: 1.5, scale: 0, exp: 1),
     manaChargeRate: 25.0,
     manaEfficiency: 1.0,
+    minCost: 5.0,
     )
 
   normalSpell = projectileBase.createSpell((damage, 100.0), (fiery, 50.0))
@@ -187,7 +190,8 @@ proc playerShoot*(entities: seq[Entity], dt: float): seq[Event] =
       let spell = spells[p.heldSpell - 1]
       m.held += spell.manaChargeRate * dt
       m.held = min(m.held, m.cur)
-      if p.spellReleased:
+      if not p.isSpellHeld and m.held > spell.minCost:
         if trySpend(m.held):
           result = spell.shoot(m.held)
         m.held = 0
+        p.heldSpell = 0
