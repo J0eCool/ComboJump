@@ -1,8 +1,12 @@
 import
+  component/mana,
   component/player_control,
+  component/transform,
   entity,
   event,
-  input
+  input,
+  option,
+  rect
 
 const spells = @[Input.spell1, Input.spell2, Input.spell3]
 
@@ -32,3 +36,14 @@ proc playerInput*(entities: seq[Entity], input: InputManager): Events =
       p.facing = p.moveDir
     if p.facing == 0:
       p.facing = 1
+
+proc clickPlayer*(entities: seq[Entity], input: InputManager): Events =
+  entities.forComponents e, [
+    Mana, m,
+    PlayerControl, p,
+    Transform, t,
+  ]:
+    input.clickPos.bindAs click:
+      if t.rect.contains click:
+        echo "Clicked player with " & $m.cur & " mana"
+        m.cur = m.max

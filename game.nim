@@ -97,9 +97,6 @@ proc newGame*(): Game =
   )
 
 proc process(game: var Game, events: Events) =
-  # if events == nil:
-  #   return
-
   for event in events:
     case event.kind
     of addEntity:
@@ -145,4 +142,5 @@ proc update*(game: var Game, dt: float) =
     updateBullets(dt)
     updateBulletDamage()
     playerShoot(dt)
+    clickPlayer(game.input)
     updateFieryBullets(dt)

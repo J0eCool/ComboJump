@@ -1,6 +1,9 @@
 import sdl2
 
-import util
+import
+  option,
+  util,
+  vec
 
 type
   Input* = enum
@@ -23,6 +26,7 @@ type
 
   InputManager* = ref object
     inputs: array[Input, InputState]
+    clickPos*: Option[Vec]
 
 proc newInputManager*(): InputManager =
   new result
@@ -47,6 +51,7 @@ proc update*(manager: InputManager) =
       i = inactive
   for i in Input:
     updateInput(manager.inputs[i])
+  manager.clickPos = makeNone[Vec]()
 
   template setForEvent(e, v) =
     let input = keyToInput e.key.keysym.scancode
@@ -61,6 +66,9 @@ proc update*(manager: InputManager) =
       setForEvent(event, pressed)
     of KeyUp:
       setForEvent(event, released)
+    of MouseButtonDown:
+      let pos = vec(event.button.x, event.button.y)
+      manager.clickPos = makeJust(pos)
     else: discard
 
 proc isPressed*(manager: InputManager, key: Input): bool =

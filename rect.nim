@@ -23,3 +23,11 @@ proc bottom*(rect: Rect): float =
 
 proc center*(rect: Rect): Vec =
   vec(rect.x, rect.y) + 0.5 * vec(rect.w, rect.h)
+
+proc contains*(rect: Rect, point: Vec): bool =
+  (
+    point.x >= rect.left and
+    point.x <= rect.right and
+    point.y >= rect.top and
+    point.y <= rect.bottom
+  )
