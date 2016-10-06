@@ -43,7 +43,7 @@ proc clickPlayer*(entities: seq[Entity], input: InputManager): Events =
     PlayerControl, p,
     Transform, t,
   ]:
-    input.clickPos.bindAs click:
+    input.clickHeldPos.bindAs click:
       if t.rect.contains click:
-        echo "Clicked player with " & $m.cur & " mana"
-        m.cur = m.max
+        echo "Holding player with " & $m.cur & " mana"
+        m.cur += 0.5

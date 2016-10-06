@@ -26,7 +26,8 @@ type
 
   InputManager* = ref object
     inputs: array[Input, InputState]
-    clickPos*: Option[Vec]
+    mousePos: Vec
+    mouseState: InputState
 
 proc newInputManager*(): InputManager =
   new result
@@ -51,7 +52,7 @@ proc update*(manager: InputManager) =
       i = inactive
   for i in Input:
     updateInput(manager.inputs[i])
-  manager.clickPos = makeNone[Vec]()
+  updateInput(manager.mouseState)
 
   template setForEvent(e, v) =
     let input = keyToInput e.key.keysym.scancode
@@ -66,9 +67,15 @@ proc update*(manager: InputManager) =
       setForEvent(event, pressed)
     of KeyUp:
       setForEvent(event, released)
+    of MouseMotion:
+      let pos = vec(event.motion.x, event.motion.y)
+      manager.mousePos = pos
     of MouseButtonDown:
       let pos = vec(event.button.x, event.button.y)
-      manager.clickPos = makeJust(pos)
+      manager.mousePos = pos
+      manager.mouseState = pressed
+    of MouseButtonUp:
+      manager.mouseState = released
     else: discard
 
 proc isPressed*(manager: InputManager, key: Input): bool =
@@ -80,3 +87,11 @@ proc isHeld*(manager: InputManager, key: Input): bool =
 
 proc isReleased*(manager: InputManager, key: Input): bool =
   manager.inputs[key] == released
+
+proc clickPos*(manager: InputManager): Option[Vec] =
+  if manager.mouseState == pressed:
+    return makeJust(manager.mousePos)
+
+proc clickHeldPos*(manager: InputManager): Option[Vec] =
+  if manager.mouseState == pressed or manager.mouseState == held:
+    return makeJust(manager.mousePos)
