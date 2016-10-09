@@ -32,7 +32,7 @@ type Game = ref object
   entities: seq[Entity]
 
 proc newGame*(): Game =
-  Game(
+  result = Game(
     input: newInputManager(),
     isRunning: true,
     entities: @[
@@ -69,31 +69,33 @@ proc newGame*(): Game =
         Collider(layer: Layer.floor),
       ]),
       newEntity("PlayerManaBarBG", [
-        Transform(pos: vec(95, 195),
+        Transform(pos: vec(100, 200),
                   size: vec(310, 50)),
         Sprite(color: color(32, 32, 32, 255)),
-      ]),
-      newEntity("PlayerManaBar", [
-        Transform(pos: vec(100, 200),
-                  size: vec(300, 40)),
-        Sprite(color: color(32, 32, 255, 255)),
-        newProgressBar("Player", "PlayerManaBarHeld"),
-      ]),
-      newEntity("PlayerManaBarHeld", [
-        Transform(pos: vec(100, 200),
-                  size: vec(300, 40)),
-        Sprite(color: color(125, 232, 255, 255)),
+      ], children=[
+        newEntity("PlayerManaBar", [
+          Transform(pos: vec(5, 5),
+                    size: vec(300, 40)),
+          Sprite(color: color(32, 32, 255, 255)),
+          newProgressBar("Player", "PlayerManaBarHeld"),
+        ]),
+        newEntity("PlayerManaBarHeld", [
+          Transform(pos: vec(5, 5),
+                    size: vec(300, 40)),
+          Sprite(color: color(125, 232, 255, 255)),
+        ]),
       ]),
       newEntity("EnemyHealthBarBG", [
-        Transform(pos: vec(795, 195),
+        Transform(pos: vec(800, 200),
                   size: vec(310, 50)),
         Sprite(color: color(32, 32, 32, 255)),
-      ]),
-      newEntity("EnemyHealthBar", [
-        Transform(pos: vec(800, 200),
-                  size: vec(300, 40)),
-        Sprite(color: color(255, 32, 32, 255)),
-        newProgressBar("Enemy"),
+      ], children=[
+        newEntity("EnemyHealthBar", [
+          Transform(pos: vec(5, 5),
+                    size: vec(300, 40)),
+          Sprite(color: color(255, 32, 32, 255)),
+          newProgressBar("Enemy"),
+        ]),
       ]),
     ],
   )

@@ -1,5 +1,4 @@
 import
-  component/component,
   entity,
   vec
 

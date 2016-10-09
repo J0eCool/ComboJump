@@ -16,6 +16,6 @@ proc renderSystem*(entities: seq[Entity], renderer: RendererPtr) =
     Transform, t,
     Sprite, s,
   ]):
-    var rect = sdlRect(t.rect)
+    var rect = sdlRect(t.globalRect)
     renderer.setDrawColor(s.color)
     renderer.fillRect(rect)

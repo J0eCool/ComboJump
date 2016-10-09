@@ -2,7 +2,6 @@ import math
 from sdl2 import color
 
 import
-  component/component,
   component/collider,
   component/health,
   component/movement,

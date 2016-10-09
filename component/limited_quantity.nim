@@ -1,4 +1,4 @@
-import component
+import entity
 
 type LimitedQuantity* = ref object of Component
   max*: float

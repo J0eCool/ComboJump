@@ -1,4 +1,4 @@
-import input, component
+import input, entity
 
 type PlayerControl* = ref object of Component
   facing*: int

@@ -1,4 +1,4 @@
-import component, vec
+import entity, vec
 
 type Movement* = ref object of Component
   vel*: Vec

@@ -2,7 +2,6 @@ import math, random
 from sdl2 import color
 
 import
-  component/component,
   component/bullet,
   component/collider,
   component/mana,

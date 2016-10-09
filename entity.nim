@@ -1,21 +1,35 @@
 import macros, sdl2
 
-import component/component, vec
+import vec
 
 type
   Entity* = ref object of RootObj
     id*: int
     name: string
     components: seq[Component]
+    parent*: Entity
+    children: seq[Entity]
+
+  Component* = ref object of RootObj
+    entity*: Entity
+
   Entities* = seq[Entity]
 
 var nextId = 0
-proc newEntity*(name: string, components: openarray[Component]): Entity =
+proc newEntity*(name: string, components: openarray[Component], children: openarray[Entity] = []): Entity =
   new result
   result.id = nextId
   result.name = name
   result.components = @components
+  for c in result.components:
+    c.entity = result
+  result.children = @children
+  for e in result.children:
+    e.parent = result
   nextId += 1
+
+proc C*(c: Component): seq[Component] =
+  @[c]
 
 proc getComponent_impl[T: Component](entity: Entity): T =
   for c in entity.components:
@@ -30,11 +44,17 @@ template withComponent*(entity, t, name: expr, body: stmt): stmt {.immediate.} =
   if name != nil:
     body
 
+proc flatten*(entities: seq[Entity]): seq[Entity] =
+  result = @[]
+  for e in entities:
+    result.add e
+    result &= flatten(e.children)
+
 macro forComponents*(entities, e: expr, components: seq[expr], body: stmt): stmt {.immediate.} =
   assert(components.len mod 2 == 0, "Need a name and identifier for each component")
   result = newNimNode(nnkForStmt)
   result.add(e)
-  result.add(entities)
+  result.add(newCall(!"flatten", entities))
   let forList = newStmtList()
   for i in 0..<components.len div 2:
     let
@@ -51,7 +71,7 @@ macro forComponents*(entities, e: expr, components: seq[expr], body: stmt): stmt
   result.add(forList)
 
 proc firstEntityByName*(entities: seq[Entity], name: string): Entity =
-  for e in entities:
+  for e in entities.flatten:
     if e.name == name:
       return e
 

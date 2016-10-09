@@ -1,6 +1,6 @@
 import sdl2
 
-import component
+import entity
 
 type Sprite* = ref object of Component
   color*: Color

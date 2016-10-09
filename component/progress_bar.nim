@@ -1,4 +1,4 @@
-import component
+import entity
 
 type ProgressBar* = ref object of Component
   target*: string
