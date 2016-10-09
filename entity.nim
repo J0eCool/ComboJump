@@ -2,10 +2,12 @@ import macros, sdl2
 
 import component/component, vec
 
-type Entity* = ref object of RootObj
-  id*: int
-  name: string
-  components: seq[Component]
+type
+  Entity* = ref object of RootObj
+    id*: int
+    name: string
+    components: seq[Component]
+  Entities* = seq[Entity]
 
 var nextId = 0
 proc newEntity*(name: string, components: openarray[Component]): Entity =

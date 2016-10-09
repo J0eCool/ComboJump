@@ -1,11 +1,10 @@
 import
+  component/clickable,
   component/mana,
   component/player_control,
-  component/transform,
   entity,
   event,
   input,
-  option,
   rect
 
 const spells = @[Input.spell1, Input.spell2, Input.spell3]
@@ -37,13 +36,11 @@ proc playerInput*(entities: seq[Entity], input: InputManager): Events =
     if p.facing == 0:
       p.facing = 1
 
-proc clickPlayer*(entities: seq[Entity], input: InputManager): Events =
+proc clickPlayer*(entities: seq[Entity]): Events =
   entities.forComponents e, [
     Mana, m,
-    PlayerControl, p,
-    Transform, t,
+    Clickable, c,
   ]:
-    input.clickHeldPos.bindAs click:
-      if t.rect.contains click:
-        echo "Holding player with " & $m.cur & " mana"
-        m.cur += 0.5
+    if c.held:
+      echo "Holding player with " & $m.cur & " mana"
+      m.cur += 0.5

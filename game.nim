@@ -2,6 +2,7 @@ import math, macros, sdl2
 
 import
   component/bullet,
+  component/clickable,
   component/collider,
   component/health,
   component/mana,
@@ -43,6 +44,7 @@ proc newGame*(): Game =
         PlayerControl(),
         Sprite(color: color(12, 255, 12, 255)),
         Collider(layer: Layer.player),
+        Clickable(),
       ]),
       newEntity("Enemy", [
         Transform(pos: vec(600, 400),
@@ -132,6 +134,7 @@ proc update*(game: var Game, dt: float) =
     game.input = input
 
   game.processAll game.entities:
+    updateClicked(game.input)
     playerInput(game.input)
     playerMovement(dt)
     physics(dt)
@@ -142,5 +145,5 @@ proc update*(game: var Game, dt: float) =
     updateBullets(dt)
     updateBulletDamage()
     playerShoot(dt)
-    clickPlayer(game.input)
+    clickPlayer()
     updateFieryBullets(dt)
