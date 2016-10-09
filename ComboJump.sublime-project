@@ -4,8 +4,12 @@
         "folder_exclude_patterns": ["nimcache"]
     }],
     "build_systems": [{
-        "name": "Nim build",
-        "cmd": ["nim", "c", "-r", "--parallelBuild:0", "--out:out/game", "main.nim"],
+        "name": "Debug build",
+        "cmd": ["nim", "c", "-r", "--parallelBuild:0", "--out:out/game_debug", "main.nim"],
+        "working_dir": "$project_path"
+    }, {
+        "name": "Release build",
+        "cmd": ["nim", "c", "-r", "-d:release", "--parallelBuild:0", "--out:out/game", "main.nim"],
         "working_dir": "$project_path"
     }]
 }
