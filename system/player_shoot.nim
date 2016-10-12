@@ -37,6 +37,7 @@ proc playerShoot*(entities: seq[Entity], dt: float): seq[Event] =
       m.held = min(m.held, m.cur)
       if not p.isSpellHeld and m.held > spell.minCost:
         if m.trySpend(m.held):
-          result = spell.shoot(m.held, t, p.facing)
+          let shotPoint = t.rect.center + t.size * 0.5 * p.facingDir - spell.size.amt(m.held) / 2
+          result = spell.shoot(m.held, shotPoint, p.facingDir)
         m.held = 0
         p.heldSpell = 0

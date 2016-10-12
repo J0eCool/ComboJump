@@ -24,7 +24,7 @@ type
   S = ManaScale[float]
   SV = ManaScale[Vec]
 
-proc amt[T](scale: ManaScale[T], mana: float): T =
+proc amt*[T](scale: ManaScale[T], mana: float): T =
   let exp = if scale.exp == 0: 1.0 else: scale.exp
   scale.base + (mana * scale.scale).pow(exp)
 
@@ -45,7 +45,7 @@ type
     angle: ManaScale[float]
     angleOffset: ManaScale[float]
     randAngPer: ManaScale[float]
-    size: ManaScale[Vec]
+    size*: ManaScale[Vec]
     liveTime: ManaScale[float]
     randomLiveTime: ManaScale[float]
     extraComponents: seq[Component]
@@ -135,9 +135,8 @@ let
     )
 
 
-proc bulletAtDir(gun: Gun, dir: Vec, t: Transform, mana: float, facing: int): Entity =
+proc bulletAtDir(gun: Gun, dir, shotPoint: Vec, mana: float): Entity =
   let
-    shotPoint = t.rect.center + vec(t.size.x * 0.5 * facing.float, 0) - gun.size.amt(mana) / 2
     randSpeed = gun.randSpeed.amt(mana)
     speed = gun.speed.amt(mana) + randomNormal(-randSpeed, randSpeed)
     vel = speed * dir
@@ -157,7 +156,7 @@ proc bulletAtDir(gun: Gun, dir: Vec, t: Transform, mana: float, facing: int): En
 
   return newEntity("Bullet", components)
 
-proc shoot*(gun: Gun, mana: float, t: Transform, facing: int): seq[Event] =
+proc shoot*(gun: Gun, mana: float, shotPoint, dir: Vec): seq[Event] =
   let mana = mana * gun.manaEfficiency
   result = @[]
   for i in 0..<gun.numBullets.amt(mana).int:
@@ -166,9 +165,8 @@ proc shoot*(gun: Gun, mana: float, t: Transform, facing: int): seq[Event] =
         (i.float / (gun.numBullets.amt(mana).float - 1) - 0.5) * gun.angle.amt(mana)
       else:
         0
-    if facing != 1:
-      ang += 180.0
+    ang += dir.angle().radToDeg
     ang += random(-gun.randAngPer.amt(mana), gun.randAngPer.amt(mana))
     ang += gun.angleOffset.amt(mana)
-    let bullet = gun.bulletAtDir(unitVec(ang.degToRad), t, mana, facing)
+    let bullet = gun.bulletAtDir(unitVec(ang.degToRad), shotPoint, mana)
     result.add Event(kind: addEntity, entity: bullet)
