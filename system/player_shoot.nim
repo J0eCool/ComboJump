@@ -18,9 +18,34 @@ import
   util
 
 let
-  normalSpell = createSpell(projectileBase, (damage, 100.0), (fiery, 50.0))
-  spreadSpell = createSpell(projectileBase, (damage, 40.0), (spread, 60.0))
-  homingSpell = createSpell(projectileBase, (damage, 20.0), (spread, 40.0), (homing, 40.0), (fiery, 20.0))
+  normalSpell = createSpell(
+    (projectileBase,
+      @[(damage, 100.0),
+        (fiery, 50.0)]
+    ),
+    (projectileBase,
+      @[(damage, 40.0),
+        (spread, 60.0)]
+    ),
+  )
+  spreadSpell = createSpell(
+    (projectileBase,
+      @[(damage, 40.0),
+        (spread, 60.0)]
+    ),
+    (projectileBase,
+      @[(damage, 40.0),
+        (spread, 60.0)]
+    ),
+  )
+  homingSpell = createSpell(
+    (projectileBase,
+      @[(damage, 20.0),
+        (spread, 40.0),
+        (homing, 40.0),
+        (fiery, 20.0)]
+    ),
+  )
 
   spells = [normalSpell, spreadSpell, homingSpell]
 

@@ -59,73 +59,80 @@ type
   SpellDef* = seq[Stage]
   Spell* = Gun
 
-proc createSpell*(baseGun: Gun, runes: varargs[Rune]): Spell =
-  result.deepCopy baseGun
-
-  proc calcFlatCosts(): array[RuneKind, float] =
-    result[spread] = 40
-    result[homing] = 60
-  const flatRuneCosts = calcFlatCosts()
-  const constCostRunes: set[RuneKind] = {}
-  var rawTotalCost = 0.0
-  var totalCost = 0.0
-  var extraCost = 0.0
-  for r in runes:
-    if not (r.kind in constCostRunes):
-      rawTotalCost += r.cost
-      totalCost += r.cost
-    totalCost += flatRuneCosts[r.kind]
-
-  var scaledCosts: array[RuneKind, float]
-  for r in runes:
+proc createSpell*(def: varargs[Stage]): Spell =
+  var guns: seq[ref Gun] = @[]
+  for stage in def:
     let
-      s = r.cost / rawTotalCost
-    assert scaledCosts[r.kind] == 0, "Duplicate runes aren't allowed"
-    scaledCosts[r.kind] = s
-    extraCost += flatRuneCosts[r.kind] * s
+      baseGun = stage.gun
+      runes = stage.runes
+    var curGun = new(Gun)
+    curGun[].deepCopy baseGun
 
-  let s = (extraCost + 100.0) / 100.0
-  result.manaEfficiency /= s
-  result.manaChargeRate *= sqrt(s)
-  result.minCost *= s / result.manaEfficiency
+    proc calcFlatCosts(): array[RuneKind, float] =
+      result[spread] = 40
+      result[homing] = 60
+    const flatRuneCosts = calcFlatCosts()
+    const constCostRunes: set[RuneKind] = {}
+    var rawTotalCost = 0.0
+    var totalCost = 0.0
+    var extraCost = 0.0
+    for r in runes:
+      if not (r.kind in constCostRunes):
+        rawTotalCost += r.cost
+        totalCost += r.cost
+      totalCost += flatRuneCosts[r.kind]
 
-  if result.extraComponents == nil:
-    result.extraComponents = @[]
-  for r in runes:
-    let c = scaledCosts[r.kind]
-    case r.kind
-    of damage:
-      result.damage.base += 3 * c
-      result.damage.scale += 0.4 * c
-    of spread:
-      result.numBullets.base += 5 * c
-      result.numBullets.scale += 0.2 * c
-      result.randSpeed.base += 500 * c
-      result.speed.base -= 500 * c
-      result.angle.base += 70 * c
-      result.angle.scale += 7 * c
-      result.liveTime.base -= 1.2 * c
-      result.randomLiveTime.base += 0.6 * c
-    of homing:
-      result.speed.base -= 600 * c
-      result.randSpeed.base += 200 * c
-      result.angle.base += 150 * c
-      result.randAngPer.base += 10 * c
-      result.liveTime.scale += 0.06 * c
-      result.extraComponents.add HomingBullet(turnRate: 800 * c)
-    of fiery:
-      result.damage.base += 2 * c
-      result.damage.scale += 0.25 * c
-      result.speed.base -= 100 * c
-      result.speed.scale -= 200 * c
-      result.liveTime.scale += 0.05 * c
-      result.extraComponents.add newFieryBullet(c)
+    var scaledCosts: array[RuneKind, float]
+    for r in runes:
+      let
+        s = r.cost / rawTotalCost
+      assert scaledCosts[r.kind] == 0, "Duplicate runes aren't allowed"
+      scaledCosts[r.kind] = s
+      extraCost += flatRuneCosts[r.kind] * s
 
-  var next: ref Gun
-  new(next)
-  next[].deepCopy result
-  result.nextStage = next
-  dprint result.nextStage != nil, next[].nextStage != nil
+    let s = (extraCost + 100.0) / 100.0
+    curGun[].manaEfficiency /= s
+    curGun[].manaChargeRate *= sqrt(s)
+    curGun[].minCost *= s / curGun[].manaEfficiency
+
+    if curGun[].extraComponents == nil:
+      curGun[].extraComponents = @[]
+    for r in runes:
+      let c = scaledCosts[r.kind]
+      case r.kind
+      of damage:
+        curGun[].damage.base += 3 * c
+        curGun[].damage.scale += 0.4 * c
+      of spread:
+        curGun[].numBullets.base += 5 * c
+        curGun[].numBullets.scale += 0.2 * c
+        curGun[].randSpeed.base += 500 * c
+        curGun[].speed.base -= 500 * c
+        curGun[].angle.base += 70 * c
+        curGun[].angle.scale += 7 * c
+        curGun[].liveTime.base -= 1.2 * c
+        curGun[].randomLiveTime.base += 0.6 * c
+      of homing:
+        curGun[].speed.base -= 600 * c
+        curGun[].randSpeed.base += 200 * c
+        curGun[].angle.base += 150 * c
+        curGun[].randAngPer.base += 10 * c
+        curGun[].liveTime.scale += 0.06 * c
+        curGun[].extraComponents.add HomingBullet(turnRate: 800 * c)
+      of fiery:
+        curGun[].damage.base += 2 * c
+        curGun[].damage.scale += 0.25 * c
+        curGun[].speed.base -= 100 * c
+        curGun[].speed.scale -= 200 * c
+        curGun[].liveTime.scale += 0.05 * c
+        curGun[].extraComponents.add newFieryBullet(c)
+    guns.add curGun
+
+  for i in 0..<guns.len:
+    guns[i][].liveTime.base /= guns.len.float
+    if i + 1 < guns.len:
+      guns[i][].nextStage = guns[i + 1]
+  return guns[0][]
 
 let
   projectileBase* = Gun(
@@ -148,13 +155,10 @@ proc bulletAtDir(gun: Gun, dir, shotPoint: Vec, mana: float): Entity =
     speed = gun.speed.amt(mana) + randomNormal(-randSpeed, randSpeed)
     vel = speed * dir
     liveTime = gun.liveTime.amt(mana) + random(-gun.randomLiveTime.amt(mana), gun.randomLiveTime.amt(mana))
-  var nextStage: ShootProc
+  var nextStageProc: ShootProc
   if gun.nextStage != nil:
-    echo "oh nextStage not nil fancy huh"
-    proc foo(pos, vel: Vec): Events =
-      echo "FOO"
-      gun.nextStage[].shoot(mana, pos, -1 * vel)
-    nextStage = foo
+    nextStageProc = proc(pos, vel: Vec): Events =
+      gun.nextStage[].shoot(mana, pos, vel)
   var components: seq[Component] = @[
     Transform(pos: shotPoint, size: gun.size.amt(mana)),
     Movement(vel: vel),
@@ -163,7 +167,7 @@ proc bulletAtDir(gun: Gun, dir, shotPoint: Vec, mana: float): Entity =
     newBullet(
       damage=gun.damage.amt(mana).int,
       liveTime=liveTime,
-      nextStage=nextStage,
+      nextStage=nextStageProc,
     ),
   ]
   for c in gun.extraComponents:
