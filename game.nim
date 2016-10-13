@@ -12,6 +12,7 @@ import
   component/sprite,
   component/transform,
   system/bullet_hit,
+  system/bullet_update,
   system/collisions,
   system/physics,
   system/player_input,

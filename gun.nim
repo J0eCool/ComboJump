@@ -52,7 +52,7 @@ type
     manaChargeRate*: float
     manaEfficiency: float
     minCost*: float
-    nextStage: Option[ref Gun]
+    nextStage*: ref Gun
 
   Stage* = tuple[gun: Gun, runes: seq[Rune]]
 
@@ -121,6 +121,12 @@ proc createSpell*(baseGun: Gun, runes: varargs[Rune]): Spell =
       result.liveTime.scale += 0.05 * c
       result.extraComponents.add newFieryBullet(c)
 
+  var next: ref Gun
+  new(next)
+  next[].deepCopy result
+  result.nextStage = next
+  dprint result.nextStage != nil, next[].nextStage != nil
+
 let
   projectileBase* = Gun(
     damage: S(base: 1, scale: 0, exp: 1),
@@ -134,6 +140,7 @@ let
     minCost: 5.0,
     )
 
+proc shoot*(gun: Gun, mana: float, shotPoint, dir: Vec): Events;
 
 proc bulletAtDir(gun: Gun, dir, shotPoint: Vec, mana: float): Entity =
   let
@@ -141,6 +148,13 @@ proc bulletAtDir(gun: Gun, dir, shotPoint: Vec, mana: float): Entity =
     speed = gun.speed.amt(mana) + randomNormal(-randSpeed, randSpeed)
     vel = speed * dir
     liveTime = gun.liveTime.amt(mana) + random(-gun.randomLiveTime.amt(mana), gun.randomLiveTime.amt(mana))
+  var nextStage: ShootProc
+  if gun.nextStage != nil:
+    echo "oh nextStage not nil fancy huh"
+    proc foo(pos, vel: Vec): Events =
+      echo "FOO"
+      gun.nextStage[].shoot(mana, pos, -1 * vel)
+    nextStage = foo
   var components: seq[Component] = @[
     Transform(pos: shotPoint, size: gun.size.amt(mana)),
     Movement(vel: vel),
@@ -149,6 +163,7 @@ proc bulletAtDir(gun: Gun, dir, shotPoint: Vec, mana: float): Entity =
     newBullet(
       damage=gun.damage.amt(mana).int,
       liveTime=liveTime,
+      nextStage=nextStage,
     ),
   ]
   for c in gun.extraComponents:

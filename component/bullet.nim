@@ -12,16 +12,21 @@ import
   util,
   vec
 
-type Bullet* = ref object of Component
-  damage*: int
-  liveTime*: float
-  timeLeft*: float
+type
+  Bullet* = ref object of Component
+    damage*: int
+    liveTime*: float
+    timeLeft*: float
+    nextStage*: ShootProc
 
-proc newBullet*(damage: int, liveTime: float): Bullet =
+  ShootProc* = proc(pos, vel: Vec): Events
+
+proc newBullet*(damage: int, liveTime: float, nextStage: ShootProc = nil): Bullet =
   Bullet(
     damage: damage,
     liveTime: liveTime,
     timeLeft: liveTime,
+    nextStage: nextStage,
   )
 
 proc lifePct*(b: Bullet): float =
@@ -30,10 +35,10 @@ proc lifePct*(b: Bullet): float =
 type HomingBullet* = ref object of Component
   turnRate*: float
 
-type FieryBullet = ref object of Component
-  timer, interval: float
-  liveTime: float
-  size: float
+type FieryBullet* = ref object of Component
+  timer*, interval*: float
+  liveTime*: float
+  size*: float
 
 proc newFieryBullet*(mana: float): FieryBullet =
   FieryBullet(
@@ -42,74 +47,3 @@ proc newFieryBullet*(mana: float): FieryBullet =
     liveTime: lerp(mana, 0.1, 0.9),
     size: lerp(mana, 0.4, 0.9),
   )
-
-############################################################
-
-proc findNearestTarget(entities: seq[Entity], pos: Vec): Vec =
-  var
-    target = pos
-    minDist = -1.0
-  forComponents(entities, e, [
-    Transform, t,
-    Health, h,
-  ]):
-    let dist = distance2(pos, t.pos)
-    if minDist < 0.0 or dist < minDist:
-      target = t.pos
-      minDist = dist
-  return target
-
-proc updateHomingBullets(entities: seq[Entity], dt: float) =
-  entities.forComponents e, [
-    Bullet, b,
-    HomingBullet, h,
-    Movement, m,
-    Transform, t,
-  ]:
-    if h.turnRate <= 0:
-      h.turnRate = random(350.0, 500.0)
-    let
-      target = findNearestTarget(entities, t.pos)
-      delta = target - t.pos 
-      s = sign(m.vel.cross(delta)).float
-      baseTurn = s * h.turnRate.degToRad * dt
-      turn = lerp((1 - b.lifePct) * 5, 0, baseTurn)
-    m.vel = m.vel.rotate(turn)
-
-proc updateFieryBullets*(entities: seq[Entity], dt: float): seq[Event] =
-  result = @[]
-  entities.forComponents e, [
-    FieryBullet, f,
-    Movement, m,
-    Transform, t,
-  ]:
-    f.timer += dt
-    assert f.interval > 0
-    while f.timer >= f.interval:
-      f.timer -= f.interval
-      let
-        vel = m.vel.rotate(random(-PI/3, PI/3) - PI) * 0.15
-        flare = newEntity("Flare", [
-          Transform(
-            pos: t.pos + randomVec(t.size.length),
-            size: t.size * f.size,
-          ),
-          Sprite(color: color(255, 128, 32, 255)),
-          Collider(),
-          Movement(vel: vel),
-          newBullet(damage=0, liveTime=f.liveTime),
-        ])
-      result.add Event(kind: addEntity, entity: flare)
-
-proc updateBullets*(entities: seq[Entity], dt: float): seq[Event] =
-  result = @[]
-  forComponents(entities, e, [
-    Bullet, b,
-    Collider, c,
-    Movement, m,
-  ]):
-    b.timeLeft -= dt
-    if b.timeLeft <= 0.0 or c.collisions.len > 0:
-      result.add(Event(kind: removeEntity, entity: e))
-
-  entities.updateHomingBullets dt
