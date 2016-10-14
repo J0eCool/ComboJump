@@ -1,3 +1,4 @@
 nimcache/*
 out/*
 *.sublime-workspace
+profile_results.txt

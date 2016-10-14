@@ -5,11 +5,22 @@
     }],
     "build_systems": [{
         "name": "Debug build",
-        "cmd": ["nim", "c", "-r", "--parallelBuild:0", "--out:out/game_debug", "main.nim"],
+        "cmd": ["nim", "c", "-r",
+            "-d:debug", "--parallelBuild:0",
+            "--out:out/game_debug", "main.nim"],
         "working_dir": "$project_path"
     }, {
         "name": "Release build",
-        "cmd": ["nim", "c", "-r", "-d:release", "--parallelBuild:0", "--out:out/game", "main.nim"],
+        "cmd": ["nim", "c", "-r",
+            "-d:release", "--parallelBuild:0",
+            "--out:out/game", "main.nim"],
+        "working_dir": "$project_path"
+    }, {
+        "name": "Profile build",
+        "cmd": ["nim", "c", "-r",
+            "-d:release", "--parallelBuild:0",
+            "--profiler:on", "--stackTrace:on", "-d:Profile=1",
+            "--out:out/game", "main.nim"],
         "working_dir": "$project_path"
     }]
 }

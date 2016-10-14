@@ -1,5 +1,9 @@
 import math, macros, sdl2
 
+const Profile {.intdefine.}: int = 0
+when Profile != 0:
+  import nimprof
+
 import
   component/bullet,
   component/clickable,
