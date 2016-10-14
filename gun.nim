@@ -128,10 +128,13 @@ proc createSpell*(def: varargs[Stage]): Spell =
         curGun[].extraComponents.add newFieryBullet(c)
     guns.add curGun
 
+  let life = 1.0 + (guns.len.float - 1) * 0.5
   for i in 0..<guns.len:
-    guns[i][].liveTime.base /= guns.len.float
+    let gun = guns[i]
+    gun[].liveTime.base /= life
+    gun[].liveTime.scale /= life
     if i + 1 < guns.len:
-      guns[i][].nextStage = guns[i + 1]
+      gun[].nextStage = guns[i + 1]
   return guns[0][]
 
 let
