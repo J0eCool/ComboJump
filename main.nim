@@ -1,13 +1,19 @@
-import sdl2,
+import
+  sdl2,
+  sdl2.ttf
 
-       game,
-       input,
-       util,
-       vec
+import
+  game,
+  input,
+  util,
+  vec
 
 proc main =
   sdl2.init(INIT_VIDEO or INIT_TIMER or INIT_EVENTS)
   defer: sdl2.quit()
+
+  ttf.ttfInit()
+  defer: ttf.ttfQuit()
 
   let window = createWindow(
     title = "2d tututuru",

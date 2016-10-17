@@ -14,6 +14,7 @@ import
   component/player_control,
   component/progress_bar,
   component/sprite,
+  component/text,
   component/transform,
   system/bullet_hit,
   system/bullet_update,
@@ -33,12 +34,14 @@ import
 
 type Game = ref object
   input: InputManager
+  fonts: FontManager
   isRunning*: bool
   entities: seq[Entity]
 
 proc newGame*(): Game =
   result = Game(
     input: newInputManager(),
+    fonts: newFontManager(),
     isRunning: true,
     entities: @[
       newEntity("Player", [
@@ -102,6 +105,11 @@ proc newGame*(): Game =
           newProgressBar("Enemy"),
         ]),
       ]),
+      newEntity("TestText", [
+        Transform(pos: vec(500, 200),
+                  size: vec(0)),
+        newText("Hello world?! 10/20  :!@#$%^&*(){}[]"),
+      ]),
     ],
   )
 
@@ -127,7 +135,7 @@ proc draw*(render: RendererPtr, game: Game) =
   render.setDrawColor(110, 132, 174)
   render.clear()
 
-  game.entities.renderSystem(render)
+  game.entities.renderSystem(render, game.fonts)
 
   render.present()
 
