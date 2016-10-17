@@ -85,7 +85,7 @@ proc newGame*(): Game =
           newProgressBar("Player", "PlayerManaBarHeld"),
         ]),
         newEntity("PlayerManaBarHeld", [
-          Transform(pos: vec(5, 5),
+          Transform(pos: vec(5, 15),
                     size: vec(300, 40)),
           Sprite(color: color(125, 232, 255, 255)),
         ]),
@@ -102,7 +102,7 @@ proc newGame*(): Game =
           newProgressBar("Enemy"),
         ]),
       ]),
-    ],
+    ].flatten,
   )
 
 proc process(game: var Game, events: Events) =

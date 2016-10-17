@@ -5,6 +5,7 @@ type LimitedQuantity* = ref object of Component
   cur*: float
   regenPerSecond*: float
   held*: float
+genComponentType(LimitedQuantity)
 
 proc init*(limited: LimitedQuantity, max: int) =
   limited.max = max.float

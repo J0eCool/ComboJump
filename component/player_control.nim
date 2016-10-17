@@ -11,6 +11,7 @@ type PlayerControl* = ref object of Component
   jumpPressed*: bool
   heldSpell*: int
   isSpellHeld*: bool
+genComponentType(PlayerControl)
 
 proc isCasting*(control: PlayerControl): bool =
   control.heldSpell != 0

@@ -15,13 +15,13 @@ proc collidesWith(a, b: Rect): bool =
 
 proc checkCollisisons*(entities: seq[Entity]): Events =
   forComponents(entities, a, [
-    Transform, a_t,
     Collider, a_c,
+    Transform, a_t,
   ]):
     a_c.collisions = @[]
     forComponents(entities, b, [
-      Transform, b_t,
       Collider, b_c,
+      Transform, b_t,
     ]):
       if a != b and a_c.layer.canCollideWith(b_c.layer) and a_t.rect.collidesWith(b_t.rect):
         a_c.collisions.add(b)

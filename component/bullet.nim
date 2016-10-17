@@ -20,6 +20,7 @@ type
     nextStage*: ShootProc
 
   ShootProc* = proc(pos, vel: Vec): Events
+genComponentType(Bullet)
 
 proc newBullet*(damage: int, liveTime: float, nextStage: ShootProc = nil): Bullet =
   Bullet(
@@ -34,11 +35,13 @@ proc lifePct*(b: Bullet): float =
 
 type HomingBullet* = ref object of Component
   turnRate*: float
+genComponentType(HomingBullet)
 
 type FieryBullet* = ref object of Component
   timer*, interval*: float
   liveTime*: float
   size*: float
+genComponentType(FieryBullet)
 
 proc newFieryBullet*(mana: float): FieryBullet =
   FieryBullet(

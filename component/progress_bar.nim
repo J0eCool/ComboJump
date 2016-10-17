@@ -4,6 +4,7 @@ type ProgressBar* = ref object of Component
   target*: string
   heldTarget*: string
   baseSize*: float
+genComponentType(ProgressBar)
 
 proc newProgressBar*(target: string, heldTarget = ""): ProgressBar =
   new result

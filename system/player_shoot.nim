@@ -37,6 +37,12 @@ let
       @[(damage, 40.0),
         (spread, 60.0)]
     ),
+    (projectileBase,
+      @[(damage, 40.0),
+        (spread, 60.0),
+        (homing, 40.0),
+        (fiery, 30.0),]
+    ),
   )
   homingSpell = createSpell(
     (projectileBase,

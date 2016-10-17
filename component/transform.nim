@@ -2,6 +2,7 @@ import entity, rect, vec
 
 type Transform* = ref object of Component
   pos*, size*: Vec
+genComponentType(Transform)
 
 proc rect*(t: Transform): Rect =
   rect(t.pos, t.size)

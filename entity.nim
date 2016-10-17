@@ -1,4 +1,7 @@
-import macros, sdl2
+import
+  macros,
+  tables,
+  typetraits
 
 import vec
 
@@ -6,7 +9,7 @@ type
   Entity* = ref object of RootObj
     id*: int
     name: string
-    components: seq[Component]
+    components: Table[int, Component]
     parent*: Entity
     children: seq[Entity]
 
@@ -15,26 +18,42 @@ type
 
   Entities* = seq[Entity]
 
-var nextId = 0
+var componentTypeId = 0
+template genComponentType*(T: expr) =
+  let internal: int = componentTypeId
+  method tableKey*(x: T): int =
+    internal
+  proc tableKey*(x: typedesc[T]): int =
+    internal
+  method dynamicName*(x: T): string =
+    T.name
+  componentTypeId += 1
+
+genComponentType(Component)
+
+var nextEntityId = 0
 proc newEntity*(name: string, components: openarray[Component], children: openarray[Entity] = []): Entity =
   new result
-  result.id = nextId
+  result.id = nextEntityId
   result.name = name
-  result.components = @components
-  for c in result.components:
+  result.components = initTable[int, Component](8)
+  for c in components:
+    let ctype = c.tableKey
+    assert(ctype > 0)
+    assert (not result.components.hasKey(ctype))
+    result.components[ctype] = c
     c.entity = result
   result.children = @children
   for e in result.children:
     e.parent = result
-  nextId += 1
+  nextEntityId += 1
 
 proc C*(c: Component): seq[Component] =
   @[c]
 
 proc getComponent_impl[T: Component](entity: Entity): T =
-  for c in entity.components:
-    if c of T:
-      return T(c)
+  if entity.components.hasKey(tableKey(T)):
+    return T(entity.components[tableKey(T)])
 
 template getComponent*(entity, t: expr): expr =
   getComponent_impl[t](entity)
@@ -54,7 +73,7 @@ macro forComponents*(entities, e: expr, components: seq[expr], body: stmt): stmt
   assert(components.len mod 2 == 0, "Need a name and identifier for each component")
   result = newNimNode(nnkForStmt)
   result.add(e)
-  result.add(newCall(!"flatten", entities))
+  result.add(entities)
   let forList = newStmtList()
   for i in 0..<components.len div 2:
     let
