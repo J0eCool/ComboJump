@@ -34,14 +34,14 @@ import
 
 type Game = ref object
   input: InputManager
-  fonts: FontManager
+  resources: ResourceManager
   isRunning*: bool
   entities: seq[Entity]
 
 proc newGame*(): Game =
   result = Game(
     input: newInputManager(),
-    fonts: newFontManager(),
+    resources: newResourceManager(),
     isRunning: true,
     entities: @[
       newEntity("Player", [
@@ -131,11 +131,13 @@ macro processAll(game, entities: expr, body: untyped): stmt =
 
 proc draw*(render: RendererPtr, game: Game) =
   game.entities.updateProgressBars()
+  
+  game.entities.loadResources(game.resources)
 
   render.setDrawColor(110, 132, 174)
   render.clear()
 
-  game.entities.renderSystem(render, game.fonts)
+  game.entities.renderSystem(render)
 
   render.present()
 

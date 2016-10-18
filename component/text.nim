@@ -8,11 +8,17 @@ type Text* = ref object of Component
   text: string
   color*: Color
   texture*: TexturePtr
+  fontName*: string
+  font*: FontPtr
 
-proc newText*(text: string, color: Color = color(255, 255, 255, 255)): Text =
+proc newText*(text: string,
+              color = color(255, 255, 255, 255),
+              fontName = "nevis.ttf",
+              ): Text =
   new result
   result.text = text
   result.color = color
+  result.fontName = fontName
 
 proc getText*(text: Text): string =
   text.text
