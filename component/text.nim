@@ -23,6 +23,6 @@ proc newText*(text: string,
 proc getText*(text: Text): string =
   text.text
 
-proc setText*(text: var Text, t: string) =
+proc setText*(text: Text, t: string) =
   text.texture = nil
   text.text = t

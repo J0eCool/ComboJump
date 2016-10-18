@@ -85,7 +85,14 @@ proc newGame*(): Game =
           Transform(pos: vec(5, 5),
                     size: vec(300, 40)),
           Sprite(color: color(32, 32, 255, 255)),
-          newProgressBar("Player", "PlayerManaBarHeld"),
+          newProgressBar("Player",
+                         heldTarget="PlayerManaBarHeld",
+                         textEntity="PlayerManaBarText"),
+        ]),
+        newEntity("PlayerManaBarText", [
+          Transform(pos: vec(50, 10),
+                    size: vec(0)),
+          newText("999/999"),
         ]),
         newEntity("PlayerManaBarHeld", [
           Transform(pos: vec(5, 5),
@@ -104,11 +111,6 @@ proc newGame*(): Game =
           Sprite(color: color(255, 32, 32, 255)),
           newProgressBar("Enemy"),
         ]),
-      ]),
-      newEntity("TestText", [
-        Transform(pos: vec(500, 200),
-                  size: vec(0)),
-        newText("Hello world?! 10/20  :!@#$%^&*(){}[]"),
       ]),
     ],
   )
@@ -131,7 +133,7 @@ macro processAll(game, entities: expr, body: untyped): stmt =
 
 proc draw*(render: RendererPtr, game: Game) =
   game.entities.updateProgressBars()
-  
+
   game.entities.loadResources(game.resources)
 
   render.setDrawColor(110, 132, 174)
