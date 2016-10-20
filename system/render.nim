@@ -8,6 +8,7 @@ import
   component/sprite,
   component/text,
   component/transform,
+  camera,
   entity,
   rect,
   vec
@@ -35,12 +36,12 @@ proc loadResources*(entities: Entities, resources: var ResourceManager) =
     if text.font == nil:
       text.font = resources.loadFont text.fontName
 
-proc renderSystem*(entities: seq[Entity], renderer: RendererPtr) =
+proc renderSystem*(entities: seq[Entity], renderer: RendererPtr, camera: Camera) =
   entities.forComponents e, [
     Transform, t,
     Sprite, s,
   ]:
-    var rect = sdlRect(t.globalRect)
+    var rect = sdlRect(t.globalRect + camera.offset)
     renderer.setDrawColor(s.color)
     renderer.fillRect(rect)
 

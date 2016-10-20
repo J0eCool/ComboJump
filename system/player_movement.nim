@@ -37,6 +37,5 @@ proc playerMovement*(entities: seq[Entity], dt: float): Events =
     if m.vel.y < 0 and p.jumpReleased:
       m.vel.y *= 0.25
 
-    t.pos.x = clamp(t.pos.x, 0, 1200 - t.size.x)
     if t.pos.y >= 800 or p.jumpPressed and m.onGround:
       m.vel.y = jumpSpeed

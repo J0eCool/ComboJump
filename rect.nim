@@ -31,3 +31,11 @@ proc contains*(rect: Rect, point: Vec): bool =
     point.y >= rect.top and
     point.y <= rect.bottom
   )
+
+proc pos*(rect: Rect): Vec =
+  vec(rect.x, rect.y)
+proc size*(rect: Rect): Vec =
+  vec(rect.w, rect.h)
+
+proc `+`*(rect: Rect, delta: Vec): Rect =
+  rect(rect.pos + delta, rect.size)

@@ -15,14 +15,16 @@ proc main =
   ttf.ttfInit()
   defer: ttf.ttfQuit()
 
-  let window = createWindow(
-    title = "2d tututuru",
-    x = SDL_WINDOWPOS_CENTERED,
-    y = SDL_WINDOWPOS_CENTERED,
-    w = 1200,
-    h = 900,
-    flags = SDL_WINDOW_SHOWN,
-  )
+  let
+    screenSize = vec(1200, 900)
+    window = createWindow(
+      title = "2d tututuru",
+      x = SDL_WINDOWPOS_CENTERED,
+      y = SDL_WINDOWPOS_CENTERED,
+      w = screenSize.x.cint,
+      h = screenSize.y.cint,
+      flags = SDL_WINDOW_SHOWN,
+    )
   defer: window.destroy()
 
   let renderer = window.createRenderer(
@@ -32,7 +34,7 @@ proc main =
   defer: renderer.destroy()
 
   var dt = 1 / 60
-  var game = newGame()
+  var game = newGame(screenSize)
   while game.isRunning:
     game.update(dt)
 

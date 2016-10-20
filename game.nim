@@ -6,6 +6,7 @@ when Profile != 0:
 
 import
   component/bullet,
+  component/camera_target,
   component/clickable,
   component/collider,
   component/health,
@@ -26,6 +27,7 @@ import
   system/quantity_regen,
   system/render,
   system/update_progress_bar,
+  camera,
   entity,
   event,
   input,
@@ -37,8 +39,9 @@ type Game = ref object
   resources: ResourceManager
   isRunning*: bool
   entities: seq[Entity]
+  camera: Camera
 
-proc newGame*(): Game =
+proc newGame*(screenSize: Vec): Game =
   result = Game(
     input: newInputManager(),
     resources: newResourceManager(),
@@ -53,6 +56,7 @@ proc newGame*(): Game =
         Sprite(color: color(12, 255, 12, 255)),
         Collider(layer: Layer.player),
         Clickable(),
+        CameraTarget(),
       ]),
       newEntity("Enemy", [
         Transform(pos: vec(600, 400),
@@ -71,8 +75,32 @@ proc newGame*(): Game =
         Collider(layer: Layer.enemy),
       ]),
       newEntity("Ground", [
-        Transform(pos: vec(150, 800),
-                  size: vec(900, 35)),
+        Transform(pos: vec(50, 800),
+                  size: vec(2900, 35)),
+        Sprite(color: color(192, 192, 192, 255)),
+        Collider(layer: Layer.floor),
+      ]),
+      newEntity("LeftWall", [
+        Transform(pos: vec(50, 465),
+                  size: vec(35, 350)),
+        Sprite(color: color(192, 192, 192, 255)),
+        Collider(layer: Layer.floor),
+      ]),
+      newEntity("RightWall", [
+        Transform(pos: vec(2865, 465),
+                  size: vec(35, 350)),
+        Sprite(color: color(192, 192, 192, 255)),
+        Collider(layer: Layer.floor),
+      ]),
+      newEntity("Platform", [
+        Transform(pos: vec(1200, 600),
+                  size: vec(350, 35)),
+        Sprite(color: color(192, 192, 192, 255)),
+        Collider(layer: Layer.floor),
+      ]),
+      newEntity("RightPlatform", [
+        Transform(pos: vec(2200, 600),
+                  size: vec(350, 35)),
         Sprite(color: color(192, 192, 192, 255)),
         Collider(layer: Layer.floor),
       ]),
@@ -114,6 +142,7 @@ proc newGame*(): Game =
       ]),
     ],
   )
+  result.camera.screenSize = screenSize
 
 proc process(game: var Game, events: Events) =
   for event in events:
@@ -139,7 +168,7 @@ proc draw*(render: RendererPtr, game: Game) =
   render.setDrawColor(110, 132, 174)
   render.clear()
 
-  game.entities.renderSystem(render)
+  game.entities.renderSystem(render, game.camera)
 
   render.present()
 
@@ -149,7 +178,7 @@ proc update*(game: var Game, dt: float) =
     game.isRunning = false
   if game.input.isPressed(Input.restart):
     let input = game.input
-    game = newGame()
+    game = newGame(game.camera.screenSize)
     game.input = input
 
   game.processAll game.entities:
@@ -158,6 +187,7 @@ proc update*(game: var Game, dt: float) =
     playerMovement(dt)
     physics(dt)
     checkCollisisons()
+    updateCamera(game.camera)
 
     regenLimitedQuantities(dt)
 
