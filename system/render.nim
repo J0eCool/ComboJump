@@ -55,7 +55,7 @@ proc renderSystem*(entities: seq[Entity], renderer: RendererPtr, camera: Camera)
       t.size = vec(surface.w, surface.h)
     renderer.setDrawColor(text.color)
     var
-      dstrect = t.globalRect.sdlRect
+      dstrect = sdlRect(t.globalRect + camera.offset)
       srcrect = dstrect
     srcrect.x = 0
     srcrect.y = 0
