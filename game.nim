@@ -9,6 +9,7 @@ import
   component/camera_target,
   component/clickable,
   component/collider,
+  component/enemy_movement,
   component/health,
   component/mana,
   component/movement,
@@ -65,8 +66,9 @@ proc newGame*(screenSize: Vec): Game =
         newHealth(20),
         Sprite(color: color(155, 16, 24, 255)),
         Collider(layer: Layer.enemy),
+        EnemyMovement(targetRange: 400, moveSpeed: 200),
       ]),
-      newEntity("Enemy", [
+      newEntity("Enemy2", [
         Transform(pos: vec(1000, 500),
                   size: vec(60, 60)),
         Movement(usesGravity: true),
@@ -183,16 +185,21 @@ proc update*(game: var Game, dt: float) =
 
   game.processAll game.entities:
     updateClicked(game.input)
+
     playerInput(game.input)
     playerMovement(dt)
+
     physics(dt)
     checkCollisisons()
     updateCamera(game.camera)
-
+    
     regenLimitedQuantities(dt)
 
     updateBullets(dt)
     updateBulletDamage()
+    updateFieryBullets(dt)
+    
     playerShoot(dt)
     clickPlayer()
-    updateFieryBullets(dt)
+
+    updateEnemyMovement(dt)

@@ -75,5 +75,18 @@ proc firstEntityByName*(entities: seq[Entity], name: string): Entity =
     if e.name == name:
       return e
 
+proc firstComponent_impl[T](entities: Entities): T =
+  for e in entities.flatten:
+    let c = e.getComponent(T)
+    if c != nil:
+      return c
+  return nil
+
+template firstComponent*(entities: Entities, t: expr): expr =
+  firstComponent_impl[t](entities)
+
 proc `$`*(e: Entity): string =
-  e.name & " (id=" & $e.id & ")"
+  if e != nil:
+    e.name & " (id=" & $e.id & ")"
+  else:
+    "(nil entity)"

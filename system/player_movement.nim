@@ -12,7 +12,7 @@ import
 
 
 const
-  speed = 320.0
+  speed = 380.0
   accelTime = 0.1
   accel = speed / accelTime
   jumpHeight = 250.0
