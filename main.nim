@@ -4,40 +4,11 @@ import
 
 import
   game,
+  program,
   input,
   util,
   vec
 
-proc main =
-  sdl2.init(INIT_VIDEO or INIT_TIMER or INIT_EVENTS)
-  defer: sdl2.quit()
-
-  ttf.ttfInit()
-  defer: ttf.ttfQuit()
-
-  let
-    screenSize = vec(1200, 900)
-    window = createWindow(
-      title = "2d tututuru",
-      x = SDL_WINDOWPOS_CENTERED,
-      y = SDL_WINDOWPOS_CENTERED,
-      w = screenSize.x.cint,
-      h = screenSize.y.cint,
-      flags = SDL_WINDOW_SHOWN,
-    )
-  defer: window.destroy()
-
-  let renderer = window.createRenderer(
-    index = -1,
-    flags = Renderer_Accelerated or Renderer_PresentVsync,
-  )
-  defer: renderer.destroy()
-
-  var dt = 1 / 60
-  var game = newGame(screenSize)
-  while game.isRunning:
-    game.update(dt)
-
-    renderer.draw(game)
-
-main()
+let screenSize = vec(1200, 900)
+var g = newGame(screenSize)
+main(g, screenSize)

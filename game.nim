@@ -32,22 +32,28 @@ import
   entity,
   event,
   input,
+  program,
   vec,
   util
 
-type Game = ref object
+type Game* = ref object of Program
   input: InputManager
   resources: ResourceManager
-  isRunning*: bool
   entities: seq[Entity]
   camera: Camera
 
-proc newGame*(screenSize: Vec): Game =
+proc init(game: Game)
+
+proc newGame*(screenSize: Vec): Game {.procvar.} =
   result = Game(
     input: newInputManager(),
     resources: newResourceManager(),
-    isRunning: true,
-    entities: @[
+  )
+  result.camera.screenSize = screenSize
+  result.init()
+
+proc init(game: Game) =
+    game.entities = @[
       newEntity("Player", [
         Transform(pos: vec(180, 500),
                   size: vec(50, 75)),
@@ -142,11 +148,9 @@ proc newGame*(screenSize: Vec): Game =
           newProgressBar("Enemy"),
         ]),
       ]),
-    ],
-  )
-  result.camera.screenSize = screenSize
+    ]
 
-proc process(game: var Game, events: Events) =
+proc process(game: Game, events: Events) =
   for event in events:
     case event.kind
     of addEntity:
@@ -162,7 +166,7 @@ macro processAll(game, entities: expr, body: untyped): stmt =
       callNode.add node[i]
     result.add(newCall(!"process", game, callNode))
 
-proc draw*(render: RendererPtr, game: Game) =
+method draw*(render: RendererPtr, game: Game) =
   game.entities.updateProgressBars()
 
   game.entities.loadResources(game.resources)
@@ -174,13 +178,13 @@ proc draw*(render: RendererPtr, game: Game) =
 
   render.present()
 
-proc update*(game: var Game, dt: float) =
+method update*(game: Game, dt: float) =
   game.input.update()
   if game.input.isPressed(Input.exit):
-    game.isRunning = false
+    game.shouldExit = true
   if game.input.isPressed(Input.restart):
     let input = game.input
-    game = newGame(game.camera.screenSize)
+    game.init()
     game.input = input
 
   game.processAll game.entities:
@@ -203,3 +207,6 @@ proc update*(game: var Game, dt: float) =
     clickPlayer()
 
     updateEnemyMovement(dt)
+
+let screenSize = vec(1200, 900)
+main(newGame(screenSize), screenSize)
