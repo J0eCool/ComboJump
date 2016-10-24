@@ -37,118 +37,116 @@ import
   util
 
 type Game* = ref object of Program
-  input: InputManager
   resources: ResourceManager
   entities: seq[Entity]
   camera: Camera
 
-proc init(game: Game)
+proc loadEntities(game: Game)
 
 proc newGame*(screenSize: Vec): Game {.procvar.} =
-  result = Game(
-    input: newInputManager(),
-    resources: newResourceManager(),
-  )
+  new result
+  result.initProgram()
+  result.resources = newResourceManager()
   result.camera.screenSize = screenSize
-  result.init()
+  result.loadEntities()
 
-proc init(game: Game) =
-    game.entities = @[
-      newEntity("Player", [
-        Transform(pos: vec(180, 500),
-                  size: vec(50, 75)),
-        Movement(usesGravity: true),
-        newMana(100),
-        PlayerControl(),
-        Sprite(color: color(12, 255, 12, 255)),
-        Collider(layer: Layer.player),
-        Clickable(),
-        CameraTarget(),
+proc loadEntities(game: Game) =
+  game.entities = @[
+    newEntity("Player", [
+      Transform(pos: vec(180, 500),
+                size: vec(50, 75)),
+      Movement(usesGravity: true),
+      newMana(100),
+      PlayerControl(),
+      Sprite(color: color(12, 255, 12, 255)),
+      Collider(layer: Layer.player),
+      Clickable(),
+      CameraTarget(),
+    ]),
+    newEntity("Enemy", [
+      Transform(pos: vec(600, 400),
+                size: vec(60, 60)),
+      Movement(usesGravity: true),
+      newHealth(20),
+      Sprite(color: color(155, 16, 24, 255)),
+      Collider(layer: Layer.enemy),
+      EnemyMovement(targetRange: 400, moveSpeed: 200),
+    ]),
+    newEntity("Enemy2", [
+      Transform(pos: vec(1000, 500),
+                size: vec(60, 60)),
+      Movement(usesGravity: true),
+      newHealth(20),
+      Sprite(color: color(155, 16, 24, 255)),
+      Collider(layer: Layer.enemy),
+    ]),
+    newEntity("Ground", [
+      Transform(pos: vec(50, 800),
+                size: vec(2900, 35)),
+      Sprite(color: color(192, 192, 192, 255)),
+      Collider(layer: Layer.floor),
+    ]),
+    newEntity("LeftWall", [
+      Transform(pos: vec(50, 465),
+                size: vec(35, 350)),
+      Sprite(color: color(192, 192, 192, 255)),
+      Collider(layer: Layer.floor),
+    ]),
+    newEntity("RightWall", [
+      Transform(pos: vec(2865, 465),
+                size: vec(35, 350)),
+      Sprite(color: color(192, 192, 192, 255)),
+      Collider(layer: Layer.floor),
+    ]),
+    newEntity("Platform", [
+      Transform(pos: vec(1200, 600),
+                size: vec(350, 35)),
+      Sprite(color: color(192, 192, 192, 255)),
+      Collider(layer: Layer.floor),
+    ]),
+    newEntity("RightPlatform", [
+      Transform(pos: vec(2200, 600),
+                size: vec(350, 35)),
+      Sprite(color: color(192, 192, 192, 255)),
+      Collider(layer: Layer.floor),
+    ]),
+    newEntity("PlayerManaBarBG", [
+      Transform(pos: vec(100, 200),
+                size: vec(310, 50)),
+      Sprite(color: color(32, 32, 32, 255)),
+    ], children=[
+      newEntity("PlayerManaBar", [
+        Transform(pos: vec(5, 5),
+                  size: vec(300, 40)),
+        Sprite(color: color(32, 32, 255, 255)),
+        newProgressBar("Player",
+                       heldTarget="PlayerManaBarHeld",
+                       textEntity="PlayerManaBarText"),
       ]),
-      newEntity("Enemy", [
-        Transform(pos: vec(600, 400),
-                  size: vec(60, 60)),
-        Movement(usesGravity: true),
-        newHealth(20),
-        Sprite(color: color(155, 16, 24, 255)),
-        Collider(layer: Layer.enemy),
-        EnemyMovement(targetRange: 400, moveSpeed: 200),
+      newEntity("PlayerManaBarText", [
+        Transform(pos: vec(50, 10),
+                  size: vec(0)),
+        newText("999/999"),
       ]),
-      newEntity("Enemy2", [
-        Transform(pos: vec(1000, 500),
-                  size: vec(60, 60)),
-        Movement(usesGravity: true),
-        newHealth(20),
-        Sprite(color: color(155, 16, 24, 255)),
-        Collider(layer: Layer.enemy),
+      newEntity("PlayerManaBarHeld", [
+        Transform(pos: vec(5, 5),
+                  size: vec(300, 40)),
+        Sprite(color: color(125, 232, 255, 255)),
       ]),
-      newEntity("Ground", [
-        Transform(pos: vec(50, 800),
-                  size: vec(2900, 35)),
-        Sprite(color: color(192, 192, 192, 255)),
-        Collider(layer: Layer.floor),
+    ]),
+    newEntity("EnemyHealthBarBG", [
+      Transform(pos: vec(800, 200),
+                size: vec(310, 50)),
+      Sprite(color: color(32, 32, 32, 255)),
+    ], children=[
+      newEntity("EnemyHealthBar", [
+        Transform(pos: vec(5, 5),
+                  size: vec(300, 40)),
+        Sprite(color: color(255, 32, 32, 255)),
+        newProgressBar("Enemy"),
       ]),
-      newEntity("LeftWall", [
-        Transform(pos: vec(50, 465),
-                  size: vec(35, 350)),
-        Sprite(color: color(192, 192, 192, 255)),
-        Collider(layer: Layer.floor),
-      ]),
-      newEntity("RightWall", [
-        Transform(pos: vec(2865, 465),
-                  size: vec(35, 350)),
-        Sprite(color: color(192, 192, 192, 255)),
-        Collider(layer: Layer.floor),
-      ]),
-      newEntity("Platform", [
-        Transform(pos: vec(1200, 600),
-                  size: vec(350, 35)),
-        Sprite(color: color(192, 192, 192, 255)),
-        Collider(layer: Layer.floor),
-      ]),
-      newEntity("RightPlatform", [
-        Transform(pos: vec(2200, 600),
-                  size: vec(350, 35)),
-        Sprite(color: color(192, 192, 192, 255)),
-        Collider(layer: Layer.floor),
-      ]),
-      newEntity("PlayerManaBarBG", [
-        Transform(pos: vec(100, 200),
-                  size: vec(310, 50)),
-        Sprite(color: color(32, 32, 32, 255)),
-      ], children=[
-        newEntity("PlayerManaBar", [
-          Transform(pos: vec(5, 5),
-                    size: vec(300, 40)),
-          Sprite(color: color(32, 32, 255, 255)),
-          newProgressBar("Player",
-                         heldTarget="PlayerManaBarHeld",
-                         textEntity="PlayerManaBarText"),
-        ]),
-        newEntity("PlayerManaBarText", [
-          Transform(pos: vec(50, 10),
-                    size: vec(0)),
-          newText("999/999"),
-        ]),
-        newEntity("PlayerManaBarHeld", [
-          Transform(pos: vec(5, 5),
-                    size: vec(300, 40)),
-          Sprite(color: color(125, 232, 255, 255)),
-        ]),
-      ]),
-      newEntity("EnemyHealthBarBG", [
-        Transform(pos: vec(800, 200),
-                  size: vec(310, 50)),
-        Sprite(color: color(32, 32, 32, 255)),
-      ], children=[
-        newEntity("EnemyHealthBar", [
-          Transform(pos: vec(5, 5),
-                    size: vec(300, 40)),
-          Sprite(color: color(255, 32, 32, 255)),
-          newProgressBar("Enemy"),
-        ]),
-      ]),
-    ]
+    ]),
+  ]
 
 proc process(game: Game, events: Events) =
   for event in events:
@@ -171,20 +169,12 @@ method draw*(render: RendererPtr, game: Game) =
 
   game.entities.loadResources(game.resources)
 
-  render.setDrawColor(110, 132, 174)
-  render.clear()
-
   game.entities.renderSystem(render, game.camera)
 
-  render.present()
-
 method update*(game: Game, dt: float) =
-  game.input.update()
-  if game.input.isPressed(Input.exit):
-    game.shouldExit = true
   if game.input.isPressed(Input.restart):
     let input = game.input
-    game.init()
+    game.loadEntities()
     game.input = input
 
   game.processAll game.entities:
@@ -208,5 +198,6 @@ method update*(game: Game, dt: float) =
 
     updateEnemyMovement(dt)
 
-let screenSize = vec(1200, 900)
-main(newGame(screenSize), screenSize)
+when isMainModule:
+  let screenSize = vec(1200, 900)
+  main(newGame(screenSize), screenSize)

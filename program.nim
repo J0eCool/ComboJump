@@ -8,13 +8,33 @@ import
   vec
 
 type Program* = ref object of RootObj
+  input*: InputManager
   shouldExit*: bool
+
+proc initProgram*(program: Program) =
+  program.input = newInputManager()
 
 method update*(program: Program, dt: float) {.base.} =
   discard
 
 method draw*(renderer: RendererPtr, program: Program) {.base.} =
   discard
+
+proc updateBase(program: Program, dt: float) =
+  program.input.update()
+  if program.input.isPressed(Input.exit):
+    program.shouldExit = true
+    return
+
+  program.update(dt)
+
+proc drawBase(renderer: RendererPtr, program: Program) =
+  renderer.setDrawColor(110, 132, 174)
+  renderer.clear()
+
+  renderer.draw(program)
+
+  renderer.present()
 
 proc main*(program: Program, screenSize: Vec) =
   sdl2.init(INIT_VIDEO or INIT_TIMER or INIT_EVENTS)
@@ -42,7 +62,7 @@ proc main*(program: Program, screenSize: Vec) =
 
   var dt = 1 / 60
   while (not program.shouldExit):
-    program.update(dt)
+    program.updateBase(dt)
 
-    renderer.draw(program)
+    renderer.drawBase(program)
 
