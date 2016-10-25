@@ -27,4 +27,7 @@ proc renderSystem*(entities: seq[Entity], renderer: RendererPtr, camera: Camera)
     Transform, t,
     Text, text,
   ]:
-    renderer.drawText(text.getText(), (t.globalPos + camera.offset), text.font, text.color)
+    if text.cachedText == nil:
+      new text.cachedText
+      text.cachedText[] = renderer.renderText(text.getText(), text.font, text.color)
+    renderer.draw(text.cachedText[], (t.globalPos + camera.offset))

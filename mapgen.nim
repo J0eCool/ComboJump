@@ -1,8 +1,10 @@
 import
   hashes,
+  math,
   sets,
   sdl2,
-  sdl2.ttf
+  sdl2.ttf,
+  tables
 
 import
   drawing,
@@ -12,6 +14,7 @@ import
   vec
 
 const fontName = "nevis.ttf"
+var textCache = initTable[string, RenderedText]()
 
 var nextId = 1
 type GraphNode = object
@@ -32,6 +35,21 @@ proc firstItem[T](s: HashSet[T]): T =
   assert(s.len > 0)
   for n in s.items:
     return n
+
+proc drawArrow(renderer: RendererPtr, p1, p2: Vec, headSize, radius: float) =
+  let
+    delta = p2 - p1
+    dist = delta.length
+    dir = delta.unit
+    r = min(dist, radius / 2)
+    a = p1 + dir * r
+    b = p2 - dir * r
+    headAngle = 0.8 * PI
+    c = b + dir.rotate(headAngle) * headSize
+    d = b + dir.rotate(-headAngle) * headSize
+  renderer.drawLine(a, b)
+  renderer.drawLine(b, c)
+  renderer.drawLine(b, d)
 
 proc draw(renderer: RendererPtr, node: ref GraphNode, font: FontPtr) =
   var
@@ -54,18 +72,22 @@ proc draw(renderer: RendererPtr, node: ref GraphNode, font: FontPtr) =
         openSet.incl c
         closedSet.incl c
 
+  const nodeSize = vec(50)
+
   renderer.setDrawColor(64, 64, 64)
   for line in linesToDraw:
-    renderer.drawLine(line.p1, line.p2)
+    renderer.drawArrow(line.p1, line.p2, 20, nodeSize.length)
 
-  const size = vec(50)
   for n in nodesToDraw:
     renderer.setDrawColor(232, 232, 232)
-    renderer.fillRect rect(n.pos, size)
+    renderer.fillRect rect(n.pos, nodeSize)
     renderer.setDrawColor(64, 64, 64)
-    renderer.drawRect rect(n.pos, size)
+    renderer.drawRect rect(n.pos, nodeSize)
 
-    renderer.drawText($n.id, n.pos, font, color(64, 64, 64, 255))
+    let text = $n.id
+    if not textCache.hasKey(text):
+      textCache[text] = renderer.renderText(text, font, color(64, 64, 64, 255))
+    renderer.draw(textCache[text], n.pos)
 
 type MapGen* = ref object of Program
   root: ref GraphNode

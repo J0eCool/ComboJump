@@ -2,12 +2,14 @@ import
   sdl2,
   sdl2.ttf
 
-import entity
+import
+  drawing,
+  entity
 
 type Text* = ref object of Component
   text: string
   color*: Color
-  texture*: TexturePtr
+  cachedText*: ref RenderedText
   fontName*: string
   font*: FontPtr
 
@@ -24,5 +26,5 @@ proc getText*(text: Text): string =
   text.text
 
 proc setText*(text: Text, t: string) =
-  text.texture = nil
+  text.cachedText = nil
   text.text = t
