@@ -13,13 +13,13 @@ proc rect*(pos, size: Vec): Rect =
   )
 
 proc left*(rect: Rect): float =
-  rect.x
+  rect.x - rect.w / 2
 proc right*(rect: Rect): float =
-  rect.x + rect.w
+  rect.x + rect.w / 2
 proc top*(rect: Rect): float =
-  rect.y
+  rect.y - rect.h / 2
 proc bottom*(rect: Rect): float =
-  rect.y + rect.h
+  rect.y + rect.h / 2
 
 proc center*(rect: Rect): Vec =
   vec(rect.x, rect.y) + 0.5 * vec(rect.w, rect.h)

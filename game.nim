@@ -81,20 +81,20 @@ proc loadEntities(game: Game) =
       Collider(layer: Layer.enemy),
     ]),
     newEntity("Ground", [
-      Transform(pos: vec(50, 800),
-                size: vec(2900, 35)),
+      Transform(pos: vec(1450, 810),
+                size: vec(2900, 40)),
       Sprite(color: color(192, 192, 192, 255)),
       Collider(layer: Layer.floor),
     ]),
     newEntity("LeftWall", [
-      Transform(pos: vec(50, 465),
-                size: vec(35, 350)),
+      Transform(pos: vec(20, 620),
+                size: vec(40, 340)),
       Sprite(color: color(192, 192, 192, 255)),
       Collider(layer: Layer.floor),
     ]),
     newEntity("RightWall", [
-      Transform(pos: vec(2865, 465),
-                size: vec(35, 350)),
+      Transform(pos: vec(2880, 620),
+                size: vec(40, 340)),
       Sprite(color: color(192, 192, 192, 255)),
       Collider(layer: Layer.floor),
     ]),
@@ -116,7 +116,7 @@ proc loadEntities(game: Game) =
       Sprite(color: color(32, 32, 32, 255)),
     ], children=[
       newEntity("PlayerManaBar", [
-        Transform(pos: vec(5, 5),
+        Transform(pos: vec(0),
                   size: vec(300, 40)),
         Sprite(color: color(32, 32, 255, 255)),
         newProgressBar("Player",
@@ -124,12 +124,12 @@ proc loadEntities(game: Game) =
                        textEntity="PlayerManaBarText"),
       ]),
       newEntity("PlayerManaBarText", [
-        Transform(pos: vec(50, 10),
+        Transform(pos: vec(0),
                   size: vec(0)),
         newText("999/999"),
       ]),
       newEntity("PlayerManaBarHeld", [
-        Transform(pos: vec(5, 5),
+        Transform(pos: vec(0),
                   size: vec(300, 40)),
         Sprite(color: color(125, 232, 255, 255)),
       ]),
@@ -140,7 +140,7 @@ proc loadEntities(game: Game) =
       Sprite(color: color(32, 32, 32, 255)),
     ], children=[
       newEntity("EnemyHealthBar", [
-        Transform(pos: vec(5, 5),
+        Transform(pos: vec(0),
                   size: vec(300, 40)),
         Sprite(color: color(255, 32, 32, 255)),
         newProgressBar("Enemy"),

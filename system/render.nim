@@ -9,6 +9,7 @@ import
   component/text,
   component/transform,
   camera,
+  drawing,
   entity,
   rect,
   vec
@@ -26,9 +27,6 @@ proc loadFont(resources: var ResourceManager, fontName: string): FontPtr =
 proc newResourceManager*(): ResourceManager =
   result.fonts = initTable[string, FontPtr](8)
 
-proc sdlRect(r: rect.Rect): sdl2.Rect =
-  rect(r.x.cint, r.y.cint, r.w.cint, r.h.cint)
-
 proc loadResources*(entities: Entities, resources: var ResourceManager) =
   entities.forComponents e, [
     Text, text,
@@ -41,9 +39,8 @@ proc renderSystem*(entities: seq[Entity], renderer: RendererPtr, camera: Camera)
     Transform, t,
     Sprite, s,
   ]:
-    var rect = sdlRect(t.globalRect + camera.offset)
     renderer.setDrawColor(s.color)
-    renderer.fillRect(rect)
+    renderer.fillRect(t.globalRect + camera.offset)
 
   entities.forComponents e, [
     Transform, t,
