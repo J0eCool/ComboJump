@@ -33,6 +33,7 @@ import
   event,
   input,
   program,
+  resources,
   vec,
   util
 

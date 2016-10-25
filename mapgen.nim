@@ -1,13 +1,17 @@
 import
   hashes,
   sets,
-  sdl2
+  sdl2,
+  sdl2.ttf
 
 import
   drawing,
   program,
   rect,
+  resources,
   vec
+
+const fontName = "nevis.ttf"
 
 var nextId = 1
 type GraphNode = object
@@ -29,7 +33,7 @@ proc firstItem[T](s: HashSet[T]): T =
   for n in s.items:
     return n
 
-proc draw(renderer: RendererPtr, node: ref GraphNode) =
+proc draw(renderer: RendererPtr, node: ref GraphNode, font: FontPtr) =
   var
     nodesToDraw: seq[ref GraphNode] = @[]
     linesToDraw: seq[tuple[p1: Vec, p2: Vec]] = @[]
@@ -61,11 +65,15 @@ proc draw(renderer: RendererPtr, node: ref GraphNode) =
     renderer.setDrawColor(64, 64, 64)
     renderer.drawRect rect(n.pos, size)
 
+    renderer.drawText($n.id, n.pos, font, color(64, 64, 64, 255))
+
 type MapGen* = ref object of Program
   root: ref GraphNode
+  resources: ResourceManager
 
 proc newMapGen(): MapGen =
   new result
+  result.resources = newResourceManager()
   result.initProgram()
 
 proc genMap(map: MapGen) =
@@ -86,8 +94,9 @@ proc genMap(map: MapGen) =
   map.root = n1
 
 method draw*(renderer: RendererPtr, map: MapGen) =
-  renderer.setDrawColor(32, 32, 32)
-  renderer.draw map.root
+  let font = map.resources.loadFont fontName
+
+  renderer.draw map.root, font
 
 method update*(map: MapGen, dt: float) =
   discard
