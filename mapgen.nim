@@ -8,6 +8,7 @@ import
 
 import
   drawing,
+  input,
   program,
   rect,
   resources,
@@ -121,7 +122,9 @@ method draw*(renderer: RendererPtr, map: MapGen) =
   renderer.draw map.root, font
 
 method update*(map: MapGen, dt: float) =
-  discard
+  if map.input.isPressed(Input.spell1):
+    nextId = 1
+    map.genMap()
 
 when isMainModule:
   let
