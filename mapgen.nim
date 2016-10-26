@@ -11,6 +11,7 @@ import
   program,
   rect,
   resources,
+  util,
   vec
 
 const fontName = "nevis.ttf"
@@ -99,21 +100,20 @@ proc newMapGen(): MapGen =
   result.initProgram()
 
 proc genMap(map: MapGen) =
-  let
-    n1 = newGraphNode()
-    n2 = newGraphNode()
-    n3 = newGraphNode()
-    n4 = newGraphNode()
-  n1.pos = vec(400, 400)
-  n2.pos = vec(700, 500)
-  n3.pos = vec(800, 200)
-  n4.pos = vec(200, 800)
+  let numNodes = random(6, 12)
+  var nodes: seq[ref GraphNode] = @[]
 
-  n1.neighbors = @[n2, n3]
-  n2.neighbors = @[n1, n4]
-  n4.neighbors = @[n3]
+  for i in 0..<numNodes:
+    let n = newGraphNode()
+    n.pos = vec(random(100, 1100), random(100, 800))
+    if i > 0:
+      nodes[random(0, i-1)].neighbors.add n
+    nodes.add n
 
-  map.root = n1
+  map.root = nodes[0]
+
+method init(map: MapGen) =
+  map.genMap()
 
 method draw*(renderer: RendererPtr, map: MapGen) =
   let font = map.resources.loadFont fontName
@@ -127,5 +127,4 @@ when isMainModule:
   let
     screenSize = vec(1200, 900)
     map = newMapGen()
-  map.genMap()
   main(map, screenSize)

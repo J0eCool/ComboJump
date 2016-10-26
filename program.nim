@@ -1,6 +1,8 @@
 import
+  random,
   sdl2,
-  sdl2.ttf
+  sdl2.ttf,
+  times
 
 import
   input,
@@ -13,6 +15,9 @@ type Program* = ref object of RootObj
 
 proc initProgram*(program: Program) =
   program.input = newInputManager()
+
+method init*(program: Program) {.base.} =
+  discard
 
 method update*(program: Program, dt: float) {.base.} =
   discard
@@ -37,6 +42,8 @@ proc drawBase(renderer: RendererPtr, program: Program) =
   renderer.present()
 
 proc main*(program: Program, screenSize: Vec) =
+  randomize()
+
   sdl2.init(INIT_VIDEO or INIT_TIMER or INIT_EVENTS)
   defer: sdl2.quit()
 
@@ -60,9 +67,10 @@ proc main*(program: Program, screenSize: Vec) =
   )
   defer: renderer.destroy()
 
+  program.init()
+
   var dt = 1 / 60
   while (not program.shouldExit):
     program.updateBase(dt)
 
     renderer.drawBase(program)
-

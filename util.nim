@@ -24,6 +24,8 @@ proc sign*(x: SomeNumber): int =
 
 proc random*(lo, hi: float): float =
   random(hi - lo) + lo
+proc random*(lo, hi: int): int =
+  random(hi - lo + 1) + lo
 
 proc randomNormal*(lo, hi: float): float =
   let
