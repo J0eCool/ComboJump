@@ -46,41 +46,23 @@ proc drawArrow(renderer: RendererPtr, p1, p2: Vec, headSize, radius: float) =
     r = min(dist, radius / 2)
     a = p1 + dir * r
     b = p2 - dir * r
+    s = min(dist, headSize)
     headAngle = 0.8 * PI
-    c = b + dir.rotate(headAngle) * headSize
-    d = b + dir.rotate(-headAngle) * headSize
+    c = b + dir.rotate(headAngle) * s
+    d = b + dir.rotate(-headAngle) * s
   renderer.drawLine(a, b)
   renderer.drawLine(b, c)
   renderer.drawLine(b, d)
 
-proc draw(renderer: RendererPtr, node: ref GraphNode, font: FontPtr) =
-  var
-    nodesToDraw: seq[ref GraphNode] = @[]
-    linesToDraw: seq[tuple[p1: Vec, p2: Vec]] = @[]
-    openSet = initSet[ref GraphNode]()
-    closedSet = initSet[ref GraphNode]()
-
-  openSet.incl node
-  closedSet.incl node
-
-  while openSet.len > 0:
-    let n = openSet.firstItem
-    openSet.excl n
-
-    nodesToDraw.add n
-    for c in n.neighbors:
-      linesToDraw.add((n.pos, c.pos))
-      if (not closedSet.contains(c)):
-        openSet.incl c
-        closedSet.incl c
-
+proc draw(renderer: RendererPtr, nodes: seq[ref GraphNode], font: FontPtr) =
   const nodeSize = vec(50)
 
   renderer.setDrawColor(64, 64, 64)
-  for line in linesToDraw:
-    renderer.drawArrow(line.p1, line.p2, 20, nodeSize.length)
+  for n in nodes:
+    for c in n.neighbors:
+      renderer.drawArrow(n.pos, c.pos, 20, nodeSize.length)
 
-  for n in nodesToDraw:
+  for n in nodes:
     renderer.setDrawColor(232, 232, 232)
     renderer.fillRect rect(n.pos, nodeSize)
     renderer.setDrawColor(64, 64, 64)
@@ -92,7 +74,7 @@ proc draw(renderer: RendererPtr, node: ref GraphNode, font: FontPtr) =
     renderer.draw(textCache[text], n.pos)
 
 type MapGen* = ref object of Program
-  root: ref GraphNode
+  nodes: seq[ref GraphNode]
   resources: ResourceManager
 
 proc newMapGen(): MapGen =
@@ -111,7 +93,7 @@ proc genMap(map: MapGen) =
       nodes[random(0, i-1)].neighbors.add n
     nodes.add n
 
-  map.root = nodes[0]
+  map.nodes = nodes
 
 method init(map: MapGen) =
   map.genMap()
@@ -119,7 +101,7 @@ method init(map: MapGen) =
 method draw*(renderer: RendererPtr, map: MapGen) =
   let font = map.resources.loadFont fontName
 
-  renderer.draw map.root, font
+  renderer.draw map.nodes, font
 
 method update*(map: MapGen, dt: float) =
   if map.input.isPressed(Input.spell1):
