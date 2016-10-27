@@ -82,8 +82,7 @@ proc newMapGen(): MapGen =
   result.resources = newResourceManager()
   result.initProgram()
 
-proc genMap(map: MapGen) =
-  let numNodes = random(6, 12)
+proc genMap(map: MapGen, numNodes: int) =
   var nodes: seq[ref GraphNode] = @[]
 
   for i in 0..<numNodes:
@@ -95,8 +94,32 @@ proc genMap(map: MapGen) =
 
   map.nodes = nodes
 
+proc applyForces(nodes: seq[ref GraphNode], dt: float) =
+  var forces = initTable[ref GraphNode, Vec]()
+  for n in nodes:
+    forces[n] = vec()
+  for n in nodes:
+    for c in nodes:
+      let
+        delta = n.pos - c.pos
+        dist = max(delta.length2, 10)
+      forces[n] += delta.unit() / dist * 1000000
+
+    for c in n.neighbors:
+      let
+        delta = c.pos - n.pos
+        dist = delta.length - 100
+        toMove = delta.unit() * dist
+      forces[n] += toMove
+      forces[c] -= toMove
+
+  for n in nodes:
+    n.pos += forces[n] * dt
+
+
+
 method init(map: MapGen) =
-  map.genMap()
+  map.genMap(12)
 
 method draw*(renderer: RendererPtr, map: MapGen) =
   let font = map.resources.loadFont fontName
@@ -106,7 +129,10 @@ method draw*(renderer: RendererPtr, map: MapGen) =
 method update*(map: MapGen, dt: float) =
   if map.input.isPressed(Input.spell1):
     nextId = 1
-    map.genMap()
+    map.genMap(random(7,21))
+
+  for i in 0..100:
+    applyForces(map.nodes, dt*10)
 
 when isMainModule:
   let

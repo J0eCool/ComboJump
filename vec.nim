@@ -7,6 +7,8 @@ proc vec*[T: SomeNumber](x, y: T): Vec =
   (x.float, y.float)
 proc vec*[T: SomeNumber](s: T): Vec =
   (s.float, s.float)
+proc vec*(): Vec =
+  (0.0, 0.0)
 
 template vecf(op, assignOp: expr): expr =
   proc op*(a, b: Vec): Vec =
