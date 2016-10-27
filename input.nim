@@ -28,6 +28,7 @@ type
     inputs: array[Input, InputState]
     mousePos: Vec
     mouseState: InputState
+    mouseWheel: int
 
 proc newInputManager*(): InputManager =
   new result
@@ -53,6 +54,7 @@ proc update*(manager: InputManager) =
   for i in Input:
     updateInput(manager.inputs[i])
   updateInput(manager.mouseState)
+  manager.mouseWheel = 0
 
   template setForEvent(e, v) =
     let input = keyToInput e.key.keysym.scancode
@@ -76,6 +78,8 @@ proc update*(manager: InputManager) =
       manager.mouseState = pressed
     of MouseButtonUp:
       manager.mouseState = released
+    of MouseWheel:
+      manager.mouseWheel = event.wheel.y.int
     else: discard
 
 proc isPressed*(manager: InputManager, key: Input): bool =
@@ -95,3 +99,6 @@ proc clickPos*(manager: InputManager): Option[Vec] =
 proc clickHeldPos*(manager: InputManager): Option[Vec] =
   if manager.mouseState == pressed or manager.mouseState == held:
     return makeJust(manager.mousePos)
+
+proc mouseWheel*(manager: InputManager): int =
+  manager.mouseWheel
