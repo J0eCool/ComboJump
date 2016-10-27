@@ -89,8 +89,8 @@ type MapGen* = ref object of Program
   screenSize: Vec
 
 const
-  zoomLevels = 25
-  zoomPower = 1.15
+  zoomLevels = 15
+  zoomPower = 1.3
   midZoomLevel = zoomLevels div 2
 
 proc newMapGen(screenSize: Vec): MapGen =
