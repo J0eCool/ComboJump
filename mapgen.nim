@@ -120,8 +120,12 @@ proc applyForces(nodes: seq[ref GraphNode], dt: float) =
   var forces = initTable[ref GraphNode, Vec]()
   for n in nodes:
     forces[n] = vec()
+
+  var edges: seq[tuple[a, b: ref GraphNode]] = @[]
   for n in nodes:
     for c in nodes:
+      if n == c:
+        continue
       let
         delta = n.pos - c.pos
         length = delta.length
@@ -129,6 +133,7 @@ proc applyForces(nodes: seq[ref GraphNode], dt: float) =
       forces[n] += delta.unit() / dist * 1000
 
     for c in n.neighbors:
+      edges.add((n, c))
       const idealLength = 100
       let
         delta = c.pos - n.pos
@@ -136,6 +141,28 @@ proc applyForces(nodes: seq[ref GraphNode], dt: float) =
         toMove = delta.unit() * dist * dist / idealLength
       forces[n] += toMove
       forces[c] -= toMove
+
+  proc orientation(a, b, c: Vec): int =
+    sign((b - a).cross(c - a))
+  proc intersects(a, b, c, d: Vec): bool =
+    (orientation(a, b, c) != orientation(a, b, d) and
+     orientation(c, d, a) != orientation(c, d, b))
+
+  for i in 0..<edges.len:
+    let
+      a = edges[i]
+      aDir = (a.b.pos - a.a.pos).unit
+    for j in i+1..<edges.len:
+      let
+        b = edges[j]
+        bDir = (b.b.pos - b.a.pos).unit
+      if intersects(a.a.pos + 5 * aDir, a.b.pos - 5 * aDir,
+                    b.a.pos + 5 * bDir, b.b.pos - 5 * bDir):
+        forces[a.a] += aDir * 2500 * aDir.cross(bDir)
+        forces[a.b] += aDir * 2500 * aDir.cross(bDir)
+        forces[b.a] += bDir * 2500 * bDir.cross(aDir)
+        forces[b.b] += bDir * 2500 * bDir.cross(aDir)
+
 
   for n in nodes:
     n.pos += forces[n] * dt
