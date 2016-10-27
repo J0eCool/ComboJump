@@ -9,6 +9,7 @@ import
 import
   drawing,
   input,
+  option,
   program,
   rect,
   resources,
@@ -54,28 +55,31 @@ proc drawArrow(renderer: RendererPtr, p1, p2: Vec, headSize, radius: float) =
   renderer.drawLine(b, c)
   renderer.drawLine(b, d)
 
-proc draw(renderer: RendererPtr, nodes: seq[ref GraphNode], font: FontPtr) =
+proc draw(renderer: RendererPtr, nodes: seq[ref GraphNode], font: FontPtr, camera: Vec) =
   const nodeSize = vec(50)
 
   renderer.setDrawColor(64, 64, 64)
   for n in nodes:
     for c in n.neighbors:
-      renderer.drawArrow(n.pos, c.pos, 20, nodeSize.length)
+      renderer.drawArrow(n.pos - camera, c.pos - camera, 20, nodeSize.length)
 
   for n in nodes:
+    let pos = n.pos - camera
     renderer.setDrawColor(232, 232, 232)
-    renderer.fillRect rect(n.pos, nodeSize)
+    renderer.fillRect rect(pos, nodeSize)
     renderer.setDrawColor(64, 64, 64)
-    renderer.drawRect rect(n.pos, nodeSize)
+    renderer.drawRect rect(pos, nodeSize)
 
     let text = $n.id
     if not textCache.hasKey(text):
       textCache[text] = renderer.renderText(text, font, color(64, 64, 64, 255))
-    renderer.draw(textCache[text], n.pos)
+    renderer.draw(textCache[text], pos)
 
 type MapGen* = ref object of Program
   nodes: seq[ref GraphNode]
   resources: ResourceManager
+  camera: Vec
+  lastMousePos: Option[Vec]
 
 proc newMapGen(): MapGen =
   new result
@@ -116,23 +120,27 @@ proc applyForces(nodes: seq[ref GraphNode], dt: float) =
   for n in nodes:
     n.pos += forces[n] * dt
 
-
-
 method init(map: MapGen) =
   map.genMap(12)
 
 method draw*(renderer: RendererPtr, map: MapGen) =
   let font = map.resources.loadFont fontName
 
-  renderer.draw map.nodes, font
+  renderer.draw map.nodes, font, map.camera
 
 method update*(map: MapGen, dt: float) =
   if map.input.isPressed(Input.spell1):
     nextId = 1
-    map.genMap(random(7,21))
+    map.genMap(random(107,121))
 
-  for i in 0..100:
-    applyForces(map.nodes, dt*10)
+  let mouse = map.input.clickHeldPos()
+  map.lastMousePos.bindAs pos:
+    mouse.bindAs mousePos:
+      map.camera += pos - mousePos
+  map.lastMousePos = mouse
+
+  for i in 0..10:
+    applyForces(map.nodes, dt*2)
 
 when isMainModule:
   let
