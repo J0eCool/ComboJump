@@ -1,4 +1,5 @@
 import macros, math, random
+import util
 
 type Vec* {.pure, final.} =
   tuple[x, y: float]
@@ -63,3 +64,22 @@ proc cross*(a, b: Vec): float =
 
 proc randomVec*(r: float): Vec =
   unitVec(random(2 * PI)) * random(r)
+
+proc max*(a, b: Vec): Vec =
+  if a.length2 > b.length2:
+    a
+  else:
+    b
+
+proc min*(a, b: Vec): Vec =
+  if a.length2 < b.length2:
+    a
+  else:
+    b
+
+proc orientation*(a, b, c: Vec): int =
+  sign((b - a).cross(c - a))
+
+proc intersects*(a, b, c, d: Vec): bool =
+  (orientation(a, b, c) != orientation(a, b, d) and
+   orientation(c, d, a) != orientation(c, d, b))

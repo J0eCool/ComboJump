@@ -87,6 +87,8 @@ type MapGen* = ref object of Program
   lastMousePos: Option[Vec]
   zoomLevel: int
   screenSize: Vec
+  converged: bool
+  iterations: int
 
 const
   zoomLevels = 15
@@ -115,13 +117,62 @@ proc genMap(map: MapGen, numNodes: int) =
     nodes.add n
 
   map.nodes = nodes
+  map.converged = false
+  map.iterations = 0
 
-proc applyForces(nodes: seq[ref GraphNode], dt: float) =
+type Edge = tuple[a, b: ref GraphNode]
+proc edges(nodes: seq[ref GraphNode]): seq[Edge] =
+  result = @[]
+  for n in nodes:
+    for c in n.neighbors:
+      result.add((n, c))
+
+proc collides(a, b: Edge): bool =
+  let
+    aDelta = a.b.pos - a.a.pos
+    aDir = aDelta.unit
+    bDelta = b.b.pos - b.a.pos
+    bDir = bDelta.unit
+  const r = 0.2
+  intersects(
+    a.a.pos + r * aDir,
+    a.b.pos - r * aDir,
+    b.a.pos + r * bDir,
+    b.b.pos - r * bDir)
+
+proc hasCollisions(edges: seq[Edge], ): bool =
+  for i in 0..<edges.len:
+    let a = edges[i]
+    for j in i+1..<edges.len:
+      let b = edges[j]
+      if collides(a, b):
+        return true
+
+proc tryFixCollisions(edges: seq[Edge], dt: float) =
+  var forces = initTable[ref GraphNode, Vec]()
+  for i in 0..<edges.len:
+    let
+      a = edges[i]
+      aDelta = a.b.pos - a.a.pos
+      aDir = aDelta.unit
+    for j in i+1..<edges.len:
+      let
+        b = edges[j]
+        bDelta = b.b.pos - b.a.pos
+        bDir = bDelta.unit
+      if collides(a, b):
+        forces[a.a] = forces.getOrDefault(a.a) + bDir * 500
+        forces[a.b] = forces.getOrDefault(a.a) + bDir * 500
+        forces[b.a] = forces.getOrDefault(a.a) + aDir * 500
+        forces[b.b] = forces.getOrDefault(a.a) + aDir * 500
+  for n, f in forces:
+    n.pos += f * dt
+
+proc applyForces(nodes: seq[ref GraphNode], dt: float): Vec =
   var forces = initTable[ref GraphNode, Vec]()
   for n in nodes:
     forces[n] = vec()
 
-  var edges: seq[tuple[a, b: ref GraphNode]] = @[]
   for n in nodes:
     for c in nodes:
       if n == c:
@@ -133,7 +184,6 @@ proc applyForces(nodes: seq[ref GraphNode], dt: float) =
       forces[n] += delta.unit() / dist * 1000
 
     for c in n.neighbors:
-      edges.add((n, c))
       const idealLength = 100
       let
         delta = c.pos - n.pos
@@ -142,30 +192,21 @@ proc applyForces(nodes: seq[ref GraphNode], dt: float) =
       forces[n] += toMove
       forces[c] -= toMove
 
-  proc orientation(a, b, c: Vec): int =
-    sign((b - a).cross(c - a))
-  proc intersects(a, b, c, d: Vec): bool =
-    (orientation(a, b, c) != orientation(a, b, d) and
-     orientation(c, d, a) != orientation(c, d, b))
-
-  for i in 0..<edges.len:
-    let
-      a = edges[i]
-      aDir = (a.b.pos - a.a.pos).unit
-    for j in i+1..<edges.len:
-      let
-        b = edges[j]
-        bDir = (b.b.pos - b.a.pos).unit
-      if intersects(a.a.pos + 5 * aDir, a.b.pos - 5 * aDir,
-                    b.a.pos + 5 * bDir, b.b.pos - 5 * bDir):
-        forces[a.a] += aDir * 2500 * aDir.cross(bDir)
-        forces[a.b] += aDir * 2500 * aDir.cross(bDir)
-        forces[b.a] += bDir * 2500 * bDir.cross(aDir)
-        forces[b.b] += bDir * 2500 * bDir.cross(aDir)
-
-
+  var maxDrift = vec()
   for n in nodes:
-    n.pos += forces[n] * dt
+    let toMove = forces[n] * dt
+    maxDrift = max(toMove, maxDrift)
+    n.pos += toMove
+  return maxDrift
+
+proc centerNodes(map: MapGen) =
+  var centerPos = vec()
+  for n in map.nodes:
+    centerPos += n.pos
+  centerPos = centerPos / map.nodes.len
+  # centerPos -= map.screenSize / 2
+  for n in map.nodes:
+    n.pos -= centerPos
 
 method init(map: MapGen) =
   map.genMap(12)
@@ -178,7 +219,7 @@ method draw*(renderer: RendererPtr, map: MapGen) =
 method update*(map: MapGen, dt: float) =
   if map.input.isPressed(Input.spell1):
     nextId = 1
-    map.genMap(random(07,21))
+    map.genMap(random(27,31)*3)
 
   let mouse = map.input.clickHeldPos()
   map.lastMousePos.bindAs pos:
@@ -193,8 +234,19 @@ method update*(map: MapGen, dt: float) =
     map.zoomLevel = map.zoomLevel.clamp(0, zoomLevels)
     map.camera = center + 0.5 * map.zoomScale * map.screenSize
 
-  for i in 0..10:
-    applyForces(map.nodes, dt*2)
+  if not map.converged:
+    var maxDrift = vec()
+    const
+      driftThreshold = 0.1
+    for i in 0..50:
+      maxDrift = max(maxDrift, applyForces(map.nodes, 2 * dt))
+    let edges = map.nodes.edges
+    tryFixCollisions(edges, (2 + 0.025 * map.iterations.float) * dt)
+    map.iterations += 1
+    if (not hasCollisions(edges)) and maxDrift.length < driftThreshold:
+      map.converged = true
+
+  map.centerNodes()
 
 when isMainModule:
   let
