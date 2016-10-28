@@ -80,15 +80,22 @@ proc draw(renderer: RendererPtr, nodes: seq[ref GraphNode], font: FontPtr, camer
       textCache[text] = renderer.renderText(text, font, color(64, 64, 64, 255))
     renderer.draw(textCache[text], pos)
 
-type MapGen* = ref object of Program
-  nodes: seq[ref GraphNode]
-  resources: ResourceManager
-  camera: Vec
-  lastMousePos: Option[Vec]
-  zoomLevel: int
-  screenSize: Vec
-  converged: bool
-  iterations: int
+type
+  Stage = enum
+    spacing,
+    splitting,
+    legalizing,
+    done
+
+  MapGen* = ref object of Program
+    nodes: seq[ref GraphNode]
+    resources: ResourceManager
+    camera: Vec
+    lastMousePos: Option[Vec]
+    zoomLevel: int
+    screenSize: Vec
+    stage: Stage
+    iterations: int
 
 const
   zoomLevels = 15
@@ -117,7 +124,7 @@ proc genMap(map: MapGen, numNodes: int) =
     nodes.add n
 
   map.nodes = nodes
-  map.converged = false
+  map.stage = spacing
   map.iterations = 0
 
 type Edge = tuple[a, b: ref GraphNode]
@@ -217,16 +224,20 @@ method draw*(renderer: RendererPtr, map: MapGen) =
   renderer.draw map.nodes, font, map.camera, map.zoomScale
 
 method update*(map: MapGen, dt: float) =
+  #TODO: split into subfunctions
+  # maybe generate new map
   if map.input.isPressed(Input.spell1):
     nextId = 1
-    map.genMap(random(27,31)*3)
+    map.genMap(random(27,31))
 
+  # update camera position
   let mouse = map.input.clickHeldPos()
   map.lastMousePos.bindAs pos:
     mouse.bindAs mousePos:
       map.camera += pos - mousePos
   map.lastMousePos = mouse
 
+  # update camera zoom
   let dWheel = map.input.mouseWheel
   if dWheel != 0:
     let center = map.camera - 0.5 * map.zoomScale * map.screenSize
@@ -234,17 +245,57 @@ method update*(map: MapGen, dt: float) =
     map.zoomLevel = map.zoomLevel.clamp(0, zoomLevels)
     map.camera = center + 0.5 * map.zoomScale * map.screenSize
 
-  if not map.converged:
+  # iterate map
+  if map.stage == spacing:
     var maxDrift = vec()
     const
-      driftThreshold = 0.1
-      numSteps = 10
+      driftThreshold = 3
+      numSteps = 30
     for i in 0..numSteps:
       maxDrift = max(maxDrift, applyForces(map.nodes, 2 * dt))
     let edges = map.nodes.edges
-    tryFixCollisions(edges, (2 + 0.025 * map.iterations.float / numSteps) * dt)
+    tryFixCollisions(edges, (1 + 0.025 * map.iterations.float / numSteps) * dt)
+    if maxDrift.length < driftThreshold:
+      map.stage = splitting
+    map.iterations += numSteps
+  elif map.stage == splitting:
+    var
+      didSplit = false
+      toAdd: seq[ref GraphNode] = @[]
+    for n in map.nodes:
+      let length = n.neighbors.len + (if n.id == 1: 0 else: 1)
+      if length > 4:
+        echo "Splitting: ", n.id, " with neighbors=", length
+        didSplit = true
+        let x = newGraphNode()
+        x.pos = n.pos + randomVec(30)
+        shuffle(n.neighbors)
+        while n.neighbors.len >= length div 2:
+          x.neighbors.add n.neighbors[0]
+          n.neighbors.del 0
+        n.neighbors.add x
+        toAdd.add x
+    for n in toAdd:
+      map.nodes.add n
+
+    if didSplit:
+      map.stage = spacing
+      map.iterations = 0
+    else:
+      map.stage = legalizing
+  elif map.stage == legalizing:
+    #TODO: fix copy-paste from separating!!
+    var maxDrift = vec()
+    const
+      driftThreshold = 3
+      numSteps = 30
+    for i in 0..numSteps:
+      maxDrift = max(maxDrift, applyForces(map.nodes, 2 * dt))
+    let edges = map.nodes.edges
+    tryFixCollisions(edges, (1 + 0.025 * map.iterations.float / numSteps) * dt)
     if (not hasCollisions(edges)) and maxDrift.length < driftThreshold:
-      map.converged = true
+      map.stage = done
+      echo "Done"
     map.iterations += numSteps
 
   map.centerNodes()

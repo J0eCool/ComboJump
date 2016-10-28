@@ -35,6 +35,11 @@ proc randomNormal*(lo, hi: float): float =
     h = max(a, b)
   random(l, h)
 
+proc shuffle*[T](list: var seq[T]) =
+  for i in 0..<list.len:
+    let j = random(i, list.len - 1)
+    swap(list[i], list[j])
+
 proc remove*[T](list: var seq[T], item: T) =
   let index = list.find(item)
   if index >= 0:
