@@ -161,12 +161,12 @@ proc tryFixCollisions(edges: seq[Edge], dt: float) =
         bDelta = b.b.pos - b.a.pos
         bDir = bDelta.unit
       if collides(a, b):
-        forces[a.a] = forces.getOrDefault(a.a) + bDir * 500
-        forces[a.b] = forces.getOrDefault(a.a) + bDir * 500
-        forces[b.a] = forces.getOrDefault(a.a) + aDir * 500
-        forces[b.b] = forces.getOrDefault(a.a) + aDir * 500
+        forces[a.a] = forces.getOrDefault(a.a) + bDir * (500 * dt)
+        forces[a.b] = forces.getOrDefault(a.a) + bDir * (500 * dt)
+        forces[b.a] = forces.getOrDefault(a.a) + aDir * (500 * dt)
+        forces[b.b] = forces.getOrDefault(a.a) + aDir * (500 * dt)
   for n, f in forces:
-    n.pos += f * dt
+    n.pos += f
 
 proc applyForces(nodes: seq[ref GraphNode], dt: float): Vec =
   var forces = initTable[ref GraphNode, Vec]()
@@ -180,8 +180,8 @@ proc applyForces(nodes: seq[ref GraphNode], dt: float): Vec =
       let
         delta = n.pos - c.pos
         length = delta.length
-        dist = max(length * length / 100, 10)
-      forces[n] += delta.unit() / dist * 1000
+        dist = max(length / 100 * length, 10)
+      forces[n] += delta.unit() * (1000 / dist)
 
     for c in n.neighbors:
       const idealLength = 100
@@ -204,7 +204,7 @@ proc centerNodes(map: MapGen) =
   for n in map.nodes:
     centerPos += n.pos
   centerPos = centerPos / map.nodes.len
-  # centerPos -= map.screenSize / 2
+  centerPos -= map.screenSize / 2
   for n in map.nodes:
     n.pos -= centerPos
 
@@ -238,13 +238,14 @@ method update*(map: MapGen, dt: float) =
     var maxDrift = vec()
     const
       driftThreshold = 0.1
-    for i in 0..50:
+      numSteps = 10
+    for i in 0..numSteps:
       maxDrift = max(maxDrift, applyForces(map.nodes, 2 * dt))
     let edges = map.nodes.edges
-    tryFixCollisions(edges, (2 + 0.025 * map.iterations.float) * dt)
-    map.iterations += 1
+    tryFixCollisions(edges, (2 + 0.025 * map.iterations.float / numSteps) * dt)
     if (not hasCollisions(edges)) and maxDrift.length < driftThreshold:
       map.converged = true
+    map.iterations += numSteps
 
   map.centerNodes()
 
