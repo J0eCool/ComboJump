@@ -96,6 +96,7 @@ type
     screenSize: Vec
     stage: Stage
     iterations: int
+    paused: bool
 
 const
   zoomLevels = 15
@@ -229,6 +230,8 @@ method update*(map: MapGen, dt: float) =
   if map.input.isPressed(Input.spell1):
     nextId = 1
     map.genMap(random(27,31))
+  if map.input.isPressed(Input.jump):
+    map.paused = not map.paused
 
   # update camera position
   let mouse = map.input.clickHeldPos()
@@ -245,6 +248,9 @@ method update*(map: MapGen, dt: float) =
     map.zoomLevel = map.zoomLevel.clamp(0, zoomLevels)
     map.camera = center + 0.5 * map.zoomScale * map.screenSize
 
+  if map.paused:
+    return
+
   # iterate map
   if map.stage == spacing:
     var maxDrift = vec()
@@ -257,6 +263,7 @@ method update*(map: MapGen, dt: float) =
     tryFixCollisions(edges, (1 + 0.025 * map.iterations.float / numSteps) * dt)
     if maxDrift.length < driftThreshold:
       map.stage = splitting
+      map.paused = true
     map.iterations += numSteps
   elif map.stage == splitting:
     var
@@ -282,12 +289,14 @@ method update*(map: MapGen, dt: float) =
       map.stage = spacing
       map.iterations = 0
     else:
+      echo "No splits"
       map.stage = legalizing
+      map.paused = true
   elif map.stage == legalizing:
     #TODO: fix copy-paste from separating!!
     var maxDrift = vec()
     const
-      driftThreshold = 3
+      driftThreshold = 0.1
       numSteps = 30
     for i in 0..numSteps:
       maxDrift = max(maxDrift, applyForces(map.nodes, 2 * dt))
