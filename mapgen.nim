@@ -1,4 +1,5 @@
 import
+  algorithm,
   hashes,
   math,
   sets,
@@ -34,10 +35,9 @@ proc newGraphNode(): ref GraphNode =
 proc hash(node: ref GraphNode): Hash =
   node.id.Hash
 
-proc firstItem[T](s: HashSet[T]): T =
-  assert(s.len > 0)
-  for n in s.items:
-    return n
+proc numChildren(node: ref GraphNode): int =
+  for n in node.neighbors:
+    result += 1 + n.numChildren
 
 proc drawArrow(renderer: RendererPtr, p1, p2: Vec, headSize, radius: float) =
   let
@@ -87,6 +87,12 @@ type
     legalizing,
     done
 
+  Direction = enum
+    left,
+    up,
+    right,
+    down
+
   MapGen* = ref object of Program
     nodes: seq[ref GraphNode]
     resources: ResourceManager
@@ -98,11 +104,22 @@ type
     iterations: int
     paused: bool
     shouldAutoPause: bool
+    legalizingNode: int
+    legalizingChild: int
+    legalizedDirs: set[Direction]
+
+proc initDirArray(): array[Direction, Vec] =
+  result[left] = vec(-1, 0)
+  result[right] = vec(1, 0)
+  result[up] = vec(0, -1)
+  result[down] = vec(0, 1)
 
 const
   zoomLevels = 15
   zoomPower = 1.3
   midZoomLevel = zoomLevels div 2
+  dirToVec = initDirArray()
+  allDirs = {right, down, up, left}
 
 proc newMapGen(screenSize: Vec): MapGen =
   new result
@@ -128,6 +145,9 @@ proc genMap(map: MapGen, numNodes: int) =
   map.nodes = nodes
   map.stage = spacing
   map.iterations = 0
+  map.legalizingNode = 0
+  map.legalizingChild = 0
+  map.legalizedDirs = {}
 
 type Edge = tuple[a, b: ref GraphNode]
 proc edges(nodes: seq[ref GraphNode]): seq[Edge] =
@@ -149,7 +169,7 @@ proc collides(a, b: Edge): bool =
     b.a.pos + r * bDir,
     b.b.pos - r * bDir)
 
-proc hasCollisions(edges: seq[Edge], ): bool =
+proc hasCollisions(edges: seq[Edge]): bool =
   for i in 0..<edges.len:
     let a = edges[i]
     for j in i+1..<edges.len:
@@ -198,32 +218,6 @@ proc applyForces(nodes: seq[ref GraphNode], dt: float): Vec =
         delta = c.pos - n.pos
         dist = delta.length - idealLength
         toMove = delta.unit() * dist * dist / idealLength
-      forces[n] += toMove
-      forces[c] -= toMove
-
-  var maxDrift = vec()
-  for n in nodes:
-    let toMove = forces[n] * dt
-    maxDrift = max(toMove, maxDrift)
-    n.pos += toMove
-  return maxDrift
-
-proc applyStraighteningForces(nodes: seq[ref GraphNode], dt: float): Vec =
-  var forces = initTable[ref GraphNode, Vec]()
-  for n in nodes:
-    forces[n] = vec()
-
-  const
-    up = vec(0, 1)
-    right = vec(1, 0)
-  for n in nodes:
-    for c in n.neighbors:
-      let
-        delta = c.pos - n.pos
-        tryUp = delta.y.abs > delta.x.abs
-        dir = if tryUp: up else: right
-        toFix = (if tryUp: right else: up)
-        toMove = delta.unit.cross(toFix) * dir * 5000 * dt
       forces[n] += toMove
       forces[c] -= toMove
 
@@ -305,35 +299,61 @@ method update*(map: MapGen, dt: float) =
         let x = newGraphNode()
         x.pos = n.pos + randomVec(30)
         shuffle(n.neighbors)
-        while n.neighbors.len >= length div 2:
+        while n.neighbors.len > length div 2:
           x.neighbors.add n.neighbors[0]
           n.neighbors.del 0
-        n.neighbors.add x
+        x.neighbors.add n
         toAdd.add x
     for n in toAdd:
       map.nodes.add n
 
     if didSplit:
-      map.stage = spacing
+      map.stage = splitting
       map.iterations = 0
     else:
       echo "No splits"
       map.stage = legalizing
       map.paused = map.shouldAutoPause
   elif map.stage == legalizing:
-    #TODO: fix copy-paste from separating!!
-    var maxDrift = vec()
-    const
-      driftThreshold = 0.1
-      numSteps = 30
-    for i in 0..numSteps:
-      maxDrift = max(maxDrift, applyForces(map.nodes, 2 * dt) + applyStraighteningForces(map.nodes, 2 * dt))
-    let edges = map.nodes.edges
-    tryFixCollisions(edges, (1 + 0.025 * map.iterations.float / numSteps) * dt)
-    if (not hasCollisions(edges)) and maxDrift.length < driftThreshold:
+    if map.legalizingNode >= map.nodes.len:
       map.stage = done
       echo "Done"
-    map.iterations += numSteps
+    else:
+      let node = map.nodes[map.legalizingNode]
+      if map.legalizingChild >= node.neighbors.len:
+        map.legalizingNode += 1
+        map.legalizingChild = 0
+        map.legalizedDirs = {}
+      else:
+        var sortedNeighbors = node.neighbors
+        sortedNeighbors.sort(
+          proc (a, b: ref GraphNode): int =
+            system.cmp[int](a.numChildren, b.numChildren)
+        )
+        let
+          child = sortedNeighbors[map.legalizingChild]
+          delta = child.pos - node.pos
+          dirs = allDirs - map.legalizedDirs
+        var
+          bestDir: Option[Direction]
+          bestDiff = 0.0
+        for d in dirs:
+          case bestDir.kind
+          of option.none:
+            bestDir = makeJust d
+            bestDiff = delta.dot dirToVec[d]
+          of option.just:
+            let diff = delta.dot dirToVec[d]
+            if diff > bestDiff:
+              bestDir = makeJust d
+              bestDiff = diff
+        let d = bestDir.value
+        child.pos = node.pos + dirToVec[d] * delta.length
+        map.legalizedDirs = map.legalizedDirs + {d}
+
+        echo "Moving <", child.id, "> to <", d, "> of <", node.id, ">"
+
+        map.legalizingChild += 1
 
   map.centerNodes()
 
