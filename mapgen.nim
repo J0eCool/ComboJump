@@ -35,9 +35,32 @@ proc newGraphNode(): ref GraphNode =
 proc hash(node: ref GraphNode): Hash =
   node.id.Hash
 
+proc firstItem[T](s: HashSet[T]): T = 
+  assert(s.len > 0) 
+  for n in s.items: 
+    return n 
+
+proc traverse(node: ref GraphNode): seq[ref GraphNode] =
+  result = @[] 
+  var 
+    openSet = initSet[ref GraphNode]() 
+    closedSet = initSet[ref GraphNode]() 
+ 
+  openSet.incl node 
+  closedSet.incl node 
+ 
+  while openSet.len > 0: 
+    let n = openSet.firstItem 
+    openSet.excl n 
+ 
+    result.add n 
+    for c in n.neighbors: 
+      if (not closedSet.contains(c)): 
+        openSet.incl c 
+        closedSet.incl c 
+
 proc numChildren(node: ref GraphNode): int =
-  for n in node.neighbors:
-    result += 1 + n.numChildren
+  node.traverse.len
 
 proc drawArrow(renderer: RendererPtr, p1, p2: Vec, headSize, radius: float) =
   let
@@ -302,7 +325,7 @@ method update*(map: MapGen, dt: float) =
         while n.neighbors.len > length div 2:
           x.neighbors.add n.neighbors[0]
           n.neighbors.del 0
-        x.neighbors.add n
+        n.neighbors.add x
         toAdd.add x
     for n in toAdd:
       map.nodes.add n
@@ -347,8 +370,11 @@ method update*(map: MapGen, dt: float) =
             if diff > bestDiff:
               bestDir = makeJust d
               bestDiff = diff
-        let d = bestDir.value
-        child.pos = node.pos + dirToVec[d] * delta.length
+        let
+          d = bestDir.value
+          toMove = node.pos - child.pos + dirToVec[d] * delta.length
+        for c in child.traverse:
+          c.pos += toMove
         map.legalizedDirs = map.legalizedDirs + {d}
 
         echo "Moving <", child.id, "> to <", d, "> of <", node.id, ">"
