@@ -97,6 +97,7 @@ type
     stage: Stage
     iterations: int
     paused: bool
+    shouldAutoPause: bool
 
 const
   zoomLevels = 15
@@ -207,6 +208,32 @@ proc applyForces(nodes: seq[ref GraphNode], dt: float): Vec =
     n.pos += toMove
   return maxDrift
 
+proc applyStraighteningForces(nodes: seq[ref GraphNode], dt: float): Vec =
+  var forces = initTable[ref GraphNode, Vec]()
+  for n in nodes:
+    forces[n] = vec()
+
+  const
+    up = vec(0, 1)
+    right = vec(1, 0)
+  for n in nodes:
+    for c in n.neighbors:
+      let
+        delta = c.pos - n.pos
+        tryUp = delta.y.abs > delta.x.abs
+        dir = if tryUp: up else: right
+        toFix = (if tryUp: right else: up)
+        toMove = delta.unit.cross(toFix) * dir * 5000 * dt
+      forces[n] += toMove
+      forces[c] -= toMove
+
+  var maxDrift = vec()
+  for n in nodes:
+    let toMove = forces[n] * dt
+    maxDrift = max(toMove, maxDrift)
+    n.pos += toMove
+  return maxDrift
+
 proc centerNodes(map: MapGen) =
   var centerPos = vec()
   for n in map.nodes:
@@ -218,6 +245,7 @@ proc centerNodes(map: MapGen) =
 
 method init(map: MapGen) =
   map.genMap(12)
+  map.shouldAutoPause = false
 
 method draw*(renderer: RendererPtr, map: MapGen) =
   let font = map.resources.loadFont fontName
@@ -263,7 +291,7 @@ method update*(map: MapGen, dt: float) =
     tryFixCollisions(edges, (1 + 0.025 * map.iterations.float / numSteps) * dt)
     if maxDrift.length < driftThreshold:
       map.stage = splitting
-      map.paused = true
+      map.paused = map.shouldAutoPause
     map.iterations += numSteps
   elif map.stage == splitting:
     var
@@ -291,7 +319,7 @@ method update*(map: MapGen, dt: float) =
     else:
       echo "No splits"
       map.stage = legalizing
-      map.paused = true
+      map.paused = map.shouldAutoPause
   elif map.stage == legalizing:
     #TODO: fix copy-paste from separating!!
     var maxDrift = vec()
@@ -299,7 +327,7 @@ method update*(map: MapGen, dt: float) =
       driftThreshold = 0.1
       numSteps = 30
     for i in 0..numSteps:
-      maxDrift = max(maxDrift, applyForces(map.nodes, 2 * dt))
+      maxDrift = max(maxDrift, applyForces(map.nodes, 2 * dt) + applyStraighteningForces(map.nodes, 2 * dt))
     let edges = map.nodes.edges
     tryFixCollisions(edges, (1 + 0.025 * map.iterations.float / numSteps) * dt)
     if (not hasCollisions(edges)) and maxDrift.length < driftThreshold:
