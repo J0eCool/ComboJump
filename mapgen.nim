@@ -28,19 +28,19 @@ type
     right,
     down
 
-  GraphNode = object
+  GraphNode = ref object
     id: int
     pos: Vec
-    neighbors: seq[ref GraphNode]
+    neighbors: seq[GraphNode]
     usedDirs: set[Direction]
 
-proc newGraphNode(): ref GraphNode =
+proc newGraphNode(): GraphNode =
   new result
   result.id = nextId
   result.neighbors = @[]
   nextId += 1
 
-proc hash(node: ref GraphNode): Hash =
+proc hash(node: GraphNode): Hash =
   node.id.Hash
 
 proc firstItem[T](s: HashSet[T]): T = 
@@ -48,11 +48,11 @@ proc firstItem[T](s: HashSet[T]): T =
   for n in s.items: 
     return n 
 
-proc traverse(node: ref GraphNode): seq[ref GraphNode] =
+proc traverse(node: GraphNode): seq[GraphNode] =
   result = @[] 
   var 
-    openSet = initSet[ref GraphNode]() 
-    closedSet = initSet[ref GraphNode]() 
+    openSet = initSet[GraphNode]() 
+    closedSet = initSet[GraphNode]() 
  
   openSet.incl node 
   closedSet.incl node 
@@ -67,7 +67,7 @@ proc traverse(node: ref GraphNode): seq[ref GraphNode] =
         openSet.incl c 
         closedSet.incl c 
 
-proc numChildren(node: ref GraphNode): int =
+proc numChildren(node: GraphNode): int =
   node.traverse.len
 
 proc drawArrow(renderer: RendererPtr, p1, p2: Vec, headSize, radius: float) =
@@ -86,7 +86,7 @@ proc drawArrow(renderer: RendererPtr, p1, p2: Vec, headSize, radius: float) =
   renderer.drawLine(b, c)
   renderer.drawLine(b, d)
 
-proc draw(renderer: RendererPtr, nodes: seq[ref GraphNode], font: FontPtr, camera: Vec, zoom: float) =
+proc draw(renderer: RendererPtr, nodes: seq[GraphNode], font: FontPtr, camera: Vec, zoom: float) =
   let
     nodeWidth = 50 * zoom
     nodeSize = vec(nodeWidth)
@@ -119,7 +119,7 @@ type
     done
 
   MapGen* = ref object of Program
-    nodes: seq[ref GraphNode]
+    nodes: seq[GraphNode]
     resources: ResourceManager
     camera: Vec
     lastMousePos: Option[Vec]
@@ -163,7 +163,7 @@ proc zoomScale(map: MapGen): float =
   pow(zoomPower, lvl.float)
 
 proc genMap(map: MapGen, numNodes: int) =
-  var nodes: seq[ref GraphNode] = @[]
+  var nodes: seq[GraphNode] = @[]
 
   for i in 0..<numNodes:
     let n = newGraphNode()
@@ -178,8 +178,8 @@ proc genMap(map: MapGen, numNodes: int) =
   map.legalizingNode = 0
   map.legalizingChild = 0
 
-type Edge = tuple[a, b: ref GraphNode]
-proc edges(nodes: seq[ref GraphNode]): seq[Edge] =
+type Edge = tuple[a, b: GraphNode]
+proc edges(nodes: seq[GraphNode]): seq[Edge] =
   result = @[]
   for n in nodes:
     for c in n.neighbors:
@@ -207,7 +207,7 @@ proc hasCollisions(edges: seq[Edge]): bool =
         return true
 
 proc tryFixCollisions(edges: seq[Edge], dt: float) =
-  var forces = initTable[ref GraphNode, Vec]()
+  var forces = initTable[GraphNode, Vec]()
   for i in 0..<edges.len:
     let
       a = edges[i]
@@ -226,8 +226,8 @@ proc tryFixCollisions(edges: seq[Edge], dt: float) =
   for n, f in forces:
     n.pos += f
 
-proc applyForces(nodes: seq[ref GraphNode], dt: float): Vec =
-  var forces = initTable[ref GraphNode, Vec]()
+proc applyForces(nodes: seq[GraphNode], dt: float): Vec =
+  var forces = initTable[GraphNode, Vec]()
   for n in nodes:
     forces[n] = vec()
 
@@ -319,7 +319,7 @@ method update*(map: MapGen, dt: float) =
   elif map.stage == splitting:
     var
       didSplit = false
-      toAdd: seq[ref GraphNode] = @[]
+      toAdd: seq[GraphNode] = @[]
     for n in map.nodes:
       let length = n.neighbors.len + (if n.id == 1: 0 else: 1)
       if length > 4:
@@ -355,7 +355,7 @@ method update*(map: MapGen, dt: float) =
       else:
         var sortedNeighbors = node.neighbors
         sortedNeighbors.sort(
-          proc (a, b: ref GraphNode): int =
+          proc (a, b: GraphNode): int =
             system.cmp[int](a.numChildren, b.numChildren)
         )
         let
