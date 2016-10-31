@@ -21,10 +21,18 @@ const fontName = "nevis.ttf"
 var textCache = initTable[string, RenderedText]()
 
 var nextId = 1
-type GraphNode = object
-  id: int
-  pos: Vec
-  neighbors: seq[ref GraphNode]
+type
+  Direction = enum
+    left,
+    up,
+    right,
+    down
+
+  GraphNode = object
+    id: int
+    pos: Vec
+    neighbors: seq[ref GraphNode]
+    usedDirs: set[Direction]
 
 proc newGraphNode(): ref GraphNode =
   new result
@@ -110,12 +118,6 @@ type
     legalizing,
     done
 
-  Direction = enum
-    left,
-    up,
-    right,
-    down
-
   MapGen* = ref object of Program
     nodes: seq[ref GraphNode]
     resources: ResourceManager
@@ -129,19 +131,24 @@ type
     shouldAutoPause: bool
     legalizingNode: int
     legalizingChild: int
-    legalizedDirs: set[Direction]
 
-proc initDirArray(): array[Direction, Vec] =
+proc initDirToVec(): array[Direction, Vec] =
   result[left] = vec(-1, 0)
   result[right] = vec(1, 0)
   result[up] = vec(0, -1)
   result[down] = vec(0, 1)
+proc initDirToOpposite(): array[Direction, Direction] =
+  result[left] = right
+  result[right] = left
+  result[up] = down
+  result[down] = up
 
 const
   zoomLevels = 15
   zoomPower = 1.3
   midZoomLevel = zoomLevels div 2
-  dirToVec = initDirArray()
+  dirToVec = initDirToVec()
+  dirToOpposite = initDirToOpposite()
   allDirs = {right, down, up, left}
 
 proc newMapGen(screenSize: Vec): MapGen =
@@ -170,7 +177,6 @@ proc genMap(map: MapGen, numNodes: int) =
   map.iterations = 0
   map.legalizingNode = 0
   map.legalizingChild = 0
-  map.legalizedDirs = {}
 
 type Edge = tuple[a, b: ref GraphNode]
 proc edges(nodes: seq[ref GraphNode]): seq[Edge] =
@@ -346,7 +352,6 @@ method update*(map: MapGen, dt: float) =
       if map.legalizingChild >= node.neighbors.len:
         map.legalizingNode += 1
         map.legalizingChild = 0
-        map.legalizedDirs = {}
       else:
         var sortedNeighbors = node.neighbors
         sortedNeighbors.sort(
@@ -356,7 +361,7 @@ method update*(map: MapGen, dt: float) =
         let
           child = sortedNeighbors[map.legalizingChild]
           delta = child.pos - node.pos
-          dirs = allDirs - map.legalizedDirs
+          dirs = allDirs - node.usedDirs
         var
           bestDir: Option[Direction]
           bestDiff = 0.0
@@ -375,7 +380,8 @@ method update*(map: MapGen, dt: float) =
           toMove = node.pos - child.pos + dirToVec[d] * delta.length
         for c in child.traverse:
           c.pos += toMove
-        map.legalizedDirs = map.legalizedDirs + {d}
+        node.usedDirs = node.usedDirs + {d}
+        child.usedDirs = child.usedDirs + {dirToOpposite[d]}
 
         echo "Moving <", child.id, "> to <", d, "> of <", node.id, ">"
 
