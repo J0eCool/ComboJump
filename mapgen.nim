@@ -266,6 +266,92 @@ proc centerNodes(map: MapGen) =
   for n in map.nodes:
     n.pos -= centerPos
 
+proc updateSpacing(map: MapGen, dt: float) =
+  var maxDrift = vec()
+  const
+    driftThreshold = 3
+    numSteps = 30
+  for i in 0..numSteps:
+    maxDrift = max(maxDrift, applyForces(map.nodes, 2 * dt))
+  let edges = map.nodes.edges
+  tryFixCollisions(edges, (1 + 0.025 * map.iterations.float / numSteps) * dt)
+  if maxDrift.length < driftThreshold:
+    map.stage = splitting
+    map.paused = map.shouldAutoPause
+  map.iterations += numSteps
+
+proc updateSplitting(map: MapGen) =
+  var
+    didSplit = false
+    toAdd: seq[GraphNode] = @[]
+  for n in map.nodes:
+    let length = n.neighbors.len + (if n.id == 1: 0 else: 1)
+    if length > 4:
+      echo "Splitting: ", n.id, " with neighbors=", length
+      didSplit = true
+      let x = newGraphNode()
+      x.pos = n.pos + randomVec(30)
+      shuffle(n.neighbors)
+      while n.neighbors.len > length div 2:
+        x.neighbors.add n.neighbors[0]
+        n.neighbors.del 0
+      n.neighbors.add x
+      toAdd.add x
+  for n in toAdd:
+    map.nodes.add n
+
+  if didSplit:
+    map.stage = splitting
+    map.iterations = 0
+  else:
+    echo "No splits"
+    map.stage = legalizing
+    map.paused = map.shouldAutoPause
+
+proc updateLegalizing(map: MapGen) =
+  if map.legalizingNode >= map.nodes.len:
+    map.stage = done
+    echo "Done"
+  else:
+    let node = map.nodes[map.legalizingNode]
+    if map.legalizingChild >= node.neighbors.len:
+      map.legalizingNode += 1
+      map.legalizingChild = 0
+    else:
+      var sortedNeighbors = node.neighbors
+      sortedNeighbors.sort(
+        proc (a, b: GraphNode): int =
+          system.cmp[int](a.numChildren, b.numChildren)
+      )
+      let
+        child = sortedNeighbors[map.legalizingChild]
+        delta = child.pos - node.pos
+        dirs = allDirs - node.usedDirs
+      var
+        bestDir: Option[Direction]
+        bestDiff = 0.0
+      for d in dirs:
+        case bestDir.kind
+        of option.none:
+          bestDir = makeJust d
+          bestDiff = delta.dot dirToVec[d]
+        of option.just:
+          let diff = delta.dot dirToVec[d]
+          if diff > bestDiff:
+            bestDir = makeJust d
+            bestDiff = diff
+      let
+        d = bestDir.value
+        toMove = node.pos - child.pos + dirToVec[d] * delta.length
+      for c in child.traverse:
+        c.pos += toMove
+      node.usedDirs = node.usedDirs + {d}
+      child.usedDirs = child.usedDirs + {dirToOpposite[d]}
+
+      echo "Moving <", child.id, "> to <", d, "> of <", node.id, ">"
+
+      map.legalizingChild += 1
+
 method init(map: MapGen) =
   map.genMap(12)
   map.shouldAutoPause = false
@@ -304,88 +390,11 @@ method update*(map: MapGen, dt: float) =
 
   # iterate map
   if map.stage == spacing:
-    var maxDrift = vec()
-    const
-      driftThreshold = 3
-      numSteps = 30
-    for i in 0..numSteps:
-      maxDrift = max(maxDrift, applyForces(map.nodes, 2 * dt))
-    let edges = map.nodes.edges
-    tryFixCollisions(edges, (1 + 0.025 * map.iterations.float / numSteps) * dt)
-    if maxDrift.length < driftThreshold:
-      map.stage = splitting
-      map.paused = map.shouldAutoPause
-    map.iterations += numSteps
+    map.updateSpacing(dt)
   elif map.stage == splitting:
-    var
-      didSplit = false
-      toAdd: seq[GraphNode] = @[]
-    for n in map.nodes:
-      let length = n.neighbors.len + (if n.id == 1: 0 else: 1)
-      if length > 4:
-        echo "Splitting: ", n.id, " with neighbors=", length
-        didSplit = true
-        let x = newGraphNode()
-        x.pos = n.pos + randomVec(30)
-        shuffle(n.neighbors)
-        while n.neighbors.len > length div 2:
-          x.neighbors.add n.neighbors[0]
-          n.neighbors.del 0
-        n.neighbors.add x
-        toAdd.add x
-    for n in toAdd:
-      map.nodes.add n
-
-    if didSplit:
-      map.stage = splitting
-      map.iterations = 0
-    else:
-      echo "No splits"
-      map.stage = legalizing
-      map.paused = map.shouldAutoPause
+    map.updateSplitting()
   elif map.stage == legalizing:
-    if map.legalizingNode >= map.nodes.len:
-      map.stage = done
-      echo "Done"
-    else:
-      let node = map.nodes[map.legalizingNode]
-      if map.legalizingChild >= node.neighbors.len:
-        map.legalizingNode += 1
-        map.legalizingChild = 0
-      else:
-        var sortedNeighbors = node.neighbors
-        sortedNeighbors.sort(
-          proc (a, b: GraphNode): int =
-            system.cmp[int](a.numChildren, b.numChildren)
-        )
-        let
-          child = sortedNeighbors[map.legalizingChild]
-          delta = child.pos - node.pos
-          dirs = allDirs - node.usedDirs
-        var
-          bestDir: Option[Direction]
-          bestDiff = 0.0
-        for d in dirs:
-          case bestDir.kind
-          of option.none:
-            bestDir = makeJust d
-            bestDiff = delta.dot dirToVec[d]
-          of option.just:
-            let diff = delta.dot dirToVec[d]
-            if diff > bestDiff:
-              bestDir = makeJust d
-              bestDiff = diff
-        let
-          d = bestDir.value
-          toMove = node.pos - child.pos + dirToVec[d] * delta.length
-        for c in child.traverse:
-          c.pos += toMove
-        node.usedDirs = node.usedDirs + {d}
-        child.usedDirs = child.usedDirs + {dirToOpposite[d]}
-
-        echo "Moving <", child.id, "> to <", d, "> of <", node.id, ">"
-
-        map.legalizingChild += 1
+    map.updateLegalizing()
 
   map.centerNodes()
 
