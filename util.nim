@@ -64,3 +64,8 @@ proc `$`*[T: enum, V](list: array[T, V]): string =
       result &= ", "
     result &= $i & ":" & $list[i]
   result &= "]"
+
+macro addVarargs*(call, args: expr): expr =
+  result = call
+  for arg in args:
+    result.add arg

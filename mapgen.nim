@@ -131,6 +131,7 @@ type
     shouldAutoPause: bool
     legalizingNode: int
     legalizingChild: int
+    loggingStages: set[Stage]
 
 proc initDirToVec(): array[Direction, Vec] =
   result[left] = vec(-1, 0)
@@ -156,7 +157,12 @@ proc newMapGen(screenSize: Vec): MapGen =
   result.screenSize = screenSize
   result.resources = newResourceManager()
   result.zoomLevel = midZoomLevel
+  result.loggingStages = {}
   result.initProgram()
+
+template log(map: MapGen, stage: Stage, message: varargs[untyped]) =
+  if stage in map.loggingStages:
+    addVarargs(echo(), message)
 
 proc zoomScale(map: MapGen): float =
   let lvl = map.zoomLevel - midZoomLevel
@@ -287,7 +293,7 @@ proc updateSplitting(map: MapGen) =
   for n in map.nodes:
     let length = n.neighbors.len + (if n.id == 1: 0 else: 1)
     if length > 4:
-      echo "Splitting: ", n.id, " with neighbors=", length
+      map.log splitting, "Splitting: ", n.id, " with neighbors=", length
       didSplit = true
       let x = newGraphNode()
       x.pos = n.pos + randomVec(30)
@@ -304,14 +310,14 @@ proc updateSplitting(map: MapGen) =
     map.stage = splitting
     map.iterations = 0
   else:
-    echo "No splits"
+    map.log splitting, "No splits"
     map.stage = legalizing
     map.paused = map.shouldAutoPause
 
 proc updateLegalizing(map: MapGen) =
   if map.legalizingNode >= map.nodes.len:
     map.stage = done
-    echo "Done"
+    map.log legalizing, "Done"
   else:
     let node = map.nodes[map.legalizingNode]
     if map.legalizingChild >= node.neighbors.len:
@@ -348,7 +354,7 @@ proc updateLegalizing(map: MapGen) =
       node.usedDirs = node.usedDirs + {d}
       child.usedDirs = child.usedDirs + {dirToOpposite[d]}
 
-      echo "Moving <", child.id, "> to <", d, "> of <", node.id, ">"
+      map.log legalizing, "Moving <", child.id, "> to <", d, "> of <", node.id, ">"
 
       map.legalizingChild += 1
 
