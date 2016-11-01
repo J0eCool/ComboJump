@@ -18,7 +18,6 @@ import
   vec
 
 const fontName = "nevis.ttf"
-var textCache = initTable[string, RenderedText]()
 
 var nextId = 1
 type
@@ -96,6 +95,12 @@ proc drawArrow(renderer: RendererPtr, p1, p2: Vec, headSize, radius: float) =
   renderer.drawLine(b, c)
   renderer.drawLine(b, d)
 
+var textCache = initTable[string, RenderedText]()
+proc drawCachedText(renderer: RendererPtr, text: string, pos: Vec, font: FontPtr, color: Color) =
+  if not textCache.hasKey(text):
+    textCache[text] = renderer.renderText(text, font, color)
+  renderer.draw(textCache[text], pos)
+
 proc draw(renderer: RendererPtr, nodes: seq[GraphNode], font: FontPtr, camera: Vec, zoom: float) =
   let
     nodeWidth = 50 * zoom
@@ -117,9 +122,7 @@ proc draw(renderer: RendererPtr, nodes: seq[GraphNode], font: FontPtr, camera: V
     renderer.drawRect rect(pos, nodeSize)
 
     let text = $n.id
-    if not textCache.hasKey(text):
-      textCache[text] = renderer.renderText(text, font, color(64, 64, 64, 255))
-    renderer.draw(textCache[text], pos)
+    renderer.drawCachedText(text, pos, font, color(64, 64, 64, 255))
 
 type
   Stage = enum
@@ -169,7 +172,7 @@ proc newMapGen(screenSize: Vec): MapGen =
   result.screenSize = screenSize
   result.resources = newResourceManager()
   result.zoomLevel = midZoomLevel
-  result.loggingStages = {legalizing}
+  result.loggingStages = {}
   result.initProgram()
 
 template log(map: MapGen, stage: Stage, message: varargs[untyped]) =
@@ -211,12 +214,18 @@ proc collides(a, b: Edge): bool =
     aDir = aDelta.unit
     bDelta = b.b.pos - b.a.pos
     bDir = bDelta.unit
-  const r = 0.2
-  intersects(
-    a.a.pos + r * aDir,
-    a.b.pos - r * aDir,
-    b.a.pos + r * bDir,
-    b.b.pos - r * bDir)
+  const r = -50
+  return (
+    a.a != b.a and
+    a.a != b.b and
+    a.b != b.a and
+    a.b != b.b and
+    intersects(
+      a.a.pos + r * aDir,
+      a.b.pos - r * aDir,
+      b.a.pos + r * bDir,
+      b.b.pos - r * bDir)
+    )
 
 template walkCollisions(edges: seq[Edge], a, b, body: untyped): untyped =
   for i in 0..<edges.len:
@@ -251,10 +260,11 @@ proc tryFixCollisions(edges: seq[Edge], dt: float) =
         bDelta = b.b.pos - b.a.pos
         bDir = bDelta.unit
       if collides(a, b):
-        forces[a.a] = forces.getOrDefault(a.a) + bDir * (500 * dt)
-        forces[a.b] = forces.getOrDefault(a.a) + bDir * (500 * dt)
-        forces[b.a] = forces.getOrDefault(a.a) + aDir * (500 * dt)
-        forces[b.b] = forces.getOrDefault(a.a) + aDir * (500 * dt)
+        let dirs = [bDir, aDir]
+        var i = 0
+        for n in [a.a, b.a, a.b, b.b]:
+          forces[n] = forces.getOrDefault(n) + dirs[i mod 2] * (500 * dt)
+          i += 1
   for n, f in forces:
     n.pos += f
 
@@ -381,20 +391,39 @@ proc updateLegalizing(map: MapGen) =
       child.dirToParent = dirToVec[op]
 
       map.log legalizing, "Moving <", child.id, "> to <", d, "> of <", node.id, ">"
-      map.log legalizing, "  with dirToParent ", child.dirToParent
 
       map.legalizingChild += 1
 
 proc updateUncrossing(map: MapGen, dt: float) =
-  let crosses = map.nodes.edges.nodesWithCollisions
-  if crosses.len == 0:
+  # let crosses = map.nodes.edges.nodesWithCollisions
+  # if crosses.len == 0:
+  #   map.stage = preDone
+  #   return
+  # let
+  #   nodes = crosses.toSeq.sortedByChildCount
+  #   node = nodes[nodes.len - 1]
+  #   toMove = node.dirToParent * dt * 2500
+  # node.moveWithChildren toMove
+  let edges = map.nodes.edges
+  if not edges.hasCollisions:
     map.stage = preDone
     return
-  let
-    nodes = crosses.toSeq.sortedByChildCount
-    node = nodes[nodes.len - 1]
-    toMove = node.dirToParent * dt * 2500
-  node.moveWithChildren toMove
+
+  var maxDrift = vec()
+  const
+    driftThreshold = 3
+    numSteps = 30
+  for i in 0..numSteps:
+    maxDrift = max(maxDrift, applyForces(map.nodes, 2 * dt))
+  tryFixCollisions(edges, (1 + 0.25 * map.iterations.float / numSteps) * dt)
+  if maxDrift.length < driftThreshold or not edges.hasCollisions:
+    map.stage = spacing
+    map.paused = map.shouldAutoPause
+    for n in map.nodes:
+      n.usedDirs = {}
+    map.legalizingChild = 0
+    map.legalizingNode = 0
+  map.iterations += numSteps
 
 
 method init(map: MapGen) =
@@ -402,9 +431,12 @@ method init(map: MapGen) =
   map.shouldAutoPause = false
 
 method draw*(renderer: RendererPtr, map: MapGen) =
-  let font = map.resources.loadFont fontName
+  let
+    font = map.resources.loadFont fontName
+    stageText = "Stage: " & $map.stage
 
   renderer.draw map.nodes, font, map.camera, map.zoomScale
+  renderer.drawCachedText stageText, vec(600, 830), font, color(64, 64, 64, 255)
 
 method update*(map: MapGen, dt: float) =
   #TODO: split into subfunctions
