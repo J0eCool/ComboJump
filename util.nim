@@ -35,6 +35,9 @@ proc randomNormal*(lo, hi: float): float =
     hi = max(a, b)
   random(lo, hi)
 
+proc random*[T](list: seq[T]): T =
+  list[random(0, list.len - 1)]
+  
 proc shuffle*[T](list: var seq[T]) =
   for i in 0..<list.len:
     let j = random(i, list.len - 1)

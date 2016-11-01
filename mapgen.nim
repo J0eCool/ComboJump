@@ -33,6 +33,7 @@ type
     pos: Vec
     neighbors: seq[GraphNode]
     usedDirs: set[Direction]
+    dirToParent: Vec
 
 proc newGraphNode(): GraphNode =
   new result
@@ -45,8 +46,13 @@ proc hash(node: GraphNode): Hash =
 
 proc firstItem[T](s: HashSet[T]): T = 
   assert(s.len > 0) 
-  for n in s.items: 
-    return n 
+  for x in s.items: 
+    return x
+
+proc toSeq[T](s: HashSet[T]): seq[T] =
+  result = @[]
+  for x in s.items:
+    result.add x
 
 proc traverse(node: GraphNode): seq[GraphNode] =
   result = @[] 
@@ -69,6 +75,10 @@ proc traverse(node: GraphNode): seq[GraphNode] =
 
 proc numChildren(node: GraphNode): int =
   node.traverse.len
+
+proc moveWithChildren(node: GraphNode, toMove: Vec) =
+  for n in node.traverse:
+    n.pos += toMove
 
 proc drawArrow(renderer: RendererPtr, p1, p2: Vec, headSize, radius: float) =
   let
@@ -116,6 +126,8 @@ type
     spacing,
     splitting,
     legalizing,
+    uncrossing,
+    preDone,
     done
 
   MapGen* = ref object of Program
@@ -157,7 +169,7 @@ proc newMapGen(screenSize: Vec): MapGen =
   result.screenSize = screenSize
   result.resources = newResourceManager()
   result.zoomLevel = midZoomLevel
-  result.loggingStages = {}
+  result.loggingStages = {legalizing}
   result.initProgram()
 
 template log(map: MapGen, stage: Stage, message: varargs[untyped]) =
@@ -183,6 +195,8 @@ proc genMap(map: MapGen, numNodes: int) =
   map.iterations = 0
   map.legalizingNode = 0
   map.legalizingChild = 0
+  map.camera = vec()
+  echo "New map with ", numNodes, " nodes"
 
 type Edge = tuple[a, b: GraphNode]
 proc edges(nodes: seq[GraphNode]): seq[Edge] =
@@ -204,13 +218,25 @@ proc collides(a, b: Edge): bool =
     b.a.pos + r * bDir,
     b.b.pos - r * bDir)
 
-proc hasCollisions(edges: seq[Edge]): bool =
+template walkCollisions(edges: seq[Edge], a, b, body: untyped): untyped =
   for i in 0..<edges.len:
     let a = edges[i]
     for j in i+1..<edges.len:
       let b = edges[j]
       if collides(a, b):
-        return true
+        body
+
+proc hasCollisions(edges: seq[Edge]): bool =
+  edges.walkCollisions a, b:
+    return true
+
+proc nodesWithCollisions(edges: seq[Edge]): HashSet[GraphNode] =
+  result = initSet[GraphNode]()
+  edges.walkCollisions a, b:
+    result.incl a.a
+    result.incl a.b
+    result.incl b.a
+    result.incl b.b
 
 proc tryFixCollisions(edges: seq[Edge], dt: float) =
   var forces = initTable[GraphNode, Vec]()
@@ -272,6 +298,13 @@ proc centerNodes(map: MapGen) =
   for n in map.nodes:
     n.pos -= centerPos
 
+proc sortedByChildCount(nodes: seq[GraphNode]): seq[GraphNode] =
+  result = nodes
+  result.sort(
+    proc (a, b: GraphNode): int =
+      system.cmp[int](a.numChildren, b.numChildren)
+  )
+
 proc updateSpacing(map: MapGen, dt: float) =
   var maxDrift = vec()
   const
@@ -296,7 +329,7 @@ proc updateSplitting(map: MapGen) =
       map.log splitting, "Splitting: ", n.id, " with neighbors=", length
       didSplit = true
       let x = newGraphNode()
-      x.pos = n.pos + randomVec(30)
+      x.pos = n.pos + randomVec(150, 300)
       shuffle(n.neighbors)
       while n.neighbors.len > length div 2:
         x.neighbors.add n.neighbors[0]
@@ -306,29 +339,21 @@ proc updateSplitting(map: MapGen) =
   for n in toAdd:
     map.nodes.add n
 
-  if didSplit:
-    map.stage = splitting
-    map.iterations = 0
-  else:
-    map.log splitting, "No splits"
+  if not didSplit:
+    map.log splitting, "Done splitting"
     map.stage = legalizing
     map.paused = map.shouldAutoPause
 
 proc updateLegalizing(map: MapGen) =
   if map.legalizingNode >= map.nodes.len:
-    map.stage = done
-    map.log legalizing, "Done"
+    map.stage = uncrossing
   else:
     let node = map.nodes[map.legalizingNode]
     if map.legalizingChild >= node.neighbors.len:
       map.legalizingNode += 1
       map.legalizingChild = 0
     else:
-      var sortedNeighbors = node.neighbors
-      sortedNeighbors.sort(
-        proc (a, b: GraphNode): int =
-          system.cmp[int](a.numChildren, b.numChildren)
-      )
+      let sortedNeighbors = node.neighbors.sortedByChildCount
       let
         child = sortedNeighbors[map.legalizingChild]
         delta = child.pos - node.pos
@@ -348,15 +373,29 @@ proc updateLegalizing(map: MapGen) =
             bestDiff = diff
       let
         d = bestDir.value
+        op = dirToOpposite[d]
         toMove = node.pos - child.pos + dirToVec[d] * delta.length
-      for c in child.traverse:
-        c.pos += toMove
+      child.moveWithChildren toMove
       node.usedDirs = node.usedDirs + {d}
-      child.usedDirs = child.usedDirs + {dirToOpposite[d]}
+      child.usedDirs = child.usedDirs + {op}
+      child.dirToParent = dirToVec[op]
 
       map.log legalizing, "Moving <", child.id, "> to <", d, "> of <", node.id, ">"
+      map.log legalizing, "  with dirToParent ", child.dirToParent
 
       map.legalizingChild += 1
+
+proc updateUncrossing(map: MapGen, dt: float) =
+  let crosses = map.nodes.edges.nodesWithCollisions
+  if crosses.len == 0:
+    map.stage = preDone
+    return
+  let
+    nodes = crosses.toSeq.sortedByChildCount
+    node = nodes[nodes.len - 1]
+    toMove = node.dirToParent * dt * 2500
+  node.moveWithChildren toMove
+
 
 method init(map: MapGen) =
   map.genMap(12)
@@ -372,7 +411,7 @@ method update*(map: MapGen, dt: float) =
   # maybe generate new map
   if map.input.isPressed(Input.spell1):
     nextId = 1
-    map.genMap(random(27,31))
+    map.genMap(random(7,55))
   if map.input.isPressed(Input.jump):
     map.paused = not map.paused
 
@@ -395,12 +434,20 @@ method update*(map: MapGen, dt: float) =
     return
 
   # iterate map
-  if map.stage == spacing:
+  case map.stage
+  of spacing:
     map.updateSpacing(dt)
-  elif map.stage == splitting:
+  of splitting:
     map.updateSplitting()
-  elif map.stage == legalizing:
+  of legalizing:
     map.updateLegalizing()
+  of uncrossing:
+    map.updateUncrossing(dt)
+  of preDone:
+    echo "Done"
+    map.stage = done
+  of done:
+    discard
 
   map.centerNodes()
 

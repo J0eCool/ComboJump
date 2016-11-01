@@ -62,8 +62,10 @@ proc dot*(a, b: Vec): float =
 proc cross*(a, b: Vec): float =
   a.x * b.y - a.y * b.x
 
+proc randomVec*(rlo, rhi: float): Vec =
+  unitVec(random(2 * PI)) * random(rlo, rhi)
 proc randomVec*(r: float): Vec =
-  unitVec(random(2 * PI)) * random(r)
+  randomVec(0, r)
 
 proc max*(a, b: Vec): Vec =
   if a.length2 > b.length2:
