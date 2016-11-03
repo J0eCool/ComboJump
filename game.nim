@@ -46,6 +46,7 @@ proc loadEntities(game: Game)
 
 proc newGame*(screenSize: Vec): Game {.procvar.} =
   new result
+  result.title = "WizGame"
   result.initProgram()
   result.resources = newResourceManager()
   result.camera.screenSize = screenSize

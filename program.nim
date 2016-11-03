@@ -11,6 +11,7 @@ import
 
 type Program* = ref object of RootObj
   input*: InputManager
+  title*: string
   shouldExit*: bool
 
 proc initProgram*(program: Program) =
@@ -52,7 +53,7 @@ proc main*(program: Program, screenSize: Vec) =
 
   let
     window = createWindow(
-      title = "2d tututuru",
+      title = program.title,
       x = SDL_WINDOWPOS_CENTERED,
       y = SDL_WINDOWPOS_CENTERED,
       w = screenSize.x.cint,

@@ -169,6 +169,7 @@ const
 
 proc newMapGen(screenSize: Vec): MapGen =
   new result
+  result.title = "Map Gen"
   result.screenSize = screenSize
   result.resources = newResourceManager()
   result.zoomLevel = midZoomLevel
