@@ -395,35 +395,15 @@ proc updateLegalizing(map: MapGen) =
       map.legalizingChild += 1
 
 proc updateUncrossing(map: MapGen, dt: float) =
-  # let crosses = map.nodes.edges.nodesWithCollisions
-  # if crosses.len == 0:
-  #   map.stage = preDone
-  #   return
-  # let
-  #   nodes = crosses.toSeq.sortedByChildCount
-  #   node = nodes[nodes.len - 1]
-  #   toMove = node.dirToParent * dt * 2500
-  # node.moveWithChildren toMove
-  let edges = map.nodes.edges
-  if not edges.hasCollisions:
+  let crosses = map.nodes.edges.nodesWithCollisions
+  if crosses.len == 0:
     map.stage = preDone
     return
-
-  var maxDrift = vec()
-  const
-    driftThreshold = 3
-    numSteps = 30
-  for i in 0..numSteps:
-    maxDrift = max(maxDrift, applyForces(map.nodes, 2 * dt))
-  tryFixCollisions(edges, (1 + 0.25 * map.iterations.float / numSteps) * dt)
-  if maxDrift.length < driftThreshold or not edges.hasCollisions:
-    map.stage = spacing
-    map.paused = map.shouldAutoPause
-    for n in map.nodes:
-      n.usedDirs = {}
-    map.legalizingChild = 0
-    map.legalizingNode = 0
-  map.iterations += numSteps
+  let
+    nodes = crosses.toSeq.sortedByChildCount
+    node = nodes[nodes.len - 1]
+    toMove = node.dirToParent * dt * 2500
+  node.moveWithChildren toMove
 
 
 method init(map: MapGen) =

@@ -30,6 +30,8 @@ vecf `-`, `-=`
 vecf `*`, `*=`
 vecf `/`, `/=`
 vecf pow, `pow=`
+vecf min, `min=`
+vecf max, `max=`
 
 proc unitVec*(angle: float): Vec =
   vec(cos(angle), sin(angle))
@@ -67,13 +69,16 @@ proc randomVec*(rlo, rhi: float): Vec =
 proc randomVec*(r: float): Vec =
   randomVec(0, r)
 
-proc max*(a, b: Vec): Vec =
+proc random*(lo, hi: Vec): Vec =
+  vec(random(lo.x, hi.x), random(lo.y, hi.y))
+
+proc lengthMax*(a, b: Vec): Vec =
   if a.length2 > b.length2:
     a
   else:
     b
 
-proc min*(a, b: Vec): Vec =
+proc lengthMin*(a, b: Vec): Vec =
   if a.length2 < b.length2:
     a
   else:
