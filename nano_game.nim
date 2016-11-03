@@ -5,11 +5,9 @@ when Profile != 0:
   import nimprof
 
 import
-  component/bullet,
+  game,
   component/camera_target,
-  component/clickable,
   component/collider,
-  component/enemy_movement,
   component/health,
   component/mana,
   component/movement,
@@ -18,13 +16,10 @@ import
   component/sprite,
   component/text,
   component/transform,
-  system/bullet_hit,
-  system/bullet_update,
   system/collisions,
   system/physics,
   system/player_input,
   system/player_movement,
-  system/player_shoot,
   system/quantity_regen,
   system/render,
   system/update_progress_bar,
@@ -37,24 +32,14 @@ import
   vec,
   util
 
-type Game* = ref object of Program
-  resources*: ResourceManager
-  entities*: Entities
-  camera*: Camera
+type NanoGame* = ref object of Game
 
-method loadEntities*(game: Game) {.base.}
-
-proc newGame*(screenSize: Vec): Game =
+proc newNanoGame*(screenSize: Vec): NanoGame =
   new result
-  result.title = "WizGame"
   result.camera.screenSize = screenSize
+  result.title = "NaNo Game 2016"
 
-method init*(game: Game) =
-  game.initProgram()
-  game.resources = newResourceManager()
-  game.loadEntities()
-
-method loadEntities*(game: Game) =
+method loadEntities*(game: NanoGame) =
   game.entities = @[
     newEntity("Player", [
       Transform(pos: vec(180, 500),
@@ -64,41 +49,11 @@ method loadEntities*(game: Game) =
       PlayerControl(),
       Sprite(color: color(12, 255, 12, 255)),
       Collider(layer: Layer.player),
-      Clickable(),
       CameraTarget(),
-    ]),
-    newEntity("Enemy", [
-      Transform(pos: vec(600, 400),
-                size: vec(60, 60)),
-      Movement(usesGravity: true),
-      newHealth(20),
-      Sprite(color: color(155, 16, 24, 255)),
-      Collider(layer: Layer.enemy),
-      EnemyMovement(targetRange: 400, moveSpeed: 200),
-    ]),
-    newEntity("Enemy2", [
-      Transform(pos: vec(1000, 500),
-                size: vec(60, 60)),
-      Movement(usesGravity: true),
-      newHealth(20),
-      Sprite(color: color(155, 16, 24, 255)),
-      Collider(layer: Layer.enemy),
     ]),
     newEntity("Ground", [
       Transform(pos: vec(1450, 810),
                 size: vec(2900, 40)),
-      Sprite(color: color(192, 192, 192, 255)),
-      Collider(layer: Layer.floor),
-    ]),
-    newEntity("LeftWall", [
-      Transform(pos: vec(20, 620),
-                size: vec(40, 340)),
-      Sprite(color: color(192, 192, 192, 255)),
-      Collider(layer: Layer.floor),
-    ]),
-    newEntity("RightWall", [
-      Transform(pos: vec(2880, 620),
-                size: vec(40, 340)),
       Sprite(color: color(192, 192, 192, 255)),
       Collider(layer: Layer.floor),
     ]),
@@ -138,42 +93,7 @@ method loadEntities*(game: Game) =
         Sprite(color: color(125, 232, 255, 255)),
       ]),
     ]),
-    newEntity("EnemyHealthBarBG", [
-      Transform(pos: vec(800, 200),
-                size: vec(310, 50)),
-      Sprite(color: color(32, 32, 32, 255)),
-    ], children=[
-      newEntity("EnemyHealthBar", [
-        Transform(pos: vec(0),
-                  size: vec(300, 40)),
-        Sprite(color: color(255, 32, 32, 255)),
-        newProgressBar("Enemy"),
-      ]),
-    ]),
   ]
-
-proc process*(game: Game, events: Events) =
-  for event in events:
-    case event.kind
-    of addEntity:
-      game.entities.add event.entity
-    of removeEntity:
-      game.entities.remove event.entity
-
-macro processAll*(game, entities: expr, body: untyped): stmt =
-  result = newNimNode(nnkStmtList)
-  for node in body:
-    let callNode = newCall(node[0], entities)
-    for i in 1..<node.len:
-      callNode.add node[i]
-    result.add(newCall(!"process", game, callNode))
-
-method draw*(render: RendererPtr, game: Game) =
-  game.entities.updateProgressBars()
-
-  game.entities.loadResources(game.resources)
-
-  game.entities.renderSystem(render, game.camera)
 
 method update*(game: Game, dt: float) =
   if game.input.isPressed(Input.restart):
@@ -182,8 +102,6 @@ method update*(game: Game, dt: float) =
     game.input = input
 
   game.processAll game.entities:
-    updateClicked(game.input)
-
     playerInput(game.input)
     playerMovement(dt)
 
@@ -193,15 +111,6 @@ method update*(game: Game, dt: float) =
     
     regenLimitedQuantities(dt)
 
-    updateBullets(dt)
-    updateBulletDamage()
-    updateFieryBullets(dt)
-    
-    playerShoot(dt)
-    clickPlayer()
-
-    updateEnemyMovement(dt)
-
 when isMainModule:
   let screenSize = vec(1200, 900)
-  main(newGame(screenSize), screenSize)
+  main(newNanoGame(screenSize), screenSize)
