@@ -34,4 +34,4 @@ proc updateProgressBars*(entities: seq[Entity]) =
 
     if textTarget != nil:
       textTarget.withComponent Text, txt:
-        txt.setText($q.cur.int & " / " & $q.max.int)
+        txt.text = $q.cur.int & " / " & $q.max.int

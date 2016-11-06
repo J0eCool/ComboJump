@@ -11,6 +11,7 @@ type ResourceManager* = object
 
 proc loadFont*(resources: var ResourceManager, fontName: string): FontPtr =
   if not resources.fonts.hasKey(fontName):
+    echo "Loading font \"", fontName, "\""
     const hardcodedFontSize = 24 # TODO: not this?
     let font = openFont(fontName, hardcodedFontSize)
     resources.fonts[fontName] = font

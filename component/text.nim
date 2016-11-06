@@ -7,9 +7,8 @@ import
   entity
 
 type Text* = ref object of Component
-  text: string
+  text*: string
   color*: Color
-  cachedText*: ref RenderedText
   fontName*: string
   font*: FontPtr
   ignoresCamera*: bool
@@ -23,10 +22,3 @@ proc newText*(text: string,
   result.color = color
   result.fontName = fontName
   result.ignoresCamera = true
-
-proc getText*(text: Text): string =
-  text.text
-
-proc setText*(text: Text, t: string) =
-  text.cachedText = nil
-  text.text = t
