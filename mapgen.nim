@@ -8,6 +8,7 @@ import
   tables
 
 import
+  system/render,
   drawing,
   input,
   option,
@@ -94,12 +95,6 @@ proc drawArrow(renderer: RendererPtr, p1, p2: Vec, headSize, radius: float) =
   renderer.drawLine(a, b)
   renderer.drawLine(b, c)
   renderer.drawLine(b, d)
-
-var textCache = initTable[string, RenderedText]()
-proc drawCachedText(renderer: RendererPtr, text: string, pos: Vec, font: FontPtr, color: Color) =
-  if not textCache.hasKey(text):
-    textCache[text] = renderer.renderText(text, font, color)
-  renderer.draw(textCache[text], pos)
 
 proc draw(renderer: RendererPtr, nodes: seq[GraphNode], font: FontPtr, camera: Vec, zoom: float) =
   let

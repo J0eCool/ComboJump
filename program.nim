@@ -13,6 +13,7 @@ type Program* = ref object of RootObj
   input*: InputManager
   title*: string
   shouldExit*: bool
+  frameTime*: float
 
 proc initProgram*(program: Program) =
   program.input = newInputManager()
@@ -64,14 +65,37 @@ proc main*(program: Program, screenSize: Vec) =
 
   let renderer = window.createRenderer(
     index = -1,
-    flags = Renderer_Accelerated or Renderer_PresentVsync,
+    flags = Renderer_Accelerated,
   )
   defer: renderer.destroy()
 
   program.init()
 
-  var dt = 1 / 60
+  const
+    frames = 64
+    maxFramerate = 60
+    maxFrameTicks = ((1.0 / maxFramerate) * 1000).uint32
+  var
+    lastTime = getTicks()
+    dt = 0.0
+    pastFrames: array[frames, float]
+    frameIdx = 0
   while (not program.shouldExit):
-    program.updateBase(dt)
+    let curTime = getTicks()
+    dt = (curTime - lastTime).float / 1000.0
+    lastTime = curTime.uint32
 
+    program.updateBase(dt)
     renderer.drawBase(program)
+
+    let
+      updateTicks = getTicks() - curTime
+
+    pastFrames[frameIdx] = updateTicks.float
+    frameIdx = (frameIdx + 1) mod frames
+    var sum = 0.0
+    for t in pastFrames:
+      sum += t
+    program.frameTime = sum / frames
+
+    delay(maxFrameTicks - updateTicks)

@@ -132,11 +132,14 @@ method loadEntities*(game: NanoGame) =
     ]),
   ]
 
-method update*(game: Game, dt: float) =
-  if game.input.isPressed(Input.restart):
-    let input = game.input
-    game.loadEntities()
-    game.input = input
+method draw*(renderer: RendererPtr, game: NanoGame) =
+  renderer.drawGame(game)
+
+  renderer.drawCachedText($game.frameTime & "ms", vec(1100, 875),
+                          game.resources.loadFont("nevis.ttf"), color(0, 0, 0, 255))
+
+method update*(game: NanoGame, dt: float) =
+  game.updateBase()
 
   game.processAll game.entities:
     playerInput(game.input)

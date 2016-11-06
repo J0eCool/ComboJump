@@ -169,18 +169,24 @@ macro processAll*(game, entities: expr, body: untyped): stmt =
       callNode.add node[i]
     result.add(newCall(!"process", game, callNode))
 
-method draw*(render: RendererPtr, game: Game) =
+proc drawGame*(renderer: RendererPtr, game: Game) =
   game.entities.updateProgressBars()
 
   game.entities.loadResources(game.resources)
 
-  game.entities.renderSystem(render, game.camera)
+  game.entities.renderSystem(renderer, game.camera)
 
-method update*(game: Game, dt: float) =
+method draw*(renderer: RendererPtr, game: Game) =
+  renderer.drawGame(game)
+
+proc updateBase*(game: Game) =
   if game.input.isPressed(Input.restart):
     let input = game.input
     game.loadEntities()
     game.input = input
+
+method update*(game: Game, dt: float) =
+  game.updateBase()
 
   game.processAll game.entities:
     updateClicked(game.input)

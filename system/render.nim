@@ -16,6 +16,14 @@ import
   vec
 
 var textCache = initTable[string, RenderedText]()
+proc drawCachedText*(renderer: RendererPtr,
+                     text: string,
+                     pos: Vec,
+                     font: FontPtr,
+                     color: Color = color(255, 255, 255, 255)) =
+  if not textCache.hasKey(text):
+    textCache[text] = renderer.renderText(text, font, color)
+  renderer.draw(textCache[text], pos)
 
 proc renderSystem*(entities: seq[Entity], renderer: RendererPtr, camera: Camera) =
   entities.forComponents e, [
@@ -31,8 +39,5 @@ proc renderSystem*(entities: seq[Entity], renderer: RendererPtr, camera: Camera)
     Text, text,
   ]:
     let
-      r = t.globalPos + (if text.ignoresCamera: vec() else: camera.offset)
-
-    if not textCache.hasKey(text.text):
-      textCache[text.text] = renderer.renderText(text.text, text.font, text.color)
-    renderer.draw textCache[text.text], r
+      pos = t.globalPos + (if text.ignoresCamera: vec() else: camera.offset)
+    renderer.drawCachedText(text.text, pos, text.font, text.color)
