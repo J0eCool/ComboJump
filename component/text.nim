@@ -12,6 +12,7 @@ type Text* = ref object of Component
   cachedText*: ref RenderedText
   fontName*: string
   font*: FontPtr
+  ignoresCamera*: bool
 
 proc newText*(text: string,
               color = color(255, 255, 255, 255),
@@ -21,6 +22,7 @@ proc newText*(text: string,
   result.text = text
   result.color = color
   result.fontName = fontName
+  result.ignoresCamera = true
 
 proc getText*(text: Text): string =
   text.text

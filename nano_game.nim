@@ -70,14 +70,16 @@ method loadEntities*(game: NanoGame) =
       Collider(layer: Layer.floor),
     ]),
     newEntity("PlayerManaBarBG", [
-      Transform(pos: vec(100, 200),
+      Transform(pos: vec(200, 60),
                 size: vec(310, 50)),
-      Sprite(color: color(32, 32, 32, 255)),
+      Sprite(color: color(32, 32, 32, 255),
+             ignoresCamera: true),
     ], children=[
       newEntity("PlayerManaBar", [
         Transform(pos: vec(0),
                   size: vec(300, 40)),
-        Sprite(color: color(32, 32, 255, 255)),
+        Sprite(color: color(32, 32, 255, 255),
+               ignoresCamera: true),
         newProgressBar("Player",
                        heldTarget="PlayerManaBarHeld",
                        textEntity="PlayerManaBarText"),

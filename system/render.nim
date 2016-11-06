@@ -20,14 +20,16 @@ proc renderSystem*(entities: seq[Entity], renderer: RendererPtr, camera: Camera)
     Transform, t,
     Sprite, s,
   ]:
-    renderer.setDrawColor(s.color)
-    renderer.fillRect(t.globalRect + camera.offset)
+    let r = t.globalRect + (if s.ignoresCamera: vec() else: camera.offset)
+    renderer.setDrawColor s.color
+    renderer.fillRect r
 
   entities.forComponents e, [
     Transform, t,
     Text, text,
   ]:
+    let r = t.globalPos + (if text.ignoresCamera: vec() else: camera.offset)
     if text.cachedText == nil:
       new text.cachedText
       text.cachedText[] = renderer.renderText(text.getText(), text.font, text.color)
-    renderer.draw(text.cachedText[], (t.globalPos + camera.offset))
+    renderer.draw text.cachedText[], r

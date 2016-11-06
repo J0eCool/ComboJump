@@ -4,3 +4,4 @@ import entity
 
 type Sprite* = ref object of Component
   color*: Color
+  ignoresCamera*: bool
