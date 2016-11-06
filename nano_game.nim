@@ -10,6 +10,7 @@ import
   component/collider,
   component/enemy_movement,
   component/health,
+  component/limited_quantity,
   component/mana,
   component/movement,
   component/player_control,
@@ -46,6 +47,7 @@ method loadEntities*(game: NanoGame) =
       Transform(pos: vec(180, 500),
                 size: vec(50, 75)),
       Movement(usesGravity: true),
+      newHealth(30),
       newMana(100),
       PlayerControl(),
       Sprite(color: color(12, 255, 12, 255)),
@@ -79,20 +81,42 @@ method loadEntities*(game: NanoGame) =
       Sprite(color: color(192, 192, 192, 255)),
       Collider(layer: Layer.floor),
     ]),
-    newEntity("PlayerManaBarBG", [
+    newEntity("PlayerHealthBarBG", [
       Transform(pos: vec(200, 60),
-                size: vec(310, 50)),
+                size: vec(310, 35)),
+      Sprite(color: color(32, 32, 32, 255),
+             ignoresCamera: true),
+    ], children=[
+      newEntity("PlayerHealthBar", [
+        Transform(pos: vec(0),
+                  size: vec(300, 25)),
+        Sprite(color: color(255, 32, 32, 255),
+               ignoresCamera: true),
+        newProgressBar[Health](
+          "Player",
+          textEntity="PlayerHealthBarText"),
+      ]),
+      newEntity("PlayerHealthBarText", [
+        Transform(pos: vec(0),
+                  size: vec(0)),
+        newText("999/999"),
+      ]),
+    ]),
+    newEntity("PlayerManaBarBG", [
+      Transform(pos: vec(200, 90),
+                size: vec(310, 35)),
       Sprite(color: color(32, 32, 32, 255),
              ignoresCamera: true),
     ], children=[
       newEntity("PlayerManaBar", [
         Transform(pos: vec(0),
-                  size: vec(300, 40)),
+                  size: vec(300, 25)),
         Sprite(color: color(32, 32, 255, 255),
                ignoresCamera: true),
-        newProgressBar("Player",
-                       heldTarget="PlayerManaBarHeld",
-                       textEntity="PlayerManaBarText"),
+        newProgressBar[Mana](
+          "Player",
+          heldTarget="PlayerManaBarHeld",
+          textEntity="PlayerManaBarText"),
       ]),
       newEntity("PlayerManaBarText", [
         Transform(pos: vec(0),
@@ -101,7 +125,7 @@ method loadEntities*(game: NanoGame) =
       ]),
       newEntity("PlayerManaBarHeld", [
         Transform(pos: vec(0),
-                  size: vec(300, 40)),
+                  size: vec(300, 25)),
         Sprite(color: color(125, 232, 255, 255),
                ignoresCamera: true),
       ]),
