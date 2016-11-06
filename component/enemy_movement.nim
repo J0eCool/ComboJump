@@ -10,6 +10,7 @@ import
 
 type EnemyMovement* = ref object of Component
   targetRange*: float
+  targetMinRange*: float
   moveSpeed*: float
   startPos: Option[Vec]
 
@@ -26,8 +27,10 @@ proc updateEnemyMovement*(entities: Entities, dt: float): Events =
     if pt == nil:
       continue
 
-    let delta = pt.pos - t.pos
-    if delta.x.abs <= em.targetRange:
+    let
+      delta = pt.pos - t.pos
+      xDist = delta.x.abs
+    if xDist.between(em.targetMinRange, em.targetRange):
       m.vel.x = em.moveSpeed * delta.x.sign.float
     else:
       m.vel.x = 0

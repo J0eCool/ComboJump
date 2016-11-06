@@ -72,3 +72,6 @@ macro addVarargs*(call, args: expr): expr =
   result = call
   for arg in args:
     result.add arg
+
+proc between*[T](val, lo, hi: T): bool =
+  val >= lo and val <= hi

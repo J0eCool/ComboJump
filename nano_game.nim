@@ -8,6 +8,7 @@ import
   game,
   component/camera_target,
   component/collider,
+  component/enemy_movement,
   component/health,
   component/mana,
   component/movement,
@@ -51,6 +52,15 @@ method loadEntities*(game: NanoGame) =
       Collider(layer: Layer.player),
       CameraTarget(),
     ]),
+    newEntity("Enemy", [
+      Transform(pos: vec(700, 400),
+                size: vec(60, 60)),
+      Movement(usesGravity: true),
+      newHealth(20),
+      Sprite(color: color(155, 16, 24, 255)),
+      Collider(layer: Layer.enemy),
+      EnemyMovement(targetMinRange: 75, targetRange: 400, moveSpeed: 200),
+    ]),
     newEntity("Ground", [
       Transform(pos: vec(1450, 810),
                 size: vec(2900, 40)),
@@ -92,7 +102,8 @@ method loadEntities*(game: NanoGame) =
       newEntity("PlayerManaBarHeld", [
         Transform(pos: vec(0),
                   size: vec(300, 40)),
-        Sprite(color: color(125, 232, 255, 255)),
+        Sprite(color: color(125, 232, 255, 255),
+               ignoresCamera: true),
       ]),
     ]),
   ]
@@ -106,6 +117,8 @@ method update*(game: Game, dt: float) =
   game.processAll game.entities:
     playerInput(game.input)
     playerMovement(dt)
+
+    updateEnemyMovement(dt)
 
     physics(dt)
     checkCollisisons()
