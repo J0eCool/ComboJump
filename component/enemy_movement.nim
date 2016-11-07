@@ -8,29 +8,41 @@ import
   util,
   vec
 
-type EnemyMovement* = ref object of Component
-  targetRange*: float
-  targetMinRange*: float
-  moveSpeed*: float
-  startPos: Option[Vec]
+type
+  EnemyProximity* = ref object of Component
+    targetRange*: float
+    targetMinRange*: float
+    isInRange: bool
+    dirToPlayer: float
 
-proc updateEnemyMovement*(entities: Entities, dt: float): Events =
+  EnemyMoveTowards* = ref object of Component
+    moveSpeed*: float
+
+proc updateEnemyProximity*(entities: Entities): Events =
   entities.forComponents e, [
-    EnemyMovement, em,
-    Movement, m,
+    EnemyProximity, p,
     Transform, t,
   ]:
-    let p = entities.firstComponent(PlayerControl)
-    if p == nil:
+    let pc = entities.firstComponent(PlayerControl)
+    if pc == nil:
       continue
-    let pt = p.entity.getComponent(Transform)
+    let pt = pc.entity.getComponent(Transform)
     if pt == nil:
       continue
 
     let
       delta = pt.pos - t.pos
       xDist = delta.x.abs
-    if xDist.between(em.targetMinRange, em.targetRange):
-      m.vel.x = em.moveSpeed * delta.x.sign.float
+    p.isInRange = xDist.between(p.targetMinRange, p.targetRange)
+    p.dirToPlayer = delta.x.sign.float
+
+proc updateEnemyMovement*(entities: Entities, dt: float): Events =
+  entities.forComponents e, [
+    EnemyMoveTowards, em,
+    EnemyProximity, ep,
+    Movement, m,
+  ]:
+    if ep.isInRange:
+      m.vel.x = em.moveSpeed * ep.dirToPlayer
     else:
       m.vel.x = 0

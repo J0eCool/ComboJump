@@ -72,7 +72,8 @@ method loadEntities*(game: NanoGame) =
       newHealth(20),
       Sprite(color: color(155, 16, 24, 255)),
       Collider(layer: Layer.enemy),
-      EnemyMovement(targetMinRange: 75, targetRange: 400, moveSpeed: 200),
+      EnemyMoveTowards(moveSpeed: 200),
+      EnemyProximity(targetMinRange: 75, targetRange: 400),
     ]),
     newEntity("Ground", [
       Transform(pos: vec(1450, 810),
@@ -157,6 +158,7 @@ method update*(game: NanoGame, dt: float) =
     playerMovement(dt)
     playerShoot(dt)
 
+    updateEnemyProximity()
     updateEnemyMovement(dt)
 
     updateBullets(dt)
