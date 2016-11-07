@@ -20,7 +20,7 @@ proc loadSprite*(resources: var ResourceManager, textureName: string, renderer: 
     echo "Loading texture \"", textureName, "\""
     let surface = load(textureFolder & textureName)
     if surface == nil:
-      echo "  WOOPS, texture not found"
+      echo "  Unable to load texture at " & textureFolder, textureName
       return nil
     let
       texture = renderer.createTextureFromSurface(surface)
@@ -35,6 +35,9 @@ proc loadFont*(resources: var ResourceManager, fontName: string): FontPtr =
     echo "Loading font \"", fontName, "\""
     const hardcodedFontSize = 24 # TODO: not this?
     let font = openFont(fontFolder & fontName, hardcodedFontSize)
+    if font == nil:
+      echo "  Unable to load font at " & fontFolder, fontName
+      return nil
     resources.fonts[fontName] = font
   return resources.fonts[fontName]
 
@@ -46,11 +49,15 @@ proc loadResources*(entities: Entities, resources: var ResourceManager, renderer
   entities.forComponents e, [
     Text, text,
   ]:
-    if text.font == nil:
+    if text.fontName != nil and text.font == nil:
       text.font = resources.loadFont text.fontName
+      if text.font == nil:
+        text.fontName = nil
 
   entities.forComponents e, [
     Sprite, sprite,
   ]:
     if sprite.textureName != nil and sprite.sprite == nil:
       sprite.sprite = resources.loadSprite(sprite.textureName, renderer)
+      if sprite.sprite == nil:
+        sprite.textureName = nil

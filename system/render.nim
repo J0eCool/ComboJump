@@ -41,6 +41,7 @@ proc renderSystem*(entities: seq[Entity], renderer: RendererPtr, camera: Camera)
     Transform, t,
     Text, text,
   ]:
-    let
-      pos = t.globalPos + (if text.ignoresCamera: vec() else: camera.offset)
-    renderer.drawCachedText(text.text, pos, text.font, text.color)
+    if text.font != nil:
+      let
+        pos = t.globalPos + (if text.ignoresCamera: vec() else: camera.offset)
+      renderer.drawCachedText(text.text, pos, text.font, text.color)
