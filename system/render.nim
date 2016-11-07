@@ -31,8 +31,11 @@ proc renderSystem*(entities: seq[Entity], renderer: RendererPtr, camera: Camera)
     Sprite, s,
   ]:
     let r = t.globalRect + (if s.ignoresCamera: vec() else: camera.offset)
-    renderer.setDrawColor s.color
-    renderer.fillRect r
+    if s.sprite != nil:
+      renderer.draw s.sprite, r
+    else:
+      renderer.setDrawColor s.color
+      renderer.fillRect r
 
   entities.forComponents e, [
     Transform, t,

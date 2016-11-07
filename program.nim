@@ -1,6 +1,7 @@
 import
   random,
   sdl2,
+  sdl2.image,
   sdl2.ttf,
   times
 
@@ -51,6 +52,9 @@ proc main*(program: Program, screenSize: Vec) =
 
   ttf.ttfInit()
   defer: ttf.ttfQuit()
+
+  discard image.init()
+  defer: image.quit()
 
   let
     window = createWindow(

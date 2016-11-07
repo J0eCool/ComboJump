@@ -202,7 +202,7 @@ macro processAll*(game, entities: expr, body: untyped): stmt =
 proc drawGame*(renderer: RendererPtr, game: Game) =
   game.entities.updateProgressBars()
 
-  game.entities.loadResources(game.resources)
+  game.entities.loadResources(game.resources, renderer)
 
   game.entities.renderSystem(renderer, game.camera)
 

@@ -61,7 +61,7 @@ method loadEntities*(game: NanoGame) =
           createSpell((gun: projectileBase, runes: @[(damage, 50.0), (spread, 30.0)])),
         ],
       ),
-      Sprite(color: color(12, 255, 12, 255)),
+      Sprite(textureName: "Wizard.png"),
       Collider(layer: Layer.player),
       CameraTarget(),
     ]),

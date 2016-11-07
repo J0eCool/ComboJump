@@ -1,7 +1,17 @@
-import sdl2
+import
+  sdl2
 
-import entity
+import
+  entity,
+  rect
 
-type Sprite* = ref object of Component
-  color*: Color
-  ignoresCamera*: bool
+type
+  SpriteData* = ref object
+    texture*: TexturePtr
+    size*: rect.Rect
+
+  Sprite* = ref object of Component
+    color*: Color
+    ignoresCamera*: bool
+    textureName*: string
+    sprite*: SpriteData
