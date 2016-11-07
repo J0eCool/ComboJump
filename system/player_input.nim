@@ -2,6 +2,7 @@ import
   component/clickable,
   component/mana,
   component/player_control,
+  component/sprite,
   entity,
   event,
   input,
@@ -13,6 +14,7 @@ proc playerInput*(entities: seq[Entity], input: InputManager): Events =
   entities.forComponents e, [
     PlayerControl, p,
     PlayerShooting, ps,
+    Sprite, s,
   ]:
     p.jumpPressed = input.isPressed(Input.jump)
     p.jumpReleased = input.isReleased(Input.jump)
@@ -33,6 +35,10 @@ proc playerInput*(entities: seq[Entity], input: InputManager): Events =
       if input.isHeld(Input.right):
         dir += 1
     p.moveDir = dir
+    if dir == 1:
+      s.flipX = false
+    elif dir == -1:
+      s.flipX = true
 
     if p.moveDir != 0:
       p.facing = p.moveDir

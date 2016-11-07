@@ -15,3 +15,4 @@ type
     ignoresCamera*: bool
     textureName*: string
     sprite*: SpriteData
+    flipX*: bool
