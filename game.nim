@@ -56,6 +56,36 @@ method init*(game: Game) =
 
 method loadEntities*(game: Game) =
   discard
+  # normalSpell = createSpell(
+  #   (projectileBase,
+  #     @[(damage, 100.0),
+  #       (fiery, 50.0)]
+  #   ),
+  #   (projectileBase,
+  #     @[(damage, 40.0),
+  #       (spread, 60.0)]
+  #   ),
+  # )
+  # spreadSpell = createSpell(
+  #   (projectileBase,
+  #     @[(damage, 40.0),
+  #       (spread, 60.0)]
+  #   ),
+  #   (projectileBase,
+  #     @[(damage, 40.0),
+  #       (spread, 60.0)]
+  #   ),
+  # )
+  # homingSpell = createSpell(
+  #   (projectileBase,
+  #     @[(damage, 20.0),
+  #       (spread, 40.0),
+  #       (homing, 40.0),
+  #       (fiery, 20.0)]
+  #   ),
+  # )
+  # spells = [normalSpell, spreadSpell, homingSpell]
+
   # game.entities = @[
   #   newEntity("Player", [
   #     Transform(pos: vec(180, 500),

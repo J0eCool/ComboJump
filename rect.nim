@@ -22,7 +22,7 @@ proc bottom*(rect: Rect): float =
   rect.y + rect.h / 2
 
 proc center*(rect: Rect): Vec =
-  vec(rect.x, rect.y) + 0.5 * vec(rect.w, rect.h)
+  vec(rect.x, rect.y)
 
 proc contains*(rect: Rect, point: Vec): bool =
   (

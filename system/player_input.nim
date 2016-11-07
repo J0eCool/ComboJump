@@ -10,21 +10,24 @@ import
 const spells = @[Input.spell1, Input.spell2, Input.spell3]
 
 proc playerInput*(entities: seq[Entity], input: InputManager): Events =
-  forComponents(entities, e, [PlayerControl, p]):
+  entities.forComponents e, [
+    PlayerControl, p,
+    PlayerShooting, ps,
+  ]:
     p.jumpPressed = input.isPressed(Input.jump)
     p.jumpReleased = input.isReleased(Input.jump)
 
-    if p.heldSpell != 0:
-      p.isSpellHeld = input.isHeld spells[p.heldSpell - 1]
+    if ps.heldSpell != 0:
+      ps.isSpellHeld = input.isHeld spells[ps.heldSpell - 1]
     else:
       for i in 0..<spells.len:
         if input.isPressed spells[i]:
-          p.heldSpell = i + 1
-          p.isSpellHeld = true
+          ps.heldSpell = i + 1
+          ps.isSpellHeld = true
           break
 
     var dir = 0
-    if not p.isCasting:
+    if not ps.isCasting:
       if input.isHeld(Input.left):
         dir -= 1
       if input.isHeld(Input.right):

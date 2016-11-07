@@ -18,16 +18,20 @@ import
   component/sprite,
   component/text,
   component/transform,
+  system/bullet_hit,
+  system/bullet_update,
   system/collisions,
   system/physics,
   system/player_input,
   system/player_movement,
+  system/player_shoot,
   system/quantity_regen,
   system/render,
   system/update_progress_bar,
   camera,
   entity,
   event,
+  gun,
   input,
   program,
   resources,
@@ -50,6 +54,13 @@ method loadEntities*(game: NanoGame) =
       newHealth(30),
       newMana(100),
       PlayerControl(),
+      PlayerShooting(
+        spells: [
+          createSpell((gun: projectileBase, runes: @[(damage, 50.0)])),
+          createSpell((gun: projectileBase, runes: @[(damage, 50.0), (fiery, 30.0)])),
+          createSpell((gun: projectileBase, runes: @[(damage, 50.0), (spread, 30.0)])),
+        ],
+      ),
       Sprite(color: color(12, 255, 12, 255)),
       Collider(layer: Layer.player),
       CameraTarget(),
@@ -144,8 +155,13 @@ method update*(game: NanoGame, dt: float) =
   game.processAll game.entities:
     playerInput(game.input)
     playerMovement(dt)
+    playerShoot(dt)
 
     updateEnemyMovement(dt)
+
+    updateBullets(dt)
+    updateFieryBullets(dt)
+    updateBulletDamage()
 
     physics(dt)
     checkCollisisons()
