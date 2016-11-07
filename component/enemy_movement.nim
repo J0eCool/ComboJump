@@ -18,6 +18,12 @@ type
   EnemyMoveTowards* = ref object of Component
     moveSpeed*: float
 
+  EnemyJumpTowards* = ref object of Component
+    moveSpeed*: float
+    jumpHeight*: float
+    jumpDelay*: float
+    jumpTimer: float
+
 proc updateEnemyProximity*(entities: Entities): Events =
   entities.forComponents e, [
     EnemyProximity, p,
@@ -36,7 +42,7 @@ proc updateEnemyProximity*(entities: Entities): Events =
     p.isInRange = xDist.between(p.targetMinRange, p.targetRange)
     p.dirToPlayer = delta.x.sign.float
 
-proc updateEnemyMovement*(entities: Entities, dt: float): Events =
+proc updateEnemyMoveTowards(entities: Entities, dt: float) =
   entities.forComponents e, [
     EnemyMoveTowards, em,
     EnemyProximity, ep,
@@ -46,3 +52,26 @@ proc updateEnemyMovement*(entities: Entities, dt: float): Events =
       m.vel.x = em.moveSpeed * ep.dirToPlayer
     else:
       m.vel.x = 0
+
+proc updateEnemyJumpTowards(entities: Entities, dt: float) =
+  entities.forComponents e, [
+    EnemyJumpTowards, em,
+    EnemyProximity, ep,
+    Movement, m,
+  ]:
+    if not m.onGround:
+      continue
+
+    m.vel.x = 0
+    em.jumpTimer -= dt
+    if em.jumpTimer >= 0:
+      continue
+
+    if ep.isInRange:
+      m.vel.x = em.moveSpeed * ep.dirToPlayer
+      m.vel.y = jumpSpeed(em.jumpHeight)
+      em.jumpTimer = em.jumpDelay
+
+proc updateEnemyMovement*(entities: Entities, dt: float): Events =
+  entities.updateEnemyMoveTowards(dt)
+  entities.updateEnemyJumpTowards(dt)

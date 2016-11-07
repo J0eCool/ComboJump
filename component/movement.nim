@@ -1,4 +1,10 @@
-import entity, vec
+import
+  math
+
+import
+  entity,
+  util,
+  vec
 
 type Movement* = ref object of Component
   vel*: Vec
@@ -6,3 +12,6 @@ type Movement* = ref object of Component
   onGround*: bool
 
 const gravity* = 2_100.0
+proc jumpSpeed*(height: float): float =
+  -sign(gravity).float * sqrt(2 * height * abs(gravity))
+

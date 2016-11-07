@@ -16,7 +16,6 @@ const
   accelTime = 0.1
   accel = speed / accelTime
   jumpHeight = 250.0
-  jumpSpeed = -sign(gravity).float * sqrt(2 * jumpHeight * abs(gravity))
 
 proc playerMovement*(entities: seq[Entity], dt: float): Events =
   forComponents(entities, e, [
@@ -38,4 +37,4 @@ proc playerMovement*(entities: seq[Entity], dt: float): Events =
       m.vel.y *= 0.25
 
     if t.pos.y >= 800 or p.jumpPressed and m.onGround:
-      m.vel.y = jumpSpeed
+      m.vel.y = jumpSpeed(jumpHeight)

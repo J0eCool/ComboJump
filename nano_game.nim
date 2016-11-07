@@ -75,6 +75,16 @@ method loadEntities*(game: NanoGame) =
       EnemyMoveTowards(moveSpeed: 200),
       EnemyProximity(targetMinRange: 75, targetRange: 400),
     ]),
+    newEntity("Jumping Enemy", [
+      Transform(pos: vec(1200, 400),
+                size: vec(60, 60)),
+      Movement(usesGravity: true),
+      newHealth(20),
+      Sprite(color: color(155, 16, 124, 255)),
+      Collider(layer: Layer.enemy),
+      EnemyJumpTowards(moveSpeed: 250, jumpHeight: 115, jumpDelay: 0.5),
+      EnemyProximity(targetRange: 400),
+    ]),
     newEntity("Ground", [
       Transform(pos: vec(1450, 810),
                 size: vec(2900, 40)),
