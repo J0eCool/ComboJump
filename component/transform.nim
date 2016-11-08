@@ -5,6 +5,9 @@ type Transform* = ref object of Component
 
 proc rect*(t: Transform): Rect =
   rect(t.pos, t.size)
+proc `rect=`*(t: Transform, r: Rect) =
+  t.pos = r.pos
+  t.size = r.size
 
 proc heirarchyOrderedTransforms(t: Transform): seq[Transform] =
   result = @[t]

@@ -11,6 +11,11 @@ proc vec*[T: SomeNumber](s: T): Vec =
 proc vec*(): Vec =
   (0.0, 0.0)
 
+proc vecX*(v: Vec): Vec =
+  vec(v.x, 0.0)
+proc vecY*(v: Vec): Vec =
+  vec(0.0, v.y)
+
 template vecf(op, assignOp: expr): expr =
   proc op*(a, b: Vec): Vec =
     vec(op(a.x, b.x),

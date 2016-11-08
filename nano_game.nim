@@ -47,6 +47,7 @@ proc newNanoGame*(screenSize: Vec): NanoGame =
 
 method loadEntities*(game: NanoGame) =
   game.entities = @[
+    # --- Actors ---
     newEntity("Player", [
       Transform(pos: vec(180, 500),
                 size: vec(50, 75)),
@@ -85,9 +86,17 @@ method loadEntities*(game: NanoGame) =
       EnemyJumpTowards(moveSpeed: 250, jumpHeight: 115, jumpDelay: 0.5),
       EnemyProximity(targetRange: 400),
     ]),
+
+    # --- Terrain ---
     newEntity("Ground", [
       Transform(pos: vec(1450, 810),
                 size: vec(2900, 40)),
+      Sprite(color: color(192, 192, 192, 255)),
+      Collider(layer: Layer.floor),
+    ]),
+    newEntity("LeftWall", [
+      Transform(pos: vec(-20, 610),
+                size: vec(40, 440)),
       Sprite(color: color(192, 192, 192, 255)),
       Collider(layer: Layer.floor),
     ]),
@@ -103,6 +112,8 @@ method loadEntities*(game: NanoGame) =
       Sprite(color: color(192, 192, 192, 255)),
       Collider(layer: Layer.floor),
     ]),
+
+    # --- UI ---
     newEntity("PlayerHealthBarBG", [
       Transform(pos: vec(200, 60),
                 size: vec(310, 35)),

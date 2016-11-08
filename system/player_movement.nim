@@ -18,12 +18,12 @@ const
   jumpHeight = 250.0
 
 proc playerMovement*(entities: seq[Entity], dt: float): Events =
-  forComponents(entities, e, [
+  entities.forComponents e, [
     Movement, m,
     PlayerControl, p,
     Transform, t,
     Collider, c,
-  ]):
+  ]:
     var dir = p.moveDir.float
     let preSign = sign(m.vel.x)
     if dir == 0:

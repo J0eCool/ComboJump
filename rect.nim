@@ -21,8 +21,35 @@ proc top*(rect: Rect): float =
 proc bottom*(rect: Rect): float =
   rect.y + rect.h / 2
 
+proc `left=`*(rect: var Rect, pos: float) =
+  rect.x = pos + rect.w / 2
+proc `right=`*(rect: var Rect, pos: float) =
+  rect.x = pos - rect.w / 2
+proc `top=`*(rect: var Rect, pos: float) =
+  rect.y = pos + rect.h / 2
+proc `bottom=`*(rect: var Rect, pos: float) =
+  rect.y = pos - rect.h / 2
+
 proc center*(rect: Rect): Vec =
   vec(rect.x, rect.y)
+
+proc topLeft*(rect: Rect): Vec =
+  vec(rect.left, rect.top)
+proc topRight*(rect: Rect): Vec =
+  vec(rect.right, rect.top)
+proc bottomLeft*(rect: Rect): Vec =
+  vec(rect.left, rect.bottom)
+proc bottomRight*(rect: Rect): Vec =
+  vec(rect.right, rect.bottom)
+
+proc centerLeft*(rect: Rect): Vec =
+  vec(rect.left, rect.y)
+proc centerRight*(rect: Rect): Vec =
+  vec(rect.right, rect.y)
+proc centerTop*(rect: Rect): Vec =
+  vec(rect.x, rect.top)
+proc centerBottom*(rect: Rect): Vec =
+  vec(rect.x, rect.bottom)
 
 proc contains*(rect: Rect, point: Vec): bool =
   (
@@ -31,6 +58,13 @@ proc contains*(rect: Rect, point: Vec): bool =
     point.y >= rect.top and
     point.y <= rect.bottom
   )
+
+proc intersects*(a, b: Rect): bool =
+  return
+    a.left <= b.right and
+    a.right >= b.left and
+    a.top <= b.bottom and
+    a.bottom >= b.top
 
 proc pos*(rect: Rect): Vec =
   vec(rect.x, rect.y)
