@@ -66,7 +66,7 @@ proc updateFieryBullets*(entities: seq[Entity], dt: float): seq[Event] =
           Sprite(color: color(255, 128, 32, 255)),
           Collider(),
           Movement(vel: vel),
-          newBullet(damage=0, liveTime=f.liveTime),
+          newBullet(liveTime=f.liveTime),
         ])
       result.add Event(kind: addEntity, entity: flare)
 

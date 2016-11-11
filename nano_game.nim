@@ -8,6 +8,7 @@ import
   game,
   component/camera_target,
   component/collider,
+  component/damage,
   component/enemy_movement,
   component/health,
   component/limited_quantity,
@@ -57,9 +58,9 @@ method loadEntities*(game: NanoGame) =
       PlayerControl(),
       PlayerShooting(
         spells: [
-          createSpell((gun: projectileBase, runes: @[(damage, 50.0)])),
-          createSpell((gun: projectileBase, runes: @[(damage, 50.0), (fiery, 30.0)])),
-          createSpell((gun: projectileBase, runes: @[(damage, 50.0), (spread, 30.0)])),
+          createSpell((gun: projectileBase, runes: @[(base, 50.0)])),
+          createSpell((gun: projectileBase, runes: @[(base, 50.0), (fiery, 30.0)])),
+          createSpell((gun: projectileBase, runes: @[(base, 50.0), (spread, 30.0)])),
         ],
       ),
       Sprite(textureName: "Wizard.png"),
@@ -71,6 +72,7 @@ method loadEntities*(game: NanoGame) =
                 size: vec(60, 60)),
       Movement(usesGravity: true),
       newHealth(20),
+      Damage(damage: 1),
       Sprite(color: color(155, 16, 24, 255)),
       Collider(layer: Layer.enemy),
       EnemyMoveTowards(moveSpeed: 200),
@@ -184,7 +186,7 @@ method update*(game: NanoGame, dt: float) =
 
     updateBullets(dt)
     updateFieryBullets(dt)
-    updateBulletDamage()
+    updateDamage()
 
     physics(dt)
     checkCollisisons()

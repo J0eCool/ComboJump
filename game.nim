@@ -219,25 +219,25 @@ method update*(game: Game, dt: float) =
   game.updateBase()
 
   game.processAll game.entities:
-    updateClicked(game.input)
+    # updateClicked(game.input)
 
-    playerInput(game.input)
-    playerMovement(dt)
+    # playerInput(game.input)
+    # playerMovement(dt)
 
     physics(dt)
     checkCollisisons()
     updateCamera(game.camera)
     
-    regenLimitedQuantities(dt)
+    # regenLimitedQuantities(dt)
 
-    updateBullets(dt)
-    updateBulletDamage()
-    updateFieryBullets(dt)
+    # updateBullets(dt)
+    # updateBulletDamage()
+    # updateFieryBullets(dt)
     
-    playerShoot(dt)
-    clickPlayer()
+    # playerShoot(dt)
+    # clickPlayer()
 
-    updateEnemyMovement(dt)
+    # updateEnemyMovement(dt)
 
 when isMainModule:
   let screenSize = vec(1200, 900)

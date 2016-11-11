@@ -14,16 +14,14 @@ import
 
 type
   Bullet* = ref object of Component
-    damage*: int
     liveTime*: float
     timeLeft*: float
     nextStage*: ShootProc
 
   ShootProc* = proc(pos, vel: Vec): Events
 
-proc newBullet*(damage: int, liveTime: float, nextStage: ShootProc = nil): Bullet =
+proc newBullet*(liveTime: float, nextStage: ShootProc = nil): Bullet =
   Bullet(
-    damage: damage,
     liveTime: liveTime,
     timeLeft: liveTime,
     nextStage: nextStage,

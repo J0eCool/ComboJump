@@ -4,6 +4,7 @@ from sdl2 import color
 import
   component/bullet,
   component/collider,
+  component/damage,
   component/mana,
   component/movement,
   component/player_control,
@@ -30,7 +31,7 @@ proc amt*[T](scale: ManaScale[T], mana: float): T =
 
 type
   RuneKind* = enum
-    damage
+    base
     spread
     homing
     fiery
@@ -100,7 +101,7 @@ proc createSpell*(def: varargs[Stage]): Spell =
     for r in runes:
       let c = scaledCosts[r.kind]
       case r.kind
-      of damage:
+      of base:
         curGun[].damage.base += 3 * c
         curGun[].damage.scale += 0.4 * c
       of spread:
@@ -167,8 +168,8 @@ proc bulletAtDir(gun: Gun, dir, shotPoint: Vec, mana: float): Entity =
     Movement(vel: vel),
     Collider(layer: Layer.bullet),
     Sprite(color: color(255, 255, 32, 255)),
+    Damage(damage: gun.damage.amt(mana).int),
     newBullet(
-      damage=gun.damage.amt(mana).int,
       liveTime=liveTime,
       nextStage=nextStageProc,
     ),
