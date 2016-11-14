@@ -11,6 +11,7 @@ import
   entity,
   event,
   gun,
+  system,
   util,
   vec
 
@@ -70,19 +71,20 @@ proc updateFieryBullets*(entities: seq[Entity], dt: float): seq[Event] =
         ])
       result.add Event(kind: addEntity, entity: flare)
 
-proc updateBullets*(entities: seq[Entity], dt: float): Events =
-  result = @[]
-  entities.forComponents e, [
-    Bullet, b,
-    Collider, c,
-    Movement, m,
-  ]:
-    b.timeLeft -= dt
-    if b.timeLeft <= 0.0 or c.collisions.len > 0:
-      result.add(Event(kind: removeEntity, entity: e))
+defineSystem:
+  proc updateBullets*(dt: float) =
+    result = @[]
+    entities.forComponents e, [
+      Bullet, b,
+      Collider, c,
+      Movement, m,
+    ]:
+      b.timeLeft -= dt
+      if b.timeLeft <= 0.0 or c.collisions.len > 0:
+        result.add(Event(kind: removeEntity, entity: e))
 
-      if b.nextStage != nil:
-        e.withComponent Transform, t:
-          result &= b.nextStage(t.pos, m.vel.unit)
+        if b.nextStage != nil:
+          e.withComponent Transform, t:
+            result &= b.nextStage(t.pos, m.vel.unit)
 
-  entities.updateHomingBullets dt
+    entities.updateHomingBullets dt
