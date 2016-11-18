@@ -11,6 +11,22 @@ import
   util
 
 type
+  JSONTokenKind = enum
+    literal
+    comma
+    colon
+    arrayStart
+    arrayEnd
+    objectStart
+    objectEnd
+    error
+  JSONToken = object
+    case kind: JSONTokenKind
+    of literal, error:
+      value: string
+    of comma, colon, arrayStart, arrayEnd, objectStart, objectEnd:
+      discard
+
   JSONKind = enum
     jsObject
     jsArray
@@ -18,7 +34,7 @@ type
     jsNull
     jsError
   JSON = object
-    case kind*: JSONKind
+    case kind: JSONKind
     of jsObject:
       obj: Table[string, JSON]
     of jsArray:
@@ -30,26 +46,72 @@ type
     of jsError:
       msg: string
 
-proc parseStringToJSON(str: string): JSON {.procvar.} =
-  let
-    last = len(str) - 1
-    match = case str[0]
-      of '"': '"'
-      of '[': ']'
-      of '{': '}'
-      else: str[last]
-  if str[last] != match:
-    return JSON(kind: jsError, msg: "unmatched " & str[0] & " on string: " & str)
-
-  let inner = str[1..last-1]
-  case str[0]
-  of '"':
-    return JSON(kind: jsString, str: inner)
-  of '[':
-    let parts = inner.split(",").map(parseStringToJSON)
-    return JSON(kind: jsArray, arr: parts)
+proc `$`(token: JSONToken): string =
+  case token.kind:
+  of literal:
+    '"' & token.value & '"'
+  of error:
+    "<|" & token.value & "|>"
   else:
-    return JSON(kind: jsError, msg: "unknown format: " & str)
+    $token.kind
+
+proc tokenizeJSON(str: string): seq[JSONToken] =
+  var
+    curr = ""
+    i = 0
+    readingString = false
+  result = @[]
+  proc t(kind: JSONTokenKind): JSONToken =
+    JSONToken(kind: kind)
+  while i < str.len:
+    let c = str[i]
+    i += 1
+    if readingString:
+      if c != '"':
+        curr &= c
+      else:
+        result.add JSONToken(kind: literal, value: curr)
+        curr = ""
+        readingString = false
+      continue
+
+    case c
+    of '{': result.add t(objectStart)
+    of '}': result.add t(objectEnd)
+    of '[': result.add t(arrayStart)
+    of ']': result.add t(arrayEnd)
+    of ',': result.add t(comma)
+    of ':': result.add t(colon)
+    of '"': readingString = true
+    else:
+      result.add JSONToken(kind: error, value: "Unexpected character '" & c & "'")
+      return
+
+proc parseJSONTokensFrom(idx: var int, tokens: seq[JSONToken]): JSON =
+  var t = tokens[idx]
+  idx += 1
+  case t.kind:
+  of literal:
+    JSON(kind: jsString, str: t.value)
+  of arrayStart:
+    var arr: seq[JSON] = @[]
+    while tokens[idx].kind != arrayEnd:
+      arr.add parseJSONTokensFrom(idx, tokens)
+      let k = tokens[idx].kind
+      if k == comma:
+        idx += 1
+      elif k != arrayEnd:
+        return JSON(kind: jsError, msg: "Unexpected token " & $k)
+    JSON(kind: jsArray, arr: arr)
+  else:
+    JSON(kind: jsError, msg: "Unexpected token " & $t.kind)
+  
+proc parseJSONTokens(tokens: seq[JSONToken]): JSON =
+  var idx = 0
+  parseJSONTokensFrom(idx, tokens)
+
+proc deserializeJSON(str: string): JSON =
+  parseJSONTokens(tokenizeJSON(str))
 
 proc serializeJSON(json: JSON): string =
   case json.kind
@@ -71,13 +133,17 @@ proc serializeJSON(json: JSON): string =
   of jsError:
     result = "<|" & json.msg & "|>"
 
-echo "Serialized: ", serializeJSON(parseStringToJSON(
-  """["lol",["butts","lol"]]"""
-  # """"lol""""
-))
+proc test(str: string) =
+  echo "TEST: ", str
+  echo "  Tokens: ", tokenizeJSON(str)
+  echo "  Serialized: ", serializeJSON(deserializeJSON(str))
 
-proc readJSONFile(filename: string): JSON =
-  parseStringToJSON(readFile(filename).string)
+# test """"lol""""
+# test """["a","b","c"]"""
+test """["lol",["butts","lol"]]"""
+
+# proc readJSONFile(filename: string): JSON =
+#   parseStringToJSON(readFile(filename).string)
 
 type Data = Table[string, int]
 const sysFile = "systems.json"
