@@ -33,22 +33,23 @@ type
 proc parseStringToJSON(str: string): JSON {.procvar.} =
   let
     last = len(str) - 1
-    inner = str[1..last-1]
+    match = case str[0]
+      of '"': '"'
+      of '[': ']'
+      of '{': '}'
+      else: str[last]
+  if str[last] != match:
+    return JSON(kind: jsError, msg: "unmatched " & str[0] & " on string: " & str)
+
+  let inner = str[1..last-1]
   case str[0]
   of '"':
-    if str[last] == '"':
-      JSON(kind: jsString, str: inner)
-    else:
-      JSON(kind: jsError, msg: "unmatched \" on string: " & str)
+    return JSON(kind: jsString, str: inner)
   of '[':
-    if str[last] == ']':
-      let parts = inner.split(",").map(parseStringToJSON)
-      JSON(kind: jsArray, arr: parts)
-    else:
-      JSON(kind: jsError, msg: "unmatched [ on string: " & str)
-
+    let parts = inner.split(",").map(parseStringToJSON)
+    return JSON(kind: jsArray, arr: parts)
   else:
-    JSON(kind: jsError, msg: "unknown format: " & str)
+    return JSON(kind: jsError, msg: "unknown format: " & str)
 
 proc serializeJSON(json: JSON): string =
   case json.kind
@@ -68,10 +69,10 @@ proc serializeJSON(json: JSON): string =
   of jsNull:
     result = "null"
   of jsError:
-    result = json.msg
+    result = "<|" & json.msg & "|>"
 
 echo "Serialized: ", serializeJSON(parseStringToJSON(
-  """["lol","butts"]"""
+  """["lol",["butts","lol"]]"""
   # """"lol""""
 ))
 
