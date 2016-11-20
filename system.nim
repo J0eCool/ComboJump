@@ -54,7 +54,7 @@ proc getNextId(data: Data): int =
 
 macro defineSystem*(body: untyped): untyped =
   var data = readData()
-  let key = $body[0].name
+  let key = ($body[0].name)[0..^2]
   if not data.hasKey(key):
     let nextId = getNextId(data)
     data[key] = System()
@@ -72,3 +72,19 @@ macro defineSystem*(body: untyped): untyped =
   writeData(data)
 
   return body
+
+proc addSystemCalls*(stmtList: NimNode, game: NimNode) =
+  let data = readData()
+  let entities = newDotExpr(game, newIdentNode(!"entities"))
+  for k, v in data:
+    let
+      sysName = newIdentNode(k)
+      callNode = newCall(sysName, entities)
+    for arg in v.args:
+      callNode.add newDotExpr(game, newIdentNode(arg))
+    let
+      processCall = newCall(!"process", game, callNode)
+      declaredCall = newCall(!"declared", sysName)
+    var whenNode = newNimNode(nnkWhenStmt)
+    whenNode.add newNimNode(nnkElifBranch).add(declaredCall).add(processCall)
+    stmtList.add whenNode

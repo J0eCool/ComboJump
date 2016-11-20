@@ -34,6 +34,7 @@ import
   input,
   program,
   resources,
+  system,
   vec,
   util
 
@@ -41,6 +42,7 @@ type Game* = ref object of Program
   resources*: ResourceManager
   entities*: Entities
   camera*: Camera
+  dt: float
 
 method loadEntities*(game: Game) {.base.}
 
@@ -191,13 +193,9 @@ proc process*(game: Game, events: Events) =
     of removeEntity:
       game.entities.remove event.entity
 
-macro processAll*(game, entities: expr, body: untyped): stmt =
+macro processAll*(game): stmt =
   result = newNimNode(nnkStmtList)
-  for node in body:
-    let callNode = newCall(node[0], entities)
-    for i in 1..<node.len:
-      callNode.add node[i]
-    result.add(newCall(!"process", game, callNode))
+  addSystemCalls(result, game)
 
 proc drawGame*(renderer: RendererPtr, game: Game) =
   game.entities.updateProgressBars()
@@ -209,35 +207,14 @@ proc drawGame*(renderer: RendererPtr, game: Game) =
 method draw*(renderer: RendererPtr, game: Game) =
   renderer.drawGame(game)
 
-proc updateBase*(game: Game) =
+method update*(game: Game, dt: float) =
   if game.input.isPressed(Input.restart):
     let input = game.input
     game.loadEntities()
     game.input = input
+  game.dt = dt
 
-method update*(game: Game, dt: float) =
-  game.updateBase()
-
-  game.processAll game.entities:
-    # updateClicked(game.input)
-
-    # playerInput(game.input)
-    # playerMovement(dt)
-
-    physics(dt)
-    checkCollisisons()
-    updateCamera(game.camera)
-    
-    # regenLimitedQuantities(dt)
-
-    # updateBullets(dt)
-    # updateBulletDamage()
-    # updateFieryBullets(dt)
-    
-    # playerShoot(dt)
-    # clickPlayer()
-
-    # updateEnemyMovement(dt)
+  game.processAll()
 
 when isMainModule:
   let screenSize = vec(1200, 900)

@@ -173,27 +173,6 @@ method draw*(renderer: RendererPtr, game: NanoGame) =
   renderer.drawCachedText($game.frameTime & "ms", vec(1100, 875),
                           game.resources.loadFont("nevis.ttf"), color(0, 0, 0, 255))
 
-method update*(game: NanoGame, dt: float) =
-  game.updateBase()
-
-  game.processAll game.entities:
-    playerInput(game.input)
-    playerMovement(dt)
-    playerShoot(dt)
-
-    updateEnemyProximity()
-    updateEnemyMovement(dt)
-
-    updateBullets(dt)
-    updateFieryBullets(dt)
-    updateDamage()
-
-    physics(dt)
-    checkCollisisons()
-    updateCamera(game.camera)
-    
-    regenLimitedQuantities(dt)
-
 when isMainModule:
   let screenSize = vec(1200, 900)
   main(newNanoGame(screenSize), screenSize)
