@@ -1,4 +1,13 @@
 {
-  "updateDamage*": "0",
-  "updateBullets*": "1"
+  "updateDamage*": {
+    "id": "0",
+    "args": [
+    ]
+  },
+  "updateBullets*": {
+    "id": "1",
+    "args": [
+      "dt"
+    ]
+  }
 }

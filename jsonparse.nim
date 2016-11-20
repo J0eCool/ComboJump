@@ -156,21 +156,21 @@ proc serializeJSON*(json: JSON, pretty=false, indents=0): string =
   of jsString:
     result = "\"" & json.str & "\""
   of jsArray:
-    result = "[" & newline
+    result = "["
     var first = true
     for x in json.arr:
       if not first:
-        result &= "," & newline
-      result &= indentation & tab & serializeJSON(x, pretty, indents+1)
+        result &= ","
+      result &= newline & indentation & tab & serializeJSON(x, pretty, indents+1)
       first = false
     result &= newline & indentation & "]"
   of jsObject:
-    result = "{" & newline
+    result = "{"
     var first = true
     for k, v in json.obj:
       if not first:
-        result &= "," & newline
-      result &= indentation & tab &
+        result &= ","
+      result &= newline & indentation & tab &
           "\"" & k & "\":" & space &
           serializeJSON(v, pretty, indents+1)
       first = false
@@ -190,9 +190,18 @@ proc readJSONFile*(filename: string): JSON =
 proc writeJSONFile*(filename: string, json: JSON) =
   writeFile(filename, $json)
 
+proc fromJSON*[T](json: JSON): T
 proc fromJSON*(x: var int, json: JSON) =
   assert json.kind == jsString
   x = parseInt(json.str)
+proc fromJSON*(str: var string, json: JSON) =
+  assert json.kind == jsString
+  str = json.str
+proc fromJSON*[T](list: var seq[T], json: JSON) =
+  assert json.kind == jsArray
+  list = @[]
+  for j in json.arr:
+    list.add fromJSON[T](j)
 
 proc fromJSON*[T](json: JSON): T =
   var x: T
@@ -201,6 +210,13 @@ proc fromJSON*[T](json: JSON): T =
 
 proc toJSON*(x: int): JSON =
   JSON(kind: jsString, str: $x)
+proc toJSON*(str: string): JSON =
+  JSON(kind: jsString, str: str)
+proc toJSON*[T](list: seq[T]): JSON =
+  var arr: seq[JSON] = @[]
+  for item in list:
+    arr.add item.toJSON
+  JSON(kind: jsArray, arr: arr)
 
 when isMainModule:
   proc test(str: string) =
