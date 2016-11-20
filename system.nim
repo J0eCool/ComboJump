@@ -61,6 +61,7 @@ macro defineSystem*(body: untyped): untyped =
     data[key].id = nextId
 
   var ps = body[0].params
+  assert ps[0].kind == nnkEmpty, "System " & key & " should not have a return value"
   ps[0] = ident("Events")
   ps.insert 1, newIdentDefs(ident("entities"), ident("Entities"))
   var args: seq[string] = @[]

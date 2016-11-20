@@ -3,15 +3,17 @@ import
   component/limited_quantity,
   component/mana,
   entity,
-  event
+  event,
+  system
 
-proc regenLimitedQuantities*(entities: seq[Entity], dt: float): Events =
-  entities.forComponents e, [
-    Health, h,
-  ]:
-    h.regen dt
+defineSystem:
+  proc regenLimitedQuantities*(dt: float) =
+    entities.forComponents e, [
+      Health, h,
+    ]:
+      h.regen dt
 
-  entities.forComponents e, [
-    Mana, m,
-  ]:
-    m.regen dt
+    entities.forComponents e, [
+      Mana, m,
+    ]:
+      m.regen dt

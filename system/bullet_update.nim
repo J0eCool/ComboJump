@@ -46,30 +46,31 @@ proc updateHomingBullets(entities: seq[Entity], dt: float) =
       turn = lerp((1 - b.lifePct) * 5, 0, baseTurn)
     m.vel = m.vel.rotate(turn)
 
-proc updateFieryBullets*(entities: seq[Entity], dt: float): seq[Event] =
-  result = @[]
-  entities.forComponents e, [
-    FieryBullet, f,
-    Movement, m,
-    Transform, t,
-  ]:
-    f.timer += dt
-    assert f.interval > 0
-    while f.timer >= f.interval:
-      f.timer -= f.interval
-      let
-        vel = m.vel.rotate(random(-PI/3, PI/3) - PI) * 0.15
-        flare = newEntity("Flare", [
-          Transform(
-            pos: t.pos + randomVec(t.size.length),
-            size: t.size * f.size,
-          ),
-          Sprite(color: color(255, 128, 32, 255)),
-          Collider(),
-          Movement(vel: vel),
-          newBullet(liveTime=f.liveTime),
-        ])
-      result.add Event(kind: addEntity, entity: flare)
+defineSystem:
+  proc updateFieryBullets*(dt: float) =
+    result = @[]
+    entities.forComponents e, [
+      FieryBullet, f,
+      Movement, m,
+      Transform, t,
+    ]:
+      f.timer += dt
+      assert f.interval > 0
+      while f.timer >= f.interval:
+        f.timer -= f.interval
+        let
+          vel = m.vel.rotate(random(-PI/3, PI/3) - PI) * 0.15
+          flare = newEntity("Flare", [
+            Transform(
+              pos: t.pos + randomVec(t.size.length),
+              size: t.size * f.size,
+            ),
+            Sprite(color: color(255, 128, 32, 255)),
+            Collider(),
+            Movement(vel: vel),
+            newBullet(liveTime=f.liveTime),
+          ])
+        result.add Event(kind: addEntity, entity: flare)
 
 defineSystem:
   proc updateBullets*(dt: float) =

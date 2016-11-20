@@ -1,13 +1,76 @@
 {
+  "clickPlayer*": {
+    "id": "3",
+    "args": [
+    ]
+  },
+  "playerShoot*": {
+    "id": "5",
+    "args": [
+      "dt"
+    ]
+  },
+  "physics*": {
+    "id": "10",
+    "args": [
+      "dt"
+    ]
+  },
+  "playerMovement*": {
+    "id": "4",
+    "args": [
+      "dt"
+    ]
+  },
+  "updateCamera*": {
+    "id": "11",
+    "args": [
+      "camera"
+    ]
+  },
+  "regenLimitedQuantities*": {
+    "id": "12",
+    "args": [
+      "dt"
+    ]
+  },
+  "checkCollisisons*": {
+    "id": "9",
+    "args": [
+    ]
+  },
   "updateDamage*": {
     "id": "0",
     "args": [
+    ]
+  },
+  "updateFieryBullets*": {
+    "id": "8",
+    "args": [
+      "dt"
+    ]
+  },
+  "updateEnemyMovement*": {
+    "id": "7",
+    "args": [
+      "dt"
+    ]
+  },
+  "playerInput*": {
+    "id": "2",
+    "args": [
+      "input"
     ]
   },
   "updateBullets*": {
     "id": "1",
     "args": [
       "dt"
+    ]
+  },
+  "updateEnemyProximity*": {
+    "id": "6",
+    "args": [
     ]
   }
 }

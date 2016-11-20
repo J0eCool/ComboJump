@@ -5,6 +5,7 @@ import
   entity,
   event,
   option,
+  system,
   util,
   vec
 
@@ -24,23 +25,24 @@ type
     jumpDelay*: float
     jumpTimer: float
 
-proc updateEnemyProximity*(entities: Entities): Events =
-  entities.forComponents e, [
-    EnemyProximity, p,
-    Transform, t,
-  ]:
-    let pc = entities.firstComponent(PlayerControl)
-    if pc == nil:
-      continue
-    let pt = pc.entity.getComponent(Transform)
-    if pt == nil:
-      continue
+defineSystem:
+  proc updateEnemyProximity*() =
+    entities.forComponents e, [
+      EnemyProximity, p,
+      Transform, t,
+    ]:
+      let pc = entities.firstComponent(PlayerControl)
+      if pc == nil:
+        continue
+      let pt = pc.entity.getComponent(Transform)
+      if pt == nil:
+        continue
 
-    let
-      delta = pt.pos - t.pos
-      xDist = delta.x.abs
-    p.isInRange = xDist.between(p.targetMinRange, p.targetRange)
-    p.dirToPlayer = delta.x.sign.float
+      let
+        delta = pt.pos - t.pos
+        xDist = delta.x.abs
+      p.isInRange = xDist.between(p.targetMinRange, p.targetRange)
+      p.dirToPlayer = delta.x.sign.float
 
 proc updateEnemyMoveTowards(entities: Entities, dt: float) =
   entities.forComponents e, [
@@ -72,6 +74,7 @@ proc updateEnemyJumpTowards(entities: Entities, dt: float) =
       m.vel.y = jumpSpeed(em.jumpHeight)
       em.jumpTimer = em.jumpDelay
 
-proc updateEnemyMovement*(entities: Entities, dt: float): Events =
-  entities.updateEnemyMoveTowards(dt)
-  entities.updateEnemyJumpTowards(dt)
+defineSystem:
+  proc updateEnemyMovement*(dt: float) =
+    entities.updateEnemyMoveTowards(dt)
+    entities.updateEnemyJumpTowards(dt)
