@@ -11,24 +11,24 @@ import
 
 type Data = Table[string, int]
 const sysFile = "systems.json"
+
+proc fromJSON(data: var Data, json: JSON) =
+  data = initTable[string, int](64)
+  assert json.kind == jsObject
+  for k, v in json.obj:
+    data[k] = fromJSON[int](v)
+
+proc toJSON(data: Data): JSON =
+  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
+  for k, v in data:
+    result.obj[k] = toJSON(v)
+
 proc readData(): Data =
-  result = initTable[string, int](64)
-  let
-    inStr = readFile(sysFile).string
-    lines = inStr.split("\n")
-  for ln in lines:
-    let parts = ln.split(":")
-    if parts.len > 1:
-      let
-        name = parts[0]
-        count = parts[1].parseInt
-      result[name] = count
+  let json = readJSONFile(sysFile)
+  return fromJSON[Data](json)
 
 proc writeData(data: Data) =
-  var outStr = ""
-  for k, v in data.pairs:
-    outStr &= k & ":" & $v & "\n"
-  writeFile(sysFile, outStr)
+  writeFile(sysFile, $data.toJson)
 
 proc getNextId(data: Data): int =
   var ids: seq[int] = @[]

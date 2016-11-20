@@ -31,17 +31,17 @@ type
     jsNull
     jsError
   JSON* = object
-    case kind: JSONKind
+    case kind*: JSONKind
     of jsObject:
-      obj: Table[string, JSON]
+      obj*: Table[string, JSON]
     of jsArray:
-      arr: seq[JSON]
+      arr*: seq[JSON]
     of jsString:
-      str: string
+      str*: string
     of jsNull:
       discard
     of jsError:
-      msg: string
+      msg*: string
 
 proc `$`(token: JSONToken): string =
   case token.kind:
@@ -176,6 +176,21 @@ proc `$`*(json: JSON): string =
 
 proc readJSONFile*(filename: string): JSON =
   deserializeJSON(readFile(filename).string)
+
+proc writeJSONFile*(filename: string, json: JSON) =
+  writeFile(filename, $json)
+
+proc fromJSON*(x: var int, json: JSON) =
+  assert json.kind == jsString
+  x = parseInt(json.str)
+
+proc fromJSON*[T](json: JSON): T =
+  var x: T
+  x.fromJSON(json)
+  return x
+
+proc toJSON*(x: int): JSON =
+  JSON(kind: jsString, str: $x)
 
 when isMainModule:
   proc test(str: string) =
