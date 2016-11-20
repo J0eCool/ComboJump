@@ -28,7 +28,7 @@ proc readData(): Data =
   return fromJSON[Data](json)
 
 proc writeData(data: Data) =
-  writeFile(sysFile, $data.toJson)
+  writeFile(sysFile, data.toJson.toPrettyString)
 
 proc getNextId(data: Data): int =
   var ids: seq[int] = @[]

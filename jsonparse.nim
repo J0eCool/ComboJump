@@ -144,35 +144,45 @@ proc parseJSONTokens(tokens: seq[JSONToken]): JSON =
 proc deserializeJSON*(str: string): JSON =
   parseJSONTokens(tokenizeJSON(str))
 
-proc serializeJSON*(json: JSON): string =
+proc serializeJSON*(json: JSON, pretty=false, indents=0): string =
+  let
+    tab = "  "
+    indentation = if not pretty: "" else: tab.repeat(indents)
+    newline = if not pretty: "" else: "\n"
+    space = if not pretty: "" else: " "
   case json.kind
   of jsNull:
     result = "null"
   of jsString:
     result = "\"" & json.str & "\""
   of jsArray:
-    result = "["
+    result = "[" & newline
     var first = true
     for x in json.arr:
       if not first:
-        result &= ","
-      result &= serializeJSON(x)
+        result &= "," & newline
+      result &= indentation & tab & serializeJSON(x, pretty, indents+1)
       first = false
-    result &= "]"
+    result &= newline & indentation & "]"
   of jsObject:
-    result = "{"
+    result = "{" & newline
     var first = true
     for k, v in json.obj:
       if not first:
-        result &= ","
-      result &= "\"" & k & "\":" & serializeJSON(v)
+        result &= "," & newline
+      result &= indentation & tab &
+          "\"" & k & "\":" & space &
+          serializeJSON(v, pretty, indents+1)
       first = false
-    result &= "}"
+    result &= newline & indentation & "}"
   of jsError:
-    result = "<|" & json.msg & "|>"
+    result = "<|" & json.msg & "|>" & newline
 
 proc `$`*(json: JSON): string =
   serializeJSON(json)
+
+proc toPrettyString*(json: JSON): string =
+  serializeJSON(json, pretty=true)
 
 proc readJSONFile*(filename: string): JSON =
   deserializeJSON(readFile(filename).string)
@@ -198,6 +208,8 @@ when isMainModule:
     echo "  Tokens: ", tokenizeJSON(str)
     echo "  Serialized: ", deserializeJSON(str)
     echo "  Roundtrip : ", deserializeJSON(serializeJSON(deserializeJSON(str)))
+    echo "  Pretty    :"
+    echo deserializeJSON(str).toPrettyString()
 
   test """"lol""""
   test """["a", "b", "c"]"""
