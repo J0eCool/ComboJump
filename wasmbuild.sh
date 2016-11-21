@@ -1,0 +1,1 @@
+nim cc -c -d:release --deadCodeElim:on --noCppExceptions --cpu:i386 --dynlibOverride:sdl2 --dynlibOverride:sdl2_ttf mapgen.nim && /s/wasm/emscripten/emcc --em-config /s/wasm/emscripten_config -s WASM=1 nimcache/*.c -I ~/Programming/Tools/nim-0.15.2/lib/ -lm -o game.html -s USE_SDL=2 -s USE_SDL_TTF=2 -O2 --preload-file . -s TOTAL_MEMORY=167772160 && python -m SimpleHTTPServer 8080
