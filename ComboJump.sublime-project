@@ -34,5 +34,11 @@
             "-d:debug", "--parallelBuild:0",
             "--out:out/nanogame", "nano_game.nim"],
         "working_dir": "$project_path"
+    }, {
+        "name": "JSON Test",
+        "cmd": ["nim", "c", "-r",
+            "-d:debug", "--parallelBuild:0",
+            "--out:out/jsontest", "jsonparse.nim"],
+        "working_dir": "$project_path"
     }]
 }

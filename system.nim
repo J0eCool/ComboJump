@@ -13,6 +13,7 @@ type
   System = object
     id: int
     args: seq[string]
+    filename: string
   Data = Table[string, System]
 const sysFile = "systems.json"
 
@@ -20,10 +21,12 @@ proc fromJSON(system: var System, json: JSON) =
   assert json.kind == jsObject
   system.id = fromJSON[int](json.obj["id"])
   system.args = fromJSON[seq[string]](json.obj["args"])
+  system.filename = fromJSON[string](json.obj.getOrDefault("filename"))
 proc toJSON(system: System): JSON =
   result = JSON(kind: jsObject, obj: initTable[string, JSON]())
   result.obj["id"] = system.id.toJSON()
   result.obj["args"] = system.args.toJSON()
+  result.obj["filename"] = system.filename.toJSON()
 
 proc fromJSON(data: var Data, json: JSON) =
   data = initTable[string, System](64)
@@ -68,6 +71,7 @@ macro defineSystem*(body: untyped): untyped =
   for i in 2..<ps.len:
     args.add $ps[i][0].ident
   data[key].args = args
+  data[key].filename = lineinfo(body).split("(")[0]
 
   writeData(data)
 

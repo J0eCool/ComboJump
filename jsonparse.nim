@@ -16,12 +16,13 @@ type
     arrayEnd
     objectStart
     objectEnd
+    null
     error
   JSONToken = object
     case kind: JSONTokenKind
     of literal, error:
       value: string
-    of comma, colon, arrayStart, arrayEnd, objectStart, objectEnd:
+    of comma, colon, arrayStart, arrayEnd, objectStart, objectEnd, null:
       discard
 
   JSONKind* = enum
@@ -85,6 +86,13 @@ proc tokenizeJSON(str: string): seq[JSONToken] =
     of ':': result.add t(colon)
     of '"': readingString = true
     of ' ', cr, lf: discard
+    of 'n':
+      if str[i..i+2] == "ull":
+        result.add t(null)
+        i += 3
+      else:
+        result.add JSONToken(kind: error, value: "Expected 'null', got '" & str[i-1..i+2] & "'")
+        return
     else:
       result.add JSONToken(kind: error, value: "Unexpected character '" & c & "'")
       return
@@ -93,6 +101,8 @@ proc parseJSONTokensFrom(idx: var int, tokens: seq[JSONToken]): JSON =
   var t = tokens[idx]
   idx += 1
   case t.kind:
+  of null:
+    return JSON(kind: jsNull)
   of literal:
     return JSON(kind: jsString, str: t.value)
   of arrayStart:
@@ -146,7 +156,7 @@ proc deserializeJSON*(str: string): JSON =
 
 proc serializeJSON*(json: JSON, pretty=false, indents=0): string =
   let
-    tab = "  "
+    tab = if not pretty: "" else: "  "
     indentation = if not pretty: "" else: tab.repeat(indents)
     newline = if not pretty: "" else: "\n"
     space = if not pretty: "" else: " "
@@ -195,8 +205,13 @@ proc fromJSON*(x: var int, json: JSON) =
   assert json.kind == jsString
   x = parseInt(json.str)
 proc fromJSON*(str: var string, json: JSON) =
-  assert json.kind == jsString
-  str = json.str
+  case json.kind
+  of jsString:
+    str = json.str
+  of jsNull:
+    str = nil
+  else:
+    assert false
 proc fromJSON*[T](list: var seq[T], json: JSON) =
   assert json.kind == jsArray
   list = @[]
@@ -211,7 +226,10 @@ proc fromJSON*[T](json: JSON): T =
 proc toJSON*(x: int): JSON =
   JSON(kind: jsString, str: $x)
 proc toJSON*(str: string): JSON =
-  JSON(kind: jsString, str: str)
+  if str != nil:
+    JSON(kind: jsString, str: str)
+  else:
+    JSON(kind: jsNull)
 proc toJSON*[T](list: seq[T]): JSON =
   var arr: seq[JSON] = @[]
   for item in list:
@@ -230,7 +248,7 @@ when isMainModule:
   test """"lol""""
   test """["a", "b", "c"]"""
   test """["lol", ["butts", "lol"]]"""
-  test """{"x": "12", "y": "9"}"""
+  test """{"x": "12", "y": "9", "z": null}"""
   test """[
     { "x":"12"
     , "y" : "9"
