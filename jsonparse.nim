@@ -54,10 +54,6 @@ proc `$`(token: JSONToken): string =
     $token.kind
 
 proc tokenizeJSON(str: string): seq[JSONToken] =
-  const
-    newlineStr = "\n"
-    cr = newlineStr[0]
-    lf = newlineStr[newlineStr.len-1]
   var
     curr = ""
     i = 0
@@ -77,6 +73,9 @@ proc tokenizeJSON(str: string): seq[JSONToken] =
         readingString = false
       continue
 
+    if c.isSpaceAscii():
+      continue
+
     case c
     of '{': result.add t(objectStart)
     of '}': result.add t(objectEnd)
@@ -85,7 +84,6 @@ proc tokenizeJSON(str: string): seq[JSONToken] =
     of ',': result.add t(comma)
     of ':': result.add t(colon)
     of '"': readingString = true
-    of ' ', cr, lf: discard
     of 'n':
       if str[i..i+2] == "ull":
         result.add t(null)

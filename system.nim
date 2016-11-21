@@ -1,6 +1,7 @@
 import
   algorithm,
   macros,
+  os,
   strutils,
   tables
 
@@ -77,14 +78,19 @@ macro defineSystem*(body: untyped): untyped =
 
   return body
 
-macro defineSystemCalls*(): stmt =
+macro importAllSystems*(): untyped =
+  result = newNimNode(nnkStmtList)
+  for f in walkDir("component"):
+    result.add newTree(nnkImportStmt, ident(f.path))
+  for f in walkDir("system"):
+    result.add newTree(nnkImportStmt, ident(f.path))
+
+macro defineSystemCalls*(): untyped =
   result = newNimNode(nnkStmtList)
   let
     data = readData()
     game = ident("game")
     entities = newDotExpr(game, ident("entities"))
-  for k, v in data:
-    result.add newTree(nnkImportStmt, ident(v.filename))
   let
     retVal = newEmptyNode()
     gameParam = newIdentDefs(game, ident("Game"))

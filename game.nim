@@ -195,6 +195,7 @@ proc drawGame*(renderer: RendererPtr, game: Game) =
 method draw*(renderer: RendererPtr, game: Game) =
   renderer.drawGame(game)
 
+importAllSystems()
 defineSystemCalls()
 method update*(game: Game, dt: float) =
   if game.input.isPressed(Input.restart):
