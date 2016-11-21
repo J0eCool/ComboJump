@@ -77,18 +77,23 @@ macro defineSystem*(body: untyped): untyped =
 
   return body
 
-proc addSystemCalls*(stmtList: NimNode, game: NimNode) =
-  let data = readData()
-  let entities = newDotExpr(game, newIdentNode(!"entities"))
+macro defineSystemCalls*(): stmt =
+  result = newNimNode(nnkStmtList)
+  let
+    data = readData()
+    game = ident("game")
+    entities = newDotExpr(game, ident("entities"))
+  for k, v in data:
+    result.add newTree(nnkImportStmt, ident(v.filename))
+  let
+    retVal = newEmptyNode()
+    gameParam = newIdentDefs(game, ident("Game"))
+    procDef = newProc(postfix(ident("updateSystems"), "*"), [retVal, gameParam])
   for k, v in data:
     let
-      sysName = newIdentNode(k)
+      sysName = ident(k)
       callNode = newCall(sysName, entities)
     for arg in v.args:
-      callNode.add newDotExpr(game, newIdentNode(arg))
-    let
-      processCall = newCall(!"process", game, callNode)
-      declaredCall = newCall(!"declared", sysName)
-    var whenNode = newNimNode(nnkWhenStmt)
-    whenNode.add newNimNode(nnkElifBranch).add(declaredCall).add(processCall)
-    stmtList.add whenNode
+      callNode.add newDotExpr(game, ident(arg))
+    procDef.body.add newCall(!"process", game, callNode)
+  result.add procDef

@@ -18,14 +18,6 @@ import
   component/sprite,
   component/text,
   component/transform,
-  system/bullet_hit,
-  system/bullet_update,
-  system/collisions,
-  system/physics,
-  system/player_input,
-  system/player_movement,
-  system/player_shoot,
-  system/quantity_regen,
   system/render,
   system/update_progress_bar,
   camera,
@@ -42,7 +34,7 @@ type Game* = ref object of Program
   resources*: ResourceManager
   entities*: Entities
   camera*: Camera
-  dt: float
+  dt*: float
 
 method loadEntities*(game: Game) {.base.}
 
@@ -193,10 +185,6 @@ proc process*(game: Game, events: Events) =
     of removeEntity:
       game.entities.remove event.entity
 
-macro processAll*(game): stmt =
-  result = newNimNode(nnkStmtList)
-  addSystemCalls(result, game)
-
 proc drawGame*(renderer: RendererPtr, game: Game) =
   game.entities.updateProgressBars()
 
@@ -207,6 +195,7 @@ proc drawGame*(renderer: RendererPtr, game: Game) =
 method draw*(renderer: RendererPtr, game: Game) =
   renderer.drawGame(game)
 
+defineSystemCalls()
 method update*(game: Game, dt: float) =
   if game.input.isPressed(Input.restart):
     let input = game.input
@@ -214,7 +203,7 @@ method update*(game: Game, dt: float) =
     game.input = input
   game.dt = dt
 
-  game.processAll()
+  game.updateSystems()
 
 when isMainModule:
   let screenSize = vec(1200, 900)
