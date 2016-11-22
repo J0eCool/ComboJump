@@ -85,7 +85,7 @@ macro importAllSystems*(): untyped =
   for f in walkDir("system"):
     result.add newTree(nnkImportStmt, ident(f.path))
 
-macro defineSystemCalls*(): untyped =
+macro defineSystemCalls*(gameType: typed): untyped =
   result = newNimNode(nnkStmtList)
   let
     data = readData()
@@ -93,8 +93,8 @@ macro defineSystemCalls*(): untyped =
     entities = newDotExpr(game, ident("entities"))
   let
     retVal = newEmptyNode()
-    gameParam = newIdentDefs(game, ident("Game"))
-    procDef = newProc(postfix(ident("updateSystems"), "*"), [retVal, gameParam])
+    gameParam = newIdentDefs(game, gameType)
+    procDef = newProc(ident("updateSystems"), [retVal, gameParam])
   for k, v in data:
     let
       sysName = ident(k)
