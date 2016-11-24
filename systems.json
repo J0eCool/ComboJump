@@ -40,6 +40,13 @@
       "dt"
     ]
   },
+  "gridControl": {
+    "filename": "component/grid_control.nim",
+    "id": "13",
+    "args": [
+      "input"
+    ]
+  },
   "playerInput": {
     "filename": "system/player_input.nim",
     "id": "6",
