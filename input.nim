@@ -10,6 +10,8 @@ type
     none,
     left,
     right,
+    up,
+    down,
     jump,
     spell1,
     spell2,
@@ -24,8 +26,13 @@ type
     held,
     released,
 
+  Axis* = enum
+    horizontal
+    vertical
+
   InputManager* = ref object
     inputs: array[Input, InputState]
+    axes: array[Axis, int]
     mousePos: Vec
     mouseState: InputState
     mouseWheel: int
@@ -37,6 +44,8 @@ proc keyToInput(key: Scancode): Input =
   case key
   of SDL_SCANCODE_A: left
   of SDL_SCANCODE_D: right
+  of SDL_SCANCODE_W: up
+  of SDL_SCANCODE_S: down
   of SDL_SCANCODE_K: jump
   of SDL_SCANCODE_J: spell1
   of SDL_SCANCODE_I: spell2
@@ -45,6 +54,7 @@ proc keyToInput(key: Scancode): Input =
   of SDL_SCANCODE_ESCAPE: exit
   else: none
 
+proc isHeld*(manager: InputManager, key: Input): bool
 proc update*(manager: InputManager) =
   template updateInput(i) =
     if i == pressed:
@@ -55,6 +65,16 @@ proc update*(manager: InputManager) =
     updateInput(manager.inputs[i])
   updateInput(manager.mouseState)
   manager.mouseWheel = 0
+
+  template updateAxis(a, neg, pos) =
+    var val = 0
+    if manager.isHeld(neg):
+      val -= 1
+    if manager.isHeld(pos):
+      val += 1
+    manager.axes[a] = val
+  updateAxis(horizontal, left, right)
+  updateAxis(vertical, up, down)
 
   template setForEvent(e, v) =
     let input = keyToInput e.key.keysym.scancode
@@ -102,3 +122,6 @@ proc clickHeldPos*(manager: InputManager): Option[Vec] =
 
 proc mouseWheel*(manager: InputManager): int =
   manager.mouseWheel
+
+proc getAxis*(manager: InputManager, axis: Axis): int =
+  manager.axes[axis]

@@ -30,16 +30,10 @@ defineSystem:
             ps.isSpellHeld = true
             break
 
-      var dir = 0
-      if not ps.isCasting:
-        if input.isHeld(Input.left):
-          dir -= 1
-        if input.isHeld(Input.right):
-          dir += 1
-      p.moveDir = dir
-      if dir == 1:
+      p.moveDir = input.getAxis(Axis.horizontal)
+      if p.moveDir == 1:
         s.flipX = false
-      elif dir == -1:
+      elif p.moveDir == -1:
         s.flipX = true
 
       if p.moveDir != 0:
