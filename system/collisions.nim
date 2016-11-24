@@ -8,6 +8,7 @@ import
   system
 
 defineSystem:
+  components = [Transform, Collider]
   proc checkCollisisons*() =
     forComponents(entities, a, [
       Transform, a_t,

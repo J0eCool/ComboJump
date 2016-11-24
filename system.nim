@@ -56,27 +56,55 @@ proc getNextId(data: Data): int =
       return
     result += 1
 
+proc getBaseType(t: NimNode): NimNode =
+  result = t
+  while result.kind == nnkBracketExpr:
+    result = result[1]
+  assert result.kind == nnkSym
+
+proc walkHierarchy(t: NimNode): seq[NimNode] =
+  result = @[t.getBaseType]
+  while $result[^1].symbol != "RootObj":
+    let td = result[^1].symbol.getImpl
+    result.add td[2][0][1][0]
+
 macro defineSystem*(body: untyped): untyped =
+  var sysProc: NimNode = nil
+  for n in body:
+    if n.kind == nnkProcDef:
+      assert sysProc == nil, "Only expecting one proc per system"
+      sysProc = n
+    else:
+      assert n.kind == nnkAsgn
+      let metaKind = $n[0]
+      case metaKind
+      of "components":
+        discard
+      else:
+        assert false, "Unrecognized system metadata: " & metaKind
+  assert sysProc != nil, "Must find proc in system"
+
   var data = readData()
-  let key = ($body[0].name)[0..^2]
+  let key = ($sysProc.name)[0..^2]
   if not data.hasKey(key):
     let nextId = getNextId(data)
     data[key] = System()
     data[key].id = nextId
 
-  var ps = body[0].params
+  var ps = sysProc.params
   assert ps[0].kind == nnkEmpty, "System " & key & " should not have a return value"
   ps[0] = ident("Events")
   ps.insert 1, newIdentDefs(ident("entities"), ident("Entities"))
   var args: seq[string] = @[]
   for i in 2..<ps.len:
-    args.add $ps[i][0].ident
+    let arg = ps[i]
+    args.add $arg[0].ident
   data[key].args = args
   data[key].filename = lineinfo(body).split("(")[0]
 
   writeData(data)
 
-  return body
+  return sysProc
 
 macro importAllSystems*(): untyped =
   result = newNimNode(nnkStmtList)
