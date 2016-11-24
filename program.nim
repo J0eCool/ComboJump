@@ -102,4 +102,7 @@ proc main*(program: Program, screenSize: Vec) =
       sum += t
     program.frameTime = sum / frames
 
-    delay(maxFrameTicks - updateTicks)
+    let delayTicks = max(
+      maxFrameTicks.int - updateTicks.int,
+      0).uint32
+    delay(delayTicks)
