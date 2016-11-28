@@ -40,7 +40,7 @@ proc newNanoGame*(screenSize: Vec): NanoGame =
   new result
   result.camera.screenSize = screenSize
   result.title = "NaNo Game 2016"
-  result.background = newScrollingBackground(18.0)
+  result.background = newScrollingBackground(22.0)
 
 method loadEntities*(game: NanoGame) =
   game.entities = @[

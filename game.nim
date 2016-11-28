@@ -201,13 +201,13 @@ proc updateBase*(game: Game) =
     game.loadEntities()
     game.input = input
 
-importAllSystems()
-defineSystemCalls(Game)
+# importAllSystems()
+# defineSystemCalls(Game)
 method update*(game: Game, dt: float) =
   game.updateBase()
   game.dt = dt
 
-  game.updateSystems()
+  # game.updateSystems()
 
 when isMainModule:
   let screenSize = vec(1200, 900)

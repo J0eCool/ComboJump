@@ -47,6 +47,15 @@
       "input"
     ]
   },
+  "update": {
+    "filename": "scrolling_background.nim",
+    "id": "14",
+    "args": [
+      "background",
+      "dt",
+      "camera"
+    ]
+  },
   "playerInput": {
     "filename": "system/player_input.nim",
     "id": "6",
