@@ -100,7 +100,7 @@ macro defineSystem*(body: untyped): untyped =
     let arg = ps[i]
     args.add $arg[0].ident
   data[key].args = args
-  data[key].filename = lineinfo(body).split("(")[0]
+  data[key].filename = lineinfo(body).split("(")[0].replace("\\", by="/")
 
   writeData(data)
 
