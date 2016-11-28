@@ -39,7 +39,7 @@ proc draw*(renderer: RendererPtr, rendered: RenderedText, pos: Vec) =
     srcrect.y = 0
     renderer.copy(rendered.texture, addr srcrect, addr dstrect)
 
-proc draw*(renderer: RendererPtr, sprite: SpriteData, rect: rect.Rect, flipX: bool) =
+proc draw*(renderer: RendererPtr, sprite: SpriteData, rect: rect.Rect, flipX = false) =
   var
     dstrect = sdlRect(rect - rect.size / 2)
     srcrect = sdlRect(sprite.size)

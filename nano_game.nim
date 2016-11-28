@@ -28,24 +28,22 @@ import
   input,
   program,
   resources,
+  scrolling_background,
   system,
   vec,
   util
 
 type NanoGame* = ref object of Game
+  background: ScrollingBackground
 
 proc newNanoGame*(screenSize: Vec): NanoGame =
   new result
   result.camera.screenSize = screenSize
   result.title = "NaNo Game 2016"
+  result.background = newScrollingBackground(18.0)
 
 method loadEntities*(game: NanoGame) =
   game.entities = @[
-    newEntity("BG", [
-      Transform(pos: vec(600, 450),
-                size: vec(1200, 900)),
-      Sprite(color: color(67, 167, 81, 255)),
-    ]),
     newEntity("Player", [
       Transform(pos: vec(300, 400),
                 size: vec(76, 68)),
@@ -70,6 +68,9 @@ method loadEntities*(game: NanoGame) =
   ]
 
 method draw*(renderer: RendererPtr, game: NanoGame) =
+  game.background.loadBackgroundAssets(game.resources, renderer)
+  renderer.draw(game.background, game.camera)
+
   renderer.drawGame(game)
 
   renderer.drawCachedText($game.frameTime & "ms", vec(1100, 875),
