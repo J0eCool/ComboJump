@@ -41,20 +41,25 @@ proc newNanoGame*(screenSize: Vec): NanoGame =
 
 method loadEntities*(game: NanoGame) =
   game.entities = @[
+    newEntity("BG", [
+      Transform(pos: vec(600, 450),
+                size: vec(1200, 900)),
+      Sprite(color: color(67, 167, 81, 255)),
+    ]),
     newEntity("Player", [
       Transform(pos: vec(300, 400),
-                size: vec(50, 70)),
+                size: vec(76, 68)),
       Movement(),
       Collider(layer: player),
       GridControl(moveSpeed: 300.0),
-      Sprite(textureName: "Wizard.png"),
+      Sprite(textureName: "Wizard2.png"),
     ]),
     newEntity("Enemy", [
       Transform(pos: vec(600, 400),
-                size: vec(60, 60)),
+                size: vec(48, 56)),
       Movement(),
       Collider(layer: enemy),
-      Sprite(color: color(155, 16, 24, 255)),
+      Sprite(textureName: "Goblin.png"),
     ]),
     newEntity("Block", [
       Transform(pos: vec(500, 700),
