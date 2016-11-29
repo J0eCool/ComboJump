@@ -52,7 +52,6 @@
     "id": "14",
     "args": [
       "background",
-      "dt",
       "camera"
     ]
   },

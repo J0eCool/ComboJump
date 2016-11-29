@@ -40,7 +40,7 @@ proc newNanoGame*(screenSize: Vec): NanoGame =
   new result
   result.camera.screenSize = screenSize
   result.title = "NaNo Game 2016"
-  result.background = newScrollingBackground(22.0)
+  result.background = newScrollingBackground()
 
 method loadEntities*(game: NanoGame) =
   game.entities = @[
@@ -50,6 +50,7 @@ method loadEntities*(game: NanoGame) =
       Movement(),
       Collider(layer: player),
       GridControl(moveSpeed: 300.0),
+      CameraTarget(vertical: true),
       Sprite(textureName: "Wizard2.png"),
     ]),
     newEntity("Enemy", [
