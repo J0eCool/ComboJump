@@ -26,7 +26,8 @@ type
     infos: seq[DecorationInfo]
     loaded: bool
     spawnDist: float
-    spawnedUpTo: float
+    spawnedHi: float
+    spawnedLo: float
 
 proc newScrollingBackground*(): ScrollingBackground =
   result = ScrollingBackground(
@@ -61,10 +62,25 @@ proc draw*(renderer: RendererPtr, background: ScrollingBackground, camera: Camer
 
 defineSystem:
   proc update*(background: var ScrollingBackground, camera: Camera) =
-    while background.spawnedUpTo < camera.screenSize.y + camera.offset.y:
+    proc spawnAt(yOffset: float, infos: seq[DecorationInfo]): Decoration =
       let
-        dist = background.spawnDist
-        spawnPos = vec(random(0.0, camera.screenSize.x), -background.spawnedUpTo + camera.screenSize.y)
-        info = random(background.infos)
-      background.decos.add Decoration(info: info, pos: spawnPos)
-      background.spawnedUpTo += dist
+        spawnPos = vec(random(0.0, camera.screenSize.x), yOffset + camera.screenSize.y)
+        info = random(infos)
+      Decoration(info: info, pos: spawnPos)
+    while background.spawnedLo > -camera.offset.y - camera.screenSize.y:
+      background.decos.add spawnAt(background.spawnedLo, background.infos)
+      background.spawnedLo -= background.spawnDist
+    while background.spawnedHi < -camera.offset.y:
+      background.decos.add spawnAt(background.spawnedHi, background.infos)
+      background.spawnedHi += background.spawnDist
+
+    var toRemove = newSeq[Decoration]()
+    for deco in background.decos:
+      if deco.pos.y + camera.offset.y < 0.0:
+        toRemove.add deco
+        background.spawnedLo.max = deco.pos.y - camera.screenSize.y
+      if deco.pos.y + camera.offset.y > camera.screenSize.y:
+        toRemove.add deco
+        background.spawnedHi.min = deco.pos.y - camera.screenSize.y
+    for deco in toRemove:
+      background.decos.remove deco

@@ -75,3 +75,8 @@ macro addVarargs*(call, args: expr): expr =
 
 proc between*[T](val, lo, hi: T): bool =
   val >= lo and val <= hi
+
+proc `min=`*[T](a: var T, b: T) =
+  a = min(a, b)
+proc `max=`*[T](a: var T, b: T) =
+  a = max(a, b)
