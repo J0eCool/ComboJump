@@ -24,3 +24,6 @@ template bindAs*(opt, name: expr, body: stmt): stmt {.immediate.} =
   of just:
     let name = opt.value
     body
+
+proc isNone*[T](opt: Option[T]): bool =
+  opt.kind == none

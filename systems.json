@@ -33,6 +33,14 @@
       "dt"
     ]
   },
+  "targetedShoot": {
+    "filename": "component/target_shooter.nim",
+    "id": "14",
+    "args": [
+      "targeting",
+      "input"
+    ]
+  },
   "updateFieryBullets": {
     "filename": "system/bullet_update.nim",
     "id": "8",
@@ -47,12 +55,11 @@
       "input"
     ]
   },
-  "update": {
-    "filename": "scrolling_background.nim",
-    "id": "14",
+  "updateTargeting": {
+    "filename": "targeting.nim",
+    "id": "16",
     "args": [
-      "background",
-      "camera"
+      "targeting"
     ]
   },
   "playerInput": {
@@ -85,6 +92,14 @@
     "filename": "component/camera_target.nim",
     "id": "0",
     "args": [
+      "camera"
+    ]
+  },
+  "updateBackground": {
+    "filename": "scrolling_background.nim",
+    "id": "15",
+    "args": [
+      "background",
       "camera"
     ]
   },

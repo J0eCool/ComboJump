@@ -18,6 +18,7 @@ import
   component/player_control,
   component/progress_bar,
   component/sprite,
+  component/target_shooter,
   component/text,
   component/transform,
   system/render,
@@ -30,11 +31,13 @@ import
   resources,
   scrolling_background,
   system,
+  targeting,
   vec,
   util
 
 type NanoGame* = ref object of Game
   background: ScrollingBackground
+  targeting: Targeting
 
 proc newNanoGame*(screenSize: Vec): NanoGame =
   new result
@@ -51,14 +54,24 @@ method loadEntities*(game: NanoGame) =
       Collider(layer: player),
       GridControl(moveSpeed: 300.0),
       CameraTarget(vertical: true),
+      TargetShooter(),
       Sprite(textureName: "Wizard2.png"),
     ]),
-    newEntity("Enemy", [
+    newEntity("Goblin", [
       Transform(pos: vec(600, 400),
                 size: vec(48, 56)),
       Movement(),
+      newHealth(20),
       Collider(layer: enemy),
       Sprite(textureName: "Goblin.png"),
+    ]),
+    newEntity("Ogre", [
+      Transform(pos: vec(700, 100),
+                size: vec(52, 80)),
+      Movement(),
+      newHealth(40),
+      Collider(layer: enemy),
+      Sprite(textureName: "Ogre.png"),
     ]),
     newEntity("Block", [
       Transform(pos: vec(500, 700),
@@ -71,6 +84,7 @@ method loadEntities*(game: NanoGame) =
 method draw*(renderer: RendererPtr, game: NanoGame) =
   game.background.loadBackgroundAssets(game.resources, renderer)
   renderer.draw(game.background, game.camera)
+  renderer.draw(game.targeting, game.camera)
 
   renderer.drawGame(game)
 

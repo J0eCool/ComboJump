@@ -61,7 +61,7 @@ proc draw*(renderer: RendererPtr, background: ScrollingBackground, camera: Camer
     renderer.draw info.sprite, r
 
 defineSystem:
-  proc update*(background: var ScrollingBackground, camera: Camera) =
+  proc updateBackground*(background: var ScrollingBackground, camera: Camera) =
     proc spawnAt(yOffset: float, infos: seq[DecorationInfo]): Decoration =
       let
         spawnPos = vec(random(0.0, camera.screenSize.x), yOffset + camera.screenSize.y)
