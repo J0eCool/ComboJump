@@ -24,10 +24,11 @@ type
   TargetShooter* = ref object of Component
 
 defineSystem:
-  proc targetedShoot*(targeting: Targeting, input: InputManager) =
+  proc targetedShoot*(input: InputManager) =
     result = @[]
     entities.forComponents e, [
       TargetShooter, sh,
+      Targeting, targeting,
       Transform, t,
     ]:
       var dir = vec(0, -1)

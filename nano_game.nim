@@ -37,7 +37,6 @@ import
 
 type NanoGame* = ref object of Game
   background: ScrollingBackground
-  targeting: Targeting
 
 proc newNanoGame*(screenSize: Vec): NanoGame =
   new result
@@ -54,6 +53,7 @@ method loadEntities*(game: NanoGame) =
       Collider(layer: player),
       GridControl(moveSpeed: 300.0),
       CameraTarget(vertical: true),
+      Targeting(),
       TargetShooter(),
       Sprite(textureName: "Wizard2.png"),
     ]),
