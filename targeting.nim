@@ -19,11 +19,12 @@ type
   Targeting* = object
     target*: Option[Entity]
 
-proc draw*(renderer: RendererPtr, targeting: Targeting, camera: Camera) =
-  targeting.target.bindAs tgt:
-    tgt.withComponent Transform, t:
-      renderer.setDrawColor color(255, 67, 81, 255)
-      renderer.fillRect t.globalRect + camera.offset
+defineDrawSystem:
+  proc drawTargeting*(targeting: Targeting, camera: Camera) =
+    targeting.target.bindAs tgt:
+      tgt.withComponent Transform, t:
+        renderer.setDrawColor color(255, 67, 81, 255)
+        renderer.fillRect t.globalRect + camera.offset
 
 defineSystem:
   proc updateTargeting*(targeting: var Targeting) =

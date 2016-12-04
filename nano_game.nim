@@ -81,18 +81,18 @@ method loadEntities*(game: NanoGame) =
     ]),
   ]
 
+importAllSystems()
+defineSystemCalls(NanoGame)
+
 method draw*(renderer: RendererPtr, game: NanoGame) =
   game.background.loadBackgroundAssets(game.resources, renderer)
-  renderer.draw(game.background, game.camera)
-  renderer.draw(game.targeting, game.camera)
 
+  renderer.drawSystems(game)
   renderer.drawGame(game)
 
   renderer.drawCachedText($game.frameTime & "ms", vec(1100, 875),
                           game.resources.loadFont("nevis.ttf"), color(0, 0, 0, 255))
 
-importAllSystems()
-defineSystemCalls(NanoGame)
 method update*(game: NanoGame, dt: float) =
   game.updateBase()
   game.dt = dt

@@ -50,15 +50,16 @@ proc loadBackgroundAssets*(
       info.sprite = resources.loadSprite(info.filename, renderer)
     background.loaded = true
 
-proc draw*(renderer: RendererPtr, background: ScrollingBackground, camera: Camera) =
-  renderer.setDrawColor color(67, 167, 81, 255)
-  renderer.fillRect rect.rect(camera.screenSize / 2, camera.screenSize)
+defineDrawSystem:
+  proc drawBackground*(background: ScrollingBackground, camera: Camera) =
+    renderer.setDrawColor color(67, 167, 81, 255)
+    renderer.fillRect rect.rect(camera.screenSize / 2, camera.screenSize)
 
-  for deco in background.decos:
-    let
-      info = deco.info
-      r = rect.rect(deco.pos + vec(0.0, camera.offset.y), info.size)
-    renderer.draw info.sprite, r
+    for deco in background.decos:
+      let
+        info = deco.info
+        r = rect.rect(deco.pos + vec(0.0, camera.offset.y), info.size)
+      renderer.draw info.sprite, r
 
 defineSystem:
   proc updateBackground*(background: var ScrollingBackground, camera: Camera) =
