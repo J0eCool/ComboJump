@@ -12,6 +12,7 @@ import
   component/sprite,
   entity,
   event,
+  newgun,
   option,
   rect,
   system,
@@ -22,6 +23,8 @@ import
 
 type
   TargetShooter* = ref object of Component
+
+let spell = @[createProjectile, shoot, createProjectile, shoot]
 
 defineSystem:
   proc targetedShoot*(input: InputManager) =
@@ -36,14 +39,5 @@ defineSystem:
         targetEntity.withComponent Transform, target:
           dir = (target.pos - t.pos).unit
 
-      const speed = 1000
       if input.isPressed(Input.spell1):
-        let bullet = newEntity("bullet", [
-          Transform(pos: t.pos, size: vec(20)),
-          Movement(vel: speed * dir),
-          Collider(layer: Layer.bullet),
-          Damage(damage: 5),
-          Sprite(color: color(0, 255, 255, 255)),
-          newBullet(1.0),
-        ])
-        result.add Event(kind: addEntity, entity: bullet)
+        result &= spell.castAt(t.pos, dir)
