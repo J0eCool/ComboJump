@@ -24,7 +24,9 @@ import
 type
   TargetShooter* = ref object of Component
 
-let spell = @[createProjectile, shoot, createProjectile, shoot]
+let
+  spell1 = @[createSingle, shoot]
+  spell2 = @[count, count, count, createSpread, shoot]
 
 defineSystem:
   proc targetedShoot*(input: InputManager) =
@@ -40,4 +42,6 @@ defineSystem:
           dir = (target.pos - t.pos).unit
 
       if input.isPressed(Input.spell1):
-        result &= spell.castAt(t.pos, dir)
+        result &= spell1.castAt(t.pos, dir)
+      if input.isPressed(Input.spell2):
+        result &= spell2.castAt(t.pos, dir)
