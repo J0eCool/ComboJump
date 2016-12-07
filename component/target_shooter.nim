@@ -28,7 +28,7 @@ let
   spell1 = @[createSingle]
   spell2 = @[
     count, count, count, count, count, createSpread,
-      count, count, count, createSpread,
+      count, count, count, createBurst,
         createSingle,
         despawn,
       despawn,

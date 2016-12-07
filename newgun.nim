@@ -25,6 +25,7 @@ type
     count
     createSingle
     createSpread
+    createBurst
     despawn
 
   SpellDesc* = seq[Rune]
@@ -32,13 +33,14 @@ type
   ProjectileKind = enum
     single
     spread
+    burst
 
   ProjectileInfo = object
     onDespawn: ref ProjectileInfo
     case kind: ProjectileKind
     of single:
       discard
-    of spread:
+    of spread, burst:
       numBullets: int
 
   ValueKind = enum
@@ -53,13 +55,15 @@ type
       projectile: ProjectileInfo
 
 proc newBulletEvents(projectile: ProjectileInfo, pos, dir: Vec): Events
-proc newBullet(pos, dir: Vec, speed: float, despawnCallback: proc(pos, vel: Vec): Events): Entity =
+proc newBullet(pos, dir: Vec, speed: float,
+               color: sdl2.Color,
+               despawnCallback: proc(pos, vel: Vec): Events): Entity =
   newEntity("Bullet", [
     Transform(pos: pos, size: vec(20)),
     Movement(vel: speed * dir),
     Collider(layer: Layer.bullet),
     Damage(damage: 5),
-    Sprite(color: color(0, 255, 255, 255)),
+    Sprite(color: color),
     newBullet(0.6, despawnCallback),
   ])
 
@@ -74,22 +78,37 @@ proc newBulletEvents(projectile: ProjectileInfo, pos, dir: Vec): Events =
   of single:
     let
       speed = 1200.0
-      bullet = newBullet(pos, dir, speed, despawnCallback)
-    bullet.getComponent(Sprite).color = color(255, 255, 0, 255)
+      color = color(255, 255, 0, 255)
+      bullet = newBullet(pos, dir, speed, color, despawnCallback)
     result = @[Event(kind: addEntity, entity: bullet)]
   of spread:
     result = @[]
     let
-      speed = 400.0
+      speed = 600.0
+      color = color(0, 255, 255, 255)
       num = projectile.numBullets
-      angPer = 15.0
+      angPer = 20.0
       totAng = angPer * (num - 1).float
       baseAng = -totAng / 2
     for i in 0..<num:
       let
         ang = baseAng + angPer * i.float
         curDir = dir.rotate(ang.degToRad)
-        bullet = newBullet(pos, curDir, speed, despawnCallback)
+        bullet = newBullet(pos, curDir, speed, color, despawnCallback)
+      result.add Event(kind: addEntity, entity: bullet)
+  of burst:
+    result = @[]
+    let
+      speed = 600.0
+      color = color(255, 0, 255, 255)
+      num = projectile.numBullets * 2
+      angPer = 360.0 / num.float
+      baseAng = angPer / 2
+    for i in 0..<num:
+      let
+        ang = baseAng + angPer * i.float
+        curDir = dir.rotate(ang.degToRad)
+        bullet = newBullet(pos, curDir, speed, color, despawnCallback)
       result.add Event(kind: addEntity, entity: bullet)
 
 proc castAt*(spell: SpellDesc, pos, dir: Vec): Events =
@@ -106,12 +125,19 @@ proc castAt*(spell: SpellDesc, pos, dir: Vec): Events =
     of createSingle:
       let proj = ProjectileInfo(kind: single)
       valueStack.push Value(kind: projectileInfo, projectile: proj)
-    of createSpread:
+    of createSpread, createBurst:
       let arg = valueStack.pop
       assert arg.kind == number
       let
         num = arg.value.int
-        proj = ProjectileInfo(kind: spread, numBullets: num)
+        projKind =
+          case rune
+          of createSpread: spread
+          of createBurst: burst
+          else:
+            assert false, "Missing projKind case"
+            single
+        proj = ProjectileInfo(kind: projKind, numBullets: num)
       valueStack.push Value(kind: projectileInfo, projectile: proj)
     of despawn:
       let arg = valueStack.pop
