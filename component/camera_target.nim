@@ -8,6 +8,7 @@ import
 
 type CameraTarget* = ref object of Component
   vertical*: bool
+  offset*: Vec
 
 defineSystem:
   proc updateCamera*(camera: var Camera) =
@@ -15,7 +16,7 @@ defineSystem:
       CameraTarget, c,
       Transform, t,
     ]:
-      let diff = camera.screenSize / 2 - t.pos
+      let diff = camera.screenSize / 2 - t.pos + c.offset
       if not c.vertical:
         camera.offset.x = diff.x
       else:
