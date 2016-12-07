@@ -26,7 +26,13 @@ type
 
 let
   spell1 = @[createSingle]
-  spell2 = @[count, count, count, createSpread]
+  spell2 = @[
+    count, count, count, count, count, createSpread,
+      count, count, count, createSpread,
+        createSingle,
+        despawn,
+      despawn,
+    ]
 
 defineSystem:
   proc targetedShoot*(input: InputManager) =
