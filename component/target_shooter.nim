@@ -25,8 +25,8 @@ type
   TargetShooter* = ref object of Component
 
 let
-  spell1 = @[createSingle, shoot]
-  spell2 = @[count, count, count, createSpread, shoot]
+  spell1 = @[createSingle]
+  spell2 = @[count, count, count, createSpread]
 
 defineSystem:
   proc targetedShoot*(input: InputManager) =

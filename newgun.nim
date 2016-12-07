@@ -25,7 +25,6 @@ type
     count
     createSingle
     createSpread
-    shoot
 
   SpellDesc* = seq[Rune]
 
@@ -85,7 +84,6 @@ proc newBulletEvents(projectile: ProjectileInfo, pos, dir: Vec): Events =
       result.add Event(kind: addEntity, entity: bullet)
 
 proc castAt*(spell: SpellDesc, pos, dir: Vec): Events =
-  result = @[]
   var valueStack = newStack[Value]()
   for rune in spell:
     case rune
@@ -106,9 +104,8 @@ proc castAt*(spell: SpellDesc, pos, dir: Vec): Events =
         num = arg.value.int
         proj = ProjectileInfo(kind: spread, numBullets: num)
       valueStack.push Value(kind: projectileInfo, projectile: proj)
-    of shoot:
-      let arg = valueStack.pop
-      assert arg.kind == projectileInfo
-      result &= arg.projectile.newBulletEvents(pos, dir)
 
+  let arg = valueStack.pop
   assert valueStack.count == 0
+  assert arg.kind == projectileInfo
+  return arg.projectile.newBulletEvents(pos, dir)
