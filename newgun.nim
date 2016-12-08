@@ -52,9 +52,9 @@ type
     of number:
       value: float
     of projectileInfo:
-      projectile: ProjectileInfo
+      info: ProjectileInfo
 
-proc newBulletEvents(projectile: ProjectileInfo, pos, dir: Vec): Events
+proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec): Events
 proc newBullet(pos, dir: Vec, speed: float,
                color: sdl2.Color,
                despawnCallback: proc(pos, vel: Vec): Events): Entity =
@@ -67,14 +67,14 @@ proc newBullet(pos, dir: Vec, speed: float,
     newBullet(0.6, despawnCallback),
   ])
 
-proc newBulletEvents(projectile: ProjectileInfo, pos, dir: Vec): Events =
+proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec): Events =
   let despawnCallback =
-    if projectile.onDespawn == nil:
+    if info.onDespawn == nil:
       nil
     else:
       proc(pos, vel: Vec): Events =
-        newBulletEvents(projectile.onDespawn[], pos, vel)
-  case projectile.kind
+        newBulletEvents(info.onDespawn[], pos, vel)
+  case info.kind
   of single:
     let
       speed = 1200.0
@@ -86,7 +86,7 @@ proc newBulletEvents(projectile: ProjectileInfo, pos, dir: Vec): Events =
     let
       speed = 600.0
       color = color(0, 255, 255, 255)
-      num = projectile.numBullets
+      num = info.numBullets
       angPer = 20.0
       totAng = angPer * (num - 1).float
       baseAng = -totAng / 2
@@ -101,7 +101,7 @@ proc newBulletEvents(projectile: ProjectileInfo, pos, dir: Vec): Events =
     let
       speed = 600.0
       color = color(255, 0, 255, 255)
-      num = projectile.numBullets * 2
+      num = info.numBullets * 2
       angPer = 360.0 / num.float
       baseAng = angPer / 2
     for i in 0..<num:
@@ -124,7 +124,7 @@ proc castAt*(spell: SpellDesc, pos, dir: Vec): Events =
         valueStack.push num
     of createSingle:
       let proj = ProjectileInfo(kind: single)
-      valueStack.push Value(kind: projectileInfo, projectile: proj)
+      valueStack.push Value(kind: projectileInfo, info: proj)
     of createSpread, createBurst:
       let arg = valueStack.pop
       assert arg.kind == number
@@ -138,19 +138,19 @@ proc castAt*(spell: SpellDesc, pos, dir: Vec): Events =
             assert false, "Missing projKind case"
             single
         proj = ProjectileInfo(kind: projKind, numBullets: num)
-      valueStack.push Value(kind: projectileInfo, projectile: proj)
+      valueStack.push Value(kind: projectileInfo, info: proj)
     of despawn:
       let arg = valueStack.pop
       assert arg.kind == projectileInfo
       var proj = valueStack.pop
       assert proj.kind == projectileInfo
-      assert proj.projectile.onDespawn == nil
+      assert proj.info.onDespawn == nil
       var d = new(ProjectileInfo)
-      d[] = arg.projectile
-      proj.projectile.onDespawn = d
+      d[] = arg.info
+      proj.info.onDespawn = d
       valueStack.push proj
 
   let arg = valueStack.pop
   assert valueStack.count == 0
   assert arg.kind == projectileInfo
-  return arg.projectile.newBulletEvents(pos, dir)
+  return arg.info.newBulletEvents(pos, dir)
