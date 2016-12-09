@@ -22,14 +22,20 @@ import
 
 type
   Rune* = enum
+    num
     count
+    mult
     createSingle
     createSpread
     createBurst
     despawn
     update
     done
+
+    # update-only runes
+    wave
     turn
+    grow
 
   SpellDesc* = seq[Rune]
 
@@ -84,11 +90,35 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec): Events =
         nil
       else:
         proc(e: Entity, dt: float) =
+          var valueStack = newStack[Value]()
           for rune in info.updateRunes:
             case rune
+            of num:
+              valueStack.push Value(kind: number, value: 1.0)
+            of count:
+              var num = valueStack.pop
+              assert num.kind == number
+              num.value += 1.0
+              valueStack.push num
+            of mult:
+              let a = valueStack.pop
+              assert a.kind == number
+              let b = valueStack.pop
+              assert b.kind == number
+              valueStack.push Value(kind: number, value: a.value * b.value)
+            of wave:
+              let b = e.getComponent(Bullet)
+              valueStack.push Value(kind: number, value: sin(1.5 * TAU * b.lifePct))
             of turn:
+              let arg = valueStack.pop
+              assert arg.kind == number
               let mv = e.getComponent(Movement)
-              mv.vel = mv.vel.rotate(360.0.degToRad * dt)
+              mv.vel = mv.vel.rotate(360.0.degToRad * arg.value * dt)
+            of grow:
+              let arg = valueStack.pop
+              assert arg.kind == number
+              let t = e.getComponent(Transform)
+              t.size += vec(arg.value * 40.0 * dt)
             else:
               assert false, "Invalid update rune: " & $rune
   case info.kind
@@ -134,13 +164,19 @@ proc castAt*(spell: SpellDesc, pos, dir: Vec): Events =
   while i < spell.len:
     let rune = spell[i]
     case rune
+    of num:
+      valueStack.push Value(kind: number, value: 1.0)
     of count:
-      if valueStack.count == 0 or valueStack.peek.kind != number:
-        valueStack.push Value(kind: number, value: 1.0)
-      else:
-        var num = valueStack.pop
-        num.value += 1.0
-        valueStack.push num
+      var num = valueStack.pop
+      assert num.kind == number
+      num.value += 1.0
+      valueStack.push num
+    of mult:
+      let a = valueStack.pop
+      assert a.kind == number
+      let b = valueStack.pop
+      assert b.kind == number
+      valueStack.push Value(kind: number, value: a.value * b.value)
     of createSingle:
       let proj = ProjectileInfo(kind: single)
       valueStack.push Value(kind: projectileInfo, info: proj)
@@ -176,9 +212,8 @@ proc castAt*(spell: SpellDesc, pos, dir: Vec): Events =
       while spell[i] != done:
         i += 1
       proj.info.updateRunes = spell[begin..<i]
-      echo proj.info.updateRunes
       valueStack.push proj
-    of done, turn:
+    of done, turn, wave, grow:
       assert false, "Invalid context for rune: " & $rune
     i += 1
 

@@ -27,11 +27,11 @@ type
 let
   spell1 = @[createSingle]
   spell2 = @[
-    count, count, count, count, count, createSpread,
-      update,
-        turn,
-      done,
-      count, count, count, createBurst,
+    num, count, count, count, count, createSpread,
+      num, count, count, createBurst,
+        update,
+          wave, num, count, count, mult, grow,
+        done,
         createSingle,
         despawn,
       despawn,
