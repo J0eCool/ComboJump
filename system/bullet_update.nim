@@ -81,6 +81,9 @@ defineSystem:
       Movement, m,
     ]:
       b.timeLeft -= dt
+      if b.onUpdate != nil:
+        b.onUpdate(e, dt)
+        
       if b.timeLeft <= 0.0 or c.collisions.len > 0:
         result.add(Event(kind: removeEntity, entity: e))
 

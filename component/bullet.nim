@@ -17,14 +17,17 @@ type
     liveTime*: float
     timeLeft*: float
     nextStage*: ShootProc
+    onUpdate*: UpdateProc
 
   ShootProc* = proc(pos, vel: Vec): Events
+  UpdateProc* = proc(entity: Entity, dt: float)
 
-proc newBullet*(liveTime: float, nextStage: ShootProc = nil): Bullet =
+proc newBullet*(liveTime: float, nextStage: ShootProc = nil, onUpdate: UpdateProc = nil): Bullet =
   Bullet(
     liveTime: liveTime,
     timeLeft: liveTime,
     nextStage: nextStage,
+    onUpdate: onUpdate,
   )
 
 proc lifePct*(b: Bullet): float =
