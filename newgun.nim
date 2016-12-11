@@ -119,7 +119,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec): Events =
               valueStack.push Value(kind: number, value: a.value * b.value)
             of wave:
               let b = e.getComponent(Bullet)
-              valueStack.push Value(kind: number, value: sin(1.5 * TAU * b.lifePct))
+              valueStack.push Value(kind: number, value: cos(1.5 * TAU * b.lifePct))
             of turn:
               let arg = valueStack.pop
               assert arg.kind == number
