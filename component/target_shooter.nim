@@ -51,6 +51,6 @@ defineSystem:
           dir = (target.pos - t.pos).unit
 
       if input.isPressed(Input.spell1):
-        result &= spell1.castAt(t.pos, dir)
+        result &= spell1.castAt(t.pos, dir).handleSpellCast()
       if input.isPressed(Input.spell2):
-        result &= spell2.castAt(t.pos, dir)
+        result &= spell2.castAt(t.pos, dir).handleSpellCast()

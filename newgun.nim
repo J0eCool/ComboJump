@@ -64,6 +64,17 @@ type
     of projectileInfo:
       info: ProjectileInfo
 
+  SpellParseKind = enum
+    error
+    success
+  SpellParse* = object
+    case kind: SpellParseKind
+    of error:
+      index: int
+      message: string
+    of success:
+      events: Events
+
 proc newBullet(pos, dir: Vec, speed: float,
                color: sdl2.Color,
                despawnCallback: proc(pos, vel: Vec): Events,
@@ -158,9 +169,12 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec): Events =
         bullet = newBullet(pos, curDir, speed, color, despawnCallback, updateCallback)
       result.add Event(kind: addEntity, entity: bullet)
 
-proc castAt*(spell: SpellDesc, pos, dir: Vec): Events =
+proc castAt*(spell: SpellDesc, pos, dir: Vec): SpellParse =
   var valueStack = newStack[Value]()
   var i = 0
+  template expect(cond: bool, msg: string = "") =
+    if not cond:
+      return SpellParse(kind: error, index: i, message: msg)
   while i < spell.len:
     let rune = spell[i]
     case rune
@@ -168,21 +182,21 @@ proc castAt*(spell: SpellDesc, pos, dir: Vec): Events =
       valueStack.push Value(kind: number, value: 1.0)
     of count:
       var num = valueStack.pop
-      assert num.kind == number
+      expect num.kind == number
       num.value += 1.0
       valueStack.push num
     of mult:
       let a = valueStack.pop
-      assert a.kind == number
+      expect a.kind == number
       let b = valueStack.pop
-      assert b.kind == number
+      expect b.kind == number
       valueStack.push Value(kind: number, value: a.value * b.value)
     of createSingle:
       let proj = ProjectileInfo(kind: single)
       valueStack.push Value(kind: projectileInfo, info: proj)
     of createSpread, createBurst:
       let arg = valueStack.pop
-      assert arg.kind == number
+      expect arg.kind == number
       let
         num = arg.value.int
         projKind =
@@ -190,34 +204,42 @@ proc castAt*(spell: SpellDesc, pos, dir: Vec): Events =
           of createSpread: spread
           of createBurst: burst
           else:
-            assert false, "Missing projKind case"
+            expect false, "Missing projKind case"
             single
         proj = ProjectileInfo(kind: projKind, numBullets: num)
       valueStack.push Value(kind: projectileInfo, info: proj)
     of despawn:
       let arg = valueStack.pop
-      assert arg.kind == projectileInfo
+      expect arg.kind == projectileInfo
       var proj = valueStack.pop
-      assert proj.kind == projectileInfo
-      assert proj.info.onDespawn == nil
+      expect proj.kind == projectileInfo
+      expect proj.info.onDespawn == nil
       var d = new(ProjectileInfo)
       d[] = arg.info
       proj.info.onDespawn = d
       valueStack.push proj
     of update:
       var proj = valueStack.pop
-      assert proj.kind == projectileInfo
-      assert proj.info.updateRunes == nil
+      expect proj.kind == projectileInfo
+      expect proj.info.updateRunes == nil
       let begin = i + 1
       while spell[i] != done:
         i += 1
       proj.info.updateRunes = spell[begin..<i]
       valueStack.push proj
     of done, turn, wave, grow:
-      assert false, "Invalid context for rune: " & $rune
+      expect false, "Invalid context for rune: " & $rune
     i += 1
 
   let arg = valueStack.pop
-  assert valueStack.count == 0
-  assert arg.kind == projectileInfo
-  return arg.info.newBulletEvents(pos, dir)
+  expect valueStack.count == 0
+  expect arg.kind == projectileInfo
+  return SpellParse(kind: success, events: arg.info.newBulletEvents(pos, dir))
+
+proc handleSpellCast*(parse: SpellParse): Events =
+  case parse.kind
+  of success:
+    return parse.events
+  of error:
+    echo "Parse error for spell at index ", parse.index, ": ", parse.message
+    return @[]
