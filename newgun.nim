@@ -156,8 +156,10 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec): Events =
             of grow:
               let arg = valueStack.pop
               assert arg.kind == number
-              let t = e.getComponent(Transform)
-              t.size += vec(arg.value * 40.0 * dt)
+              let
+                b = e.getComponent(Bullet)
+                t = e.getComponent(Transform)
+              t.size += vec(arg.value * 160.0 * b.lifePct * dt)
             else:
               assert false, "Invalid update rune: " & $rune
   case info.kind
