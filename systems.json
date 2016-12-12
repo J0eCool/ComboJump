@@ -125,6 +125,13 @@
         "camera"
       ]
     },
+    "drawSpells": {
+      "filename": "component/target_shooter.nim",
+      "id": "19",
+      "args": [
+        "resources"
+      ]
+    },
     "drawTargeting": {
       "filename": "targeting.nim",
       "id": "18",

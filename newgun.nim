@@ -75,6 +75,34 @@ type
     of success:
       events: Events
 
+proc textureName*(rune: Rune): string =
+  result = "runes/"
+  case rune
+  of num:
+    result &= "Num.png"
+  of count:
+    result &= "Inc.png"
+  of mult:
+    result &= "Mult.png"
+  of createSingle:
+    result &= "Single.png"
+  of createSpread:
+    result &= "Spread.png"
+  of createBurst:
+    result &= "Burst.png"
+  of despawn:
+    result &= "Despawn.png"
+  of update:
+    result &= "Update.png"
+  of done:
+    result &= "Done.png"
+  of wave:
+    result &= "Wave.png"
+  of turn:
+    result &= "Turn.png"
+  of grow:
+    result &= "Grow.png"
+
 proc newBullet(pos, dir: Vec, speed: float,
                color: sdl2.Color,
                despawnCallback: proc(pos, vel: Vec): Events,
