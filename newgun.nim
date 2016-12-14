@@ -46,13 +46,16 @@ type
 
   ProjectileInfo = object
     onDespawn: ref ProjectileInfo
-    updateRunes: seq[Rune]
+    updateCallbacks: seq[UpdateProc]
     case kind: ProjectileKind
     of single:
       discard
     of spread, burst:
       numBullets: int
 
+  NumberProc = proc(e: Entity): float
+  Number = object
+    get: NumberProc
   ValueKind = enum
     number
     projectileInfo
@@ -60,7 +63,7 @@ type
   Value = object
     case kind: ValueKind
     of number:
-      value: float
+      value: Number
     of projectileInfo:
       info: ProjectileInfo
 
@@ -125,43 +128,12 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec): Events =
         proc(pos, vel: Vec): Events =
           newBulletEvents(info.onDespawn[], pos, vel)
     updateCallback =
-      if info.updateRunes == nil:
+      if info.updateCallbacks == nil:
         nil
       else:
         proc(e: Entity, dt: float) =
-          var valueStack = newStack[Value]()
-          for rune in info.updateRunes:
-            case rune
-            of num:
-              valueStack.push Value(kind: number, value: 1.0)
-            of count:
-              var num = valueStack.pop
-              assert num.kind == number
-              num.value += 1.0
-              valueStack.push num
-            of mult:
-              let a = valueStack.pop
-              assert a.kind == number
-              let b = valueStack.pop
-              assert b.kind == number
-              valueStack.push Value(kind: number, value: a.value * b.value)
-            of wave:
-              let b = e.getComponent(Bullet)
-              valueStack.push Value(kind: number, value: cos(1.5 * TAU * b.lifePct))
-            of turn:
-              let arg = valueStack.pop
-              assert arg.kind == number
-              let mv = e.getComponent(Movement)
-              mv.vel = mv.vel.rotate(360.0.degToRad * arg.value * dt)
-            of grow:
-              let arg = valueStack.pop
-              assert arg.kind == number
-              let
-                b = e.getComponent(Bullet)
-                t = e.getComponent(Transform)
-              t.size += vec(arg.value * 160.0 * b.lifePct * dt)
-            else:
-              assert false, "Invalid update rune: " & $rune
+          for f in info.updateCallbacks:
+            f(e, dt)
   case info.kind
   of single:
     let
@@ -200,8 +172,10 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec): Events =
       result.add Event(kind: addEntity, entity: bullet)
 
 proc castAt*(spell: SpellDesc, pos, dir: Vec): SpellParse =
-  var valueStack = newStack[Value]()
-  var i = 0
+  var
+    valueStack = newStack[Value]()
+    updateContext: seq[UpdateProc] = nil
+    i = 0
   template expect(cond: bool, msg: string = "") =
     if not cond:
       return SpellParse(kind: error, index: i, message: msg)
@@ -209,18 +183,32 @@ proc castAt*(spell: SpellDesc, pos, dir: Vec): SpellParse =
     let rune = spell[i]
     case rune
     of num:
-      valueStack.push Value(kind: number, value: 1.0)
+      let
+        f = proc(e: Entity): float = 1.0
+        n = Number(get: f)
+      valueStack.push Value(kind: number, value: n)
     of count:
       var num = valueStack.pop
       expect num.kind == number
-      num.value += 1.0
-      valueStack.push num
+      let
+        # Need this to wrap the closure of num.value so it doesn't get lost
+        # by runes like [num, count, count]
+        makeProc = proc(v: Number): NumberProc =
+          result = proc(e:Entity): float =
+            v.get(e) + 1.0
+      let
+        f = makeProc(num.value)
+        n = Number(get: f)
+      valueStack.push Value(kind: number, value: n)
     of mult:
       let a = valueStack.pop
       expect a.kind == number
       let b = valueStack.pop
       expect b.kind == number
-      valueStack.push Value(kind: number, value: a.value * b.value)
+      let
+        f = proc(e: Entity): float = a.value.get(e) * b.value.get(e)
+        n = Number(get: f)
+      valueStack.push Value(kind: number, value: n)
     of createSingle:
       let proj = ProjectileInfo(kind: single)
       valueStack.push Value(kind: projectileInfo, info: proj)
@@ -228,7 +216,7 @@ proc castAt*(spell: SpellDesc, pos, dir: Vec): SpellParse =
       let arg = valueStack.pop
       expect arg.kind == number
       let
-        num = arg.value.int
+        num = arg.value.get(nil).int
         projKind =
           case rune
           of createSpread: spread
@@ -249,16 +237,43 @@ proc castAt*(spell: SpellDesc, pos, dir: Vec): SpellParse =
       proj.info.onDespawn = d
       valueStack.push proj
     of update:
+      expect((updateContext == nil), "Invalid in an update context")
+      var proj = valueStack.peek
+      expect proj.kind == projectileInfo
+      updateContext = @[]
+    of done:
+      expect((updateContext != nil), "Needs an update context")
       var proj = valueStack.pop
       expect proj.kind == projectileInfo
-      expect proj.info.updateRunes == nil
-      let begin = i + 1
-      while spell[i] != done:
-        i += 1
-      proj.info.updateRunes = spell[begin..<i]
+      proj.info.updateCallbacks = updateContext
+      updateContext = nil
       valueStack.push proj
-    of done, turn, wave, grow:
-      expect false, "Invalid context for rune: " & $rune
+    of wave:
+      expect((updateContext != nil), "Needs an update context")
+      let
+        f = proc(e: Entity): float =
+          let b = e.getComponent(Bullet)
+          cos(1.5 * TAU * b.lifePct)
+        n = Number(get: f)
+      valueStack.push Value(kind: number, value: n)
+    of turn:
+      expect((updateContext != nil), "Needs an update context")
+      let arg = valueStack.pop
+      assert arg.kind == number
+      let f = proc(e: Entity, dt: float) =
+        let mv = e.getComponent(Movement)
+        mv.vel = mv.vel.rotate(360.0.degToRad * arg.value.get(e) * dt)
+      updateContext.add f
+    of grow:
+      expect((updateContext != nil), "Needs an update context")
+      let arg = valueStack.pop
+      assert arg.kind == number
+      let f = proc(e: Entity, dt: float) =
+        let
+          b = e.getComponent(Bullet)
+          t = e.getComponent(Transform)
+        t.size += vec(arg.value.get(e) * 160.0 * b.lifePct * dt)
+      updateContext.add f
     i += 1
 
   let arg = valueStack.pop

@@ -29,7 +29,7 @@ type
 
 
 let
-  spell1 = @[createSingle, Rune.update, num, count, count, grow, done,]
+  spell1 = @[createSingle]
   spell2 = @[
     num, count, count, count, count, createSpread,
       Rune.update,
@@ -44,14 +44,10 @@ let
       despawn,
     ]
   spell3 = @[
-    num, count, count, count, count,
-    num, count, count, count,
-    mult, createSpread,
-      num, count, count, count, createSpread,
-        Rune.update,
-          num, grow,
-        done,
-      despawn,
+    num, count, count, createSpread,
+    Rune.update,
+      num, grow,
+    done,
     ]
 
 proc drawSpell(renderer: RendererPtr, spell: SpellDesc, pos: Vec, resources: var ResourceManager) =
