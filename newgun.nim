@@ -76,7 +76,7 @@ type
       index: int
       message: string
     of success:
-      events: Events
+      fire: (proc(pos, dir: Vec): Events)
 
 proc textureName*(rune: Rune): string =
   result = "runes/"
@@ -171,7 +171,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec): Events =
         bullet = newBullet(pos, curDir, speed, color, despawnCallback, updateCallback)
       result.add Event(kind: addEntity, entity: bullet)
 
-proc castAt*(spell: SpellDesc, pos, dir: Vec): SpellParse =
+proc parse*(spell: SpellDesc): SpellParse =
   var
     valueStack = newStack[Value]()
     updateContext: seq[UpdateProc] = nil
@@ -279,12 +279,14 @@ proc castAt*(spell: SpellDesc, pos, dir: Vec): SpellParse =
   let arg = valueStack.pop
   expect valueStack.count == 0
   expect arg.kind == projectileInfo
-  return SpellParse(kind: success, events: arg.info.newBulletEvents(pos, dir))
+  let fireProc = proc(pos, dir: Vec): Events =
+    arg.info.newBulletEvents(pos, dir)
+  return SpellParse(kind: success, fire: fireProc)
 
-proc handleSpellCast*(parse: SpellParse): Events =
+proc handleSpellCast*(parse: SpellParse, pos, dir: Vec): Events =
   case parse.kind
   of success:
-    return parse.events
+    return parse.fire(pos, dir)
   of error:
     echo "Parse error for spell at index ", parse.index, ": ", parse.message
     return @[]
