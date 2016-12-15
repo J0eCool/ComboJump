@@ -7,18 +7,39 @@ import
 
 type
   Input* = enum
-    none,
-    left,
-    right,
-    up,
-    down,
-    jump,
-    spell1,
-    spell2,
-    spell3,
-    menu,
-    restart,
-    exit,
+    none
+    left
+    right
+    up
+    down
+    jump
+    spell1
+    spell2
+    spell3
+    menu
+    restart
+    exit
+    backspace
+    delete
+
+    n1
+    n2
+    n3
+    n4
+    n5
+    n6
+    n7
+    n8
+    n9
+    n0
+    z
+    x
+    c
+    v
+    b
+    n
+    m
+
 
   InputState = enum
     inactive,
@@ -52,6 +73,26 @@ proc keyToInput(key: Scancode): Input =
   of SDL_SCANCODE_L: spell3
   of SDL_SCANCODE_R: restart
   of SDL_SCANCODE_ESCAPE: exit
+  of SDL_SCANCODE_BACKSPACE: backspace
+  of SDL_SCANCODE_DELETE: delete
+
+  of SDL_SCANCODE_1: n1
+  of SDL_SCANCODE_2: n2
+  of SDL_SCANCODE_3: n3
+  of SDL_SCANCODE_4: n4
+  of SDL_SCANCODE_5: n5
+  of SDL_SCANCODE_6: n6
+  of SDL_SCANCODE_7: n7
+  of SDL_SCANCODE_8: n8
+  of SDL_SCANCODE_9: n9
+  of SDL_SCANCODE_0: n0
+  of SDL_SCANCODE_Z: z
+  of SDL_SCANCODE_X: x
+  of SDL_SCANCODE_C: c
+  of SDL_SCANCODE_V: v
+  of SDL_SCANCODE_B: b
+  of SDL_SCANCODE_N: n
+  of SDL_SCANCODE_M: m
   else: none
 
 proc isHeld*(manager: InputManager, key: Input): bool
