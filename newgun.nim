@@ -71,6 +71,7 @@ type
     error
     success
   SpellParse* = object
+    spell: SpellDesc
     case kind: SpellParseKind
     of error:
       index: int
@@ -178,7 +179,7 @@ proc parse*(spell: SpellDesc): SpellParse =
     i = 0
   template expect(cond: bool, msg: string = "") =
     if not cond:
-      return SpellParse(kind: error, index: i, message: msg)
+      return SpellParse(kind: error, spell: spell, index: i, message: msg)
   while i < spell.len:
     let rune = spell[i]
     case rune
@@ -188,7 +189,7 @@ proc parse*(spell: SpellDesc): SpellParse =
         n = Number(get: f)
       valueStack.push Value(kind: number, value: n)
     of count:
-      expect valueStack.count >= 1, "Needs at least 1 arguments"
+      expect valueStack.count >= 1, "Needs at least 1 argument"
       var num = valueStack.pop
       expect num.kind == number
       let
@@ -215,7 +216,7 @@ proc parse*(spell: SpellDesc): SpellParse =
       let proj = ProjectileInfo(kind: single)
       valueStack.push Value(kind: projectileInfo, info: proj)
     of createSpread, createBurst:
-      expect valueStack.count >= 1, "Needs at least 1 arguments"
+      expect valueStack.count >= 1, "Needs at least 1 argument"
       let arg = valueStack.pop
       expect arg.kind == number
       let
@@ -247,7 +248,7 @@ proc parse*(spell: SpellDesc): SpellParse =
       expect proj.kind == projectileInfo
       updateContext = @[]
     of done:
-      expect valueStack.count >= 2, "Needs at least 2 arguments"
+      expect valueStack.count >= 1, "Needs at least 1 argument"
       expect((updateContext != nil), "Needs an update context")
       var proj = valueStack.pop
       expect proj.kind == projectileInfo
@@ -263,7 +264,7 @@ proc parse*(spell: SpellDesc): SpellParse =
         n = Number(get: f)
       valueStack.push Value(kind: number, value: n)
     of turn:
-      expect valueStack.count >= 1, "Needs at least 1 arguments"
+      expect valueStack.count >= 1, "Needs at least 1 argument"
       expect((updateContext != nil), "Needs an update context")
       let arg = valueStack.pop
       assert arg.kind == number
@@ -272,7 +273,7 @@ proc parse*(spell: SpellDesc): SpellParse =
         mv.vel = mv.vel.rotate(360.0.degToRad * arg.value.get(e) * dt)
       updateContext.add f
     of grow:
-      expect valueStack.count >= 1, "Needs at least 1 arguments"
+      expect valueStack.count >= 1, "Needs at least 1 argument"
       expect((updateContext != nil), "Needs an update context")
       let arg = valueStack.pop
       assert arg.kind == number
@@ -289,12 +290,17 @@ proc parse*(spell: SpellDesc): SpellParse =
   expect arg.kind == projectileInfo, "Spell must end with projectile"
   let fireProc = proc(pos, dir: Vec): Events =
     arg.info.newBulletEvents(pos, dir)
-  return SpellParse(kind: success, fire: fireProc)
+  return SpellParse(kind: success, spell: spell, fire: fireProc)
 
 proc handleSpellCast*(parse: SpellParse, pos, dir: Vec): Events =
   case parse.kind
   of success:
     return parse.fire(pos, dir)
   of error:
-    echo "Parse error for spell at index ", parse.index, ": ", parse.message
+    var errMsg = "Parse error for spell at "
+    if parse.index < parse.spell.len:
+      let rune = parse.spell[parse.index]
+      errMsg &= "rune " & $rune & "(idx=" & $parse.index & ")"
+    errMsg &= ": " & parse.message
+    echo errMsg
     return @[]
