@@ -169,9 +169,9 @@ proc bulletAtDir(gun: Gun, dir, shotPoint: Vec, mana: float): Entity =
     Collider(layer: Layer.bullet),
     Sprite(color: color(255, 255, 32, 255)),
     Damage(damage: gun.damage.amt(mana).int),
-    newBullet(
-      liveTime=liveTime,
-      nextStage=nextStageProc,
+    Bullet(
+      liveTime: liveTime,
+      nextStage: nextStageProc,
     ),
   ]
   for c in gun.extraComponents:

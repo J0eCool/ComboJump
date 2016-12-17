@@ -68,7 +68,7 @@ defineSystem:
             Sprite(color: color(255, 128, 32, 255)),
             Collider(),
             Movement(vel: vel),
-            newBullet(liveTime=f.liveTime),
+            Bullet(liveTime: f.liveTime),
           ])
         result.add Event(kind: addEntity, entity: flare)
 
@@ -80,15 +80,15 @@ defineSystem:
       Collider, c,
       Movement, m,
     ]:
-      b.timeLeft -= dt
+      b.timeSinceSpawn += dt
       if b.onUpdate != nil:
         b.onUpdate(e, dt)
         
-      if b.timeLeft <= 0.0 or c.collisions.len > 0:
+      if b.lifePct <= 0.0 or c.collisions.len > 0:
         result.add(Event(kind: removeEntity, entity: e))
 
         if b.nextStage != nil:
           e.withComponent Transform, t:
-            result &= b.nextStage(t.pos, m.vel.unit)
+            result &= b.nextStage(t.pos, b.dir)
 
     entities.updateHomingBullets dt

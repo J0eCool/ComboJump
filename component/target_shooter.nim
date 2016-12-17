@@ -45,10 +45,14 @@ let
       despawn,
     ]
   spell3Desc = @[
-    num, count, count, createSpread,
-    Rune.update,
-      num, grow,
-    done,
+    num, count, createSpread,
+    createSingle,
+      Rune.update,
+        num, grow,
+      done,
+      num, count, createBurst,
+      despawn,
+    despawn,
     ]
 
   spell1 = spell1Desc.parse()
@@ -56,7 +60,7 @@ let
   spell3 = spell3Desc.parse()
 
   inputs = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
-  runes = [num, count, mult, createSingle, createSpread, createBurst, despawn, Rune.update, done, wave, turn, grow]
+  runes = [num, count, mult, createSingle, createSpread, createBurst, despawn, Rune.update, done, wave, turn, grow, moveUp, moveSide]
 
 var
   varSpellDesc = @[createSingle]

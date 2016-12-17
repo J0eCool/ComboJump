@@ -15,23 +15,17 @@ import
 type
   Bullet* = ref object of Component
     liveTime*: float
-    timeLeft*: float
+    timeSinceSpawn*: float
     nextStage*: ShootProc
     onUpdate*: UpdateProc
+    dir*: Vec
+    speed*: float
 
   ShootProc* = proc(pos, vel: Vec): Events
   UpdateProc* = proc(entity: Entity, dt: float)
 
-proc newBullet*(liveTime: float, nextStage: ShootProc = nil, onUpdate: UpdateProc = nil): Bullet =
-  Bullet(
-    liveTime: liveTime,
-    timeLeft: liveTime,
-    nextStage: nextStage,
-    onUpdate: onUpdate,
-  )
-
 proc lifePct*(b: Bullet): float =
-  b.timeLeft / b.liveTime
+  1.0 - b.timeSinceSpawn / b.liveTime
 
 type HomingBullet* = ref object of Component
   turnRate*: float
