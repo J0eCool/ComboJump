@@ -147,7 +147,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec): Events =
     let
       speed = 600.0
       color = color(0, 255, 255, 255)
-      num = info.numBullets
+      num = info.numBullets + 1
       angPer = 20.0
       totAng = angPer * (num - 1).float
       baseAng = -totAng / 2
