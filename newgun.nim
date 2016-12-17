@@ -267,7 +267,7 @@ proc parse*(spell: SpellDesc): SpellParse =
       expect valueStack.count >= 1, "Needs at least 1 argument"
       expect((updateContext != nil), "Needs an update context")
       let arg = valueStack.pop
-      assert arg.kind == number
+      expect arg.kind == number
       let f = proc(e: Entity, dt: float) =
         let mv = e.getComponent(Movement)
         mv.vel = mv.vel.rotate(360.0.degToRad * arg.value.get(e) * dt)
@@ -276,7 +276,7 @@ proc parse*(spell: SpellDesc): SpellParse =
       expect valueStack.count >= 1, "Needs at least 1 argument"
       expect((updateContext != nil), "Needs an update context")
       let arg = valueStack.pop
-      assert arg.kind == number
+      expect arg.kind == number
       let f = proc(e: Entity, dt: float) =
         let
           b = e.getComponent(Bullet)
