@@ -20,6 +20,10 @@ proc fillRect*(renderer: RendererPtr, r: rect.Rect) =
   var sdlRect = (r - r.size / 2).sdlRect
   renderer.fillRect sdlRect
 
+proc fillRect*(renderer: RendererPtr, r: rect.Rect, color: Color) =
+  renderer.setDrawColor color
+  renderer.fillRect(r)
+
 proc drawRect*(renderer: RendererPtr, r: rect.Rect) =
   var sdlRect = (r - r.size / 2).sdlRect
   renderer.drawRect sdlRect

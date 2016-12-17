@@ -55,12 +55,13 @@ let
   spell2 = spell2Desc.parse()
   spell3 = spell3Desc.parse()
 
+  inputs = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
+  runes = [num, count, mult, createSingle, createSpread, createBurst, despawn, Rune.update, done, wave, turn, grow]
+
 var
   varSpellDesc = @[createSingle]
   varSpell = varSpellDesc.parse()
-
-  inputs = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
-  runes = [num, count, mult, createSingle, createSpread, createBurst, despawn, Rune.update, done, wave, turn, grow]
+  varSpellIdx = 1
 
 proc drawSpell(renderer: RendererPtr, spell: SpellDesc, pos: Vec, resources: var ResourceManager) =
   let size = vec(48)
@@ -92,6 +93,8 @@ defineDrawSystem:
       renderer.drawCachedText($inputs[i] & " -", pos,
                               resources.loadFont("nevis.ttf"),
                               color(0, 0, 0, 255))
+    renderer.fillRect(rect.rect(vec(60 + 42 * varSpellIdx - 21, 860), vec(6, 40)),
+                      color(0, 0, 0, 255))
 
 defineSystem:
   proc targetedShoot*(input: InputManager) =
@@ -108,14 +111,21 @@ defineSystem:
 
       for i in 0..<min(inputs.len, runes.len):
         if input.isPressed(inputs[i]):
-          varSpellDesc.add runes[i]
+          varSpellDesc.insert(runes[i], varSpellIdx)
+          varSpellIdx += 1
           varSpell = varSpellDesc.parse()
-      if input.isPressed(backspace) and varSpellDesc.len > 0:
-        varSpellDesc.del(varSpellDesc.len - 1)
+      if input.isPressed(backspace) and varSpellDesc.len > 0 and varSpellIdx > 0:
+        varSpellDesc.delete(varSpellIdx - 1)
+        varSpellIdx -= 1
         varSpell = varSpellDesc.parse()
       if input.isPressed(Input.delete):
         varSpellDesc = @[]
         varSpell = varSpellDesc.parse()
+        varSpellIdx = 0
+      if input.isPressed(runeLeft):
+        varSpellIdx = max(0, varSpellIdx - 1)
+      if input.isPressed(runeRight):
+        varSpellIdx = min(varSpellDesc.len, varSpellIdx + 1)
 
       if input.isPressed(Input.spell1):
         result &= spell1.handleSpellCast(t.pos, dir)

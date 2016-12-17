@@ -39,6 +39,8 @@ type
     b
     n
     m
+    runeLeft
+    runeRight
 
 
   InputState = enum
@@ -93,6 +95,8 @@ proc keyToInput(key: Scancode): Input =
   of SDL_SCANCODE_B: b
   of SDL_SCANCODE_N: n
   of SDL_SCANCODE_M: m
+  of SDL_SCANCODE_LEFT: runeLeft
+  of SDL_SCANCODE_RIGHT: runeRight
   else: none
 
 proc isHeld*(manager: InputManager, key: Input): bool
