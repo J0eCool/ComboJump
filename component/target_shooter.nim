@@ -18,6 +18,7 @@ import
   newgun,
   option,
   rect,
+  system/render,
   resources,
   system,
   targeting,
@@ -58,6 +59,9 @@ var
   varSpellDesc = @[createSingle]
   varSpell = varSpellDesc.parse()
 
+  inputs = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
+  runes = [num, count, mult, createSingle, createSpread, createBurst, despawn, Rune.update, done, wave, turn, grow]
+
 proc drawSpell(renderer: RendererPtr, spell: SpellDesc, pos: Vec, resources: var ResourceManager) =
   let size = vec(48)
   for i in 0..<spell.len:
@@ -76,6 +80,19 @@ defineDrawSystem:
 
     renderer.drawSpell(varSpellDesc, vec(60, 860), resources)
 
+    for i in 0..<min(inputs.len, runes.len):
+      let
+        rows = 4
+        x = (i div rows) * 120
+        y = (i mod rows) * 50
+        pos = vec(60 + x, 660 + y)
+        sprite = resources.loadSprite(runes[i].textureName(), renderer)
+        r = rect.rect(pos + vec(50, 0), vec(48))
+      renderer.draw(sprite, r)
+      renderer.drawCachedText($inputs[i] & " -", pos,
+                              resources.loadFont("nevis.ttf"),
+                              color(0, 0, 0, 255))
+
 defineSystem:
   proc targetedShoot*(input: InputManager) =
     result = @[]
@@ -89,9 +106,6 @@ defineSystem:
         targetEntity.withComponent Transform, target:
           dir = (target.pos - t.pos).unit
 
-      let
-        inputs = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
-        runes = [num, count, mult, createSingle, createSpread, createBurst, despawn, Rune.update, done, wave, turn, grow]
       for i in 0..<min(inputs.len, runes.len):
         if input.isPressed(inputs[i]):
           varSpellDesc.add runes[i]
