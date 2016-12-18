@@ -350,7 +350,8 @@ proc parse*(spell: SpellDesc): SpellParse =
           let
             tt = b.target.getComponent(Transform)
             diff = tt.pos - t.pos
-          result = b.dir.cross(diff).sign.float
+            lv = min((1.0 - b.lifePct) / 0.4, 1.0)
+          result = b.dir.cross(diff).sign.float * lv
       valueStack.push(Value(kind: number, value: Number(get: f)))
     of startPos:
       expect(updateContext != nil, "Needs an update context")
