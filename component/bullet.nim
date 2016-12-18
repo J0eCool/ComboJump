@@ -20,6 +20,7 @@ type
     onUpdate*: UpdateProc
     dir*: Vec
     speed*: float
+    target*: Entity
 
   ShootProc* = proc(pos, vel: Vec): Events
   UpdateProc* = proc(entity: Entity, dt: float)

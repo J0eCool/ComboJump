@@ -38,6 +38,7 @@ type
     grow
     moveUp
     moveSide
+    nearest
 
   SpellDesc* = seq[Rune]
 
@@ -79,7 +80,7 @@ type
       index: int
       message: string
     of success:
-      fire: (proc(pos, dir: Vec): Events)
+      fire: (proc(pos, dir: Vec, target: Entity): Events)
 
 proc textureName*(rune: Rune): string =
   result = "runes/"
@@ -112,11 +113,14 @@ proc textureName*(rune: Rune): string =
     result &= "MoveUp.png"
   of moveSide:
     result &= "MoveSide.png"
+  of nearest:
+    result &= "Nearest.png"
 
 proc newBullet(pos, dir: Vec, speed: float,
                color: sdl2.Color,
-               despawnCallback: proc(pos, vel: Vec): Events,
-               updateCallback: proc(entity: Entity, dt: float)): Entity =
+               despawnCallback: ShootProc,
+               updateCallback: UpdateProc,
+               target: Entity): Entity =
   newEntity("Bullet", [
     Transform(pos: pos, size: vec(20)),
     Movement(vel: speed * dir),
@@ -129,17 +133,18 @@ proc newBullet(pos, dir: Vec, speed: float,
       onUpdate: updateCallback,
       dir: dir,
       speed: speed,
+      target: target,
     ),
   ])
 
-proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec): Events =
+proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Entity): Events =
   let
     despawnCallback =
       if info.onDespawn == nil:
         nil
       else:
         proc(pos, vel: Vec): Events =
-          newBulletEvents(info.onDespawn[], pos, vel)
+          newBulletEvents(info.onDespawn[], pos, vel, target)
     updateCallback =
       if info.updateCallbacks == nil:
         nil
@@ -155,7 +160,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec): Events =
     let
       speed = 1200.0
       color = color(255, 255, 0, 255)
-      bullet = newBullet(pos, dir, speed, color, despawnCallback, updateCallback)
+      bullet = newBullet(pos, dir, speed, color, despawnCallback, updateCallback, target)
     result = @[Event(kind: addEntity, entity: bullet)]
   of spread:
     result = @[]
@@ -170,7 +175,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec): Events =
       let
         ang = baseAng + angPer * i.float
         curDir = dir.rotate(ang.degToRad)
-        bullet = newBullet(pos, curDir, speed, color, despawnCallback, updateCallback)
+        bullet = newBullet(pos, curDir, speed, color, despawnCallback, updateCallback, target)
       result.add Event(kind: addEntity, entity: bullet)
   of burst:
     result = @[]
@@ -184,7 +189,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec): Events =
       let
         ang = baseAng + angPer * i.float
         curDir = dir.rotate(ang.degToRad)
-        bullet = newBullet(pos, curDir, speed, color, despawnCallback, updateCallback)
+        bullet = newBullet(pos, curDir, speed, color, despawnCallback, updateCallback, target)
       result.add Event(kind: addEntity, entity: bullet)
 
 proc parse*(spell: SpellDesc): SpellParse =
@@ -323,20 +328,38 @@ proc parse*(spell: SpellDesc): SpellParse =
           m = e.getComponent(Movement)
         m.vel += (b.speed * arg.value.get(e) / 2.0) * b.dir.rotate(PI / 2)
       updateContext.add f
+    of nearest:
+      expect(updateContext != nil, "Needs an update context")
+      let f = proc(e:Entity): float =
+        let
+          b = e.getComponent(Bullet)
+          t = e.getComponent(Transform)
+        if b.target != nil:
+          let
+            tt = b.target.getComponent(Transform)
+            diff = tt.pos - t.pos
+          result = b.dir.cross(diff).sign.float
+      valueStack.push(Value(kind: number, value: Number(get: f)))
+
+    # of startPos:
+    #   expect(updateContext != nil, "Needs an update context")
+    #   let f = proc(e:Entity): float =
+    #     let b = e.getComponent(Bullet)
+    #     b.startPos
     i += 1
 
   expect(valueStack.count == 1, "Needs exactly one argument at spell end")
   let arg = valueStack.pop
   expect(arg.kind == projectileInfo, "Spell must end with projectile")
   expect(updateContext == nil, "Spell must end without update context")
-  let fireProc = proc(pos, dir: Vec): Events =
-    arg.info.newBulletEvents(pos, dir)
+  let fireProc = proc(pos, dir: Vec, target: Entity): Events =
+    arg.info.newBulletEvents(pos, dir, target)
   return SpellParse(kind: success, spell: spell, fire: fireProc)
 
-proc handleSpellCast*(parse: SpellParse, pos, dir: Vec): Events =
+proc handleSpellCast*(parse: SpellParse, pos, dir: Vec, target: Entity): Events =
   case parse.kind
   of success:
-    return parse.fire(pos, dir)
+    return parse.fire(pos, dir, target)
   of error:
     var errMsg = "Parse error for spell at "
     if parse.index < parse.spell.len:

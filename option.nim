@@ -27,3 +27,10 @@ template bindAs*(opt, name: expr, body: stmt): stmt {.immediate.} =
 
 proc isNone*[T](opt: Option[T]): bool =
   opt.kind == none
+
+proc get*[T: ref object](opt: Option[T]): T =
+  case opt.kind
+  of none:
+    nil
+  of just:
+    opt.value

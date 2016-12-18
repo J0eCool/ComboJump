@@ -60,7 +60,7 @@ let
   spell3 = spell3Desc.parse()
 
   inputs = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
-  runes = [num, count, mult, createSingle, createSpread, createBurst, despawn, Rune.update, done, wave, turn, grow, moveUp, moveSide]
+  runes = [num, count, mult, createSingle, createSpread, createBurst, despawn, Rune.update, done, wave, turn, grow, moveUp, moveSide, nearest]
 
 var
   varSpellDesc = @[createSingle]
@@ -131,11 +131,12 @@ defineSystem:
       if input.isPressed(runeRight):
         varSpellIdx = min(varSpellDesc.len, varSpellIdx + 1)
 
+      let target = targeting.target.get()
       if input.isPressed(Input.spell1):
-        result &= spell1.handleSpellCast(t.pos, dir)
+        result &= spell1.handleSpellCast(t.pos, dir, target)
       if input.isPressed(Input.spell2):
-        result &= spell2.handleSpellCast(t.pos, dir)
+        result &= spell2.handleSpellCast(t.pos, dir, target)
       if input.isPressed(Input.spell3):
-        result &= spell3.handleSpellCast(t.pos, dir)
+        result &= spell3.handleSpellCast(t.pos, dir, target)
       if input.isPressed(Input.jump):
-        result &= varSpell.handleSpellCast(t.pos, dir)
+        result &= varSpell.handleSpellCast(t.pos, dir, target)
