@@ -150,11 +150,12 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Entity): Event
         nil
       else:
         proc(e: Entity, dt: float) =
-          let m = e.getComponent(Movement)
-          m.vel = vec(0)
+          let
+            m = e.getComponent(Movement)
+            b = e.getComponent(Bullet)
+          m.vel = b.speed * b.dir
           for f in info.updateCallbacks:
             f(e, dt)
-  echo("New events with info kind: ", info.kind, " and update ", (if updateCallback == nil: "nil" else: "nonnill"))
   case info.kind
   of single:
     let
@@ -302,7 +303,9 @@ proc parse*(spell: SpellDesc): SpellParse =
         let
           b = e.getComponent(Bullet)
           t = e.getComponent(Transform)
+          m = e.getComponent(Movement)
         t.size += vec(arg.value.get(e) * 160.0 * b.lifePct * dt)
+        m.vel -= b.dir * b.speed
       updateContext.add f
     of moveUp:
       expect valueStack.count >= 1, "Needs at least 1 argument"
@@ -365,6 +368,8 @@ proc handleSpellCast*(parse: SpellParse, pos, dir: Vec, target: Entity): Events 
     if parse.index < parse.spell.len:
       let rune = parse.spell[parse.index]
       errMsg &= "rune " & $rune & "(idx=" & $parse.index & ")"
+    else:
+      errMsg &= "spell end"
     errMsg &= ": " & parse.message
     echo errMsg
     return @[]
