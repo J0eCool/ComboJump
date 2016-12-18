@@ -39,6 +39,7 @@ type
     moveUp
     moveSide
     nearest
+    startPos
 
   SpellDesc* = seq[Rune]
 
@@ -115,6 +116,8 @@ proc textureName*(rune: Rune): string =
     result &= "MoveSide.png"
   of nearest:
     result &= "Nearest.png"
+  of startPos:
+    result &= "StartPos.png"
 
 proc newBullet(pos, dir: Vec, speed: float,
                color: sdl2.Color,
@@ -169,14 +172,17 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Entity): Event
       speed = 600.0
       color = color(0, 255, 255, 255)
       num = info.numBullets + 1
-      angPer = 20.0
-      totAng = angPer * (num - 1).float
-      baseAng = -totAng / 2
+      angPer = 10.0
+      baseAng = 15.0
+      totAng = angPer * num.float + baseAng
     for i in 0..<num:
       let
-        ang = baseAng + angPer * i.float
+        p = if num == 0: 0.0 else: lerp(i / (num - 1), -1.0, 1.0)
+        ang = totAng * p / 2.0
         curDir = dir.rotate(ang.degToRad)
         bullet = newBullet(pos, curDir, speed, color, despawnCallback, updateCallback, target)
+        b = bullet.getComponent(Bullet)
+      b.startPos = p
       result.add Event(kind: addEntity, entity: bullet)
   of burst:
     result = @[]
@@ -188,9 +194,12 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Entity): Event
       baseAng = angPer / 2
     for i in 0..<num:
       let
+        p = if num == 0: 0.0 else: lerp(i / (num - 1), -1.0, 1.0)
         ang = baseAng + angPer * i.float
         curDir = dir.rotate(ang.degToRad)
         bullet = newBullet(pos, curDir, speed, color, despawnCallback, updateCallback, target)
+        b = bullet.getComponent(Bullet)
+      b.startPos = p
       result.add Event(kind: addEntity, entity: bullet)
 
 proc parse*(spell: SpellDesc): SpellParse =
@@ -343,12 +352,12 @@ proc parse*(spell: SpellDesc): SpellParse =
             diff = tt.pos - t.pos
           result = b.dir.cross(diff).sign.float
       valueStack.push(Value(kind: number, value: Number(get: f)))
-
-    # of startPos:
-    #   expect(updateContext != nil, "Needs an update context")
-    #   let f = proc(e:Entity): float =
-    #     let b = e.getComponent(Bullet)
-    #     b.startPos
+    of startPos:
+      expect(updateContext != nil, "Needs an update context")
+      let f = proc(e:Entity): float =
+        let b = e.getComponent(Bullet)
+        b.startPos
+      valueStack.push(Value(kind: number, value: Number(get: f)))
     i += 1
 
   expect(valueStack.count == 1, "Needs exactly one argument at spell end")

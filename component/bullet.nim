@@ -21,6 +21,7 @@ type
     dir*: Vec
     speed*: float
     target*: Entity
+    startPos*: float
 
   ShootProc* = proc(pos, vel: Vec): Events
   UpdateProc* = proc(entity: Entity, dt: float)
