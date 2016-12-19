@@ -15,6 +15,7 @@ import
   entity,
   event,
   input,
+  jsonparse,
   newgun,
   option,
   rect,
@@ -67,6 +68,19 @@ var
   varSpell = varSpellDesc.parse()
   varSpellIdx = 1
 
+let spellFile = "out/custom_spell.json"
+proc loadSpell() =
+  let json = readJSONFile(spellFile)
+  if json.kind == jsError:
+    return
+  fromJSON(varSpellDesc, json)
+  varSpellIdx = varSpellDesc.len
+  varSpell = varSpellDesc.parse()
+proc saveSpell() =
+  writeJSONFile(spellFile, varSpellDesc.toJSON)
+
+loadSpell()
+
 proc drawSpell(renderer: RendererPtr, spell: SpellDesc, pos: Vec, resources: var ResourceManager) =
   let size = vec(48)
   for i in 0..<spell.len:
@@ -118,13 +132,16 @@ defineSystem:
           varSpellDesc.insert(runes[i], varSpellIdx)
           varSpellIdx += 1
           varSpell = varSpellDesc.parse()
+          saveSpell()
       if input.isPressed(backspace) and varSpellDesc.len > 0 and varSpellIdx > 0:
         varSpellDesc.delete(varSpellIdx - 1)
         varSpellIdx -= 1
         varSpell = varSpellDesc.parse()
+        saveSpell()
       if input.isPressed(Input.delete):
         varSpellDesc = @[]
         varSpell = varSpellDesc.parse()
+        saveSpell()
         varSpellIdx = 0
       if input.isPressed(runeLeft):
         varSpellIdx = max(0, varSpellIdx - 1)

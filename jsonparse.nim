@@ -194,7 +194,10 @@ proc toPrettyString*(json: JSON): string =
   serializeJSON(json, pretty=true)
 
 proc readJSONFile*(filename: string): JSON =
-  deserializeJSON(readFile(filename).string)
+  try:
+    deserializeJSON(readFile(filename).string)
+  except:
+    JSON(kind: jsError, msg: "File " & filename & " doesn't exist")
 
 proc writeJSONFile*(filename: string, json: JSON) =
   writeFile(filename, $json)
