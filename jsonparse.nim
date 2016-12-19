@@ -3,7 +3,8 @@ import
   parseutils,
   sequtils,
   strutils,
-  tables
+  tables,
+  typetraits
 
 import util
 
@@ -215,6 +216,13 @@ proc fromJSON*[T](list: var seq[T], json: JSON) =
   list = @[]
   for j in json.arr:
     list.add fromJSON[T](j)
+proc fromJSON*[T: enum](item: var T, json: JSON) =
+  assert json.kind == jsString
+  for e in T:
+    if json.str == $e:
+      item = e
+      return
+  assert false, "Invalid " & T.type.name & " value: " & json.str
 
 proc fromJSON*[T](json: JSON): T =
   var x: T
@@ -233,6 +241,8 @@ proc toJSON*[T](list: seq[T]): JSON =
   for item in list:
     arr.add item.toJSON
   JSON(kind: jsArray, arr: arr)
+proc toJSON*[T: enum](item: T): JSON =
+  JSON(kind: jsString, str: $item)
 
 when isMainModule:
   proc test(str: string) =
@@ -262,3 +272,9 @@ when isMainModule:
       }
     }
     ]"""
+
+  type TestEnum = enum
+    one
+    two
+  echo one, " serialized: ", one.toJSON(), " roundtripped: ", fromJSON[TestEnum](one.toJSON())
+  # echo "fails: ", fromJSON[TestEnum](JSON(kind: jsString, str: "three"))
