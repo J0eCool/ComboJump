@@ -16,6 +16,7 @@ import
   event,
   input,
   jsonparse,
+  menu,
   newgun,
   option,
   rect,
@@ -91,6 +92,18 @@ proc drawSpell(renderer: RendererPtr, spell: SpellDesc, pos: Vec, resources: var
       r = rect.rect(curPos, size)
     renderer.draw(sprite, r)
 
+let testMenu = SpriteNode(
+    pos: vec(850, 300),
+    size: vec(300, 400),
+    children: @[
+      Button(
+        pos: vec(50, 30),
+        size: vec(80, 40),
+        onClick: proc() = echo "HI"
+      ).Node,
+    ],
+  )
+
 defineDrawSystem:
   proc drawSpells*(resources: var ResourceManager) =
     renderer.drawSpell(spell1Desc, vec(60, 40), resources)
@@ -114,8 +127,11 @@ defineDrawSystem:
     renderer.fillRect(rect.rect(vec(60 + 42 * varSpellIdx - 21, 860), vec(6, 40)),
                       color(0, 0, 0, 255))
 
+    renderer.draw(testMenu)
+
 defineSystem:
   proc targetedShoot*(input: InputManager) =
+    testMenu.update(input)
     result = @[]
     entities.forComponents e, [
       TargetShooter, sh,
