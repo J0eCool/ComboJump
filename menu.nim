@@ -2,10 +2,12 @@ import
   sdl2
 
 import
+  component/sprite,
   drawing,
   input,
   option,
   rect,
+  resources,
   vec
 
 type Node* = ref object of RootObj
@@ -14,7 +16,7 @@ type Node* = ref object of RootObj
   parent: Node
   children*: seq[Node]
 
-method drawSelf(node: Node, renderer: RendererPtr) =
+method drawSelf(node: Node, renderer: RendererPtr, resources: var ResourceManager) =
   discard
 
 method updateSelf(node: Node, input: InputManager) =
@@ -32,11 +34,11 @@ proc globalPos(node: Node): Vec =
     result += cur.pos
     cur = cur.parent
 
-proc draw*(renderer: RendererPtr, node: Node) =
+proc draw*(renderer: RendererPtr, node: Node, resources: var ResourceManager) =
   node.updateParents()
-  node.drawSelf(renderer)
+  node.drawSelf(renderer, resources)
   for c in node.children:
-    renderer.draw(c)
+    renderer.draw(c, resources)
 
 proc update*(node: Node, input: InputManager) =
   node.updateParents()
@@ -48,10 +50,16 @@ proc update*(node: Node, input: InputManager) =
 # ------
 
 type SpriteNode* = ref object of Node
+  textureName*: string
 
-method drawSelf(sprite: SpriteNode, renderer: RendererPtr) =
-  let r = rect.rect(sprite.globalPos, sprite.size)
-  renderer.fillRect(r, color(128, 128, 128, 255))
+method drawSelf(sprite: SpriteNode, renderer: RendererPtr, resources: var ResourceManager) =
+  let
+    spriteImg = resources.loadSprite(sprite.textureName, renderer)
+    r = rect.rect(sprite.globalPos, sprite.size)
+  if spriteImg != nil:
+    renderer.draw(spriteImg, r)
+  else:
+    renderer.fillRect(r, color(128, 128, 128, 255))
 
 
 # ------
@@ -59,7 +67,7 @@ method drawSelf(sprite: SpriteNode, renderer: RendererPtr) =
 type Button* = ref object of Node
   onClick*: proc()
 
-method drawSelf(button: Button, renderer: RendererPtr) =
+method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceManager) =
   let r = rect.rect(button.globalPos, button.size)
   renderer.fillRect(r, color(198, 198, 108, 255))
 
@@ -92,10 +100,10 @@ proc generateChildren(list: List) =
       n.parent = list
       list.generatedChildren.add n
 
-method drawSelf(list: List, renderer: RendererPtr) =
+method drawSelf(list: List, renderer: RendererPtr, resources: var ResourceManager) =
   list.generateChildren()
   for c in list.generatedChildren:
-    renderer.draw(c)
+    renderer.draw(c, resources)
 
 method updateSelf(list: List, input: InputManager) =
   list.generateChildren()

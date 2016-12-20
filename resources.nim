@@ -15,6 +15,9 @@ type ResourceManager* = object
   fonts: Table[string, FontPtr]
 
 proc loadSprite*(resources: var ResourceManager, textureName: string, renderer: RendererPtr): SpriteData =
+  if textureName == nil:
+    return nil
+    
   const textureFolder = "assets/textures/"
   if not resources.sprites.hasKey(textureName):
     echo "Loading texture \"", textureName, "\""

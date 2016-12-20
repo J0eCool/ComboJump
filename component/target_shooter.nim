@@ -80,6 +80,24 @@ proc loadSpell() =
 proc saveSpell() =
   writeJSONFile(spellFile, varSpellDesc.toJSON)
 
+proc addRune(rune: Rune) =
+  varSpellDesc.insert(rune, varSpellIdx)
+  varSpellIdx += 1
+  varSpell = varSpellDesc.parse()
+  saveSpell()
+
+proc deleteRune() =
+  varSpellDesc.delete(varSpellIdx - 1)
+  varSpellIdx -= 1
+  varSpell = varSpellDesc.parse()
+  saveSpell()
+
+proc clearVarSpell() =
+  varSpellDesc = @[]
+  varSpell = varSpellDesc.parse()
+  saveSpell()
+  varSpellIdx = 0
+
 loadSpell()
 
 proc drawSpell(renderer: RendererPtr, spell: SpellDesc, pos: Vec, resources: var ResourceManager) =
@@ -99,7 +117,7 @@ let testMenu = SpriteNode(
       Button(
         pos: vec(0, -160),
         size: vec(280, 50),
-        onClick: proc() = echo "HI"
+        onClick: proc() = deleteRune()
       ),
       List(
         spacing: vec(10),
@@ -109,7 +127,15 @@ let testMenu = SpriteNode(
         listNodes: (proc(i: int): Node =
           Button(
             size: vec(50, 50),
-            onClick: (proc() = echo runes[i]),
+            onClick: (proc() =
+              addRune(runes[i])
+            ),
+            children: @[
+              SpriteNode(
+                size: vec(48, 48),
+                textureName: runes[i].textureName,
+              ).Node,
+            ],
           ),
         ),
       ),
@@ -139,7 +165,7 @@ defineDrawSystem:
     renderer.fillRect(rect.rect(vec(60 + 42 * varSpellIdx - 21, 860), vec(6, 40)),
                       color(0, 0, 0, 255))
 
-    renderer.draw(testMenu)
+    renderer.draw(testMenu, resources)
 
 defineSystem:
   proc targetedShoot*(input: InputManager) =
@@ -157,20 +183,11 @@ defineSystem:
 
       for i in 0..<min(inputs.len, runes.len):
         if input.isPressed(inputs[i]):
-          varSpellDesc.insert(runes[i], varSpellIdx)
-          varSpellIdx += 1
-          varSpell = varSpellDesc.parse()
-          saveSpell()
+          addRune(runes[i])
       if input.isPressed(backspace) and varSpellDesc.len > 0 and varSpellIdx > 0:
-        varSpellDesc.delete(varSpellIdx - 1)
-        varSpellIdx -= 1
-        varSpell = varSpellDesc.parse()
-        saveSpell()
+        deleteRune()
       if input.isPressed(Input.delete):
-        varSpellDesc = @[]
-        varSpell = varSpellDesc.parse()
-        saveSpell()
-        varSpellIdx = 0
+        clearVarSpell()
       if input.isPressed(runeLeft):
         varSpellIdx = max(0, varSpellIdx - 1)
       if input.isPressed(runeRight):
