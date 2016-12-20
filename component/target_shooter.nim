@@ -97,10 +97,18 @@ let testMenu = SpriteNode(
     size: vec(300, 400),
     children: @[
       Button(
-        pos: vec(50, 30),
-        size: vec(80, 40),
+        pos: vec(0, -160),
+        size: vec(280, 50),
         onClick: proc() = echo "HI"
-      ).Node,
+      ),
+      List(
+        numItems: (proc(): int = runes.len),
+        listNodes: proc(i: int): Node =
+          Button(
+            size: vec(50, 50),
+            onClick: (proc() = echo runes[i]),
+          ),
+      ),
     ],
   )
 
