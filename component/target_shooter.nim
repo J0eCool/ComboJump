@@ -93,7 +93,7 @@ proc drawSpell(renderer: RendererPtr, spell: SpellDesc, pos: Vec, resources: var
     renderer.draw(sprite, r)
 
 let testMenu = SpriteNode(
-    pos: vec(850, 300),
+    pos: vec(950, 300),
     size: vec(300, 400),
     children: @[
       Button(
@@ -102,12 +102,16 @@ let testMenu = SpriteNode(
         onClick: proc() = echo "HI"
       ),
       List(
+        spacing: vec(10),
+        width: 5,
+        size: vec(300, 200),
         numItems: (proc(): int = runes.len),
-        listNodes: proc(i: int): Node =
+        listNodes: (proc(i: int): Node =
           Button(
             size: vec(50, 50),
             onClick: (proc() = echo runes[i]),
           ),
+        ),
       ),
     ],
   )

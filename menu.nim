@@ -58,6 +58,7 @@ method drawSelf(sprite: SpriteNode, renderer: RendererPtr) =
 
 type Button* = ref object of Node
   onClick*: proc()
+
 method drawSelf(button: Button, renderer: RendererPtr) =
   let r = rect.rect(button.globalPos, button.size)
   renderer.fillRect(r, color(198, 198, 108, 255))
@@ -74,14 +75,20 @@ method updateSelf(button: Button, input: InputManager) =
 type List* = ref object of Node
   numItems*: proc(): int
   listNodes*: proc(i: int): Node
+  spacing*: Vec
+  width*: int
   generatedChildren: seq[Node]
 
 proc generateChildren(list: List) =
   if list.generatedChildren == nil:
     list.generatedChildren = @[]
     for i in 0..<list.numItems():
-      let n = list.listNodes(i)
-      n.pos = vec(0.0, (n.size.y + 5.0) * i.float)
+      let
+        n = list.listNodes(i)
+        s = n.size + list.spacing
+        x = if list.width != 0: i mod list.width else: 0
+        y = if list.width != 0: i div list.width else: i
+      n.pos = (vec(x, y) + vec(0.5)) * s - list.size / 2
       n.parent = list
       list.generatedChildren.add n
 
