@@ -66,16 +66,35 @@ method drawSelf(sprite: SpriteNode, renderer: RendererPtr, resources: var Resour
 
 type Button* = ref object of Node
   onClick*: proc()
+  isHeld: bool
+  isMouseOver: bool
 
 method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceManager) =
-  let r = rect.rect(button.globalPos, button.size)
-  renderer.fillRect(r, color(198, 198, 108, 255))
+  let
+    r = rect.rect(button.globalPos, button.size)
+    c =
+      if button.isMouseOver and button.isHeld:
+        color(198, 198, 108, 255)
+      elif button.isMouseOver:
+        color(172, 172, 134, 255)
+      else:
+        color(160, 160, 160, 255)
+  renderer.fillRect(r, c)
 
 method updateSelf(button: Button, input: InputManager) =
-  input.clickPos.bindAs click:
-    let r = rect.rect(button.globalPos, button.size)
-    if button.onClick != nil and r.contains click:
-      button.onClick()
+  let r = rect.rect(button.globalPos, button.size)
+  input.clickPressedPos.bindAs click:
+    if r.contains click:
+      button.isHeld = true
+
+  button.isMouseOver = r.contains input.mousePos
+
+  if button.isHeld:
+    input.clickReleasedPos.bindAs click:
+      if button.onClick != nil and r.contains click:
+        button.onClick()
+      button.isHeld = false
+      button.isMouseOver = false
 
 
 # ------

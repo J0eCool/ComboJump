@@ -157,12 +157,19 @@ proc isHeld*(manager: InputManager, key: Input): bool =
 proc isReleased*(manager: InputManager, key: Input): bool =
   manager.inputs[key] == released
 
-proc clickPos*(manager: InputManager): Option[Vec] =
+proc mousePos*(manager: InputManager): Vec =
+  manager.mousePos
+
+proc clickPressedPos*(manager: InputManager): Option[Vec] =
   if manager.mouseState == pressed:
     return makeJust(manager.mousePos)
 
 proc clickHeldPos*(manager: InputManager): Option[Vec] =
   if manager.mouseState == pressed or manager.mouseState == held:
+    return makeJust(manager.mousePos)
+
+proc clickReleasedPos*(manager: InputManager): Option[Vec] =
+  if manager.mouseState == released:
     return makeJust(manager.mousePos)
 
 proc mouseWheel*(manager: InputManager): int =
