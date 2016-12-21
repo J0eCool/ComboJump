@@ -114,6 +114,7 @@ proc drawSpell(renderer: RendererPtr, spell: SpellDesc, pos: Vec, resources: var
 let testMenu = SpriteNode(
     pos: vec(950, 300),
     size: vec(300, 400),
+    color: color(128, 128, 128, 255),
     children: @[
       Button(
         pos: vec(0, -160),
@@ -137,6 +138,17 @@ let testMenu = SpriteNode(
                 textureName: rune.textureName,
               ).Node,
             ],
+          )
+        ),
+      ),
+      BindNode[int](
+        pos: vec(-150, 140),
+        item: (proc(): int = varSpellIdx),
+        node: (proc(idx: int): Node =
+          SpriteNode(
+            pos: vec(20 * idx, 12),
+            size: vec(4, 30),
+            color: color(0, 0, 0, 255)
           )
         ),
       ),

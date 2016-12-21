@@ -49,8 +49,34 @@ proc update*(node: Node, input: InputManager) =
 
 # ------
 
+type BindNode*[T] = ref object of Node
+  item*: proc(): T
+  node*: proc(item: T): Node
+  generated: Node
+  cachedItem: T
+
+proc generateChild[T](node: BindNode[T]) =
+  let item = node.item()
+  if node.cachedItem != item:
+    node.cachedItem = item
+    let n = node.node(item)
+    n.parent = node
+    node.generated = n
+
+method drawSelf[T](node: BindNode[T], renderer: RendererPtr, resources: var ResourceManager) =
+  node.generateChild()
+  renderer.draw(node.generated, resources)
+
+method updateSelf[T](node: BindNode[T], input: InputManager) =
+  node.generateChild()
+  node.generated.update(input)
+
+
+# ------
+
 type SpriteNode* = ref object of Node
   textureName*: string
+  color*: Color
 
 method drawSelf(sprite: SpriteNode, renderer: RendererPtr, resources: var ResourceManager) =
   let
@@ -59,7 +85,7 @@ method drawSelf(sprite: SpriteNode, renderer: RendererPtr, resources: var Resour
   if spriteImg != nil:
     renderer.draw(spriteImg, r)
   else:
-    renderer.fillRect(r, color(128, 128, 128, 255))
+    renderer.fillRect(r, sprite.color)
 
 
 # ------
