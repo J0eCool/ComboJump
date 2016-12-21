@@ -99,19 +99,22 @@ method updateSelf(button: Button, input: InputManager) =
 
 # ------
 
-type List* = ref object of Node
-  numItems*: proc(): int
-  listNodes*: proc(i: int): Node
+type List*[T] = ref object of Node
+  items*: proc(): seq[T]
+  listNodes*: proc(item: T): Node
   spacing*: Vec
   width*: int
   generatedChildren: seq[Node]
+  cachedItems: seq[T]
 
-proc generateChildren(list: List) =
-  if list.generatedChildren == nil:
+proc generateChildren[T](list: List[T]) =
+  let items = list.items()
+  if list.cachedItems != items:
+    list.cachedItems = items
     list.generatedChildren = @[]
-    for i in 0..<list.numItems():
+    for i in 0..<items.len:
       let
-        n = list.listNodes(i)
+        n = list.listNodes(items[i])
         s = n.size + list.spacing
         x = if list.width != 0: i mod list.width else: 0
         y = if list.width != 0: i div list.width else: i
@@ -119,12 +122,12 @@ proc generateChildren(list: List) =
       n.parent = list
       list.generatedChildren.add n
 
-method drawSelf(list: List, renderer: RendererPtr, resources: var ResourceManager) =
+method drawSelf[T](list: List[T], renderer: RendererPtr, resources: var ResourceManager) =
   list.generateChildren()
   for c in list.generatedChildren:
     renderer.draw(c, resources)
 
-method updateSelf(list: List, input: InputManager) =
+method updateSelf[T](list: List[T], input: InputManager) =
   list.generateChildren()
   for c in list.generatedChildren:
     c.update(input)

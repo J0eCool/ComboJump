@@ -119,24 +119,37 @@ let testMenu = SpriteNode(
         size: vec(280, 50),
         onClick: proc() = deleteRune()
       ),
-      List(
+      List[Rune](
         spacing: vec(10),
         width: 5,
         size: vec(300, 200),
-        numItems: (proc(): int = runes.len),
-        listNodes: (proc(i: int): Node =
+        items: (proc(): seq[Rune] = @runes),
+        listNodes: (proc(rune: Rune): Node =
           Button(
             size: vec(50, 50),
             onClick: (proc() =
-              addRune(runes[i])
+              addRune(rune)
             ),
             children: @[
               SpriteNode(
                 size: vec(48, 48),
-                textureName: runes[i].textureName,
+                textureName: rune.textureName,
               ).Node,
             ],
           ),
+        ),
+      ),
+      List[Rune](
+        spacing: vec(-4, 0),
+        width: 12,
+        pos: vec(0, 240),
+        size: vec(300, 200),
+        items: (proc(): seq[Rune] = varSpellDesc),
+        listNodes: (proc(rune: Rune): Node =
+          SpriteNode(
+            size: vec(24, 24),
+            textureName: rune.textureName,
+          )
         ),
       ),
     ],
