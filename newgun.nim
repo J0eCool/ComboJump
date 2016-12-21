@@ -81,7 +81,7 @@ type
       index: int
       message: string
     of success:
-      fire: (proc(pos, dir: Vec, target: Entity): Events)
+      fire: (proc(pos, dir: Vec, target: Target): Events)
 
 proc textureName*(rune: Rune): string =
   result = "runes/"
@@ -123,7 +123,7 @@ proc newBullet(pos, dir: Vec, speed: float,
                color: sdl2.Color,
                despawnCallback: ShootProc,
                updateCallback: UpdateProc,
-               target: Entity): Entity =
+               target: Target): Entity =
   newEntity("Bullet", [
     Transform(pos: pos, size: vec(20)),
     Movement(vel: speed * dir),
@@ -140,7 +140,7 @@ proc newBullet(pos, dir: Vec, speed: float,
     ),
   ])
 
-proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Entity): Events =
+proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target): Events =
   let
     despawnCallback =
       if info.onDespawn == nil:
@@ -347,10 +347,9 @@ proc parse*(spell: SpellDesc): SpellParse =
         let
           b = e.getComponent(Bullet)
           t = e.getComponent(Transform)
-        if b.target != nil:
+        b.target.tryPos.bindAs targetPos:
           let
-            tt = b.target.getComponent(Transform)
-            diff = tt.pos - t.pos
+            diff = targetPos - t.pos
             lv = min((1.0 - b.lifePct) / 0.4, 1.0)
           result = b.dir.cross(diff).sign.float * lv
       valueStack.push(Value(kind: number, value: Number(get: f)))
@@ -366,11 +365,11 @@ proc parse*(spell: SpellDesc): SpellParse =
   let arg = valueStack.pop
   expect(arg.kind == projectileInfo, "Spell must end with projectile")
   expect(updateContext == nil, "Spell must end without update context")
-  let fireProc = proc(pos, dir: Vec, target: Entity): Events =
+  let fireProc = proc(pos, dir: Vec, target: Target): Events =
     arg.info.newBulletEvents(pos, dir, target)
   return SpellParse(kind: success, spell: spell, fire: fireProc)
 
-proc handleSpellCast*(parse: SpellParse, pos, dir: Vec, target: Entity): Events =
+proc handleSpellCast*(parse: SpellParse, pos, dir: Vec, target: Target): Events =
   case parse.kind
   of success:
     return parse.fire(pos, dir, target)

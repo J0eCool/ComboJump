@@ -9,10 +9,24 @@ import
   component/sprite,
   entity,
   event,
+  option,
   util,
   vec
 
 type
+  TargetKind* = enum
+    noTarget
+    posTarget
+    entityTarget
+  Target* = object
+    case kind*: TargetKind
+    of noTarget:
+      discard
+    of posTarget:
+      pos*: Vec
+    of entityTarget:
+      entity*: Entity
+
   Bullet* = ref object of Component
     liveTime*: float
     timeSinceSpawn*: float
@@ -20,7 +34,7 @@ type
     onUpdate*: UpdateProc
     dir*: Vec
     speed*: float
-    target*: Entity
+    target*: Target
     startPos*: float
 
   ShootProc* = proc(pos, vel: Vec): Events
@@ -44,3 +58,12 @@ proc newFieryBullet*(mana: float): FieryBullet =
     liveTime: lerp(mana, 0.1, 0.9),
     size: lerp(mana, 0.4, 0.9),
   )
+
+proc tryPos*(target: Target): Option[Vec] =
+  case target.kind
+  of noTarget:
+    makeNone[Vec]()
+  of posTarget:
+    makeJust(target.pos)
+  of entityTarget:
+    makeJust(target.entity.getComponent(Transform).pos)

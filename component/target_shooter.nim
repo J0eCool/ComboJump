@@ -136,7 +136,7 @@ let testMenu = SpriteNode(
                 textureName: rune.textureName,
               ).Node,
             ],
-          ),
+          )
         ),
       ),
       List[Rune](
@@ -206,7 +206,7 @@ defineSystem:
       if input.isPressed(runeRight):
         varSpellIdx = min(varSpellDesc.len, varSpellIdx + 1)
 
-      let target = targeting.target.get()
+      let target = Target(kind: entityTarget, entity: targeting.target.get())
       if input.isPressed(Input.spell1):
         result &= spell1.handleSpellCast(t.pos, dir, target)
       if input.isPressed(Input.spell2):
