@@ -239,8 +239,9 @@ proc parse*(spell: SpellDesc): SpellParse =
       let b = valueStack.pop
       expect b.kind == number
       let
-        f = proc(e: Entity): float = a.value.get(e) * b.value.get(e)
-        n = Number(get: f)
+        makeProc = proc(v1, v2: Number): NumberProc =
+          result = proc(e: Entity): float = v1.get(e) * v2.get(e)
+        n = Number(get: makeProc(a.value, b.value))
       valueStack.push Value(kind: number, value: n)
     of createSingle:
       let proj = ProjectileInfo(kind: single)
