@@ -16,32 +16,53 @@ import
   vec
 
 type
+  TargetKind* = enum
+    noTarget
+    posTarget
+    entityTarget
+  Target* = object
+    case kind*: TargetKind
+    of noTarget:
+      discard
+    of posTarget:
+      pos*: Vec
+    of entityTarget:
+      entity*: Entity
+
   Targeting* = ref object of Component
-    target*: Option[Entity]
+    target*: Target
+
+proc tryPos*(target: Target): Option[Vec] =
+  case target.kind
+  of noTarget:
+    makeNone[Vec]()
+  of posTarget:
+    makeJust(target.pos)
+  of entityTarget:
+    makeJust(target.entity.getComponent(Transform).pos)
 
 defineDrawSystem:
   proc drawTargeting*(camera: Camera) =
     entities.forComponents e, [
       Targeting, t,
     ]:
-      t.target.bindAs tgt:
-        tgt.withComponent Transform, t:
-          renderer.setDrawColor color(255, 67, 81, 255)
-          renderer.fillRect t.globalRect + camera.offset
+      t.target.tryPos.bindAs pos:
+        renderer.setDrawColor color(255, 67, 81, 255)
+        renderer.fillRect rect(pos, vec(50)) + camera.offset
 
 defineSystem:
   proc updateTargeting*() =
     entities.forComponents e, [
       Targeting, targeting,
     ]:
-      targeting.target.bindAs tgt:
-        if not (tgt in entities):
-          targeting.target = makeNone[Entity]()
+      if targeting.target.kind == entityTarget:
+        if not (targeting.target.entity in entities):
+          targeting.target = Target(kind: noTarget)
 
-      if targeting.target.isNone:
+      if targeting.target.kind == noTarget:
         entities.forComponents e, [
           Collider, c,
         ]:
           if c.layer == Layer.enemy:
-            targeting.target = makeJust(e)
+            targeting.target = Target(kind: entityTarget, entity: e)
             break

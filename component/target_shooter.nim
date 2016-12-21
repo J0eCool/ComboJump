@@ -11,6 +11,7 @@ import
   component/player_control,
   component/transform,
   component/sprite,
+  camera,
   drawing,
   entity,
   event,
@@ -181,7 +182,7 @@ defineDrawSystem:
     renderer.draw(testMenu, resources)
 
 defineSystem:
-  proc targetedShoot*(input: InputManager) =
+  proc targetedShoot*(input: InputManager, camera: Camera) =
     testMenu.update(input)
     result = @[]
     entities.forComponents e, [
@@ -190,9 +191,8 @@ defineSystem:
       Transform, t,
     ]:
       var dir = vec(0, -1)
-      targeting.target.bindAs targetEntity:
-        targetEntity.withComponent Transform, target:
-          dir = (target.pos - t.pos).unit
+      targeting.target.tryPos.bindAs targetPos:
+        dir = (targetPos - t.pos).unit
 
       for i in 0..<min(inputs.len, runes.len):
         if input.isPressed(inputs[i]):
@@ -206,12 +206,14 @@ defineSystem:
       if input.isPressed(runeRight):
         varSpellIdx = min(varSpellDesc.len, varSpellIdx + 1)
 
-      let target = Target(kind: entityTarget, entity: targeting.target.get())
       if input.isPressed(Input.spell1):
-        result &= spell1.handleSpellCast(t.pos, dir, target)
+        result &= spell1.handleSpellCast(t.pos, dir, targeting.target)
       if input.isPressed(Input.spell2):
-        result &= spell2.handleSpellCast(t.pos, dir, target)
+        result &= spell2.handleSpellCast(t.pos, dir, targeting.target)
       if input.isPressed(Input.spell3):
-        result &= spell3.handleSpellCast(t.pos, dir, target)
+        result &= spell3.handleSpellCast(t.pos, dir, targeting.target)
       if input.isPressed(Input.jump):
-        result &= varSpell.handleSpellCast(t.pos, dir, target)
+        result &= varSpell.handleSpellCast(t.pos, dir, targeting.target)
+
+      input.clickPressedPos.bindAs click:
+        result &= varSpell.handleSpellCast(t.pos, dir, Target(kind: posTarget, pos: click - camera.offset))

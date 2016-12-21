@@ -38,7 +38,8 @@
       "filename": "component/target_shooter.nim",
       "id": "6",
       "args": [
-        "input"
+        "input",
+        "camera"
       ]
     },
     "updateFieryBullets": {

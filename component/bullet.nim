@@ -10,23 +10,11 @@ import
   entity,
   event,
   option,
+  targeting,
   util,
   vec
 
 type
-  TargetKind* = enum
-    noTarget
-    posTarget
-    entityTarget
-  Target* = object
-    case kind*: TargetKind
-    of noTarget:
-      discard
-    of posTarget:
-      pos*: Vec
-    of entityTarget:
-      entity*: Entity
-
   Bullet* = ref object of Component
     liveTime*: float
     timeSinceSpawn*: float
@@ -58,12 +46,3 @@ proc newFieryBullet*(mana: float): FieryBullet =
     liveTime: lerp(mana, 0.1, 0.9),
     size: lerp(mana, 0.4, 0.9),
   )
-
-proc tryPos*(target: Target): Option[Vec] =
-  case target.kind
-  of noTarget:
-    makeNone[Vec]()
-  of posTarget:
-    makeJust(target.pos)
-  of entityTarget:
-    makeJust(target.entity.getComponent(Transform).pos)
