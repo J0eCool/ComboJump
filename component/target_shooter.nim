@@ -84,7 +84,17 @@ proc clearVarSpell() =
   saveSpell()
   varSpellIdx = 0
 
-loadSpell()
+proc clampSpellIndex() =
+  varSpellIdx = clamp(varSpellIdx, 0, spellDescs[varSpell].len)
+
+proc moveCursor(dir: int) =
+  varSpellIdx += dir
+  clampSpellIndex()
+
+proc moveSpell(dir: int) =
+  varSpell += dir
+  varSpell = clamp(varSpell, 0, spellDescs.len)
+  clampSpellIndex()
 
 let
   testMenu = SpriteNode(
@@ -206,16 +216,16 @@ defineSystem:
       if input.isPressed(Input.delete):
         clearVarSpell()
       if input.isPressed(runeLeft):
-        varSpellIdx = max(0, varSpellIdx - 1)
+        moveCursor(-1)
       if input.isPressed(runeRight):
-        varSpellIdx = min(spellDescs[varSpell].len, varSpellIdx + 1)
+        moveCursor(+1)
       if input.isPressed(runeUp):
-        varSpell = max(0, varSpell - 1)
-        varSpellIdx = clamp(varSpellIdx, 0, spellDescs[varSpell].len)
+        moveSpell(-1)
       if input.isPressed(runeDown):
-        varSpell = min(spellDescs.len, varSpell + 1)
-        varSpellIdx = clamp(varSpellIdx, 0, spellDescs[varSpell].len)
+        moveSpell(+1)
 
       for i in 0..<spells.len:      
         if input.isPressed(fireInputs[i]):
           result &= spells[i].handleSpellCast(t.pos, dir, targeting.target)
+
+loadSpell()
