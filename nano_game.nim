@@ -73,12 +73,6 @@ method loadEntities*(game: NanoGame) =
       Collider(layer: enemy),
       Sprite(textureName: "Ogre.png"),
     ]),
-    newEntity("Block", [
-      Transform(pos: vec(500, 700),
-                size: vec(60, 60)),
-      Collider(layer: Layer.floor),
-      Sprite(color: color(140, 140, 140, 255)),
-    ]),
   ]
 
 importAllSystems()

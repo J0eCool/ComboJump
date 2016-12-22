@@ -159,7 +159,7 @@ let
     ]
   )
   varSpellMenu = List[int](
-    pos: vec(20, 20),
+    pos: vec(20, 680),
     spacing: vec(4),
     items: (proc(): seq[int] = toSeq(0..<spells.len)),
     listNodes: (proc(descIdx: int): Node =
