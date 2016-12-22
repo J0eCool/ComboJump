@@ -219,6 +219,10 @@ proc fromJSON*[T](list: var seq[T], json: JSON) =
   list = @[]
   for j in json.arr:
     list.add fromJSON[T](j)
+proc fromJSON*[N, T](list: var array[N, T], json: JSON) =
+  assert json.kind == jsArray
+  for i in 0..<json.arr.len:
+    list[i] = fromJSON[T](json.arr[i])
 proc fromJSON*[T: enum](item: var T, json: JSON) =
   assert json.kind == jsString
   for e in T:
@@ -244,6 +248,8 @@ proc toJSON*[T](list: seq[T]): JSON =
   for item in list:
     arr.add item.toJSON
   JSON(kind: jsArray, arr: arr)
+proc toJSON*[N, T](list: array[N, T]): JSON =
+  toJSON(@list)
 proc toJSON*[T: enum](item: T): JSON =
   JSON(kind: jsString, str: $item)
 

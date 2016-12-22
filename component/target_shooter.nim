@@ -31,71 +31,55 @@ import
 type
   TargetShooter* = ref object of Component
 
+var
+  spellDescs = [
+    @[createSingle],
+    @[num, count, createSpread],
+    @[createSingle, num, count, count, createBurst, despawn],
+    @[num, count, count, createBurst, Rune.update, nearest, turn, done],
+  ]
+
+  spells: array[4, SpellParse]
+
+  varSpell = 0
+  varSpellIdx = 1
 
 let
-  spell1Desc = @[createSingle]
-  spell2Desc = @[
-    num, count, count, count, count, createSpread,
-      Rune.update,
-        num, count, wave, mult, turn,
-      done,
-      num, count, count, createBurst,
-        Rune.update,
-          num, grow,
-        done,
-        createSingle,
-        despawn,
-      despawn,
-    ]
-  spell3Desc = @[
-    num, count, createSpread,
-    createSingle,
-      Rune.update,
-        num, grow,
-      done,
-      num, count, createBurst,
-      despawn,
-    despawn,
-    ]
-
-  spell1 = spell1Desc.parse()
-  spell2 = spell2Desc.parse()
-  spell3 = spell3Desc.parse()
-
+  fireInputs = [jump, spell1, spell2, spell3]
   inputs = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
   runes = [num, count, mult, createSingle, createSpread, createBurst, despawn, Rune.update, done, wave, turn, grow, moveUp, moveSide, nearest, startPos]
 
-var
-  varSpellDesc = @[createSingle]
-  varSpell = varSpellDesc.parse()
-  varSpellIdx = 1
+proc reparseAllSpells() =
+  for i in 0..<spellDescs.len:
+    spells[i] = spellDescs[i].parse()
 
 let spellFile = "out/custom_spell.json"
 proc loadSpell() =
   let json = readJSONFile(spellFile)
   if json.kind == jsError:
     return
-  fromJSON(varSpellDesc, json)
-  varSpellIdx = varSpellDesc.len
-  varSpell = varSpellDesc.parse()
+  fromJSON(spellDescs, json)
+  varSpellIdx = spellDescs[varSpell].len
+  reparseAllSpells()
+
 proc saveSpell() =
-  writeJSONFile(spellFile, varSpellDesc.toJSON)
+  writeJSONFile(spellFile, spellDescs.toJSON)
 
 proc addRune(rune: Rune) =
-  varSpellDesc.insert(rune, varSpellIdx)
+  spellDescs[0].insert(rune, varSpellIdx)
   varSpellIdx += 1
-  varSpell = varSpellDesc.parse()
+  spells[0] = spellDescs[0].parse()
   saveSpell()
 
 proc deleteRune() =
-  varSpellDesc.delete(varSpellIdx - 1)
+  spellDescs[0].delete(varSpellIdx - 1)
   varSpellIdx -= 1
-  varSpell = varSpellDesc.parse()
+  spells[0] = spellDescs[0].parse()
   saveSpell()
 
 proc clearVarSpell() =
-  varSpellDesc = @[]
-  varSpell = varSpellDesc.parse()
+  spellDescs[0] = @[]
+  spells[0] = spellDescs[0].parse()
   saveSpell()
   varSpellIdx = 0
 
@@ -165,7 +149,7 @@ let
         horizontal: true,
         pos: vec(0, 0),
         size: vec(800, 24),
-        items: (proc(): seq[Rune] = varSpellDesc),
+        items: (proc(): seq[Rune] = spellDescs[0]),
         listNodes: (proc(rune: Rune): Node =
           SpriteNode(
             size: vec(24, 24),
@@ -178,9 +162,9 @@ let
 
 defineDrawSystem:
   proc drawSpells*(resources: var ResourceManager) =
-    renderer.drawSpell(spell1Desc, vec(60, 40), resources)
-    renderer.drawSpell(spell2Desc, vec(60, 100), resources)
-    renderer.drawSpell(spell3Desc, vec(60, 160), resources)
+    renderer.drawSpell(spellDescs[1], vec(60, 40), resources)
+    renderer.drawSpell(spellDescs[2], vec(60, 100), resources)
+    renderer.drawSpell(spellDescs[3], vec(60, 160), resources)
 
     for i in 0..<min(inputs.len, runes.len):
       let
@@ -216,23 +200,15 @@ defineSystem:
       for i in 0..<min(inputs.len, runes.len):
         if input.isPressed(inputs[i]):
           addRune(runes[i])
-      if input.isPressed(backspace) and varSpellDesc.len > 0 and varSpellIdx > 0:
+      if input.isPressed(backspace) and spellDescs[0].len > 0 and varSpellIdx > 0:
         deleteRune()
       if input.isPressed(Input.delete):
         clearVarSpell()
       if input.isPressed(runeLeft):
         varSpellIdx = max(0, varSpellIdx - 1)
       if input.isPressed(runeRight):
-        varSpellIdx = min(varSpellDesc.len, varSpellIdx + 1)
+        varSpellIdx = min(spellDescs[0].len, varSpellIdx + 1)
 
-      if input.isPressed(Input.spell1):
-        result &= spell1.handleSpellCast(t.pos, dir, targeting.target)
-      if input.isPressed(Input.spell2):
-        result &= spell2.handleSpellCast(t.pos, dir, targeting.target)
-      if input.isPressed(Input.spell3):
-        result &= spell3.handleSpellCast(t.pos, dir, targeting.target)
-      if input.isPressed(Input.jump):
-        result &= varSpell.handleSpellCast(t.pos, dir, targeting.target)
-
-      input.clickPressedPos.bindAs click:
-        result &= varSpell.handleSpellCast(t.pos, dir, Target(kind: posTarget, pos: click - camera.offset))
+      for i in 0..<spells.len:      
+        if input.isPressed(fireInputs[i]):
+          result &= spells[i].handleSpellCast(t.pos, dir, targeting.target)
