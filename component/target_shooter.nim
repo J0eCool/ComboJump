@@ -67,20 +67,20 @@ proc saveSpell() =
   writeJSONFile(spellFile, spellDescs.toJSON)
 
 proc addRune(rune: Rune) =
-  spellDescs[0].insert(rune, varSpellIdx)
+  spellDescs[varSpell].insert(rune, varSpellIdx)
   varSpellIdx += 1
-  spells[0] = spellDescs[0].parse()
+  spells[varSpell] = spellDescs[varSpell].parse()
   saveSpell()
 
 proc deleteRune() =
-  spellDescs[0].delete(varSpellIdx - 1)
+  spellDescs[varSpell].delete(varSpellIdx - 1)
   varSpellIdx -= 1
-  spells[0] = spellDescs[0].parse()
+  spells[varSpell] = spellDescs[varSpell].parse()
   saveSpell()
 
 proc clearVarSpell() =
-  spellDescs[0] = @[]
-  spells[0] = spellDescs[0].parse()
+  spellDescs[varSpell] = @[]
+  spells[varSpell] = spellDescs[varSpell].parse()
   saveSpell()
   varSpellIdx = 0
 
@@ -208,7 +208,13 @@ defineSystem:
       if input.isPressed(runeLeft):
         varSpellIdx = max(0, varSpellIdx - 1)
       if input.isPressed(runeRight):
-        varSpellIdx = min(spellDescs[0].len, varSpellIdx + 1)
+        varSpellIdx = min(spellDescs[varSpell].len, varSpellIdx + 1)
+      if input.isPressed(runeUp):
+        varSpell = max(0, varSpell - 1)
+        varSpellIdx = clamp(varSpellIdx, 0, spellDescs[varSpell].len)
+      if input.isPressed(runeDown):
+        varSpell = min(spellDescs.len, varSpell + 1)
+        varSpellIdx = clamp(varSpellIdx, 0, spellDescs[varSpell].len)
 
       for i in 0..<spells.len:      
         if input.isPressed(fireInputs[i]):
