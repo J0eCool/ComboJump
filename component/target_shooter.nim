@@ -1,6 +1,7 @@
 import
   math,
-  sdl2
+  sdl2,
+  sequtils
 
 import
   component/bullet,
@@ -85,19 +86,9 @@ proc clearVarSpell() =
 
 loadSpell()
 
-proc drawSpell(renderer: RendererPtr, spell: SpellDesc, pos: Vec, resources: var ResourceManager) =
-  let size = vec(48)
-  for i in 0..<spell.len:
-    let
-      rune = spell[i]
-      sprite = resources.loadSprite(rune.textureName(), renderer)
-      curPos = pos + vec(i.float * (size.x - 6.0), 0.0)
-      r = rect.rect(curPos, size)
-    renderer.draw(sprite, r)
-
 let
   testMenu = SpriteNode(
-    pos: vec(950, 300),
+    pos: vec(1020, 220),
     size: vec(300, 400),
     color: color(128, 128, 128, 255),
     children: @[
@@ -128,44 +119,54 @@ let
       ),
     ]
   )
-  varSpellMenu = SpriteNode(
-    pos: vec(420, 860),
-    size: vec(810, 48),
-    color: color(128, 128, 128, 255),
-    children: @[
-      BindNode[int](
-        pos: vec(-400, -12),
-        item: (proc(): int = varSpellIdx),
-        node: (proc(idx: int): Node =
-          SpriteNode(
-            pos: vec(20 * idx, 12),
-            size: vec(4, 30),
-            color: color(0, 0, 0, 255),
-          )
-        ),
-      ),
-      List[Rune](
-        spacing: vec(-4, 0),
-        horizontal: true,
-        pos: vec(0, 0),
-        size: vec(800, 24),
-        items: (proc(): seq[Rune] = spellDescs[0]),
-        listNodes: (proc(rune: Rune): Node =
-          SpriteNode(
-            size: vec(24, 24),
-            textureName: rune.textureName,
-          )
-        ),
-      ),
-    ],
+  varSpellMenu = List[int](
+    pos: vec(20, 20),
+    spacing: vec(4),
+    items: (proc(): seq[int] = toSeq(0..<spells.len)),
+    listNodes: (proc(descIdx: int): Node =
+      SpriteNode(
+        size: vec(810, 48),
+        color: color(128, 128, 128, 255),
+        children: @[
+          BindNode[int](
+            pos: vec(-400, -12),
+            item: (proc(): int =
+              if descIdx != varSpell:
+                -1
+              else:
+                varSpellIdx
+            ),
+            node: (proc(idx: int): Node =
+              if idx == -1:
+                Node()
+              else:
+                SpriteNode(
+                  pos: vec(20 * idx, 12),
+                  size: vec(4, 30),
+                  color: color(0, 0, 0, 255),
+                )
+            ),
+          ),
+          List[Rune](
+            spacing: vec(-4, 0),
+            horizontal: true,
+            pos: vec(0, 0),
+            size: vec(800, 24),
+            items: (proc(): seq[Rune] = spellDescs[descIdx]),
+            listNodes: (proc(rune: Rune): Node =
+              SpriteNode(
+                size: vec(24, 24),
+                textureName: rune.textureName,
+              )
+            ),
+          ),
+        ],
+      )
+    ),
   )
 
 defineDrawSystem:
   proc drawSpells*(resources: var ResourceManager) =
-    renderer.drawSpell(spellDescs[1], vec(60, 40), resources)
-    renderer.drawSpell(spellDescs[2], vec(60, 100), resources)
-    renderer.drawSpell(spellDescs[3], vec(60, 160), resources)
-
     for i in 0..<min(inputs.len, runes.len):
       let
         rows = 4
@@ -179,8 +180,8 @@ defineDrawSystem:
                               resources.loadFont("nevis.ttf"),
                               color(0, 0, 0, 255))
 
-    renderer.draw(testMenu, resources)
     renderer.draw(varSpellMenu, resources)
+    renderer.draw(testMenu, resources)
 
 defineSystem:
   proc targetedShoot*(input: InputManager, camera: Camera) =
