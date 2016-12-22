@@ -3,6 +3,7 @@ import
 
 import
   component/sprite,
+  system/render,
   drawing,
   input,
   option,
@@ -86,6 +87,18 @@ method drawSelf(sprite: SpriteNode, renderer: RendererPtr, resources: var Resour
     renderer.draw(spriteImg, r)
   else:
     renderer.fillRect(r, sprite.color)
+
+
+# ------
+
+type TextNode* = ref object of Node
+  text*: string
+  color*: Color
+
+method drawSelf(text: TextNode, renderer: RendererPtr, resources: var ResourceManager) =
+  renderer.drawCachedText(text.text, text.globalPos,
+                          resources.loadFont("nevis.ttf"),
+                          text.color)
 
 
 # ------

@@ -96,6 +96,24 @@ proc moveSpell(dir: int) =
   varSpell = clamp(varSpell, 0, spellDescs.len)
   clampSpellIndex()
 
+proc inputString(rune: Rune): string =
+  for i in 0..<runes.len:
+    if rune == runes[i]:
+      return $inputs[i]
+  assert false, "Rune not found in runes array"
+proc inputString(input: Input): string =
+  case input
+  of jump:
+    return "K"
+  of spell1:
+    return "J"
+  of spell2:
+    return "I"
+  of spell3:
+    return "L"
+  else:
+    assert false, "Unexpected input string"
+
 let
   testMenu = SpriteNode(
     pos: vec(1020, 220),
@@ -105,24 +123,35 @@ let
       Button(
         pos: vec(0, -160),
         size: vec(280, 50),
-        onClick: proc() = deleteRune()
+        onClick: (proc() = deleteRune()),
+        children: @[
+          TextNode(
+            text: "Backspace",
+          ).Node,
+        ],
       ),
       List[Rune](
         spacing: vec(10),
-        width: 5,
+        width: 4,
         size: vec(300, 200),
         items: (proc(): seq[Rune] = @runes),
         listNodes: (proc(rune: Rune): Node =
           Button(
-            size: vec(50, 50),
+            size: vec(65, 50),
             onClick: (proc() =
               addRune(rune)
             ),
             children: @[
               SpriteNode(
+                pos: vec(-10, 0),
                 size: vec(48, 48),
                 textureName: rune.textureName,
-              ).Node,
+              ),
+              TextNode(
+                pos: vec(22, 12),
+                text: rune.inputString[^1..^0],
+                color: color(0, 0, 0, 255),
+              ),
             ],
           )
         ),
@@ -139,7 +168,7 @@ let
         color: color(128, 128, 128, 255),
         children: @[
           BindNode[int](
-            pos: vec(-400, -12),
+            pos: vec(-375, -12),
             item: (proc(): int =
               if descIdx != varSpell:
                 -1
@@ -153,14 +182,17 @@ let
                 SpriteNode(
                   pos: vec(20 * idx, 12),
                   size: vec(4, 30),
-                  color: color(0, 0, 0, 255),
                 )
             ),
+          ),
+          TextNode(
+            pos: vec(-390, 0),
+            text: fireInputs[descIdx].inputString & ":",
           ),
           List[Rune](
             spacing: vec(-4, 0),
             horizontal: true,
-            pos: vec(0, 0),
+            pos: vec(25, 0),
             size: vec(800, 24),
             items: (proc(): seq[Rune] = spellDescs[descIdx]),
             listNodes: (proc(rune: Rune): Node =
@@ -177,19 +209,6 @@ let
 
 defineDrawSystem:
   proc drawSpells*(resources: var ResourceManager) =
-    for i in 0..<min(inputs.len, runes.len):
-      let
-        rows = 4
-        x = (i div rows) * 120
-        y = (i mod rows) * 50
-        pos = vec(60 + x, 660 + y)
-        sprite = resources.loadSprite(runes[i].textureName(), renderer)
-        r = rect.rect(pos + vec(50, 0), vec(48))
-      renderer.draw(sprite, r)
-      renderer.drawCachedText($inputs[i] & " -", pos,
-                              resources.loadFont("nevis.ttf"),
-                              color(0, 0, 0, 255))
-
     renderer.draw(varSpellMenu, resources)
     renderer.draw(testMenu, resources)
 
