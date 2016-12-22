@@ -192,7 +192,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target): Event
       color = color(255, 0, 255, 255)
       num = info.numBullets * 2
       angPer = 360.0 / num.float
-      baseAng = angPer / 2
+      baseAng = random(0.0, 360.0)
     for i in 0..<num:
       let
         p = if num == 0: 0.0 else: lerp(i / (num - 1), -1.0, 1.0)
