@@ -130,8 +130,21 @@ type List*[T] = ref object of Node
   listNodes*: proc(item: T): Node
   spacing*: Vec
   width*: int
+  horizontal*: bool
   generatedChildren: seq[Node]
   cachedItems: seq[T]
+
+proc indexOffset(i, width: int, mainDir: bool): int =
+  if width == 0:
+    if mainDir:
+      i
+    else:
+      0
+  else:
+    if mainDir:
+      i div width
+    else:
+      i mod width
 
 proc generateChildren[T](list: List[T]) =
   let items = list.items()
@@ -142,8 +155,8 @@ proc generateChildren[T](list: List[T]) =
       let
         n = list.listNodes(items[i])
         s = n.size + list.spacing
-        x = if list.width != 0: i mod list.width else: 0
-        y = if list.width != 0: i div list.width else: i
+        x = indexOffset(i, list.width, list.horizontal)
+        y = indexOffset(i, list.width, not list.horizontal)
       n.pos = (vec(x, y) + vec(0.5)) * s - list.size / 2
       n.parent = list
       list.generatedChildren.add n

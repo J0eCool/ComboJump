@@ -111,7 +111,8 @@ proc drawSpell(renderer: RendererPtr, spell: SpellDesc, pos: Vec, resources: var
       r = rect.rect(curPos, size)
     renderer.draw(sprite, r)
 
-let testMenu = SpriteNode(
+let
+  testMenu = SpriteNode(
     pos: vec(950, 300),
     size: vec(300, 400),
     color: color(128, 128, 128, 255),
@@ -141,22 +142,29 @@ let testMenu = SpriteNode(
           )
         ),
       ),
+    ]
+  )
+  varSpellMenu = SpriteNode(
+    pos: vec(420, 860),
+    size: vec(810, 48),
+    color: color(128, 128, 128, 255),
+    children: @[
       BindNode[int](
-        pos: vec(-150, 140),
+        pos: vec(-400, -12),
         item: (proc(): int = varSpellIdx),
         node: (proc(idx: int): Node =
           SpriteNode(
             pos: vec(20 * idx, 12),
             size: vec(4, 30),
-            color: color(0, 0, 0, 255)
+            color: color(0, 0, 0, 255),
           )
         ),
       ),
       List[Rune](
         spacing: vec(-4, 0),
-        width: 12,
-        pos: vec(0, 240),
-        size: vec(300, 200),
+        horizontal: true,
+        pos: vec(0, 0),
+        size: vec(800, 24),
         items: (proc(): seq[Rune] = varSpellDesc),
         listNodes: (proc(rune: Rune): Node =
           SpriteNode(
@@ -174,8 +182,6 @@ defineDrawSystem:
     renderer.drawSpell(spell2Desc, vec(60, 100), resources)
     renderer.drawSpell(spell3Desc, vec(60, 160), resources)
 
-    renderer.drawSpell(varSpellDesc, vec(60, 860), resources)
-
     for i in 0..<min(inputs.len, runes.len):
       let
         rows = 4
@@ -188,14 +194,15 @@ defineDrawSystem:
       renderer.drawCachedText($inputs[i] & " -", pos,
                               resources.loadFont("nevis.ttf"),
                               color(0, 0, 0, 255))
-    renderer.fillRect(rect.rect(vec(60 + 42 * varSpellIdx - 21, 860), vec(6, 40)),
-                      color(0, 0, 0, 255))
 
     renderer.draw(testMenu, resources)
+    renderer.draw(varSpellMenu, resources)
 
 defineSystem:
   proc targetedShoot*(input: InputManager, camera: Camera) =
     testMenu.update(input)
+    varSpellMenu.update(input)
+
     result = @[]
     entities.forComponents e, [
       TargetShooter, sh,
