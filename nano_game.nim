@@ -6,32 +6,17 @@ when Profile != 0:
 
 import
   game,
-  component/camera_target,
-  component/collider,
-  component/damage,
-  component/enemy_movement,
-  component/grid_control,
-  component/health,
-  component/limited_quantity,
-  component/mana,
-  component/movement,
-  component/player_control,
-  component/progress_bar,
-  component/sprite,
-  component/target_shooter,
-  component/text,
-  component/transform,
   system/render,
   camera,
   entity,
   event,
   gun,
   input,
+  prefabs,
   program,
   resources,
   scrolling_background,
   system,
-  targeting,
   vec,
   util
 
@@ -46,33 +31,9 @@ proc newNanoGame*(screenSize: Vec): NanoGame =
 
 method loadEntities*(game: NanoGame) =
   game.entities = @[
-    newEntity("Player", [
-      Transform(pos: vec(300, 400),
-                size: vec(76, 68)),
-      Movement(),
-      Collider(layer: player),
-      GridControl(moveSpeed: 300.0),
-      CameraTarget(vertical: true, offset: vec(0, 150)),
-      Targeting(),
-      TargetShooter(),
-      Sprite(textureName: "Wizard2.png"),
-    ]),
-    newEntity("Goblin", [
-      Transform(pos: vec(600, 400),
-                size: vec(48, 56)),
-      Movement(),
-      newHealth(20),
-      Collider(layer: enemy),
-      Sprite(textureName: "Goblin.png"),
-    ]),
-    newEntity("Ogre", [
-      Transform(pos: vec(700, 100),
-                size: vec(52, 80)),
-      Movement(),
-      newHealth(40),
-      Collider(layer: enemy),
-      Sprite(textureName: "Ogre.png"),
-    ]),
+    newPlayer(vec(300, 400)),
+    newEnemy(goblin, vec(600, 400)),
+    newEnemy(ogre, vec(700, 100)),
   ]
 
 importAllSystems()

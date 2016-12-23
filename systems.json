@@ -57,7 +57,7 @@
       ]
     },
     "updateTargeting": {
-      "filename": "targeting.nim",
+      "filename": "component/targeting.nim",
       "id": "5",
       "args": [
       ]
@@ -134,7 +134,7 @@
       ]
     },
     "drawTargeting": {
-      "filename": "targeting.nim",
+      "filename": "component/targeting.nim",
       "id": "18",
       "args": [
         "camera"

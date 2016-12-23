@@ -9,6 +9,7 @@ import
   component/mana,
   component/movement,
   component/player_control,
+  component/targeting,
   component/transform,
   component/sprite,
   entity,
@@ -16,7 +17,6 @@ import
   option,
   rect,
   stack,
-  targeting,
   vec,
   util
 
@@ -163,7 +163,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target): Event
   case info.kind
   of single:
     let
-      speed = 1200.0
+      speed = 900.0
       color = color(255, 255, 0, 255)
       bullet = newBullet(pos, dir, speed, color, despawnCallback, updateCallback, target)
     result = @[Event(kind: addEntity, entity: bullet)]
