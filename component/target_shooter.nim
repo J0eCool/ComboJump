@@ -56,12 +56,12 @@ proc reparseAllSpells() =
 
 let spellFile = "out/custom_spell.json"
 proc loadSpell() =
+  defer: reparseAllSpells()
   let json = readJSONFile(spellFile)
   if json.kind == jsError:
     return
   fromJSON(spellDescs, json)
   varSpellIdx = spellDescs[varSpell].len
-  reparseAllSpells()
 
 proc saveSpell() =
   writeJSONFile(spellFile, spellDescs.toJSON)
@@ -243,7 +243,7 @@ defineSystem:
       if input.isPressed(runeDown):
         moveSpell(+1)
 
-      for i in 0..<spells.len:      
+      for i in 0..<spells.len:
         if input.isPressed(fireInputs[i]):
           result &= spells[i].handleSpellCast(t.pos, dir, targeting.target)
 

@@ -381,6 +381,10 @@ proc handleSpellCast*(parse: SpellParse, pos, dir: Vec, target: Target): Events 
       errMsg &= "rune " & $rune & "(idx=" & $parse.index & ")"
     else:
       errMsg &= "spell end"
-    errMsg &= ": " & parse.message
+    errMsg &= ": "
+    if parse.message != nil:
+      errMsg &= parse.message
+    else:
+      errMsg &= "Invalid SpellParse"
     echo errMsg
     return @[]
