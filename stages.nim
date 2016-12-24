@@ -10,27 +10,35 @@ import
   prefabs,
   resources,
   system,
-  vec
+  vec,
+  util
 
 var
   didClickIdx = 0
   lastClickedIdx = 0
 
+type
+  SpawnInfo = tuple[enemy: EnemyKind, count: int]
+  Stage = object
+    length: float
+    enemies: seq[SpawnInfo]
+
 let
   stages = @[
-    (proc(): Entities = @[
-        newPlayer(vec(300, 400)),
-        newEnemy(goblin, vec(600, 400)),
-        newEnemy(ogre, vec(700, 100)),
-    ]),
-    (proc(): Entities = @[
-        newPlayer(vec(300, 400)),
-        newEnemy(goblin, vec(600, 100)),
-        newEnemy(goblin, vec(600, 200)),
-        newEnemy(goblin, vec(600, 300)),
-        newEnemy(goblin, vec(600, 400)),
-        newEnemy(ogre, vec(700, 100)),
-    ]),
+    Stage(
+      length: 500,
+      enemies: @[
+        (goblin, 2),
+        (ogre, 1),
+      ],
+    ),
+    Stage(
+      length: 800,
+      enemies: @[
+        (goblin, 7),
+        (ogre, 2),
+      ],
+    ),
   ]
   levelMenu = SpriteNode(
     pos: vec(1020, 680),
@@ -53,6 +61,13 @@ let
     ],
   )
 
+proc spawnedEntities(stage: Stage): Entities =
+  result = @[newPlayer(vec(300, 200))]
+  for spawn in stage.enemies:
+    for i in 0..<spawn.count:
+      let pos = vec(random(100.0, 700.0), -random(0.0, stage.length))
+      result.add newEnemy(spawn.enemy, pos)
+
 defineDrawSystem:
   priority = -100
   proc drawStages*(resources: var ResourceManager) =
@@ -67,5 +82,5 @@ defineSystem:
       didClickIdx = lastClickedIdx
 
     if didClickIdx >= 0:
-      result &= event.Event(kind: loadStage, stage: stages[didClickIdx]())
+      result &= event.Event(kind: loadStage, stage: stages[didClickIdx].spawnedEntities())
       didClickIdx = -1
