@@ -9,7 +9,8 @@ import
   option,
   rect,
   resources,
-  vec
+  vec,
+  util
 
 type Node* = ref object of RootObj
   pos*: Vec

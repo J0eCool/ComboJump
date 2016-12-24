@@ -1,103 +1,126 @@
 {
   "update": {
+    "stageSelect": {
+      "filename": "stages.nim",
+      "priority": "0",
+      "id": "12",
+      "args": [
+        "input"
+      ]
+    },
     "playerShoot": {
       "filename": "system/player_shoot.nim",
-      "id": "15",
+      "priority": "0",
+      "id": "13",
       "args": [
         "dt"
       ]
     },
     "updateEnemyMovement": {
       "filename": "component/enemy_movement.nim",
-      "id": "3",
+      "priority": "0",
+      "id": "5",
       "args": [
         "dt"
       ]
     },
     "playerMovement": {
       "filename": "system/player_movement.nim",
-      "id": "14",
+      "priority": "0",
+      "id": "19",
       "args": [
         "dt"
       ]
     },
     "updateEnemyProximity": {
       "filename": "component/enemy_movement.nim",
-      "id": "2",
+      "priority": "0",
+      "id": "4",
       "args": [
       ]
     },
     "physics": {
       "filename": "system/physics.nim",
-      "id": "11",
+      "priority": "0",
+      "id": "16",
       "args": [
         "dt"
       ]
     },
     "targetedShoot": {
       "filename": "component/target_shooter.nim",
-      "id": "6",
+      "priority": "0",
+      "id": "8",
       "args": [
         "input",
         "camera"
       ]
     },
-    "updateFieryBullets": {
-      "filename": "system/bullet_update.nim",
-      "id": "8",
-      "args": [
-        "dt"
-      ]
-    },
     "gridControl": {
       "filename": "component/grid_control.nim",
-      "id": "4",
+      "priority": "0",
+      "id": "6",
       "args": [
         "input"
       ]
     },
+    "updateFieryBullets": {
+      "filename": "system/bullet_update.nim",
+      "priority": "0",
+      "id": "17",
+      "args": [
+        "dt"
+      ]
+    },
     "updateTargeting": {
       "filename": "component/targeting.nim",
-      "id": "5",
+      "priority": "0",
+      "id": "1",
       "args": [
       ]
     },
     "playerInput": {
       "filename": "system/player_input.nim",
-      "id": "12",
+      "priority": "0",
+      "id": "14",
       "args": [
         "input"
       ]
     },
     "regenLimitedQuantities": {
       "filename": "system/quantity_regen.nim",
-      "id": "16",
+      "priority": "0",
+      "id": "21",
       "args": [
         "dt"
       ]
     },
     "clickPlayer": {
       "filename": "system/player_input.nim",
-      "id": "13",
+      "priority": "0",
+      "id": "15",
       "args": [
       ]
     },
     "updateDamage": {
       "filename": "component/damage.nim",
-      "id": "1",
+      "priority": "0",
+      "id": "3",
       "args": [
       ]
     },
     "updateCamera": {
       "filename": "component/camera_target.nim",
-      "id": "0",
+      "priority": "0",
+      "id": "2",
       "args": [
         "camera"
       ]
     },
     "updateBackground": {
       "filename": "scrolling_background.nim",
-      "id": "7",
+      "priority": "0",
+      "id": "10",
       "args": [
         "background",
         "camera"
@@ -105,22 +128,33 @@
     },
     "checkCollisisons": {
       "filename": "system/collisions.nim",
-      "id": "10",
+      "priority": "0",
+      "id": "20",
       "args": [
       ]
     },
     "updateBullets": {
       "filename": "system/bullet_update.nim",
-      "id": "9",
+      "priority": "0",
+      "id": "18",
       "args": [
         "dt"
       ]
     }
   },
   "draw": {
+    "drawStages": {
+      "filename": "stages.nim",
+      "priority": "-100",
+      "id": "11",
+      "args": [
+        "resources"
+      ]
+    },
     "drawBackground": {
       "filename": "scrolling_background.nim",
-      "id": "17",
+      "priority": "100",
+      "id": "9",
       "args": [
         "background",
         "camera"
@@ -128,14 +162,24 @@
     },
     "drawSpells": {
       "filename": "component/target_shooter.nim",
-      "id": "19",
+      "priority": "-100",
+      "id": "7",
       "args": [
         "resources"
       ]
     },
     "drawTargeting": {
       "filename": "component/targeting.nim",
-      "id": "18",
+      "priority": "0",
+      "id": "0",
+      "args": [
+        "camera"
+      ]
+    },
+    "renderSystem": {
+      "filename": "system/render.nim",
+      "priority": "0",
+      "id": "22",
       "args": [
         "camera"
       ]

@@ -16,6 +16,7 @@ import
   program,
   resources,
   scrolling_background,
+  stages,
   system,
   vec,
   util
@@ -30,11 +31,7 @@ proc newNanoGame*(screenSize: Vec): NanoGame =
   result.background = newScrollingBackground()
 
 method loadEntities*(game: NanoGame) =
-  game.entities = @[
-    newPlayer(vec(300, 400)),
-    newEnemy(goblin, vec(600, 400)),
-    newEnemy(ogre, vec(700, 100)),
-  ]
+  game.entities = @[]
 
 importAllSystems()
 defineSystemCalls(NanoGame)

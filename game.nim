@@ -184,6 +184,8 @@ proc process*(game: Game, events: Events) =
       game.entities.add event.entity
     of removeEntity:
       game.entities.remove event.entity
+    of loadStage:
+      game.entities = event.stage
 
 proc drawGame*(renderer: RendererPtr, game: Game) =
   game.entities.updateProgressBars()
