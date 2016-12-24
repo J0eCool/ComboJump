@@ -20,12 +20,14 @@ var
 type
   SpawnInfo = tuple[enemy: EnemyKind, count: int]
   Stage = object
+    name: string
     length: float
     enemies: seq[SpawnInfo]
 
 let
   stages = @[
     Stage(
+      name: "1-1",
       length: 500,
       enemies: @[
         (goblin, 2),
@@ -33,6 +35,7 @@ let
       ],
     ),
     Stage(
+      name: "1-2",
       length: 800,
       enemies: @[
         (goblin, 7),
@@ -46,15 +49,20 @@ let
     color: color(128, 128, 128, 255),
     children: @[
       List[int](
-        spacing: vec(4),
+        spacing: vec(10),
+        size: vec(300, 400),
+        width: 5,
         items: (proc(): seq[int] = toSeq(0..<stages.len)),
         listNodes: (proc(stageIdx: int): Node =
           Button(
-            size: vec(60, 60),
+            size: vec(50, 50),
             onClick: (proc() =
               didClickIdx = stageIdx
               lastClickedIdx = stageIdx
             ),
+            children: @[
+              TextNode(text: stages[stageIdx].name).Node,
+            ],
           )
         ),
       ).Node,
