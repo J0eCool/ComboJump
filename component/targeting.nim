@@ -52,17 +52,26 @@ defineDrawSystem:
 
 defineSystem:
   proc updateTargeting*() =
-    entities.forComponents e, [
+    entities.forComponents entity, [
       Targeting, targeting,
+      Transform, transform,
     ]:
-      if targeting.target.kind == entityTarget:
-        if not (targeting.target.entity in entities):
-          targeting.target = Target(kind: noTarget)
+      let pos = transform.pos
+      var
+        closestEnemy: Entity = nil
+        closestDist = 0.0
+      entities.forComponents enemy, [
+        Collider, collider,
+        Transform, enemyTransform,
+      ]:
+        if collider.layer != Layer.enemy:
+          continue
+        let dist = (enemyTransform.pos - pos).length2
+        if closestEnemy == nil or dist < closestDist:
+          closestEnemy = enemy
+          closestDist = dist
 
-      if targeting.target.kind == noTarget:
-        entities.forComponents e, [
-          Collider, c,
-        ]:
-          if c.layer == Layer.enemy:
-            targeting.target = Target(kind: entityTarget, entity: e)
-            break
+      if closestEnemy != nil:
+        targeting.target = Target(kind: entityTarget, entity: closestEnemy)
+      else:
+        targeting.target = Target(kind: noTarget)
