@@ -195,16 +195,9 @@ proc drawGame*(renderer: RendererPtr, game: Game) =
 method draw*(renderer: RendererPtr, game: Game) =
   renderer.drawGame(game)
 
-proc updateBase*(game: Game) =
-  if game.input.isPressed(Input.restart):
-    let input = game.input
-    game.loadEntities()
-    game.input = input
-
 # importAllSystems()
 # defineSystemCalls(Game)
 method update*(game: Game, dt: float) =
-  game.updateBase()
   game.dt = dt
 
   # game.updateSystems()

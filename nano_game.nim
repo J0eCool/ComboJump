@@ -46,7 +46,6 @@ method draw*(renderer: RendererPtr, game: NanoGame) =
                           game.resources.loadFont("nevis.ttf"), color(0, 0, 0, 255))
 
 method update*(game: NanoGame, dt: float) =
-  game.updateBase()
   game.dt = dt
 
   game.updateSystems()

@@ -12,7 +12,9 @@ import
   system,
   vec
 
-var didClickIdx = 0
+var
+  didClickIdx = 0
+  lastClickedIdx = 0
 
 let
   stages = @[
@@ -43,6 +45,7 @@ let
             size: vec(60, 60),
             onClick: (proc() =
               didClickIdx = stageIdx
+              lastClickedIdx = stageIdx
             ),
           )
         ),
@@ -59,6 +62,10 @@ defineSystem:
   proc stageSelect*(input: InputManager) =
     result = @[]
     levelMenu.update(input)
+
+    if input.isPressed(restart):
+      didClickIdx = lastClickedIdx
+
     if didClickIdx >= 0:
       result &= event.Event(kind: loadStage, stage: stages[didClickIdx]())
       didClickIdx = -1
