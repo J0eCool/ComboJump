@@ -16,10 +16,14 @@ type
     id: int
     args: seq[string]
     filename: string
+    priority: int
   SysTable = Table[string, System]
   Data = object
     update: SysTable
     draw: SysTable
+
+  CallPair = tuple[priority: int, callNode: NimNode]
+
 const sysFile = "systems.json"
 
 proc tryKey(json: JSON, key: string): Option[JSON] =
@@ -34,11 +38,13 @@ proc fromJSON(system: var System, json: JSON) =
   system.id = fromJSON[int](json.obj["id"])
   system.args = fromJSON[seq[string]](json.obj["args"])
   system.filename = fromJSON[string](json.obj.getOrDefault("filename"))
+  system.priority = fromJSON[int](json.obj["priority"])
 proc toJSON(system: System): JSON =
   result = JSON(kind: jsObject, obj: initTable[string, JSON]())
   result.obj["id"] = system.id.toJSON()
   result.obj["args"] = system.args.toJSON()
   result.obj["filename"] = system.filename.toJSON()
+  result.obj["priority"] = system.priority.toJSON()
 
 proc fromJSON(systems: var SysTable, json: JSON) =
   assert json.kind == jsObject
@@ -97,7 +103,9 @@ proc walkHierarchy(t: NimNode): seq[NimNode] =
     result.add td[2][0][1][0]
 
 proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
-  var sysProc: NimNode = nil
+  var
+    sysProc: NimNode = nil
+    priority = 0
   for n in body:
     if n.kind == nnkProcDef:
       assert sysProc == nil, "Only expecting one proc per system"
@@ -108,6 +116,14 @@ proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
       case metaKind
       of "components":
         discard
+      of "priority":
+        let val = n[1]
+        if val.kind == nnkIntLit:
+          priority = val.intVal.int
+        elif val.kind == nnkPrefix and val[0].ident == !"-":
+          priority = -val[1].intVal.int
+        else:
+          assert false, "Invalid priority:\n" & val.treeRepr
       else:
         assert false, "Unrecognized system metadata: " & metaKind
   assert sysProc != nil, "Must find proc in system"
@@ -137,6 +153,7 @@ proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
     args.add $arg[0].ident
   systems[key].args = args
   systems[key].filename = lineinfo(body).split("(")[0].replace("\\", by="/")
+  systems[key].priority = priority
 
   if sysType == "update":
     data.update = systems
@@ -159,6 +176,12 @@ macro importAllSystems*(): untyped =
   for f in walkDir("system"):
     result.add newTree(nnkImportStmt, ident(f.path))
 
+proc sortCallPairs(list: var seq[CallPair]) =
+  list.sort(
+    proc(a, b: CallPair): int =
+      -cmp[int](a.priority, b.priority)
+  )
+
 macro defineSystemCalls*(gameType: typed): untyped =
   result = newNimNode(nnkStmtList)
   let
@@ -173,20 +196,28 @@ macro defineSystemCalls*(gameType: typed): untyped =
     rendererParam = newIdentDefs(renderer, ident("RendererPtr"))
     drawDef = newProc(ident("drawSystems"), [retVal, rendererParam, gameParam])
 
+  var updatePairs = newSeq[CallPair]()
   for k, v in data.update:
     let
       sysName = ident(k)
       callNode = newCall(sysName, newDotExpr(game, ident("entities")))
     for arg in v.args:
       callNode.add newDotExpr(game, ident(arg))
-    updateDef.body.add newCall(!"process", game, callNode)
+    updatePairs.add((v.priority, newCall(!"process", game, callNode)))
+  updatePairs.sortCallPairs()
+  for p in updatePairs:
+    updateDef.body.add p.callNode
   result.add updateDef
 
+  var drawPairs = newSeq[CallPair]()
   for k, v in data.draw:
     let
       drawName = ident(k)
       callNode = newCall(drawName, renderer, newDotExpr(game, ident("entities")))
     for arg in v.args:
       callNode.add newDotExpr(game, ident(arg))
-    drawDef.body.add callNode
+    drawPairs.add((v.priority, callNode))
+  drawPairs.sortCallPairs()
+  for p in drawPairs:
+    drawDef.body.add p.callNode
   result.add drawDef

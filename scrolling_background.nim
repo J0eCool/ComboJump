@@ -51,6 +51,7 @@ proc loadBackgroundAssets*(
     background.loaded = true
 
 defineDrawSystem:
+  priority = 100
   proc drawBackground*(background: ScrollingBackground, camera: Camera) =
     renderer.setDrawColor color(67, 167, 81, 255)
     renderer.fillRect rect.rect(camera.screenSize / 2, camera.screenSize)

@@ -208,6 +208,7 @@ let
   )
 
 defineDrawSystem:
+  priority = -100
   proc drawSpells*(resources: var ResourceManager) =
     renderer.draw(varSpellMenu, resources)
     renderer.draw(testMenu, resources)

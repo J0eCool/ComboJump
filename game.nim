@@ -190,8 +190,6 @@ proc drawGame*(renderer: RendererPtr, game: Game) =
 
   game.entities.loadResources(game.resources, renderer)
 
-  game.entities.renderSystem(renderer, game.camera)
-
 method draw*(renderer: RendererPtr, game: Game) =
   renderer.drawGame(game)
 
