@@ -3,6 +3,7 @@ import
   sequtils
 
 import
+  component/collider,
   input,
   entity,
   event,
@@ -14,8 +15,9 @@ import
   util
 
 var
-  didClickIdx = 0
-  lastClickedIdx = 0
+  clickedStage = 0
+  currentStage = 0
+  highestStageBeaten = -1
 
 type
   SpawnInfo = tuple[enemy: EnemyKind, count: int]
@@ -42,6 +44,14 @@ let
         (ogre, 2),
       ],
     ),
+    Stage(
+      name: "1-3",
+      length: 2000,
+      enemies: @[
+        (goblin, 16),
+        (ogre, 4),
+      ],
+    ),
   ]
   levelMenu = SpriteNode(
     pos: vec(1020, 680),
@@ -52,13 +62,12 @@ let
         spacing: vec(10),
         size: vec(300, 400),
         width: 5,
-        items: (proc(): seq[int] = toSeq(0..<stages.len)),
+        items: (proc(): seq[int] = toSeq(0..min(highestStageBeaten + 1, stages.len - 1))),
         listNodes: (proc(stageIdx: int): Node =
           Button(
             size: vec(50, 50),
             onClick: (proc() =
-              didClickIdx = stageIdx
-              lastClickedIdx = stageIdx
+              clickedStage = stageIdx
             ),
             children: @[
               TextNode(text: stages[stageIdx].name).Node,
@@ -87,8 +96,21 @@ defineSystem:
     levelMenu.update(input)
 
     if input.isPressed(restart):
-      didClickIdx = lastClickedIdx
+      clickedStage = currentStage
 
-    if didClickIdx >= 0:
-      result &= event.Event(kind: loadStage, stage: stages[didClickIdx].spawnedEntities())
-      didClickIdx = -1
+    var didFindEnemy = false
+    if clickedStage >= 0:
+      result &= event.Event(kind: loadStage, stage: stages[clickedStage].spawnedEntities())
+      currentStage = clickedStage
+      clickedStage = -1
+      # Need to not trigger next stage when spawning the first stage
+      didFindEnemy = true
+
+    entities.forComponents e, [
+      Collider, collider,
+    ]:
+      if collider.layer == enemy:
+        didFindEnemy = true
+        break
+    if not didFindEnemy:
+      highestStageBeaten.max = currentStage
