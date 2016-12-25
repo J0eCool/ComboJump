@@ -16,6 +16,7 @@ import
   program,
   resources,
   scrolling_background,
+  spell_creator,
   stages,
   system,
   vec,

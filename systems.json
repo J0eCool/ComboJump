@@ -133,6 +133,14 @@
       "args": [
       ]
     },
+    "updateSpellCreator": {
+      "filename": "spell_creator.nim",
+      "priority": "0",
+      "id": "24",
+      "args": [
+        "input"
+      ]
+    },
     "updateBullets": {
       "filename": "system/bullet_update.nim",
       "priority": "0",
@@ -164,6 +172,14 @@
       "filename": "component/target_shooter.nim",
       "priority": "-100",
       "id": "7",
+      "args": [
+        "resources"
+      ]
+    },
+    "drawSpellCreator": {
+      "filename": "spell_creator.nim",
+      "priority": "-100",
+      "id": "23",
       "args": [
         "resources"
       ]
