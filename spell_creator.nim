@@ -1,28 +1,14 @@
 import
-  math,
   sdl2,
   sequtils
 
 import
-  component/bullet,
-  component/collider,
-  component/damage,
-  component/mana,
-  component/movement,
-  component/player_control,
-  component/transform,
-  component/sprite,
-  camera,
-  drawing,
   entity,
   event,
   input,
   jsonparse,
   menu,
   newgun,
-  option,
-  rect,
-  system/render,
   resources,
   system,
   vec,

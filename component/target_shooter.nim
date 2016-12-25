@@ -1,28 +1,15 @@
 import
-  math,
   sdl2,
   sequtils
 
 import
-  component/bullet,
-  component/collider,
-  component/damage,
-  component/mana,
-  component/movement,
-  component/player_control,
   component/transform,
-  component/sprite,
-  camera,
-  drawing,
   entity,
   event,
   input,
-  jsonparse,
   menu,
   newgun,
   option,
-  rect,
-  system/render,
   spell_creator,
   resources,
   system,
@@ -32,7 +19,6 @@ import
 
 type
   TargetShooter* = ref object of Component
-
 
 let
   fireInputs = [jump, spell1, spell2, spell3]
@@ -106,7 +92,7 @@ defineDrawSystem:
     renderer.draw(varSpellMenu, resources)
 
 defineSystem:
-  proc targetedShoot*(input: InputManager, camera: Camera) =
+  proc targetedShoot*(input: InputManager) =
     varSpellMenu.update(input)
 
     result = @[]
