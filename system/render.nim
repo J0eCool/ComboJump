@@ -22,9 +22,10 @@ proc drawCachedText*(renderer: RendererPtr,
                      pos: Vec,
                      font: FontPtr,
                      color: Color = color(255, 255, 255, 255)) =
-  if not textCache.hasKey(text):
-    textCache[text] = renderer.renderText(text, font, color)
-  renderer.draw(textCache[text], pos)
+  let textKey = text & "__color:" & $color
+  if not textCache.hasKey(textKey):
+    textCache[textKey] = renderer.renderText(text, font, color)
+  renderer.draw(textCache[textKey], pos)
 
 defineDrawSystem:
   proc renderSystem*(camera: Camera) =
