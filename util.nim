@@ -80,3 +80,6 @@ proc `min=`*[T](a: var T, b: T) =
   a = min(a, b)
 proc `max=`*[T](a: var T, b: T) =
   a = max(a, b)
+
+proc newSeqOf*[T](base: T): seq[T] =
+  @[base]

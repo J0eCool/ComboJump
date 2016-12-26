@@ -57,7 +57,7 @@ let
     pos: vec(1020, 680),
     size: vec(300, 400),
     color: color(128, 128, 128, 255),
-    children: @[
+    children: newSeqOf[Node](
       List[int](
         spacing: vec(10),
         size: vec(300, 400),
@@ -69,13 +69,26 @@ let
             onClick: (proc() =
               clickedStage = stageIdx
             ),
-            children: @[
-              TextNode(text: stages[stageIdx].name).Node,
-            ],
+            children: newSeqOf[Node](
+              BindNode[int](
+                item: (proc(): int = currentStage),
+                node: (proc(curr: int): Node =
+                  result = TextNode(
+                    text: stages[stageIdx].name,
+                    color:
+                      if stageIdx == curr:
+                        color(32, 200, 32, 255)
+                      else:
+                        color(0, 0, 0, 255)
+                    ,
+                  )
+                ),
+              ),
+            ),
           )
         ),
-      ).Node,
-    ],
+      ),
+    ),
   )
 
 proc spawnedEntities(stage: Stage): Entities =

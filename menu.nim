@@ -55,11 +55,13 @@ type BindNode*[T] = ref object of Node
   item*: proc(): T
   node*: proc(item: T): Node
   generated: Node
+  didGenerate: bool
   cachedItem: T
 
 proc generateChild[T](node: BindNode[T]) =
   let item = node.item()
-  if node.cachedItem != item:
+  if not node.didGenerate or node.cachedItem != item:
+    node.didGenerate = true
     node.cachedItem = item
     let n = node.node(item)
     n.parent = node
