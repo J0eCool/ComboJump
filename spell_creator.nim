@@ -14,18 +14,27 @@ import
   vec,
   util
 
-var
-  spellDescs = [
-    @[createSingle],
-    @[num, count, createSpread],
-    @[createSingle, num, count, count, createBurst, despawn],
-    @[num, count, count, createBurst, Rune.update, nearest, turn, done],
-  ]
+type
+  SpellData = object
+    spellDescs: array[4, SpellDesc]
 
-  spells: array[4, SpellParse]
+    spells: array[4, SpellParse]
 
-  varSpell = 0
-  varSpellIdx = 1
+    varSpell: int
+    varSpellIdx: int
+
+proc newSpellData*(): SpellData =
+  SpellData(
+    spellDescs: [
+      @[createSingle],
+      @[],
+      @[],
+      @[],
+    ],
+    varSpellIdx: 1,
+  )
+
+var spellData = newSpellData()
 
 let
   inputs = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
@@ -37,51 +46,53 @@ proc inputString(rune: Rune): string =
       return $inputs[i]
   assert false, "Rune not found in runes array"
 
-proc reparseAllSpells() =
-  for i in 0..<spellDescs.len:
-    spells[i] = spellDescs[i].parse()
+proc reparseAllSpells(spellData: var SpellData) =
+  for i in 0..<spellData.spellDescs.len:
+    spellData.spells[i] = spellData.spellDescs[i].parse()
 
 let spellFile = "out/custom_spell.json"
-proc loadSpell() =
-  defer: reparseAllSpells()
+proc loadSpell(spellData: var SpellData) =
+  defer: spellData.reparseAllSpells()
   let json = readJSONFile(spellFile)
   if json.kind == jsError:
     return
-  fromJSON(spellDescs, json)
-  varSpellIdx = spellDescs[varSpell].len
+  fromJSON(spellData.spellDescs, json)
+  spellData.varSpellIdx = spellData.spellDescs[spellData.varSpell].len
 
-proc saveSpell() =
-  writeJSONFile(spellFile, spellDescs.toJSON)
+proc saveSpell(spellData: SpellData) =
+  writeJSONFile(spellFile, spellData.spellDescs.toJSON)
 
-proc addRune(rune: Rune) =
-  spellDescs[varSpell].insert(rune, varSpellIdx)
-  varSpellIdx += 1
-  spells[varSpell] = spellDescs[varSpell].parse()
-  saveSpell()
+proc addRune(spellData: var SpellData, rune: Rune) =
+  spellData.spellDescs[spellData.varSpell].insert(rune, spellData.varSpellIdx)
+  spellData.varSpellIdx += 1
+  spellData.spells[spellData.varSpell] = spellData.spellDescs[spellData.varSpell].parse()
+  spellData.saveSpell()
 
-proc deleteRune() =
-  spellDescs[varSpell].delete(varSpellIdx - 1)
-  varSpellIdx -= 1
-  spells[varSpell] = spellDescs[varSpell].parse()
-  saveSpell()
+proc deleteRune(spellData: var SpellData) =
+  if spellData.spellDescs[spellData.varSpell].len <= 0 or spellData.varSpellIdx <= 0:
+    return
+  spellData.spellDescs[spellData.varSpell].delete(spellData.varSpellIdx - 1)
+  spellData.varSpellIdx -= 1
+  spellData.spells[spellData.varSpell] = spellData.spellDescs[spellData.varSpell].parse()
+  spellData.saveSpell()
 
-proc clearVarSpell() =
-  spellDescs[varSpell] = @[]
-  spells[varSpell] = spellDescs[varSpell].parse()
-  saveSpell()
-  varSpellIdx = 0
+proc clearVarSpell(spellData: var SpellData) =
+  spellData.spellDescs[spellData.varSpell] = @[]
+  spellData.spells[spellData.varSpell] = spellData.spellDescs[spellData.varSpell].parse()
+  spellData.saveSpell()
+  spellData.varSpellIdx = 0
 
-proc clampSpellIndex() =
-  varSpellIdx = clamp(varSpellIdx, 0, spellDescs[varSpell].len)
+proc clampSpellIndex(spellData: var SpellData) =
+  spellData.varSpellIdx = clamp(spellData.varSpellIdx, 0, spellData.spellDescs[spellData.varSpell].len)
 
-proc moveCursor(dir: int) =
-  varSpellIdx += dir
-  clampSpellIndex()
+proc moveCursor(spellData: var SpellData, dir: int) =
+  spellData.varSpellIdx += dir
+  spellData.clampSpellIndex()
 
-proc moveSpell(dir: int) =
-  varSpell += dir
-  varSpell = clamp(varSpell, 0, spellDescs.len)
-  clampSpellIndex()
+proc moveSpell(spellData: var SpellData, dir: int) =
+  spellData.varSpell += dir
+  spellData.varSpell = clamp(spellData.varSpell, 0, spellData.spellDescs.len)
+  spellData.clampSpellIndex()
 
 let
   runeMenu = SpriteNode(
@@ -92,7 +103,7 @@ let
       Button(
         pos: vec(0, -160),
         size: vec(280, 50),
-        onClick: (proc() = deleteRune()),
+        onClick: (proc() = spellData.deleteRune()),
         children: @[
           TextNode(
             text: "Backspace",
@@ -108,7 +119,7 @@ let
           Button(
             size: vec(65, 50),
             onClick: (proc() =
-              addRune(rune)
+              spellData.addRune(rune)
             ),
             children: @[
               SpriteNode(
@@ -137,27 +148,27 @@ defineSystem:
     runeMenu.update(input)
     for i in 0..<min(inputs.len, runes.len):
       if input.isPressed(inputs[i]):
-        addRune(runes[i])
-    if input.isPressed(backspace) and spellDescs[0].len > 0 and varSpellIdx > 0:
-      deleteRune()
+        spellData.addRune(runes[i])
+    if input.isPressed(backspace):
+      spellData.deleteRune()
     if input.isPressed(Input.delete):
-      clearVarSpell()
+      spellData.clearVarSpell()
     if input.isPressed(runeLeft):
-      moveCursor(-1)
+      spellData.moveCursor(-1)
     if input.isPressed(runeRight):
-      moveCursor(+1)
+      spellData.moveCursor(+1)
     if input.isPressed(runeUp):
-      moveSpell(-1)
+      spellData.moveSpell(-1)
     if input.isPressed(runeDown):
-      moveSpell(+1)
+      spellData.moveSpell(+1)
 
-loadSpell()
+spellData.loadSpell()
 
 proc getSpells*(): array[0..3, SpellParse] =
-  spells
+  spellData.spells
 proc getVarSpell*(): int =
-  varSpell
+  spellData.varSpell
 proc getVarSpellIdx*(): int =
-  varSpellIdx
+  spellData.varSpellIdx
 proc getSpellDesc*(idx: int): SpellDesc =
-  spellDescs[idx]
+  spellData.spellDescs[idx]
