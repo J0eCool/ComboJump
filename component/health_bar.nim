@@ -42,9 +42,13 @@ proc healthBarNode(health: Health): Node =
                   size: vec(width * health.pct, height),
                   color: color(210, 32, 32, 255),
                 ),
-                TextNode(
+                BorderedTextNode(
                   text: $cur & " / " & $health.max.int,
-                  color: color(255, 255, 255, 255),
+                  color:
+                    if health.pct < 0.3:
+                      color(255, 0, 0, 255)
+                    else:
+                      color(255, 255, 255, 255),
                 ),
               ]),
             )

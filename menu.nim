@@ -106,6 +106,26 @@ method drawSelf(text: TextNode, renderer: RendererPtr, resources: var ResourceMa
 
 # ------
 
+type BorderedTextNode* = ref object of Node
+  text*: string
+  color*: Color
+
+method drawSelf(text: BorderedTextNode, renderer: RendererPtr, resources: var ResourceManager) =
+  let
+    font = resources.loadFont("nevis.ttf")
+    black = color(0, 0, 0, 255)
+    borderWidth = 2
+    str = text.text
+    pos = text.globalPos
+  for x in -1..1:
+    for y in -1..1:
+      if x != 0 or y != 0:
+        renderer.drawCachedText(str, pos + vec(x, y) * borderWidth, font, black)
+  renderer.drawCachedText(str, pos, font, text.color)
+
+
+# ------
+
 type Button* = ref object of Node
   onClick*: proc()
   isHeld: bool
