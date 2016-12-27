@@ -18,10 +18,10 @@ type Node* = ref object of RootObj
   parent: Node
   children*: seq[Node]
 
-method drawSelf(node: Node, renderer: RendererPtr, resources: var ResourceManager) =
+method drawSelf(node: Node, renderer: RendererPtr, resources: var ResourceManager) {.base.} =
   discard
 
-method updateSelf(node: Node, input: InputManager) =
+method updateSelf(node: Node, input: InputManager) {.base.} =
   discard
 
 proc updateParents(node: Node) =
