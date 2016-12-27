@@ -86,14 +86,13 @@ proc levelMenuNode(stageData: ptr StageData): Node =
               BindNode[int](
                 item: (proc(): int = stageData.currentStage),
                 node: (proc(curr: int): Node =
-                  result = TextNode(
+                  TextNode(
                     text: stages[stageIdx].name,
                     color:
                       if stageIdx == curr:
                         color(32, 200, 32, 255)
                       else:
-                        color(0, 0, 0, 255)
-                    ,
+                        color(0, 0, 0, 255),
                   )
                 ),
               ),

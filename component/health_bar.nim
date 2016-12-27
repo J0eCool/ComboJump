@@ -2,7 +2,7 @@ import sdl2
 
 import
   component/health,
-  component/progress_bar,
+  component/limited_quantity,
   component/transform,
   camera,
   entity,
@@ -18,18 +18,36 @@ type HealthBar* = ref object of Component
   menu: Node
 
 proc healthBarNode(health: Health): Node =
+  let
+    width = 200.0
+    height = 25.0
+    border = 10.0
   Node(
     children: newSeqOf[Node](
       SpriteNode(
         pos: vec(0, -75),
-        size: vec(210, 35),
-        color: color(128, 128, 128, 255),
+        size: vec(width + border, height + border),
+        color: color(32, 32, 32, 255),
         children: newSeqOf[Node](
           BindNode[int](
             item: (proc(): int = health.cur.int),
             node: (proc(cur: int): Node =
-              TextNode(text: $cur & " / " & $health.max.int)
-            ),
+              Node(children: @[
+                SpriteNode(
+                  size: vec(width, height),
+                  color: color(92, 64, 64, 255),
+                ),
+                SpriteNode(
+                  pos: vec(width * lerp(health.pct, -0.5, 0.0), 0.0),
+                  size: vec(width * health.pct, height),
+                  color: color(210, 32, 32, 255),
+                ),
+                TextNode(
+                  text: $cur & " / " & $health.max.int,
+                  color: color(255, 255, 255, 255),
+                ),
+              ]),
+            )
           )
         ),
       )
