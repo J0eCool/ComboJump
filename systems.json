@@ -17,6 +17,14 @@
         "dt"
       ]
     },
+    "updateHealthBarNodes": {
+      "filename": "component/health_bar.nim",
+      "priority": "0",
+      "id": "27",
+      "args": [
+        "input"
+      ]
+    },
     "updateEnemyMovement": {
       "filename": "component/enemy_movement.nim",
       "priority": "0",
@@ -160,6 +168,15 @@
     }
   },
   "draw": {
+    "drawHealthBarNodes": {
+      "filename": "component/health_bar.nim",
+      "priority": "-100",
+      "id": "26",
+      "args": [
+        "resources",
+        "camera"
+      ]
+    },
     "drawBackground": {
       "filename": "scrolling_background.nim",
       "priority": "100",

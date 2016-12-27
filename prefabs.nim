@@ -5,6 +5,7 @@ import
   component/enemy_movement,
   component/grid_control,
   component/health,
+  component/health_bar,
   component/limited_quantity,
   component/mana,
   component/movement,
@@ -43,6 +44,7 @@ proc newGoblin(pos: Vec): Entity =
     newHealth(20),
     Collider(layer: enemy),
     Sprite(textureName: "Goblin.png"),
+    HealthBar(),
   ])
 
 proc newOgre(pos: Vec): Entity =
@@ -50,9 +52,10 @@ proc newOgre(pos: Vec): Entity =
     Transform(pos: pos,
               size: vec(52, 80)),
     Movement(),
-    newHealth(40),
+    newHealth(50),
     Collider(layer: enemy),
     Sprite(textureName: "Ogre.png"),
+    HealthBar(),
   ])
 
 proc newEnemy*(kind: EnemyKind, pos: Vec): Entity =

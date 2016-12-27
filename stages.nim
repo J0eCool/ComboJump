@@ -61,7 +61,6 @@ let
 type
   LevelMenu* = ref object of Component
     menu: Node
-    didCreateMenu: bool
 
 proc levelMenuNode(stageData: ptr StageData): Node =
   SpriteNode(
