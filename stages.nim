@@ -14,10 +14,14 @@ import
   vec,
   util
 
-var
-  clickedStage = 0
-  currentStage = 0
-  highestStageBeaten = -1
+type
+  StageData* = object
+    clickedStage: int
+    currentStage: int
+    highestStageBeaten: int
+
+proc newStageData*(): StageData =
+  StageData(highestStageBeaten: -1)
 
 type
   SpawnInfo = tuple[enemy: EnemyKind, count: int]
@@ -53,7 +57,14 @@ let
       ],
     ),
   ]
-  levelMenu = SpriteNode(
+
+type
+  LevelMenu* = ref object of Component
+    menu: Node
+    didCreateMenu: bool
+
+proc levelMenuNode(stageData: ptr StageData): Node =
+  SpriteNode(
     pos: vec(1020, 680),
     size: vec(300, 400),
     color: color(128, 128, 128, 255),
@@ -62,16 +73,19 @@ let
         spacing: vec(10),
         size: vec(300, 400),
         width: 5,
-        items: (proc(): seq[int] = toSeq(0..min(highestStageBeaten + 1, stages.len - 1))),
+        items: (proc(): seq[int] =
+          toSeq(0..min(stageData.highestStageBeaten + 1,
+                       stages.len - 1))
+        ),
         listNodes: (proc(stageIdx: int): Node =
           Button(
             size: vec(50, 50),
             onClick: (proc() =
-              clickedStage = stageIdx
+              stageData.clickedStage = stageIdx
             ),
             children: newSeqOf[Node](
               BindNode[int](
-                item: (proc(): int = currentStage),
+                item: (proc(): int = stageData.currentStage),
                 node: (proc(curr: int): Node =
                   result = TextNode(
                     text: stages[stageIdx].name,
@@ -91,31 +105,43 @@ let
     ),
   )
 
+defineDrawSystem:
+  priority = -100
+  proc drawStageSelectMenu*(resources: var ResourceManager) =
+    entities.forComponents entity, [
+      LevelMenu, levelMenu,
+    ]:
+      renderer.draw(levelMenu.menu, resources)
+
+defineSystem:
+  proc updateStageSelectMenu*(input: InputManager, stageData: var StageData) =
+    entities.forComponents entity, [
+      LevelMenu, levelMenu,
+    ]:
+      if levelMenu.menu == nil:
+        levelMenu.menu = levelMenuNode(addr stageData)
+      levelMenu.menu.update(input)
+
 proc spawnedEntities(stage: Stage): Entities =
   result = @[newPlayer(vec(300, 200))]
+  result.add newEntity("LevelMenu", [LevelMenu().Component])
   for spawn in stage.enemies:
     for i in 0..<spawn.count:
       let pos = vec(random(100.0, 700.0), -random(0.0, stage.length))
       result.add newEnemy(spawn.enemy, pos)
 
-defineDrawSystem:
-  priority = -100
-  proc drawStages*(resources: var ResourceManager) =
-    renderer.draw(levelMenu, resources)
-
 defineSystem:
-  proc stageSelect*(input: InputManager) =
+  proc stageSelect*(input: InputManager, stageData: var StageData) =
     result = @[]
-    levelMenu.update(input)
 
     if input.isPressed(restart):
-      clickedStage = currentStage
+      stageData.clickedStage = stageData.currentStage
 
     var didFindEnemy = false
-    if clickedStage >= 0:
-      result &= event.Event(kind: loadStage, stage: stages[clickedStage].spawnedEntities())
-      currentStage = clickedStage
-      clickedStage = -1
+    if stageData.clickedStage >= 0:
+      result &= event.Event(kind: loadStage, stage: stages[stageData.clickedStage].spawnedEntities())
+      stageData.currentStage = stageData.clickedStage
+      stageData.clickedStage = -1
       # Need to not trigger next stage when spawning the first stage
       didFindEnemy = true
 
@@ -126,4 +152,4 @@ defineSystem:
         didFindEnemy = true
         break
     if not didFindEnemy:
-      highestStageBeaten.max = currentStage
+      stageData.highestStageBeaten.max = stageData.currentStage

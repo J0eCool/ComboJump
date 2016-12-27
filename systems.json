@@ -3,15 +3,16 @@
     "stageSelect": {
       "filename": "stages.nim",
       "priority": "0",
-      "id": "12",
+      "id": "16",
       "args": [
-        "input"
+        "input",
+        "stageData"
       ]
     },
     "playerShoot": {
       "filename": "system/player_shoot.nim",
       "priority": "0",
-      "id": "13",
+      "id": "17",
       "args": [
         "dt"
       ]
@@ -19,7 +20,7 @@
     "updateEnemyMovement": {
       "filename": "component/enemy_movement.nim",
       "priority": "0",
-      "id": "5",
+      "id": "6",
       "args": [
         "dt"
       ]
@@ -27,7 +28,7 @@
     "playerMovement": {
       "filename": "system/player_movement.nim",
       "priority": "0",
-      "id": "19",
+      "id": "23",
       "args": [
         "dt"
       ]
@@ -35,14 +36,14 @@
     "updateEnemyProximity": {
       "filename": "component/enemy_movement.nim",
       "priority": "0",
-      "id": "4",
+      "id": "5",
       "args": [
       ]
     },
     "physics": {
       "filename": "system/physics.nim",
       "priority": "0",
-      "id": "16",
+      "id": "20",
       "args": [
         "dt"
       ]
@@ -50,7 +51,7 @@
     "targetedShoot": {
       "filename": "component/target_shooter.nim",
       "priority": "0",
-      "id": "8",
+      "id": "11",
       "args": [
         "input"
       ]
@@ -58,7 +59,7 @@
     "gridControl": {
       "filename": "component/grid_control.nim",
       "priority": "0",
-      "id": "6",
+      "id": "7",
       "args": [
         "input"
       ]
@@ -66,9 +67,18 @@
     "updateFieryBullets": {
       "filename": "system/bullet_update.nim",
       "priority": "0",
-      "id": "17",
+      "id": "21",
       "args": [
         "dt"
+      ]
+    },
+    "updateStageSelectMenu": {
+      "filename": "stages.nim",
+      "priority": "0",
+      "id": "15",
+      "args": [
+        "input",
+        "stageData"
       ]
     },
     "updateTargeting": {
@@ -81,7 +91,7 @@
     "playerInput": {
       "filename": "system/player_input.nim",
       "priority": "0",
-      "id": "14",
+      "id": "18",
       "args": [
         "input"
       ]
@@ -89,7 +99,7 @@
     "regenLimitedQuantities": {
       "filename": "system/quantity_regen.nim",
       "priority": "0",
-      "id": "21",
+      "id": "25",
       "args": [
         "dt"
       ]
@@ -97,21 +107,21 @@
     "clickPlayer": {
       "filename": "system/player_input.nim",
       "priority": "0",
-      "id": "15",
+      "id": "19",
       "args": [
       ]
     },
     "updateDamage": {
       "filename": "component/damage.nim",
       "priority": "0",
-      "id": "3",
+      "id": "4",
       "args": [
       ]
     },
     "updateCamera": {
       "filename": "component/camera_target.nim",
       "priority": "0",
-      "id": "2",
+      "id": "3",
       "args": [
         "camera"
       ]
@@ -119,7 +129,7 @@
     "updateBackground": {
       "filename": "scrolling_background.nim",
       "priority": "0",
-      "id": "10",
+      "id": "13",
       "args": [
         "background",
         "camera"
@@ -128,14 +138,14 @@
     "checkCollisisons": {
       "filename": "system/collisions.nim",
       "priority": "0",
-      "id": "20",
+      "id": "24",
       "args": [
       ]
     },
     "updateSpellCreator": {
       "filename": "spell_creator.nim",
       "priority": "0",
-      "id": "24",
+      "id": "9",
       "args": [
         "input"
       ]
@@ -143,25 +153,17 @@
     "updateBullets": {
       "filename": "system/bullet_update.nim",
       "priority": "0",
-      "id": "18",
+      "id": "22",
       "args": [
         "dt"
       ]
     }
   },
   "draw": {
-    "drawStages": {
-      "filename": "stages.nim",
-      "priority": "-100",
-      "id": "11",
-      "args": [
-        "resources"
-      ]
-    },
     "drawBackground": {
       "filename": "scrolling_background.nim",
       "priority": "100",
-      "id": "9",
+      "id": "12",
       "args": [
         "background",
         "camera"
@@ -170,7 +172,7 @@
     "drawSpells": {
       "filename": "component/target_shooter.nim",
       "priority": "-100",
-      "id": "7",
+      "id": "10",
       "args": [
         "resources"
       ]
@@ -178,7 +180,7 @@
     "drawSpellCreator": {
       "filename": "spell_creator.nim",
       "priority": "-100",
-      "id": "23",
+      "id": "8",
       "args": [
         "resources"
       ]
@@ -194,9 +196,17 @@
     "renderSystem": {
       "filename": "system/render.nim",
       "priority": "0",
-      "id": "22",
+      "id": "2",
       "args": [
         "camera"
+      ]
+    },
+    "drawStageSelectMenu": {
+      "filename": "stages.nim",
+      "priority": "-100",
+      "id": "14",
+      "args": [
+        "resources"
       ]
     }
   }

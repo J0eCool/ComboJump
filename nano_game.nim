@@ -24,12 +24,14 @@ import
 
 type NanoGame* = ref object of Game
   background: ScrollingBackground
+  stageData: StageData
 
 proc newNanoGame*(screenSize: Vec): NanoGame =
   new result
   result.camera.screenSize = screenSize
   result.title = "NaNo Game 2016"
   result.background = newScrollingBackground()
+  result.stageData = newStageData()
 
 method loadEntities*(game: NanoGame) =
   game.entities = @[]
