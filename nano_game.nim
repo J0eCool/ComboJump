@@ -15,6 +15,7 @@ import
   prefabs,
   program,
   resources,
+  save,
   scrolling_background,
   spell_creator,
   stages,
@@ -34,7 +35,7 @@ proc newNanoGame*(screenSize: Vec): NanoGame =
   result.background = newScrollingBackground()
   result.stageData = newStageData()
   result.spellData = newSpellData()
-  result.spellData.load()
+  load(result.spellData, result.stageData)
 
 method loadEntities*(game: NanoGame) =
   game.entities = @[]

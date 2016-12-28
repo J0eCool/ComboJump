@@ -1,6 +1,7 @@
 import
   sdl2,
-  sequtils
+  sequtils,
+  tables
 
 import
   component/collider,
@@ -8,6 +9,7 @@ import
   input,
   entity,
   event,
+  jsonparse,
   menu,
   newgun,
   prefabs,
@@ -23,9 +25,19 @@ type
     currentStage: int
     highestStageBeaten: int
     currentStageInProgress: bool
+    shouldSave*: bool
 
 proc newStageData*(): StageData =
   StageData(highestStageBeaten: -1)
+
+proc fromJSON*(stageData: var StageData, json: JSON) =
+  assert json.kind == jsObject
+  stageData.currentStage.fromJSON(json.obj["currentStage"])
+  stageData.highestStageBeaten.fromJSON(json.obj["highestStageBeaten"])
+proc toJSON*(stageData: StageData): JSON =
+  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
+  result.obj["currentStage"] = stageData.currentStage.toJSON()
+  result.obj["highestStageBeaten"] = stageData.highestStageBeaten.toJSON()
 
 type
   SpawnInfo = tuple[enemy: EnemyKind, count: int]
@@ -184,6 +196,7 @@ defineSystem:
         stageData.highestStageBeaten.max = stageData.currentStage
         stageData.currentStageInProgress = false
         spellData.addRuneCapacity(stageData.currentRuneReward())
+        stageData.shouldSave = true
       
     if stageData.clickedStage >= 0:
       result &= event.Event(kind: loadStage, stage: stages[stageData.clickedStage].spawnedEntities())

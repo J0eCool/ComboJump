@@ -25,7 +25,9 @@ type
     varSpellIdx*: int
 
     capacity: Table[Rune, int]
+    shouldSave*: bool
 
+proc reparseAllSpells(spellData: var SpellData)
 proc newSpellData*(): SpellData =
   result = SpellData(
     spellDescs: [
@@ -40,6 +42,7 @@ proc newSpellData*(): SpellData =
   for r in Rune:
     result.capacity[r] = 0
   result.capacity[createSingle] = 1
+  result.reparseAllSpells()
 
 let
   inputs = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
@@ -55,26 +58,15 @@ proc reparseAllSpells(spellData: var SpellData) =
   for i in 0..<spellData.spellDescs.len:
     spellData.spells[i] = spellData.spellDescs[i].parse()
 
-proc fromJSON(spellData: var SpellData, json: JSON) =
+proc fromJSON*(spellData: var SpellData, json: JSON) =
   assert json.kind == jsObject
   spellData.spellDescs.fromJSON(json.obj["spellDescs"])
   spellData.capacity.fromJSON(json.obj["capacity"])
-proc toJSON(spellData: SpellData): JSON =
+  spellData.reparseAllSpells()
+proc toJSON*(spellData: SpellData): JSON =
   result = JSON(kind: jsObject, obj: initTable[string, JSON]())
   result.obj["spellDescs"] = spellData.spellDescs.toJSON()
   result.obj["capacity"] = spellData.capacity.toJSON()
-
-let spellFile = "out/custom_spell.json"
-proc load*(spellData: var SpellData) =
-  defer: spellData.reparseAllSpells()
-  let json = readJSONFile(spellFile)
-  if json.kind == jsError:
-    return
-  fromJSON(spellData, json)
-  spellData.varSpellIdx = spellData.spellDescs[spellData.varSpell].len
-
-proc save(spellData: SpellData) =
-  writeJSONFile(spellFile, spellData.toJSON)
 
 proc runeCount(spellDesc: SpellDesc, rune: Rune): int =
   for r in spellDesc:
@@ -90,7 +82,7 @@ proc available(spellData: SpellData, rune: Rune): int =
 
 proc addRuneCapacity*(spellData: var SpellData, rune: Rune) =
   spellData.capacity[rune] += 1
-  spellData.save()
+  spellData.shouldSave = true
 
 proc addRune(spellData: var SpellData, rune: Rune) =
   if spellData.available(rune) <= 0:
@@ -98,7 +90,7 @@ proc addRune(spellData: var SpellData, rune: Rune) =
   spellData.spellDescs[spellData.varSpell].insert(rune, spellData.varSpellIdx)
   spellData.varSpellIdx += 1
   spellData.spells[spellData.varSpell] = spellData.spellDescs[spellData.varSpell].parse()
-  spellData.save()
+  spellData.shouldSave = true
 
 proc deleteRune(spellData: var SpellData) =
   if spellData.spellDescs[spellData.varSpell].len <= 0 or spellData.varSpellIdx <= 0:
@@ -106,12 +98,12 @@ proc deleteRune(spellData: var SpellData) =
   spellData.spellDescs[spellData.varSpell].delete(spellData.varSpellIdx - 1)
   spellData.varSpellIdx -= 1
   spellData.spells[spellData.varSpell] = spellData.spellDescs[spellData.varSpell].parse()
-  spellData.save()
+  spellData.shouldSave = true
 
 proc clearVarSpell(spellData: var SpellData) =
   spellData.spellDescs[spellData.varSpell] = @[]
   spellData.spells[spellData.varSpell] = spellData.spellDescs[spellData.varSpell].parse()
-  spellData.save()
+  spellData.shouldSave = true
   spellData.varSpellIdx = 0
 
 proc clampSpellIndex(spellData: var SpellData) =

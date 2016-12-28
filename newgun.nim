@@ -20,7 +20,6 @@ import
   vec,
   util
 
-
 type
   Rune* = enum
     num

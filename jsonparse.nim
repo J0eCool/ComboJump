@@ -199,8 +199,8 @@ proc readJSONFile*(filename: string): JSON =
   except:
     JSON(kind: jsError, msg: "File " & filename & " doesn't exist")
 
-proc writeJSONFile*(filename: string, json: JSON) =
-  writeFile(filename, $json)
+proc writeJSONFile*(filename: string, json: JSON, pretty = false) =
+  writeFile(filename, json.serializeJSON(pretty))
 
 proc fromJSON*[T](json: JSON): T
 proc fromJSON*(x: var int, json: JSON) =
