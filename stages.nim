@@ -92,6 +92,46 @@ let
       ],
       runeReward: createBurst,
     ),
+    Stage(
+      name: "2-1",
+      length: 800,
+      enemies: @[
+        (goblin, 10),
+      ],
+      runeReward: turn,
+    ),
+    Stage(
+      name: "2-2",
+      length: 800,
+      enemies: @[
+        (goblin, 10),
+      ],
+      runeReward: nearest,
+    ),
+    Stage(
+      name: "2-3",
+      length: 800,
+      enemies: @[
+        (goblin, 10),
+      ],
+      runeReward: mult,
+    ),
+    Stage(
+      name: "2-4",
+      length: 800,
+      enemies: @[
+        (goblin, 10),
+      ],
+      runeReward: wave,
+    ),
+    Stage(
+      name: "2-5",
+      length: 800,
+      enemies: @[
+        (goblin, 10),
+      ],
+      runeReward: grow,
+    ),
   ]
 
 proc currentRuneReward(stageData: StageData): Rune =
