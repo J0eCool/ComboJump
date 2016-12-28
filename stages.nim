@@ -41,8 +41,7 @@ let
       name: "1-1",
       length: 500,
       enemies: @[
-        (goblin, 2),
-        (ogre, 1),
+        (goblin, 4),
       ],
       runeReward: num,
     ),
@@ -50,19 +49,36 @@ let
       name: "1-2",
       length: 800,
       enemies: @[
-        (goblin, 7),
-        (ogre, 2),
+        (goblin, 5),
+        (ogre, 1),
       ],
       runeReward: createSpread,
     ),
     Stage(
       name: "1-3",
-      length: 2000,
+      length: 1200,
       enemies: @[
-        (goblin, 16),
-        (ogre, 4),
+        (goblin, 8),
+        (ogre, 2),
       ],
       runeReward: count,
+    ),
+    Stage(
+      name: "1-4",
+      length: 1400,
+      enemies: @[
+        (goblin, 18),
+      ],
+      runeReward: despawn,
+    ),
+    Stage(
+      name: "1-5",
+      length: 2400,
+      enemies: @[
+        (goblin, 22),
+        (ogre, 5),
+      ],
+      runeReward: createBurst,
     ),
   ]
 
