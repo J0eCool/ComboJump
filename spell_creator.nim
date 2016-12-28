@@ -1,6 +1,7 @@
 import
   sdl2,
-  sequtils
+  sequtils,
+  tables
 
 import
   entity,
@@ -23,6 +24,8 @@ type
     varSpell*: int
     varSpellIdx*: int
 
+    capacity: Table[Rune, int]
+
 proc newSpellData*(): SpellData =
   result = SpellData(
     spellDescs: [
@@ -32,7 +35,11 @@ proc newSpellData*(): SpellData =
       @[],
     ],
     varSpellIdx: 1,
+    capacity: initTable[Rune, int](32),
   )
+  for r in Rune:
+    result.capacity[r] = 0
+  result.capacity[createSingle] = 1
 
 let
   inputs = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
@@ -48,19 +55,42 @@ proc reparseAllSpells(spellData: var SpellData) =
   for i in 0..<spellData.spellDescs.len:
     spellData.spells[i] = spellData.spellDescs[i].parse()
 
+proc fromJSON(spellData: var SpellData, json: JSON) =
+  assert json.kind == jsObject
+  spellData.spellDescs.fromJSON(json.obj["spellDescs"])
+  spellData.capacity.fromJSON(json.obj["capacity"])
+proc toJSON(spellData: SpellData): JSON =
+  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
+  result.obj["spellDescs"] = spellData.spellDescs.toJSON()
+  result.obj["capacity"] = spellData.capacity.toJSON()
+
 let spellFile = "out/custom_spell.json"
 proc loadSpell*(spellData: var SpellData) =
   defer: spellData.reparseAllSpells()
   let json = readJSONFile(spellFile)
   if json.kind == jsError:
     return
-  fromJSON(spellData.spellDescs, json)
+  fromJSON(spellData, json)
   spellData.varSpellIdx = spellData.spellDescs[spellData.varSpell].len
 
 proc saveSpell(spellData: SpellData) =
-  writeJSONFile(spellFile, spellData.spellDescs.toJSON)
+  writeJSONFile(spellFile, spellData.toJSON)
+
+proc runeCount(spellDesc: SpellDesc, rune: Rune): int =
+  for r in spellDesc:
+    if r == rune:
+      result += 1
+
+proc runeCount(spellData: SpellData, rune: Rune): int =
+  for desc in spellData.spellDescs:
+    result += desc.runeCount(rune)
+
+proc available(spellData: SpellData, rune: Rune): int =
+  return spellData.capacity[rune] - spellData.runeCount(rune)
 
 proc addRune(spellData: var SpellData, rune: Rune) =
+  if spellData.available(rune) <= 0:
+    return
   spellData.spellDescs[spellData.varSpell].insert(rune, spellData.varSpellIdx)
   spellData.varSpellIdx += 1
   spellData.spells[spellData.varSpell] = spellData.spellDescs[spellData.varSpell].parse()
@@ -134,6 +164,20 @@ proc runeMenuNode(spellData: ptr SpellData): Node =
                 text: rune.inputString[^1..^0],
                 color: color(0, 0, 0, 255),
               ),
+              BindNode[int](
+                item: (proc(): int = spellData[].available(rune)),
+                node: (proc(count: int): Node =
+                  BorderedTextNode(
+                    pos: vec(22, -12),
+                    text: $count,
+                    color:
+                      if count > 0:
+                        color(255, 240, 32, 255)
+                      else:
+                        color(128, 128, 128, 255),
+                  )
+                ),
+              ),
             ],
           )
         ),
@@ -156,7 +200,7 @@ defineSystem:
     ]:
       if runeMenu.menu == nil:
         runeMenu.menu = runeMenuNode(addr spellData)
-      runeMenu.menu.update(input)
+      menu.update(runeMenu.menu, input)
 
 defineSystem:
   proc updateSpellCreator*(input: InputManager, spellData: var SpellData) =

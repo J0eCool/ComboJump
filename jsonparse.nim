@@ -230,6 +230,16 @@ proc fromJSON*[T: enum](item: var T, json: JSON) =
       item = e
       return
   assert false, "Invalid " & T.type.name & " value: " & json.str
+proc fromJSON*[K, V](table: var Table[K, V], json: JSON) =
+  assert json.kind == jsObject
+  table = initTable[K, V]()
+  for rawK, rawV in json.obj:
+    var
+      k: K
+      v: V
+    k.fromJSON(JSON(kind: jsString, str: rawK))
+    v.fromJSON(rawV)
+    table[k] = v
 
 proc fromJSON*[T](json: JSON): T =
   var x: T
@@ -252,6 +262,14 @@ proc toJSON*[N, T](list: array[N, T]): JSON =
   toJSON(@list)
 proc toJSON*[T: enum](item: T): JSON =
   JSON(kind: jsString, str: $item)
+proc toJSON*[K, V](table: Table[K, V]): JSON =
+  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
+  for k, v in table:
+    let
+      rawK = k.toJSON()
+      rawV = v.toJSON()
+    assert rawK.kind == jsString
+    result.obj[rawK.str] = rawV
 
 when isMainModule:
   proc test(str: string) =
