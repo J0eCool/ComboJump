@@ -65,7 +65,7 @@ proc toJSON(spellData: SpellData): JSON =
   result.obj["capacity"] = spellData.capacity.toJSON()
 
 let spellFile = "out/custom_spell.json"
-proc loadSpell*(spellData: var SpellData) =
+proc load*(spellData: var SpellData) =
   defer: spellData.reparseAllSpells()
   let json = readJSONFile(spellFile)
   if json.kind == jsError:
@@ -73,7 +73,7 @@ proc loadSpell*(spellData: var SpellData) =
   fromJSON(spellData, json)
   spellData.varSpellIdx = spellData.spellDescs[spellData.varSpell].len
 
-proc saveSpell(spellData: SpellData) =
+proc save(spellData: SpellData) =
   writeJSONFile(spellFile, spellData.toJSON)
 
 proc runeCount(spellDesc: SpellDesc, rune: Rune): int =
@@ -88,13 +88,17 @@ proc runeCount(spellData: SpellData, rune: Rune): int =
 proc available(spellData: SpellData, rune: Rune): int =
   return spellData.capacity[rune] - spellData.runeCount(rune)
 
+proc addRuneCapacity*(spellData: var SpellData, rune: Rune) =
+  spellData.capacity[rune] += 1
+  spellData.save()
+
 proc addRune(spellData: var SpellData, rune: Rune) =
   if spellData.available(rune) <= 0:
     return
   spellData.spellDescs[spellData.varSpell].insert(rune, spellData.varSpellIdx)
   spellData.varSpellIdx += 1
   spellData.spells[spellData.varSpell] = spellData.spellDescs[spellData.varSpell].parse()
-  spellData.saveSpell()
+  spellData.save()
 
 proc deleteRune(spellData: var SpellData) =
   if spellData.spellDescs[spellData.varSpell].len <= 0 or spellData.varSpellIdx <= 0:
@@ -102,12 +106,12 @@ proc deleteRune(spellData: var SpellData) =
   spellData.spellDescs[spellData.varSpell].delete(spellData.varSpellIdx - 1)
   spellData.varSpellIdx -= 1
   spellData.spells[spellData.varSpell] = spellData.spellDescs[spellData.varSpell].parse()
-  spellData.saveSpell()
+  spellData.save()
 
 proc clearVarSpell(spellData: var SpellData) =
   spellData.spellDescs[spellData.varSpell] = @[]
   spellData.spells[spellData.varSpell] = spellData.spellDescs[spellData.varSpell].parse()
-  spellData.saveSpell()
+  spellData.save()
   spellData.varSpellIdx = 0
 
 proc clampSpellIndex(spellData: var SpellData) =

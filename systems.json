@@ -6,7 +6,8 @@
       "id": "20",
       "args": [
         "input",
-        "stageData"
+        "stageData",
+        "spellData"
       ]
     },
     "playerShoot": {

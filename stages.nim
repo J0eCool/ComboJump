@@ -9,6 +9,7 @@ import
   entity,
   event,
   menu,
+  newgun,
   prefabs,
   resources,
   spell_creator,
@@ -21,6 +22,7 @@ type
     clickedStage: int
     currentStage: int
     highestStageBeaten: int
+    currentStageInProgress: bool
 
 proc newStageData*(): StageData =
   StageData(highestStageBeaten: -1)
@@ -31,6 +33,7 @@ type
     name: string
     length: float
     enemies: seq[SpawnInfo]
+    runeReward: Rune
 
 let
   stages = @[
@@ -41,6 +44,7 @@ let
         (goblin, 2),
         (ogre, 1),
       ],
+      runeReward: num,
     ),
     Stage(
       name: "1-2",
@@ -49,6 +53,7 @@ let
         (goblin, 7),
         (ogre, 2),
       ],
+      runeReward: createSpread,
     ),
     Stage(
       name: "1-3",
@@ -57,8 +62,12 @@ let
         (goblin, 16),
         (ogre, 4),
       ],
+      runeReward: count,
     ),
   ]
+
+proc currentRuneReward(stageData: StageData): Rune =
+  stages[stageData.currentStage].runeReward
 
 type
   LevelMenu* = ref object of Component
@@ -84,11 +93,12 @@ proc levelMenuNode(stageData: ptr StageData): Node =
             onClick: (proc() =
               stageData.clickedStage = stageIdx
             ),
-            children: newSeqOf[Node](
+            children: @[
               BindNode[int](
                 item: (proc(): int = stageData.currentStage),
                 node: (proc(curr: int): Node =
                   TextNode(
+                    pos: vec(0, -10),
                     text: stages[stageIdx].name,
                     color:
                       if stageIdx == curr:
@@ -98,7 +108,12 @@ proc levelMenuNode(stageData: ptr StageData): Node =
                   )
                 ),
               ),
-            ),
+              SpriteNode(
+                pos: vec(10, 10),
+                size: vec(24, 24),
+                textureName: stages[stageIdx].runeReward.textureName,
+              ),
+            ],
           )
         ),
       ),
@@ -135,25 +150,27 @@ proc spawnedEntities(stage: Stage): Entities =
       result.add newEnemy(spawn.enemy, pos)
 
 defineSystem:
-  proc stageSelect*(input: InputManager, stageData: var StageData) =
+  proc stageSelect*(input: InputManager, stageData: var StageData, spellData: var SpellData) =
     result = @[]
 
     if input.isPressed(restart):
       stageData.clickedStage = stageData.currentStage
 
-    var didFindEnemy = false
+    if stageData.currentStageInProgress:
+      var didFindEnemy = false
+      entities.forComponents e, [
+        Collider, collider,
+      ]:
+        if collider.layer == enemy:
+          didFindEnemy = true
+          break
+      if not didFindEnemy:
+        stageData.highestStageBeaten.max = stageData.currentStage
+        stageData.currentStageInProgress = false
+        spellData.addRuneCapacity(stageData.currentRuneReward())
+      
     if stageData.clickedStage >= 0:
       result &= event.Event(kind: loadStage, stage: stages[stageData.clickedStage].spawnedEntities())
       stageData.currentStage = stageData.clickedStage
       stageData.clickedStage = -1
-      # Need to not trigger next stage when spawning the first stage
-      didFindEnemy = true
-
-    entities.forComponents e, [
-      Collider, collider,
-    ]:
-      if collider.layer == enemy:
-        didFindEnemy = true
-        break
-    if not didFindEnemy:
-      stageData.highestStageBeaten.max = stageData.currentStage
+      stageData.currentStageInProgress = true

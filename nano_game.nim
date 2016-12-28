@@ -34,7 +34,7 @@ proc newNanoGame*(screenSize: Vec): NanoGame =
   result.background = newScrollingBackground()
   result.stageData = newStageData()
   result.spellData = newSpellData()
-  result.spellData.loadSpell()
+  result.spellData.load()
 
 method loadEntities*(game: NanoGame) =
   game.entities = @[]
