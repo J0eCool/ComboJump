@@ -15,16 +15,16 @@ import
   util
 
 type
-  SpellData = object
-    spellDescs: array[4, SpellDesc]
+  SpellData* = object
+    spellDescs*: array[4, SpellDesc]
 
-    spells: array[4, SpellParse]
+    spells*: array[4, SpellParse]
 
-    varSpell: int
-    varSpellIdx: int
+    varSpell*: int
+    varSpellIdx*: int
 
 proc newSpellData*(): SpellData =
-  SpellData(
+  result = SpellData(
     spellDescs: [
       @[createSingle],
       @[],
@@ -33,8 +33,6 @@ proc newSpellData*(): SpellData =
     ],
     varSpellIdx: 1,
   )
-
-var spellData = newSpellData()
 
 let
   inputs = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
@@ -51,7 +49,7 @@ proc reparseAllSpells(spellData: var SpellData) =
     spellData.spells[i] = spellData.spellDescs[i].parse()
 
 let spellFile = "out/custom_spell.json"
-proc loadSpell(spellData: var SpellData) =
+proc loadSpell*(spellData: var SpellData) =
   defer: spellData.reparseAllSpells()
   let json = readJSONFile(spellFile)
   if json.kind == jsError:
@@ -94,8 +92,12 @@ proc moveSpell(spellData: var SpellData, dir: int) =
   spellData.varSpell = clamp(spellData.varSpell, 0, spellData.spellDescs.len)
   spellData.clampSpellIndex()
 
-let
-  runeMenu = SpriteNode(
+type
+  RuneMenu* = ref object of Component
+    menu: Node
+
+proc runeMenuNode(spellData: ptr SpellData): Node =
+  SpriteNode(
     pos: vec(1020, 220),
     size: vec(300, 400),
     color: color(128, 128, 128, 255),
@@ -103,7 +105,7 @@ let
       Button(
         pos: vec(0, -160),
         size: vec(280, 50),
-        onClick: (proc() = spellData.deleteRune()),
+        onClick: (proc() = spellData[].deleteRune()),
         children: @[
           TextNode(
             text: "Backspace",
@@ -119,7 +121,7 @@ let
           Button(
             size: vec(65, 50),
             onClick: (proc() =
-              spellData.addRune(rune)
+              spellData[].addRune(rune)
             ),
             children: @[
               SpriteNode(
@@ -138,14 +140,26 @@ let
       ),
     ]
   )
+
 defineDrawSystem:
   priority = -100
-  proc drawSpellCreator*(resources: var ResourceManager) =
-    renderer.draw(runeMenu, resources)
+  proc drawRuneMenu*(resources: var ResourceManager) =
+    entities.forComponents entity, [
+      RuneMenu, runeMenu,
+    ]:
+      renderer.draw(runeMenu.menu, resources)
 
 defineSystem:
-  proc updateSpellCreator*(input: InputManager) =
-    runeMenu.update(input)
+  proc updateRuneMenu*(input: InputManager, spellData: var SpellData) =
+    entities.forComponents entity, [
+      RuneMenu, runeMenu,
+    ]:
+      if runeMenu.menu == nil:
+        runeMenu.menu = runeMenuNode(addr spellData)
+      runeMenu.menu.update(input)
+
+defineSystem:
+  proc updateSpellCreator*(input: InputManager, spellData: var SpellData) =
     for i in 0..<min(inputs.len, runes.len):
       if input.isPressed(inputs[i]):
         spellData.addRune(runes[i])
@@ -161,14 +175,3 @@ defineSystem:
       spellData.moveSpell(-1)
     if input.isPressed(runeDown):
       spellData.moveSpell(+1)
-
-spellData.loadSpell()
-
-proc getSpells*(): array[0..3, SpellParse] =
-  spellData.spells
-proc getVarSpell*(): int =
-  spellData.varSpell
-proc getVarSpellIdx*(): int =
-  spellData.varSpellIdx
-proc getSpellDesc*(idx: int): SpellDesc =
-  spellData.spellDescs[idx]

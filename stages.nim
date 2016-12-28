@@ -4,12 +4,14 @@ import
 
 import
   component/collider,
+  component/target_shooter,
   input,
   entity,
   event,
   menu,
   prefabs,
   resources,
+  spell_creator,
   system,
   vec,
   util
@@ -121,8 +123,12 @@ defineSystem:
       levelMenu.menu.update(input)
 
 proc spawnedEntities(stage: Stage): Entities =
-  result = @[newPlayer(vec(300, 200))]
-  result.add newEntity("LevelMenu", [LevelMenu().Component])
+  result = @[
+    newPlayer(vec(300, 200)),
+    newEntity("LevelMenu", [LevelMenu().Component]),
+    newEntity("RuneMenu", [RuneMenu().Component]),
+    newEntity("SpellHudMenu", [SpellHudMenu().Component]),
+  ]
   for spawn in stage.enemies:
     for i in 0..<spawn.count:
       let pos = vec(random(100.0, 700.0), -random(0.0, stage.length))

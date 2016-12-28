@@ -36,11 +36,15 @@ proc inputString(input: Input): string =
   else:
     assert false, "Unexpected input string"
 
-let
-  varSpellMenu = List[int](
+type
+  SpellHudMenu* = ref object of Component
+    menu: Node
+
+proc spellHudMenuNode(spellData: ptr SpellData): Node =
+  List[int](
     pos: vec(20, 680),
     spacing: vec(4),
-    items: (proc(): seq[int] = toSeq(0..<getSpells().len)),
+    items: (proc(): seq[int] = toSeq(0..<spellData.spells.len)),
     listNodes: (proc(descIdx: int): Node =
       SpriteNode(
         size: vec(810, 48),
@@ -49,10 +53,10 @@ let
           BindNode[int](
             pos: vec(-375, -12),
             item: (proc(): int =
-              if descIdx != getVarSpell():
+              if descIdx != spellData.varSpell:
                 -1
               else:
-                getVarSpellIdx()
+                spellData.varSpellIdx
             ),
             node: (proc(idx: int): Node =
               if idx == -1:
@@ -73,7 +77,7 @@ let
             horizontal: true,
             pos: vec(25, 0),
             size: vec(800, 24),
-            items: (proc(): seq[Rune] = getSpellDesc(descIdx)),
+            items: (proc(): seq[Rune] = spellData.spellDescs[descIdx]),
             listNodes: (proc(rune: Rune): Node =
               SpriteNode(
                 size: vec(24, 24),
@@ -88,13 +92,23 @@ let
 
 defineDrawSystem:
   priority = -100
-  proc drawSpells*(resources: var ResourceManager) =
-    renderer.draw(varSpellMenu, resources)
+  proc drawSpellHudMenu*(resources: var ResourceManager) =
+    entities.forComponents entity, [
+      SpellHudMenu, spellHudMenu,
+    ]:
+      renderer.draw(spellHudMenu.menu, resources)
 
 defineSystem:
-  proc targetedShoot*(input: InputManager) =
-    varSpellMenu.update(input)
+  proc updateSpellHudMenu*(input: InputManager, spellData: var SpellData) =
+    entities.forComponents entity, [
+      SpellHudMenu, spellHudMenu,
+    ]:
+      if spellHudMenu.menu == nil:
+        spellHudMenu.menu = spellHudMenuNode(addr spellData)
+      spellHudMenu.menu.update(input)
 
+defineSystem:
+  proc targetedShoot*(input: InputManager, spellData: SpellData) =
     result = @[]
     entities.forComponents e, [
       TargetShooter, sh,
@@ -105,6 +119,6 @@ defineSystem:
       targeting.target.tryPos.bindAs targetPos:
         dir = (targetPos - t.pos).unit
 
-      for i in 0..<getSpells().len:
+      for i in 0..<spellData.spells.len:
         if input.isPressed(fireInputs[i]):
-          result &= getSpells()[i].handleSpellCast(t.pos, dir, targeting.target)
+          result &= spellData.spells[i].handleSpellCast(t.pos, dir, targeting.target)

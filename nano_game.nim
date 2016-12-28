@@ -25,6 +25,7 @@ import
 type NanoGame* = ref object of Game
   background: ScrollingBackground
   stageData: StageData
+  spellData: SpellData
 
 proc newNanoGame*(screenSize: Vec): NanoGame =
   new result
@@ -32,6 +33,8 @@ proc newNanoGame*(screenSize: Vec): NanoGame =
   result.title = "NaNo Game 2016"
   result.background = newScrollingBackground()
   result.stageData = newStageData()
+  result.spellData = newSpellData()
+  result.spellData.loadSpell()
 
 method loadEntities*(game: NanoGame) =
   game.entities = @[]
