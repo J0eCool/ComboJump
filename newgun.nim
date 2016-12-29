@@ -81,6 +81,9 @@ type
     of success:
       fire: (proc(pos, dir: Vec, target: Target): Events)
 
+proc `$`(value: Value): string =
+  $value.kind
+
 proc textureName*(rune: Rune): string =
   result = "runes/"
   case rune
@@ -215,7 +218,8 @@ proc parse*(spell: SpellDesc): SpellParse =
     i = 0
   template expect(cond: bool, msg: string = "") =
     if not cond:
-      return SpellParse(kind: error, spell: spell, index: i, message: msg)
+      var stackTypes = "\nStack: " & $valueStack.toSeq()
+      return SpellParse(kind: error, spell: spell, index: i, message: msg & stackTypes)
   template addUpdateProc(update: UpdateProc) =
     expect valueStack.count >= 1, "Needs at least 1 argument"
     var proj = valueStack.pop

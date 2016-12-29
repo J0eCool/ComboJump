@@ -19,3 +19,10 @@ proc peek*[T](stack: Stack[T]): T =
 
 proc `$`*[T](stack: Stack[T]): string =
   $stack.list
+
+iterator items*[T](stack: Stack[T]): T =
+  for item in stack.list:
+    yield item
+
+proc toSeq*[T](stack: Stack[T]): seq[T] =
+  stack.list
