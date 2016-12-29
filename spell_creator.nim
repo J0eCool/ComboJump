@@ -63,6 +63,7 @@ proc fromJSON*(spellData: var SpellData, json: JSON) =
   spellData.spellDescs.fromJSON(json.obj["spellDescs"])
   spellData.capacity.fromJSON(json.obj["capacity"])
   spellData.reparseAllSpells()
+  spellData.varSpellIdx = spellData.spellDescs[spellData.varSpell].len
 proc toJSON*(spellData: SpellData): JSON =
   result = JSON(kind: jsObject, obj: initTable[string, JSON]())
   result.obj["spellDescs"] = spellData.spellDescs.toJSON()
@@ -130,13 +131,22 @@ proc runeMenuNode(spellData: ptr SpellData): Node =
     children: @[
       Button(
         pos: vec(0, -160),
-        size: vec(280, 50),
+        size: vec(50, 50),
         onClick: (proc() = spellData[].deleteRune()),
-        children: @[
-          TextNode(
-            text: "Backspace",
-          ).Node,
-        ],
+        children: newSeqOf[Node](
+          TextNode(text: "Del")
+        ),
+      ),
+      Button(
+        pos: vec(60, -160),
+        size: vec(50, 50),
+        onClick: (proc() =
+          for r in Rune:
+            spellData[].addRuneCapacity(r)
+        ),
+        children: newSeqOf[Node](
+          TextNode(text: "+ALL")
+        ),
       ),
       List[Rune](
         spacing: vec(10),
