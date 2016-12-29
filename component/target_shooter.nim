@@ -50,6 +50,20 @@ proc spellHudMenuNode(spellData: ptr SpellData): Node =
         size: vec(810, 48),
         color: color(128, 128, 128, 255),
         children: @[
+          BindNode[SpellParse](
+            item: (proc(): SpellParse = spellData.spells[descIdx]),
+            node: (proc(spell: SpellParse): Node =
+              case spell.kind
+              of error:
+                SpriteNode(
+                  pos: vec(-365 + 20 * spell.index, 0),
+                  size: vec(30, 30),
+                  color: color(255, 0, 0, 255),
+                )
+              of success:
+                Node()
+            ),
+          ),
           BindNode[int](
             pos: vec(-375, -12),
             item: (proc(): int =

@@ -69,20 +69,27 @@ type
     of projectileInfo:
       info: ProjectileInfo
 
-  SpellParseKind = enum
+  SpellParseKind* = enum
     error
     success
   SpellParse* = object
     spell: SpellDesc
-    case kind: SpellParseKind
+    case kind*: SpellParseKind
     of error:
-      index: int
+      index*: int
       message: string
     of success:
+      valueStacks*: seq[seq[ValueKind]]
       fire: (proc(pos, dir: Vec, target: Target): Events)
 
-proc `$`(value: Value): string =
-  $value.kind
+proc `==`*(a, b: SpellParse): bool =
+  if a.kind != b.kind:
+    return false
+  case a.kind
+  of error:
+    return a.index == b.index and a.message == b.message
+  of success:
+    return a.valueStacks == b.valueStacks and a.fire == b.fire
 
 proc textureName*(rune: Rune): string =
   result = "runes/"

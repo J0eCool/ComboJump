@@ -1,4 +1,4 @@
-type Stack[T] = object
+type Stack*[T] = object
   list: seq[T]
 
 proc newStack*[T](): Stack[T] =
