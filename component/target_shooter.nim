@@ -92,10 +92,43 @@ proc spellHudMenuNode(spellData: ptr SpellData): Node =
             pos: vec(25, 0),
             size: vec(800, 24),
             items: (proc(): seq[Rune] = spellData.spellDescs[descIdx]),
-            listNodes: (proc(rune: Rune): Node =
+            listNodesIdx: (proc(rune: Rune, runeIdx: int): Node =
               SpriteNode(
                 size: vec(24, 24),
                 textureName: rune.textureName,
+                children: newSeqOf[Node](
+                  List[ValueKind](
+                    pos: vec(0, -12),
+                    size: vec(12, 0),
+                    spacing: vec(-2),
+                    items: (proc(): seq[ValueKind] =
+                      let stacks = spellData.spells[descIdx].valueStacks
+                      if runeIdx < stacks.len:
+                        stacks[runeIdx]
+                      else:
+                        @[]
+                    ),
+                    listNodesIdx: (proc(kind: ValueKind, idx: int): Node =
+                      let size = 8
+                      Node(
+                        size: vec(size, -size),
+                        children: newSeqOf[Node](
+                          SpriteNode(
+                            pos: vec(2 * idx, 8 * idx),
+                            size: vec(size, size),
+                            color:
+                              case kind
+                              of number:
+                                color(255, 0, 0, 255)
+                              of projectileInfo:
+                                color(0, 255, 0, 255)
+                              ,
+                          )
+                        ),
+                      )
+                    ),
+                  )
+                ),
               )
             ),
           ),

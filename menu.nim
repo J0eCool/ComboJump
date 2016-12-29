@@ -164,6 +164,7 @@ method updateSelf(button: Button, input: InputManager) =
 type List*[T] = ref object of Node
   items*: proc(): seq[T]
   listNodes*: proc(item: T): Node
+  listNodesIdx*: proc(item: T, idx: int): Node
   spacing*: Vec
   width*: int
   horizontal*: bool
@@ -183,13 +184,22 @@ proc indexOffset(i, width: int, mainDir: bool): int =
       i mod width
 
 proc generateChildren[T](list: List[T]) =
-  let items = list.items()
+  assert list.listNodes != nil xor list.listNodesIdx != nil, "List must have exactly one of listNodes or listNodesIdx"
+  let
+    items = list.items()
+    nodeProc =
+      if list.listNodes != nil:
+        proc(idx: int): Node =
+          list.listNodes(items[idx])
+      else:
+        proc(idx: int): Node =
+          list.listNodesIdx(items[idx], idx)
   if list.cachedItems != items:
     list.cachedItems = items
     list.generatedChildren = @[]
     for i in 0..<items.len:
       let
-        n = list.listNodes(items[i])
+        n = nodeProc(i)
         s = n.size + list.spacing
         x = indexOffset(i, list.width, list.horizontal)
         y = indexOffset(i, list.width, not list.horizontal)

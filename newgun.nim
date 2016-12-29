@@ -58,7 +58,7 @@ type
   NumberProc = proc(e: Entity): Option[float]
   Number = object
     get: NumberProc
-  ValueKind = enum
+  ValueKind* = enum
     number
     projectileInfo
 
@@ -74,22 +74,22 @@ type
     success
   SpellParse* = object
     spell: SpellDesc
+    valueStacks*: seq[seq[ValueKind]]
     case kind*: SpellParseKind
     of error:
       index*: int
       message: string
     of success:
-      valueStacks*: seq[seq[ValueKind]]
       fire: (proc(pos, dir: Vec, target: Target): Events)
 
 proc `==`*(a, b: SpellParse): bool =
-  if a.kind != b.kind:
+  if a.kind != b.kind or a.valueStacks != b.valueStacks:
     return false
   case a.kind
   of error:
     return a.index == b.index and a.message == b.message
   of success:
-    return a.valueStacks == b.valueStacks and a.fire == b.fire
+    return a.fire == b.fire
 
 proc textureName*(rune: Rune): string =
   result = "runes/"
@@ -222,11 +222,16 @@ proc makeMultProc(n1, n2: Number): NumberProc =
 proc parse*(spell: SpellDesc): SpellParse =
   var
     valueStack = newStack[Value]()
+    valueStacks: seq[seq[ValueKind]] = @[]
     i = 0
+  proc toKinds(values: Stack[Value]): seq[ValueKind] =
+    result = @[]
+    for value in values:
+      result.add value.kind
   template expect(cond: bool, msg: string = "") =
     if not cond:
-      var stackTypes = "\nStack: " & $valueStack.toSeq()
-      return SpellParse(kind: error, spell: spell, index: i, message: msg & stackTypes)
+      var stackTypes = "\nStack: " & $valueStack.toKinds()
+      return SpellParse(kind: error, spell: spell, index: i, message: msg & stackTypes, valueStacks: valueStacks)
   template addUpdateProc(update: UpdateProc) =
     expect valueStack.count >= 1, "Needs at least 1 argument"
     var proj = valueStack.pop
@@ -363,13 +368,14 @@ proc parse*(spell: SpellDesc): SpellParse =
         makeJust(b.startPos)
       valueStack.push(Value(kind: number, value: Number(get: f)))
     i += 1
+    valueStacks.add valueStack.toKinds()
 
   expect(valueStack.count == 1, "Needs exactly one argument at spell end")
   let arg = valueStack.pop
   expect(arg.kind == projectileInfo, "Spell must end with projectile")
   let fireProc = proc(pos, dir: Vec, target: Target): Events =
     arg.info.newBulletEvents(pos, dir, target)
-  return SpellParse(kind: success, spell: spell, fire: fireProc)
+  return SpellParse(kind: success, spell: spell, fire: fireProc, valueStacks: valueStacks)
 
 proc handleSpellCast*(parse: SpellParse, pos, dir: Vec, target: Target): Events =
   case parse.kind
