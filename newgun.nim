@@ -29,8 +29,6 @@ type
     createSpread
     createBurst
     despawn
-    update
-    done
 
     # update-only runes
     wave
@@ -100,10 +98,6 @@ proc textureName*(rune: Rune): string =
     result &= "Burst.png"
   of despawn:
     result &= "Despawn.png"
-  of update:
-    result &= "Update.png"
-  of done:
-    result &= "Done.png"
   of wave:
     result &= "Wave.png"
   of turn:
@@ -205,11 +199,18 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target): Event
 proc parse*(spell: SpellDesc): SpellParse =
   var
     valueStack = newStack[Value]()
-    updateContext: seq[UpdateProc] = nil
     i = 0
   template expect(cond: bool, msg: string = "") =
     if not cond:
       return SpellParse(kind: error, spell: spell, index: i, message: msg)
+  template addUpdateProc(update: UpdateProc) =
+    expect valueStack.count >= 1, "Needs at least 1 argument"
+    var proj = valueStack.pop
+    expect proj.kind == projectileInfo, "Expects projectileInfo argument"
+    if proj.info.updateCallbacks == nil:
+      proj.info.updateCallbacks = @[]
+    proj.info.updateCallbacks.add(update)
+    valueStack.push proj
   while i < spell.len:
     let rune = spell[i]
     case rune
@@ -272,23 +273,7 @@ proc parse*(spell: SpellDesc): SpellParse =
       d[] = arg.info
       proj.info.onDespawn = d
       valueStack.push proj
-    of update:
-      expect valueStack.count >= 1
-      expect(updateContext == nil, "Invalid in an update context")
-      var proj = valueStack.peek
-      expect proj.kind == projectileInfo, "Expects projectileInfo argument"
-      updateContext = @[]
-    of done:
-      expect valueStack.count >= 1, "Needs at least 1 argument"
-      expect(updateContext != nil, "Needs an update context")
-      var proj = valueStack.pop
-      expect proj.kind == projectileInfo, "Expects projectileInfo argument"
-      expect proj.info.updateCallbacks == nil, "Expected projectileInfo updateCallbacks to be nil"
-      proj.info.updateCallbacks = updateContext
-      updateContext = nil
-      valueStack.push proj
     of wave:
-      expect(updateContext != nil, "Needs an update context")
       let
         f = proc(e: Entity): float =
           let b = e.getComponent(Bullet)
@@ -297,16 +282,14 @@ proc parse*(spell: SpellDesc): SpellParse =
       valueStack.push Value(kind: number, value: n)
     of turn:
       expect valueStack.count >= 1, "Needs at least 1 argument"
-      expect(updateContext != nil, "Needs an update context")
       let arg = valueStack.pop
       expect arg.kind == number
       let f = proc(e: Entity, dt: float) =
         let b = e.getComponent(Bullet)
         b.dir = b.dir.rotate(360.0.degToRad * arg.value.get(e) * dt)
-      updateContext.add f
+      addUpdateProc(f)
     of grow:
       expect valueStack.count >= 1, "Needs at least 1 argument"
-      expect(updateContext != nil, "Needs an update context")
       let arg = valueStack.pop
       expect arg.kind == number
       let f = proc(e: Entity, dt: float) =
@@ -316,10 +299,9 @@ proc parse*(spell: SpellDesc): SpellParse =
           m = e.getComponent(Movement)
         t.size += vec(arg.value.get(e) * 160.0 * b.lifePct * dt)
         m.vel -= b.dir * b.speed
-      updateContext.add f
+      addUpdateProc(f)
     of moveUp:
       expect valueStack.count >= 1, "Needs at least 1 argument"
-      expect(updateContext != nil, "Needs an update context")
       let arg = valueStack.pop
       expect arg.kind == number
       let f = proc(e: Entity, dt: float) =
@@ -327,12 +309,11 @@ proc parse*(spell: SpellDesc): SpellParse =
           b = e.getComponent(Bullet)
           m = e.getComponent(Movement)
         m.vel += (b.speed * arg.value.get(e) / 2.0) * b.dir
-      updateContext.add f
+      addUpdateProc(f)
     of moveSide:
       # Copy pasted from moveUp for now. There's an issue with closures capturing
       # inconvenient local vars, that needs to be worked around less-hackily.
       expect valueStack.count >= 1, "Needs at least 1 argument"
-      expect(updateContext != nil, "Needs an update context")
       let arg = valueStack.pop
       expect arg.kind == number
       let f = proc(e: Entity, dt: float) =
@@ -340,9 +321,8 @@ proc parse*(spell: SpellDesc): SpellParse =
           b = e.getComponent(Bullet)
           m = e.getComponent(Movement)
         m.vel += (b.speed * arg.value.get(e) / 2.0) * b.dir.rotate(PI / 2)
-      updateContext.add f
+      addUpdateProc(f)
     of nearest:
-      expect(updateContext != nil, "Needs an update context")
       let f = proc(e:Entity): float =
         let
           b = e.getComponent(Bullet)
@@ -354,7 +334,6 @@ proc parse*(spell: SpellDesc): SpellParse =
           result = b.dir.cross(diff).sign.float * lv
       valueStack.push(Value(kind: number, value: Number(get: f)))
     of startPos:
-      expect(updateContext != nil, "Needs an update context")
       let f = proc(e:Entity): float =
         let b = e.getComponent(Bullet)
         b.startPos
@@ -364,7 +343,6 @@ proc parse*(spell: SpellDesc): SpellParse =
   expect(valueStack.count == 1, "Needs exactly one argument at spell end")
   let arg = valueStack.pop
   expect(arg.kind == projectileInfo, "Spell must end with projectile")
-  expect(updateContext == nil, "Spell must end without update context")
   let fireProc = proc(pos, dir: Vec, target: Target): Events =
     arg.info.newBulletEvents(pos, dir, target)
   return SpellParse(kind: success, spell: spell, fire: fireProc)
