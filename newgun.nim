@@ -55,7 +55,7 @@ type
     of spread, burst:
       numBullets: int
 
-  NumberProc = proc(e: Entity): float
+  NumberProc = proc(e: Entity): Option[float]
   Number = object
     get: NumberProc
   ValueKind = enum
@@ -196,6 +196,19 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target): Event
       b.startPos = p
       result.add Event(kind: addEntity, entity: bullet)
 
+proc makeCountProc(v: Number): NumberProc =
+  result = proc(e:Entity): Option[float] =
+    v.get(e).bindAs x:
+      return makeJust(x + 1.0)
+    return makeNone[float]()
+
+proc makeMultProc(n1, n2: Number): NumberProc =
+  result = proc(e: Entity): Option[float] =
+    n1.get(e).bindAs x1:
+      n2.get(e).bindAs x2:
+        return makeJust(x1 * x2)
+    return makeNone[float]()
+
 proc parse*(spell: SpellDesc): SpellParse =
   var
     valueStack = newStack[Value]()
@@ -216,7 +229,7 @@ proc parse*(spell: SpellDesc): SpellParse =
     case rune
     of num:
       let
-        f = proc(e: Entity): float = 1.0
+        f = proc(e: Entity): Option[float] = makeJust(1.0)
         n = Number(get: f)
       valueStack.push Value(kind: number, value: n)
     of count:
@@ -224,13 +237,7 @@ proc parse*(spell: SpellDesc): SpellParse =
       var num = valueStack.pop
       expect num.kind == number
       let
-        # Need this to wrap the closure of num.value so it doesn't get lost
-        # by runes like [num, count, count]
-        makeProc = proc(v: Number): NumberProc =
-          result = proc(e:Entity): float =
-            v.get(e) + 1.0
-      let
-        f = makeProc(num.value)
+        f = makeCountProc(num.value)
         n = Number(get: f)
       valueStack.push Value(kind: number, value: n)
     of mult:
@@ -239,10 +246,7 @@ proc parse*(spell: SpellDesc): SpellParse =
       expect a.kind == number
       let b = valueStack.pop
       expect b.kind == number
-      let
-        makeProc = proc(v1, v2: Number): NumberProc =
-          result = proc(e: Entity): float = v1.get(e) * v2.get(e)
-        n = Number(get: makeProc(a.value, b.value))
+      let n = Number(get: makeMultProc(a.value, b.value))
       valueStack.push Value(kind: number, value: n)
     of createSingle:
       let proj = ProjectileInfo(kind: single)
@@ -251,8 +255,10 @@ proc parse*(spell: SpellDesc): SpellParse =
       expect valueStack.count >= 1, "Needs at least 1 argument"
       let arg = valueStack.pop
       expect arg.kind == number
+      let rawNum = arg.value.get(nil)
+      expect rawNum.kind == just, "Needs statically determinable number"
       let
-        num = arg.value.get(nil).int
+        num = rawNum.value.int
         projKind =
           case rune
           of createSpread: spread
@@ -275,9 +281,11 @@ proc parse*(spell: SpellDesc): SpellParse =
       valueStack.push proj
     of wave:
       let
-        f = proc(e: Entity): float =
+        f = proc(e: Entity): Option[float] =
+          if e == nil:
+            return makeNone[float]()
           let b = e.getComponent(Bullet)
-          cos(1.5 * TAU * b.lifePct)
+          return makeJust(cos(1.5 * TAU * b.lifePct))
         n = Number(get: f)
       valueStack.push Value(kind: number, value: n)
     of turn:
@@ -286,7 +294,7 @@ proc parse*(spell: SpellDesc): SpellParse =
       expect arg.kind == number
       let f = proc(e: Entity, dt: float) =
         let b = e.getComponent(Bullet)
-        b.dir = b.dir.rotate(360.0.degToRad * arg.value.get(e) * dt)
+        b.dir = b.dir.rotate(360.0.degToRad * arg.value.get(e).value * dt)
       addUpdateProc(f)
     of grow:
       expect valueStack.count >= 1, "Needs at least 1 argument"
@@ -297,7 +305,7 @@ proc parse*(spell: SpellDesc): SpellParse =
           b = e.getComponent(Bullet)
           t = e.getComponent(Transform)
           m = e.getComponent(Movement)
-        t.size += vec(arg.value.get(e) * 160.0 * b.lifePct * dt)
+        t.size += vec(arg.value.get(e).value * 160.0 * b.lifePct * dt)
         m.vel -= b.dir * b.speed
       addUpdateProc(f)
     of moveUp:
@@ -308,7 +316,7 @@ proc parse*(spell: SpellDesc): SpellParse =
         let
           b = e.getComponent(Bullet)
           m = e.getComponent(Movement)
-        m.vel += (b.speed * arg.value.get(e) / 2.0) * b.dir
+        m.vel += (b.speed * arg.value.get(e).value / 2.0) * b.dir
       addUpdateProc(f)
     of moveSide:
       # Copy pasted from moveUp for now. There's an issue with closures capturing
@@ -320,10 +328,12 @@ proc parse*(spell: SpellDesc): SpellParse =
         let
           b = e.getComponent(Bullet)
           m = e.getComponent(Movement)
-        m.vel += (b.speed * arg.value.get(e) / 2.0) * b.dir.rotate(PI / 2)
+        m.vel += (b.speed * arg.value.get(e).value / 2.0) * b.dir.rotate(PI / 2)
       addUpdateProc(f)
     of nearest:
-      let f = proc(e:Entity): float =
+      let f = proc(e:Entity): Option[float] =
+        if e == nil:
+          return makeNone[float]()
         let
           b = e.getComponent(Bullet)
           t = e.getComponent(Transform)
@@ -331,12 +341,14 @@ proc parse*(spell: SpellDesc): SpellParse =
           let
             diff = targetPos - t.pos
             lv = min((1.0 - b.lifePct) / 0.4, 1.0)
-          result = b.dir.cross(diff).sign.float * lv
+          result = makeJust(b.dir.cross(diff).sign.float * lv)
       valueStack.push(Value(kind: number, value: Number(get: f)))
     of startPos:
-      let f = proc(e:Entity): float =
+      let f = proc(e:Entity): Option[float] =
+        if e == nil:
+          return makeNone[float]()
         let b = e.getComponent(Bullet)
-        b.startPos
+        makeJust(b.startPos)
       valueStack.push(Value(kind: number, value: Number(get: f)))
     i += 1
 
