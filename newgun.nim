@@ -337,6 +337,7 @@ proc parse*(spell: SpellDesc): SpellParse =
         let
           b = e.getComponent(Bullet)
           t = e.getComponent(Transform)
+        result = makeJust(0.0)
         b.target.tryPos.bindAs targetPos:
           let
             diff = targetPos - t.pos
