@@ -353,11 +353,14 @@ proc parse*(spell: SpellDesc): SpellParse =
       valueStack.push Value(kind: projectileInfo, info: proj)
     of despawn:
       let arg = valueStack.pop
-      var proj = valueStack.pop
-      expect proj.info.onDespawn == nil
+      var
+        proj = valueStack.pop
+        projToAdd = addr proj.info
+      while projToAdd.onDespawn != nil:
+        projToAdd = addr projToAdd.onDespawn[]
       var d = new(ProjectileInfo)
       d[] = arg.info
-      proj.info.onDespawn = d
+      projToAdd.onDespawn = d
       valueStack.push proj
     of wave:
       let
