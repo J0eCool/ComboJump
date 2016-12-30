@@ -116,7 +116,7 @@ proc moveCursor(spellData: var SpellData, dir: int) =
 
 proc moveSpell(spellData: var SpellData, dir: int) =
   spellData.varSpell += dir
-  spellData.varSpell = clamp(spellData.varSpell, 0, spellData.spellDescs.len)
+  spellData.varSpell = clamp(spellData.varSpell, 0, spellData.spellDescs.len-1)
   spellData.clampSpellIndex()
 
 type
