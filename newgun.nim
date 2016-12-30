@@ -69,6 +69,11 @@ type
     of projectileInfo:
       info: ProjectileInfo
 
+  RuneInfo = object
+    texture: string
+    input: seq[ValueKind]
+    output: seq[ValueKind]
+
   SpellParseKind* = enum
     error
     success
@@ -91,37 +96,102 @@ proc `==`*(a, b: SpellParse): bool =
   of success:
     return a.fire == b.fire
 
-proc textureName*(rune: Rune): string =
-  result = "runes/"
+proc info(rune: Rune): RuneInfo =
   case rune
   of num:
-    result &= "Num.png"
+    RuneInfo(
+      texture: "Num.png",
+      input: @[],
+      output: @[number],
+    )
   of count:
-    result &= "Inc.png"
+    RuneInfo(
+      texture: "Inc.png",
+      input: @[number],
+      output: @[number],
+    )
   of mult:
-    result &= "Mult.png"
+    RuneInfo(
+      texture: "Mult.png",
+      input: @[number, number],
+      output: @[number],
+    )
   of createSingle:
-    result &= "Single.png"
+    RuneInfo(
+      texture: "Single.png",
+      input: @[],
+      output: @[projectileInfo],
+    )
   of createSpread:
-    result &= "Spread.png"
+    RuneInfo(
+      texture: "Spread.png",
+      input: @[number],
+      output: @[projectileInfo],
+    )
   of createBurst:
-    result &= "Burst.png"
+    RuneInfo(
+      texture: "Burst.png",
+      input: @[number],
+      output: @[projectileInfo],
+    )
   of despawn:
-    result &= "Despawn.png"
+    RuneInfo(
+      texture: "Despawn.png",
+      input: @[projectileInfo, projectileInfo],
+      output: @[projectileInfo],
+    )
   of wave:
-    result &= "Wave.png"
+    RuneInfo(
+      texture: "Wave.png",
+      input: @[],
+      output: @[number],
+    )
   of turn:
-    result &= "Turn.png"
+    RuneInfo(
+      texture: "Turn.png",
+      input: @[number, projectileInfo],
+      output: @[projectileInfo],
+    )
   of grow:
-    result &= "Grow.png"
+    RuneInfo(
+      texture: "Grow.png",
+      input: @[number, projectileInfo],
+      output: @[projectileInfo],
+    )
   of moveUp:
-    result &= "MoveUp.png"
+    RuneInfo(
+      texture: "MoveUp.png",
+      input: @[number, projectileInfo],
+      output: @[projectileInfo],
+    )
   of moveSide:
-    result &= "MoveSide.png"
+    RuneInfo(
+      texture: "MoveSide.png",
+      input: @[number, projectileInfo],
+      output: @[projectileInfo],
+    )
   of nearest:
-    result &= "Nearest.png"
+    RuneInfo(
+      texture: "Nearest.png",
+      input: @[],
+      output: @[number],
+    )
   of startPos:
-    result &= "StartPos.png"
+    RuneInfo(
+      texture: "StartPos.png",
+      input: @[],
+      output: @[number],
+    )
+
+proc textureName*(rune: Rune): string =
+  "runes/" & rune.info.texture
+
+proc textureName*(kind: ValueKind): string =
+  case kind
+  of number:
+    "redGlobe.png"
+  of projectileInfo:
+    "greenGlobe.png"
 
 proc newBullet(pos, dir: Vec, speed: float,
                color: sdl2.Color,
@@ -233,15 +303,19 @@ proc parse*(spell: SpellDesc): SpellParse =
       var stackTypes = "\nStack: " & $valueStack.toKinds()
       return SpellParse(kind: error, spell: spell, index: i, message: msg & stackTypes, valueStacks: valueStacks)
   template addUpdateProc(update: UpdateProc) =
-    expect valueStack.count >= 1, "Needs at least 1 argument"
     var proj = valueStack.pop
-    expect proj.kind == projectileInfo, "Expects projectileInfo argument"
     if proj.info.updateCallbacks == nil:
       proj.info.updateCallbacks = @[]
     proj.info.updateCallbacks.add(update)
     valueStack.push proj
   while i < spell.len:
     let rune = spell[i]
+    for x in 0..<rune.info.input.len:
+      let
+        q = valueStack.toSeq()
+        k = q.len - 1 - x
+      expect k >= 0, "Needs at least " & $rune.info.input.len & " arguments"
+      expect q[k].kind == rune.info.input[x], "Needs argument " & $(x + 1) & " to be a " & $rune.info.input[x]
     case rune
     of num:
       let
@@ -249,28 +323,21 @@ proc parse*(spell: SpellDesc): SpellParse =
         n = Number(get: f)
       valueStack.push Value(kind: number, value: n)
     of count:
-      expect valueStack.count >= 1, "Needs at least 1 argument"
       var num = valueStack.pop
-      expect num.kind == number
       let
         f = makeCountProc(num.value)
         n = Number(get: f)
       valueStack.push Value(kind: number, value: n)
     of mult:
-      expect valueStack.count >= 2, "Needs at least 2 arguments"
       let a = valueStack.pop
-      expect a.kind == number
       let b = valueStack.pop
-      expect b.kind == number
       let n = Number(get: makeMultProc(a.value, b.value))
       valueStack.push Value(kind: number, value: n)
     of createSingle:
       let proj = ProjectileInfo(kind: single)
       valueStack.push Value(kind: projectileInfo, info: proj)
     of createSpread, createBurst:
-      expect valueStack.count >= 1, "Needs at least 1 argument"
       let arg = valueStack.pop
-      expect arg.kind == number
       let rawNum = arg.value.get(nil)
       expect rawNum.kind == just, "Needs statically determinable number"
       let
@@ -285,11 +352,8 @@ proc parse*(spell: SpellDesc): SpellParse =
         proj = ProjectileInfo(kind: projKind, numBullets: num)
       valueStack.push Value(kind: projectileInfo, info: proj)
     of despawn:
-      expect valueStack.count >= 2, "Needs at least 2 arguments"
       let arg = valueStack.pop
-      expect arg.kind == projectileInfo, "Expects projectileInfo as first argument"
       var proj = valueStack.pop
-      expect proj.kind == projectileInfo, "Expects projectileInfo as second argument"
       expect proj.info.onDespawn == nil
       var d = new(ProjectileInfo)
       d[] = arg.info
@@ -305,17 +369,13 @@ proc parse*(spell: SpellDesc): SpellParse =
         n = Number(get: f)
       valueStack.push Value(kind: number, value: n)
     of turn:
-      expect valueStack.count >= 1, "Needs at least 1 argument"
       let arg = valueStack.pop
-      expect arg.kind == number
       let f = proc(e: Entity, dt: float) =
         let b = e.getComponent(Bullet)
         b.dir = b.dir.rotate(360.0.degToRad * arg.value.get(e).value * dt)
       addUpdateProc(f)
     of grow:
-      expect valueStack.count >= 1, "Needs at least 1 argument"
       let arg = valueStack.pop
-      expect arg.kind == number
       let f = proc(e: Entity, dt: float) =
         let
           b = e.getComponent(Bullet)
@@ -325,9 +385,7 @@ proc parse*(spell: SpellDesc): SpellParse =
         m.vel -= b.dir * b.speed
       addUpdateProc(f)
     of moveUp:
-      expect valueStack.count >= 1, "Needs at least 1 argument"
       let arg = valueStack.pop
-      expect arg.kind == number
       let f = proc(e: Entity, dt: float) =
         let
           b = e.getComponent(Bullet)
@@ -337,9 +395,7 @@ proc parse*(spell: SpellDesc): SpellParse =
     of moveSide:
       # Copy pasted from moveUp for now. There's an issue with closures capturing
       # inconvenient local vars, that needs to be worked around less-hackily.
-      expect valueStack.count >= 1, "Needs at least 1 argument"
       let arg = valueStack.pop
-      expect arg.kind == number
       let f = proc(e: Entity, dt: float) =
         let
           b = e.getComponent(Bullet)

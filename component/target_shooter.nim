@@ -118,13 +118,7 @@ proc spellHudMenuNode(spellData: ptr SpellData): Node =
                           SpriteNode(
                             pos: vec(spacing * idx, (size + 2 - spacing) * idx),
                             size: vec(size, size),
-                            textureName:
-                              case kind
-                              of number:
-                                "redGlobe.png"
-                              of projectileInfo:
-                                "greenGlobe.png"
-                              ,
+                            textureName: kind.textureName,
                           )
                         ),
                       )
