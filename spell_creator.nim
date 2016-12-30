@@ -175,7 +175,7 @@ proc runeMenuNode(spellData: ptr SpellData): Node =
         spacing: vec(10),
         width: 3,
         size: vec(300, 400),
-        items: (proc(): seq[Rune] = @runes),
+        items: (proc(): seq[Rune] = @runes.filter(proc(rune: Rune): bool = spellData[].capacity[rune] > 0)),
         listNodes: (proc(rune: Rune): Node =
           Button(
             size: vec(90, 80),
