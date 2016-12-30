@@ -69,10 +69,10 @@ type
     of projectileInfo:
       info: ProjectileInfo
 
-  RuneInfo = object
+  RuneInfo* = object
     texture: string
-    input: seq[ValueKind]
-    output: seq[ValueKind]
+    input*: seq[ValueKind]
+    output*: seq[ValueKind]
 
   SpellParseKind* = enum
     error
@@ -96,7 +96,7 @@ proc `==`*(a, b: SpellParse): bool =
   of success:
     return a.fire == b.fire
 
-proc info(rune: Rune): RuneInfo =
+proc info*(rune: Rune): RuneInfo =
   case rune
   of num:
     RuneInfo(

@@ -143,13 +143,13 @@ type
 
 proc levelMenuNode(stageData: ptr StageData): Node =
   SpriteNode(
-    pos: vec(1020, 680),
-    size: vec(300, 400),
+    pos: vec(1020, 780),
+    size: vec(300, 200),
     color: color(128, 128, 128, 255),
     children: newSeqOf[Node](
       List[int](
         spacing: vec(10),
-        size: vec(300, 400),
+        size: vec(300, 200),
         width: 5,
         items: (proc(): seq[int] =
           toSeq(0..min(stageData.highestStageBeaten + 1,

@@ -119,18 +119,41 @@ proc moveSpell(spellData: var SpellData, dir: int) =
   spellData.varSpell = clamp(spellData.varSpell, 0, spellData.spellDescs.len-1)
   spellData.clampSpellIndex()
 
+proc runeValueListNode*(pos: Vec, items: (proc(): seq[ValueKind])): Node =
+  List[ValueKind](
+    pos: pos,
+    size: vec(12, 0),
+    spacing: vec(-2),
+    items: items,
+    listNodesIdx: (proc(kind: ValueKind, idx: int): Node =
+      let
+        size = 12
+        spacing = 2
+      Node(
+        size: vec(size, -size),
+        children: newSeqOf[Node](
+          SpriteNode(
+            pos: vec(spacing * idx, (size + 2 - spacing) * idx),
+            size: vec(size, size),
+            textureName: kind.textureName,
+          )
+        ),
+      )
+    ),
+  )
+
 type
   RuneMenu* = ref object of Component
     menu: Node
 
 proc runeMenuNode(spellData: ptr SpellData): Node =
   SpriteNode(
-    pos: vec(1020, 220),
-    size: vec(300, 400),
+    pos: vec(1020, 320),
+    size: vec(300, 600),
     color: color(128, 128, 128, 255),
     children: @[
       Button(
-        pos: vec(0, -160),
+        pos: vec(0, -240),
         size: vec(50, 50),
         onClick: (proc() = spellData[].deleteRune()),
         children: newSeqOf[Node](
@@ -138,7 +161,7 @@ proc runeMenuNode(spellData: ptr SpellData): Node =
         ),
       ),
       Button(
-        pos: vec(60, -160),
+        pos: vec(60, -240),
         size: vec(50, 50),
         onClick: (proc() =
           for r in Rune:
@@ -150,31 +173,31 @@ proc runeMenuNode(spellData: ptr SpellData): Node =
       ),
       List[Rune](
         spacing: vec(10),
-        width: 4,
-        size: vec(300, 200),
+        width: 3,
+        size: vec(300, 400),
         items: (proc(): seq[Rune] = @runes),
         listNodes: (proc(rune: Rune): Node =
           Button(
-            size: vec(65, 50),
+            size: vec(90, 80),
             onClick: (proc() =
               spellData[].addRune(rune)
             ),
             children: @[
               SpriteNode(
-                pos: vec(-10, 0),
+                pos: vec(-16, -12),
                 size: vec(48, 48),
                 textureName: rune.textureName,
               ),
               TextNode(
-                pos: vec(22, 12),
-                text: rune.inputString[^1..^0],
+                pos: vec(28, 4),
+                text: "[" & rune.inputString[^1..^0] & "]",
                 color: color(0, 0, 0, 255),
               ),
               BindNode[int](
                 item: (proc(): int = spellData[].available(rune)),
                 node: (proc(count: int): Node =
                   BorderedTextNode(
-                    pos: vec(22, -12),
+                    pos: vec(28, -26),
                     text: $count,
                     color:
                       if count > 0:
@@ -183,6 +206,20 @@ proc runeMenuNode(spellData: ptr SpellData): Node =
                         color(128, 128, 128, 255),
                   )
                 ),
+              ),
+              runeValueListNode(
+                vec(-22, 36),
+                proc(): seq[ValueKind] =
+                  rune.info.input
+              ),
+              TextNode(
+                pos: vec(0, 28),
+                text: "->",
+              ),
+              runeValueListNode(
+                vec(20, 36),
+                proc(): seq[ValueKind] =
+                  rune.info.output
               ),
             ],
           )
