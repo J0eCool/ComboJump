@@ -5,7 +5,9 @@ import
 
 import
   component/collider,
+  component/sprite,
   component/target_shooter,
+  component/transform,
   input,
   entity,
   event,
@@ -34,6 +36,7 @@ type
     shouldSave*: bool
     state: StageState
     transitionTo: StageState
+    didCompleteStage: bool
 
 proc newStageData*(): StageData =
   StageData(
@@ -220,10 +223,26 @@ defineSystem:
         levelMenu.menu = levelMenuNode(addr stageData)
       levelMenu.menu.update(input)
 
+type
+  ExitZone* = ref object of Component
+    stageEnd: bool
+
 proc spawnedEntities(stage: Stage): Entities =
   result = @[
     newPlayer(vec(300, 200)),
     newEntity("SpellHudMenu", [SpellHudMenu().Component]),
+    newEntity("BeginExit", [
+      ExitZone(stageEnd: false),
+      Collider(layer: playerTrigger),
+      Transform(pos: vec(600, 850), size: vec(2000, 1000)),
+      Sprite(color: color(0, 0, 0, 255)),
+    ]),
+    newEntity("EndExit", [
+      ExitZone(stageEnd: true),
+      Collider(layer: playerTrigger),
+      Transform(pos: vec(600.0, -stage.length - 150 - 500), size: vec(2000, 1000)),
+      Sprite(color: color(0, 0, 0, 255)),
+    ]),
   ]
   for spawn in stage.enemies:
     for i in 0..<spawn.count:
@@ -242,19 +261,12 @@ defineSystem:
     if stageData.state == freshStart or (input.isPressed(Input.menu) and stageData.state != inMap):
       stageData.transitionTo = inMap
 
-    if stageData.currentStageInProgress:
-      var didFindEnemy = false
-      entities.forComponents e, [
-        Collider, collider,
-      ]:
-        if collider.layer == enemy:
-          didFindEnemy = true
-          break
-      if not didFindEnemy:
-        stageData.highestStageBeaten.max = stageData.currentStage
-        stageData.currentStageInProgress = false
-        spellData.addRuneCapacity(stageData.currentRuneReward())
-        stageData.shouldSave = true
+    if stageData.currentStageInProgress and stageData.didCompleteStage:
+      stageData.currentStageInProgress = false
+      stageData.didCompleteStage = false
+      stageData.highestStageBeaten.max = stageData.currentStage
+      spellData.addRuneCapacity(stageData.currentRuneReward())
+      stageData.shouldSave = true
       
     if stageData.clickedStage >= 0:
       stageData.transitionTo = inStage
@@ -281,3 +293,14 @@ defineSystem:
         discard
       stageData.state = stageData.transitionTo
       stageData.transitionTo = none
+
+defineSystem:
+  proc updateExitZones*(stageData: var StageData) =
+    entities.forComponents e, [
+      ExitZone, exitZone,
+      Collider, collider,
+    ]:
+      if collider.collisions.len > 0:
+        stageData.transitionTo = inMap
+        if exitZone.stageEnd:
+          stageData.didCompleteStage = true

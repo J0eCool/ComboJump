@@ -54,6 +54,14 @@
         "stageData"
       ]
     },
+    "updateExitZones": {
+      "filename": "stages.nim",
+      "priority": "0",
+      "id": "31",
+      "args": [
+        "stageData"
+      ]
+    },
     "updateEnemyMovement": {
       "filename": "component/enemy_movement.nim",
       "priority": "0",
