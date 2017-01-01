@@ -1,4 +1,5 @@
 import
+  algorithm,
   math
 from sdl2 import color
 
@@ -71,8 +72,8 @@ type
 
   RuneInfo* = object
     texture: string
-    input*: seq[ValueKind]
-    output*: seq[ValueKind]
+    input: seq[ValueKind]
+    output: seq[ValueKind]
 
   SpellParseKind* = enum
     error
@@ -192,6 +193,11 @@ proc textureName*(kind: ValueKind): string =
     "redGlobe.png"
   of projectileInfo:
     "greenGlobe.png"
+
+proc inputSeq*(info: RuneInfo): seq[ValueKind] =
+  info.input.reversed
+proc outputSeq*(info: RuneInfo): seq[ValueKind] =
+  info.output.reversed
 
 proc newBullet(pos, dir: Vec, speed: float,
                color: sdl2.Color,

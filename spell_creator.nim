@@ -210,7 +210,7 @@ proc runeMenuNode(spellData: ptr SpellData): Node =
               runeValueListNode(
                 vec(-22, 36),
                 proc(): seq[ValueKind] =
-                  rune.info.input
+                  rune.info.inputSeq
               ),
               TextNode(
                 pos: vec(0, 28),
@@ -219,7 +219,7 @@ proc runeMenuNode(spellData: ptr SpellData): Node =
               runeValueListNode(
                 vec(20, 36),
                 proc(): seq[ValueKind] =
-                  rune.info.output
+                  rune.info.outputSeq
               ),
             ],
           )
