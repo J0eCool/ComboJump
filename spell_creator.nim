@@ -128,7 +128,7 @@ proc runeValueListNode*(pos: Vec, items: (proc(): seq[ValueKind])): Node =
     listNodesIdx: (proc(kind: ValueKind, idx: int): Node =
       let
         size = 12
-        spacing = 2
+        spacing = 3
       Node(
         size: vec(size, -size),
         children: newSeqOf[Node](
