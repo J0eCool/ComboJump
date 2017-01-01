@@ -41,6 +41,11 @@ proc newGoblin(pos: Vec): Entity =
     Transform(pos: pos,
               size: vec(48, 56)),
     Movement(),
+    EnemyProximity(
+      targetMinRange: 75.0,
+      targetRange: 500.0,
+    ),
+    EnemyMoveTowards(moveSpeed: 180.0),
     newHealth(20),
     Collider(layer: enemy),
     Sprite(textureName: "Goblin.png"),
@@ -52,6 +57,11 @@ proc newOgre(pos: Vec): Entity =
     Transform(pos: pos,
               size: vec(52, 80)),
     Movement(),
+    EnemyProximity(
+      targetMinRange: 100.0,
+      targetRange: 500.0,
+    ),
+    EnemyMoveTowards(moveSpeed: 130.0),
     newHealth(50),
     Collider(layer: enemy),
     Sprite(textureName: "Ogre.png"),

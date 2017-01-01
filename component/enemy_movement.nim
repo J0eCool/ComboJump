@@ -1,4 +1,5 @@
 import
+  component/collider,
   component/movement,
   component/player_control,
   component/transform,
@@ -14,7 +15,7 @@ type
     targetRange*: float
     targetMinRange*: float
     isInRange: bool
-    dirToPlayer: float
+    dirToPlayer: Vec
 
   EnemyMoveTowards* = ref object of Component
     moveSpeed*: float
@@ -27,22 +28,26 @@ type
 
 defineSystem:
   proc updateEnemyProximity*() =
+    var player: Entity = nil
+    for e in entities:
+      let c = e.getComponent(Collider)
+      if c != nil and c.layer == Layer.player:
+        player = e
+    if player == nil:
+      return
+    let pt = player.getComponent(Transform)
+    if pt == nil:
+      return
+
     entities.forComponents e, [
       EnemyProximity, p,
       Transform, t,
     ]:
-      let pc = entities.firstComponent(PlayerControl)
-      if pc == nil:
-        continue
-      let pt = pc.entity.getComponent(Transform)
-      if pt == nil:
-        continue
-
       let
         delta = pt.pos - t.pos
-        xDist = delta.x.abs
-      p.isInRange = xDist.between(p.targetMinRange, p.targetRange)
-      p.dirToPlayer = delta.x.sign.float
+        dist = delta.length.abs
+      p.isInRange = dist.between(p.targetMinRange, p.targetRange)
+      p.dirToPlayer = delta.unit
 
 proc updateEnemyMoveTowards(entities: Entities, dt: float) =
   entities.forComponents e, [
@@ -51,9 +56,9 @@ proc updateEnemyMoveTowards(entities: Entities, dt: float) =
     Movement, m,
   ]:
     if ep.isInRange:
-      m.vel.x = em.moveSpeed * ep.dirToPlayer
+      m.vel = em.moveSpeed * ep.dirToPlayer
     else:
-      m.vel.x = 0
+      m.vel = vec(0)
 
 proc updateEnemyJumpTowards(entities: Entities, dt: float) =
   entities.forComponents e, [
@@ -70,7 +75,7 @@ proc updateEnemyJumpTowards(entities: Entities, dt: float) =
       continue
 
     if ep.isInRange:
-      m.vel.x = em.moveSpeed * ep.dirToPlayer
+      m.vel.x = em.moveSpeed * ep.dirToPlayer.x.sign.float
       m.vel.y = jumpSpeed(em.jumpHeight)
       em.jumpTimer = em.jumpDelay
 
