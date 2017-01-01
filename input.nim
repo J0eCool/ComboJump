@@ -18,9 +18,9 @@ type
     spell3
     menu
     restart
-    exit
     backspace
     delete
+    quit
 
     n1
     n2
@@ -76,7 +76,7 @@ proc keyToInput(key: Scancode): Input =
   of SDL_SCANCODE_I: spell2
   of SDL_SCANCODE_L: spell3
   of SDL_SCANCODE_R: restart
-  of SDL_SCANCODE_ESCAPE: exit
+  of SDL_SCANCODE_ESCAPE: menu
   of SDL_SCANCODE_BACKSPACE: backspace
   of SDL_SCANCODE_DELETE: delete
 
@@ -133,7 +133,7 @@ proc update*(manager: InputManager) =
   while pollEvent(event):
     case event.kind
     of QuitEvent:
-      manager.inputs[exit] = pressed
+      manager.inputs[quit] = pressed
     of KeyDown:
       setForEvent(event, pressed)
     of KeyUp:

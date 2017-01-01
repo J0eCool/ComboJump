@@ -30,7 +30,7 @@ method draw*(renderer: RendererPtr, program: Program) {.base.} =
 
 proc updateBase(program: Program, dt: float) =
   program.input.update()
-  if program.input.isPressed(Input.exit):
+  if program.input.isPressed(Input.quit):
     program.shouldExit = true
     return
 

@@ -20,23 +20,30 @@ import
   util
 
 type
+  StageState = enum
+    freshStart
+    inMap
+    inStage
   StageData* = object
     clickedStage: int
     currentStage: int
     highestStageBeaten: int
     currentStageInProgress: bool
     shouldSave*: bool
+    state: StageState
 
 proc newStageData*(): StageData =
-  StageData(highestStageBeaten: -1)
+  StageData(
+    clickedStage: -1, 
+    highestStageBeaten: -1, 
+    state: freshStart,
+  )
 
 proc fromJSON*(stageData: var StageData, json: JSON) =
   assert json.kind == jsObject
-  stageData.currentStage.fromJSON(json.obj["currentStage"])
   stageData.highestStageBeaten.fromJSON(json.obj["highestStageBeaten"])
 proc toJSON*(stageData: StageData): JSON =
   result = JSON(kind: jsObject, obj: initTable[string, JSON]())
-  result.obj["currentStage"] = stageData.currentStage.toJSON()
   result.obj["highestStageBeaten"] = stageData.highestStageBeaten.toJSON()
 
 type
@@ -208,7 +215,6 @@ defineSystem:
 proc spawnedEntities(stage: Stage): Entities =
   result = @[
     newPlayer(vec(300, 200)),
-    newEntity("LevelMenu", [LevelMenu().Component]),
     newEntity("RuneMenu", [RuneMenu().Component]),
     newEntity("SpellHudMenu", [SpellHudMenu().Component]),
   ]
@@ -218,11 +224,21 @@ proc spawnedEntities(stage: Stage): Entities =
       result.add newEnemy(spawn.enemy, pos)
 
 defineSystem:
-  proc stageSelect*(input: InputManager, stageData: var StageData, spellData: var SpellData) =
+  proc stageSelect*(input: InputManager, stageData: var StageData, spellData: var SpellData, shouldExit: var bool) =
     result = @[]
 
-    if input.isPressed(restart):
+    if input.isPressed(restart) and stageData.state == inStage:
       stageData.clickedStage = stageData.currentStage
+
+    if input.isPressed(Input.menu) and stageData.state == inMap:
+      shouldExit = true
+
+    if stageData.state == freshStart or (input.isPressed(Input.menu) and stageData.state == inStage):
+      stageData.state = inMap
+      stageData.currentStageInProgress = false
+      result &= event.Event(kind: loadStage, stage: @[
+        newEntity("LevelMenu", [LevelMenu().Component]),
+      ])
 
     if stageData.currentStageInProgress:
       var didFindEnemy = false
@@ -239,6 +255,7 @@ defineSystem:
         stageData.shouldSave = true
       
     if stageData.clickedStage >= 0:
+      stageData.state = inStage
       result &= event.Event(kind: loadStage, stage: stages[stageData.clickedStage].spawnedEntities())
       stageData.currentStage = stageData.clickedStage
       stageData.clickedStage = -1
