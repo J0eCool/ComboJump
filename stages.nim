@@ -187,19 +187,9 @@ proc levelMenuNode(stageData: ptr StageData): Node =
               stageData.clickedStage = stageIdx
             ),
             children: @[
-              BindNode[int](
-                item: (proc(): int = stageData.currentStage),
-                node: (proc(curr: int): Node =
-                  TextNode(
-                    pos: vec(0, -10),
-                    text: stages[stageIdx].name,
-                    color:
-                      if stageIdx == curr:
-                        color(32, 200, 32, 255)
-                      else:
-                        color(0, 0, 0, 255),
-                  )
-                ),
+              TextNode(
+                pos: vec(0, -10),
+                text: stages[stageIdx].name,
               ),
               SpriteNode(
                 pos: vec(10, 10),
