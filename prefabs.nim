@@ -2,6 +2,7 @@ import
   component/camera_target,
   component/collider,
   component/damage,
+  component/enemy_attack,
   component/enemy_movement,
   component/grid_control,
   component/health,
@@ -44,6 +45,13 @@ proc newGoblin(pos: Vec): Entity =
     EnemyProximity(
       targetMinRange: 75.0,
       targetRange: 500.0,
+      attackRange: 95.0,
+    ),
+    EnemyAttack(
+      damage: 2,
+      attackSpeed: 1.2,
+      size: 50.0,
+      attackDistance: 75.0,
     ),
     EnemyMoveTowards(moveSpeed: 180.0),
     newHealth(20),
@@ -60,6 +68,13 @@ proc newOgre(pos: Vec): Entity =
     EnemyProximity(
       targetMinRange: 100.0,
       targetRange: 500.0,
+      attackRange: 120.0,
+    ),
+    EnemyAttack(
+      damage: 5,
+      attackSpeed: 0.9,
+      size: 70.0,
+      attackDistance: 90.0,
     ),
     EnemyMoveTowards(moveSpeed: 130.0),
     newHealth(50),

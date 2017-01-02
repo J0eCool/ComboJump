@@ -1,7 +1,6 @@
 import
   component/collider,
   component/movement,
-  component/player_control,
   component/transform,
   entity,
   event,
@@ -14,8 +13,11 @@ type
   EnemyProximity* = ref object of Component
     targetRange*: float
     targetMinRange*: float
-    isInRange: bool
-    dirToPlayer: Vec
+    attackRange*: float
+    isInRange*: bool
+    isInAttackRange*: bool
+    dirToPlayer*: Vec
+    isAttacking*: bool
 
   EnemyMoveTowards* = ref object of Component
     moveSpeed*: float
@@ -47,6 +49,7 @@ defineSystem:
         delta = pt.pos - t.pos
         dist = delta.length.abs
       p.isInRange = dist.between(p.targetMinRange, p.targetRange)
+      p.isInAttackRange = dist <= p.attackRange
       p.dirToPlayer = delta.unit
 
 proc updateEnemyMoveTowards(entities: Entities, dt: float) =
@@ -55,7 +58,7 @@ proc updateEnemyMoveTowards(entities: Entities, dt: float) =
     EnemyProximity, ep,
     Movement, m,
   ]:
-    if ep.isInRange:
+    if ep.isInRange and not ep.isAttacking:
       m.vel = em.moveSpeed * ep.dirToPlayer
     else:
       m.vel = vec(0)

@@ -78,13 +78,12 @@ defineSystem:
     entities.forComponents e, [
       Bullet, b,
       Collider, c,
-      Movement, m,
     ]:
       b.timeSinceSpawn += dt
       if b.onUpdate != nil:
         b.onUpdate(e, dt)
         
-      if b.lifePct <= 0.0 or c.collisions.len > 0:
+      if b.lifePct <= 0.0 or (c.collisions.len > 0 and not b.stayOnHit):
         result.add(Event(kind: removeEntity, entity: e))
 
         if b.nextStage != nil:

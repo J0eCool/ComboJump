@@ -24,6 +24,7 @@ type
     speed*: float
     target*: Target
     startPos*: float
+    stayOnHit*: bool
 
   ShootProc* = proc(pos, vel: Vec): Events
   UpdateProc* = proc(entity: Entity, dt: float)

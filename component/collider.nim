@@ -9,6 +9,7 @@ type
     player
     enemy
     bullet
+    enemyBullet
     playerTrigger
 
   Collider* = ref object of Component
@@ -19,6 +20,7 @@ proc initLayerMask(): array[Layer, set[Layer]] =
   result[player] = { floor, enemy }
   result[enemy] = { floor, player, bullet }
   result[bullet] = { enemy }
+  result[enemyBullet] = { player }
   result[playerTrigger] = { player }
 const layerMask = initLayerMask()
 

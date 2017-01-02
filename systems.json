@@ -93,6 +93,14 @@
         "dt"
       ]
     },
+    "updateEnemyAttack": {
+      "filename": "component/enemy_attack.nim",
+      "priority": "0",
+      "id": "32",
+      "args": [
+        "dt"
+      ]
+    },
     "targetedShoot": {
       "filename": "component/target_shooter.nim",
       "priority": "0",
