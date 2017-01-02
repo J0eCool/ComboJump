@@ -35,16 +35,17 @@ defineSystem:
       let c = e.getComponent(Collider)
       if c != nil and c.layer == Layer.player:
         player = e
-    if player == nil:
-      return
-    let pt = player.getComponent(Transform)
-    if pt == nil:
-      return
+    let pt = if player == nil: nil else: player.getComponent(Transform)
 
     entities.forComponents e, [
       EnemyProximity, p,
       Transform, t,
     ]:
+      if pt == nil:
+        p.isInRange = false
+        p.isInAttackRange = false
+        continue
+
       let
         delta = pt.pos - t.pos
         dist = delta.length.abs

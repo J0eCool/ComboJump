@@ -17,7 +17,7 @@ type
     collisions*: seq[Entity]
 
 proc initLayerMask(): array[Layer, set[Layer]] =
-  result[player] = { floor, enemy }
+  result[player] = { floor, enemy, enemyBullet }
   result[enemy] = { floor, player, bullet }
   result[bullet] = { enemy }
   result[enemyBullet] = { player }

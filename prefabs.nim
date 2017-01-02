@@ -28,6 +28,8 @@ proc newPlayer*(pos: Vec): Entity =
     Collider(layer: player),
     GridControl(moveSpeed: 300.0),
     CameraTarget(vertical: true, offset: vec(0, 150)),
+    newHealth(100),
+    HealthBar(),
     Targeting(),
     TargetShooter(),
     Sprite(textureName: "Wizard2.png"),
