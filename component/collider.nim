@@ -15,6 +15,7 @@ type
   Collider* = ref object of Component
     layer*: Layer
     collisions*: seq[Entity]
+    collisionBlacklist*: seq[Entity]
 
 proc initLayerMask(): array[Layer, set[Layer]] =
   result[player] = { floor, enemy, enemyBullet }

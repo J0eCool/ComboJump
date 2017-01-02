@@ -50,7 +50,7 @@ proc newGoblin(pos: Vec): Entity =
       attackRange: 95.0,
     ),
     EnemyAttack(
-      damage: 2,
+      damage: 12,
       attackSpeed: 1.2,
       size: 50.0,
       attackDistance: 75.0,
@@ -73,7 +73,7 @@ proc newOgre(pos: Vec): Entity =
       attackRange: 120.0,
     ),
     EnemyAttack(
-      damage: 5,
+      damage: 30,
       attackSpeed: 0.9,
       size: 70.0,
       attackDistance: 90.0,

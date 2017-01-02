@@ -21,6 +21,7 @@ defineSystem:
       for col in c.collisions:
         col.withComponent Damage, d:
           h.cur -= d.damage.float
+          c.collisionBlacklist.add col
           if h.cur <= 0:
             result.add Event(kind: removeEntity, entity: e)
             break
