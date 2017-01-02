@@ -230,6 +230,7 @@ type
 proc spawnedEntities(stage: Stage): Entities =
   result = @[
     newPlayer(vec(300, 200)),
+    newHud(),
     newEntity("SpellHudMenu", [SpellHudMenu().Component]),
     newEntity("BeginExit", [
       ExitZone(stageEnd: false),
@@ -286,6 +287,7 @@ defineSystem:
       of inSpellBuilder:
         result &= event.Event(kind: loadStage, stage: @[
           newPlayer(vec(300, 200)),
+          newHud(),
           newEntity("RuneMenu", [RuneMenu().Component]),
           newEntity("SpellHudMenu", [SpellHudMenu().Component]),
         ])

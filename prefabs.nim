@@ -7,6 +7,7 @@ import
   component/grid_control,
   component/health,
   component/health_bar,
+  component/hud_menu,
   component/limited_quantity,
   component/mana,
   component/movement,
@@ -30,12 +31,13 @@ proc newPlayer*(pos: Vec): Entity =
     CameraTarget(vertical: true, offset: vec(0, 150)),
     newHealth(100),
     newMana(50),
-    HealthBar(isPlayer: true),
-    ManaBar(),
     Targeting(),
     TargetShooter(),
     Sprite(textureName: "Wizard2.png"),
   ])
+
+proc newHud*(): Entity =
+  newEntity("Hud", [HudMenu().Component])
 
 type EnemyKind* = enum
   goblin

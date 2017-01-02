@@ -17,16 +17,13 @@ import
 
 type
   HealthBar* = ref object of Component
-    isPlayer*: bool
-    menu: Node
-  ManaBar* = ref object of Component
     menu: Node
 
-proc progressBar(quantity: LimitedQuantity,
-                 size = vec(),
-                 foreground = color(0, 0, 0, 0),
-                 background = color(0, 0, 0, 0),
-                ): Node =
+proc progressBar*(quantity: LimitedQuantity,
+                  size = vec(),
+                  foreground = color(0, 0, 0, 0),
+                  background = color(0, 0, 0, 0),
+                 ): Node =
   let
     border = 10.0
   SpriteNode(
@@ -60,7 +57,7 @@ proc progressBar(quantity: LimitedQuantity,
     ),
   )
 
-proc rawHealthBar(health: Health, size = vec()): Node =
+proc rawHealthBar*(health: Health, size = vec()): Node =
   progressBar(
     health,
     size=size,
@@ -79,27 +76,6 @@ proc healthBarNode(health: Health): Node =
     ),
   )
 
-proc playerHealthBarNode(health: Health): Node =
-  Node(
-    pos: vec(220, 30),
-    children: newSeqOf[Node](
-      rawHealthBar(health, size=vec(400, 35))
-    ),
-  )
-
-proc playerManaBarNode(mana: Mana): Node =
-  Node(
-    pos: vec(220, 75),
-    children: newSeqOf[Node](
-      progressBar(
-        mana,
-        size=vec(400, 25),
-        foreground=color(32, 32, 210, 255),
-        background=color(64, 64, 92, 255),
-      )
-    ),
-  )
-
 defineDrawSystem:
   priority = -100
   proc drawHealthBarNodes*(resources: var ResourceManager, camera: Camera) =
@@ -107,14 +83,8 @@ defineDrawSystem:
       HealthBar, healthBar,
       Transform, transform,
     ]:
-      if not healthBar.isPlayer:
-        healthBar.menu.pos = transform.pos + camera.offset + vec(0, -75)
+      healthBar.menu.pos = transform.pos + camera.offset + vec(0, -75)
       renderer.draw(healthBar.menu, resources)
-
-    entities.forComponents entity, [
-      ManaBar, manaBar,
-    ]:
-      renderer.draw(manaBar.menu, resources)
 
 defineSystem:
   proc updateHealthBarNodes*(input: InputManager) =
@@ -123,17 +93,5 @@ defineSystem:
       Health, health,
     ]:
       if healthBar.menu == nil:
-        healthBar.menu =
-          if healthBar.isPlayer:
-            playerHealthBarNode(health)
-          else:
-            healthBarNode(health)
+        healthBar.menu = healthBarNode(health)
       healthBar.menu.update(input)
-
-    entities.forComponents entity, [
-      ManaBar, manaBar,
-      Mana, mana,
-    ]:
-      if manaBar.menu == nil:
-        manaBar.menu = playerManaBarNode(mana)
-      manaBar.menu.update(input)
