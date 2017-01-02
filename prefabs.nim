@@ -29,7 +29,7 @@ proc newPlayer*(pos: Vec): Entity =
     GridControl(moveSpeed: 300.0),
     CameraTarget(vertical: true, offset: vec(0, 150)),
     newHealth(100),
-    HealthBar(),
+    HealthBar(isPlayer: true),
     Targeting(),
     TargetShooter(),
     Sprite(textureName: "Wizard2.png"),
