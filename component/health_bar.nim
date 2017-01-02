@@ -31,7 +31,7 @@ proc progressBar*(quantity: LimitedQuantity,
     color: color(32, 32, 32, 255),
     children: newSeqOf[Node](
       BindNode[int](
-        item: (proc(): int = quantity.cur.int),
+        item: (proc(): int = max(quantity.cur.int, 0)),
         node: (proc(cur: int): Node =
           Node(children: @[
             SpriteNode(
