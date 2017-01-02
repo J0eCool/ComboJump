@@ -86,7 +86,7 @@ type
       index*: int
       message: string
     of success:
-      fire: (proc(pos, dir: Vec, target: Target): Events)
+      fire*: (proc(pos, dir: Vec, target: Target): Events)
 
 proc `==`*(a, b: SpellParse): bool =
   if a.kind != b.kind or a.valueStacks != b.valueStacks:
@@ -448,12 +448,10 @@ proc parse*(spell: SpellDesc): SpellParse =
     arg.info.newBulletEvents(pos, dir, target)
   return SpellParse(kind: success, spell: spell, fire: fireProc, valueStacks: valueStacks)
 
-proc handleSpellCast*(parse: SpellParse, mana: Mana, pos, dir: Vec, target: Target): Events =
-  result = @[]
+proc canCast*(parse: SpellParse): bool =
   case parse.kind
   of success:
-    if mana.trySpend(parse.manaCost.float):
-      result = parse.fire(pos, dir, target)
+    result = true
   of error:
     var errMsg = "Parse error for spell at "
     if parse.index < parse.spell.len:

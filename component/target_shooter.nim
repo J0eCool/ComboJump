@@ -152,4 +152,6 @@ defineSystem:
 
       for i in 0..<spellData.spells.len:
         if input.isPressed(fireInputs[i]):
-          result &= spellData.spells[i].handleSpellCast(mana, t.pos, dir, targeting.target)
+          let spell = spellData.spells[i]
+          if spell.canCast() and mana.trySpend(spell.manaCost.float):
+            result &= spell.fire(t.pos, dir, targeting.target)
