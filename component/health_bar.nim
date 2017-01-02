@@ -3,6 +3,7 @@ import sdl2
 import
   component/health,
   component/limited_quantity,
+  component/mana,
   component/transform,
   camera,
   entity,
@@ -14,11 +15,18 @@ import
   vec,
   util
 
-type HealthBar* = ref object of Component
-  isPlayer*: bool
-  menu: Node
+type
+  HealthBar* = ref object of Component
+    isPlayer*: bool
+    menu: Node
+  ManaBar* = ref object of Component
+    menu: Node
 
-proc rawHealthBar(health: Health, size = vec()): Node =
+proc progressBar(quantity: LimitedQuantity,
+                 size = vec(),
+                 foreground = color(0, 0, 0, 0),
+                 background = color(0, 0, 0, 0),
+                ): Node =
   let
     border = 10.0
   SpriteNode(
@@ -26,22 +34,22 @@ proc rawHealthBar(health: Health, size = vec()): Node =
     color: color(32, 32, 32, 255),
     children: newSeqOf[Node](
       BindNode[int](
-        item: (proc(): int = health.cur.int),
+        item: (proc(): int = quantity.cur.int),
         node: (proc(cur: int): Node =
           Node(children: @[
             SpriteNode(
               size: size,
-              color: color(92, 64, 64, 255),
+              color: background,
             ),
             SpriteNode(
-              pos: vec(size.x * lerp(health.pct, -0.5, 0.0), 0.0),
-              size: vec(size.x * health.pct, size.y),
-              color: color(210, 32, 32, 255),
+              pos: vec(size.x * lerp(quantity.pct, -0.5, 0.0), 0.0),
+              size: vec(size.x * quantity.pct, size.y),
+              color: foreground,
             ),
             BorderedTextNode(
-              text: $cur & " / " & $health.max.int,
+              text: $cur & " / " & $quantity.max.int,
               color:
-                if health.pct < 0.3:
+                if quantity.pct < 0.3:
                   color(255, 0, 0, 255)
                 else:
                   color(255, 255, 255, 255),
@@ -50,6 +58,14 @@ proc rawHealthBar(health: Health, size = vec()): Node =
         )
       )
     ),
+  )
+
+proc rawHealthBar(health: Health, size = vec()): Node =
+  progressBar(
+    health,
+    size=size,
+    foreground=color(210, 32, 32, 255),
+    background=color(92, 64, 64, 255)
   )
     
 proc healthBarNode(health: Health): Node =
@@ -71,6 +87,19 @@ proc playerHealthBarNode(health: Health): Node =
     ),
   )
 
+proc playerManaBarNode(mana: Mana): Node =
+  Node(
+    pos: vec(220, 75),
+    children: newSeqOf[Node](
+      progressBar(
+        mana,
+        size=vec(400, 25),
+        foreground=color(32, 32, 210, 255),
+        background=color(64, 64, 92, 255),
+      )
+    ),
+  )
+
 defineDrawSystem:
   priority = -100
   proc drawHealthBarNodes*(resources: var ResourceManager, camera: Camera) =
@@ -82,12 +111,16 @@ defineDrawSystem:
         healthBar.menu.pos = transform.pos + camera.offset + vec(0, -75)
       renderer.draw(healthBar.menu, resources)
 
+    entities.forComponents entity, [
+      ManaBar, manaBar,
+    ]:
+      renderer.draw(manaBar.menu, resources)
+
 defineSystem:
   proc updateHealthBarNodes*(input: InputManager) =
     entities.forComponents entity, [
       HealthBar, healthBar,
       Health, health,
-      Transform, transform,
     ]:
       if healthBar.menu == nil:
         healthBar.menu =
@@ -96,3 +129,11 @@ defineSystem:
           else:
             healthBarNode(health)
       healthBar.menu.update(input)
+
+    entities.forComponents entity, [
+      ManaBar, manaBar,
+      Mana, mana,
+    ]:
+      if manaBar.menu == nil:
+        manaBar.menu = playerManaBarNode(mana)
+      manaBar.menu.update(input)
