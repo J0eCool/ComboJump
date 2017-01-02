@@ -390,6 +390,7 @@ proc parse*(spell: SpellDesc): SpellParse =
           b = e.getComponent(Bullet)
           t = e.getComponent(Transform)
           m = e.getComponent(Movement)
+        b.stayOnHit = true
         t.size += vec(arg.value.get(e).value * 160.0 * b.lifePct * dt)
         m.vel -= b.dir * b.speed
       addUpdateProc(f)
