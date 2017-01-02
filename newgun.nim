@@ -97,6 +97,11 @@ proc `==`*(a, b: SpellParse): bool =
   of success:
     return a.fire == b.fire
 
+proc manaCost*(spell: SpellParse): int =
+  result = 2
+  for stack in spell.valueStacks:
+    result += stack.len
+
 proc info*(rune: Rune): RuneInfo =
   case rune
   of num:
@@ -443,10 +448,12 @@ proc parse*(spell: SpellDesc): SpellParse =
     arg.info.newBulletEvents(pos, dir, target)
   return SpellParse(kind: success, spell: spell, fire: fireProc, valueStacks: valueStacks)
 
-proc handleSpellCast*(parse: SpellParse, pos, dir: Vec, target: Target): Events =
+proc handleSpellCast*(parse: SpellParse, mana: Mana, pos, dir: Vec, target: Target): Events =
+  result = @[]
   case parse.kind
   of success:
-    return parse.fire(pos, dir, target)
+    if mana.trySpend(parse.manaCost.float):
+      result = parse.fire(pos, dir, target)
   of error:
     var errMsg = "Parse error for spell at "
     if parse.index < parse.spell.len:
@@ -460,4 +467,3 @@ proc handleSpellCast*(parse: SpellParse, pos, dir: Vec, target: Target): Events 
     else:
       errMsg &= "Invalid SpellParse"
     echo errMsg
-    return @[]

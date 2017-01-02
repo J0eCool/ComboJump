@@ -3,6 +3,7 @@ import
   sequtils
 
 import
+  component/mana,
   component/transform,
   entity,
   event,
@@ -61,7 +62,11 @@ proc spellHudMenuNode(spellData: ptr SpellData): Node =
                   color: color(255, 0, 0, 255),
                 )
               of success:
-                Node()
+                BorderedTextNode(
+                  pos: vec(330, 0),
+                  text: "Cost: " & $spell.manaCost,
+                  color: color(32, 240, 240, 255),
+                )
             ),
           ),
           BindNode[int](
@@ -138,6 +143,7 @@ defineSystem:
     entities.forComponents e, [
       TargetShooter, sh,
       Targeting, targeting,
+      Mana, mana,
       Transform, t,
     ]:
       var dir = vec(0, -1)
@@ -146,4 +152,4 @@ defineSystem:
 
       for i in 0..<spellData.spells.len:
         if input.isPressed(fireInputs[i]):
-          result &= spellData.spells[i].handleSpellCast(t.pos, dir, targeting.target)
+          result &= spellData.spells[i].handleSpellCast(mana, t.pos, dir, targeting.target)
