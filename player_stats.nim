@@ -17,6 +17,9 @@ proc maxHealth*(stats: PlayerStats): int =
 proc maxMana*(stats: PlayerStats): int =
   50 + 5 * (stats.level - 1)
 
+proc manaRegen*(stats: PlayerStats): float =
+  stats.maxMana.float * 0.15
+
 proc addXp*(stats: var PlayerStats, xp: int) =
   stats.xp += xp
   while stats.xp >= stats.xpToNextLevel():
