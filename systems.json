@@ -51,7 +51,8 @@
       "id": "23",
       "args": [
         "spellData",
-        "stageData"
+        "stageData",
+        "stats"
       ]
     },
     "updateExitZones": {

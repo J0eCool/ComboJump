@@ -39,7 +39,7 @@ proc newNanoGame*(screenSize: Vec): NanoGame =
   result.stageData = newStageData()
   result.spellData = newSpellData()
   result.stats = newPlayerStats()
-  load(result.spellData, result.stageData)
+  load(result.spellData, result.stageData, result.stats)
 
 method loadEntities*(game: NanoGame) =
   game.entities = @[]

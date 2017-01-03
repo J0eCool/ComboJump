@@ -1,6 +1,21 @@
+import tables
+
+import
+  jsonparse
+
 type PlayerStats* = object
   level*: int
   xp*: int
+  shouldSave*: bool
+
+proc fromJSON*(stats: var PlayerStats, json: JSON) =
+  assert json.kind == jsObject
+  stats.level.fromJSON(json.obj["level"])
+  stats.xp.fromJSON(json.obj["xp"])
+proc toJSON*(stats: PlayerStats): JSON =
+  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
+  result.obj["level"] = stats.level.toJSON()
+  result.obj["xp"] = stats.xp.toJSON()
 
 proc newPlayerStats*(): PlayerStats =
   PlayerStats(
@@ -25,3 +40,4 @@ proc addXp*(stats: var PlayerStats, xp: int) =
   while stats.xp >= stats.xpToNextLevel():
     stats.xp -= stats.xpToNextLevel()
     stats.level += 1
+  stats.shouldSave = true
