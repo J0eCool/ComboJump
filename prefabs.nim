@@ -12,12 +12,14 @@ import
   component/mana,
   component/movement,
   component/player_control,
+  component/player_health,
   component/progress_bar,
   component/sprite,
   component/targeting,
   component/target_shooter,
   component/text,
   component/transform,
+  component/xp_on_death,
   entity,
   vec
 
@@ -29,7 +31,7 @@ proc newPlayer*(pos: Vec): Entity =
     Collider(layer: player),
     GridControl(moveSpeed: 300.0),
     CameraTarget(vertical: true, offset: vec(0, 150)),
-    newHealth(100),
+    PlayerHealth(),
     newMana(50),
     Targeting(),
     TargetShooter(),
@@ -64,6 +66,7 @@ proc newGoblin(pos: Vec): Entity =
     Collider(layer: enemy),
     Sprite(textureName: "Goblin.png"),
     HealthBar(),
+    XpOnDeath(xp: 5),
   ])
 
 proc newOgre(pos: Vec): Entity =
@@ -87,6 +90,7 @@ proc newOgre(pos: Vec): Entity =
     Collider(layer: enemy),
     Sprite(textureName: "Ogre.png"),
     HealthBar(),
+    XpOnDeath(xp: 12),
   ])
 
 proc newEnemy*(kind: EnemyKind, pos: Vec): Entity =

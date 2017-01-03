@@ -78,6 +78,14 @@
         "dt"
       ]
     },
+    "updatePlayerHealth": {
+      "filename": "component/player_health.nim",
+      "priority": "0",
+      "id": "35",
+      "args": [
+        "stats"
+      ]
+    },
     "updateEnemyProximity": {
       "filename": "component/enemy_movement.nim",
       "priority": "0",
@@ -194,7 +202,8 @@
       "priority": "0",
       "id": "12",
       "args": [
-        "input"
+        "input",
+        "stats"
       ]
     },
     "checkCollisisons": {

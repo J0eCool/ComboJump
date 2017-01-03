@@ -6,12 +6,14 @@ when Profile != 0:
 
 import
   game,
+  component/xp_on_death,
   system/render,
   camera,
   entity,
   event,
   gun,
   input,
+  player_stats,
   prefabs,
   program,
   resources,
@@ -27,6 +29,7 @@ type NanoGame* = ref object of Game
   background: ScrollingBackground
   stageData: StageData
   spellData: SpellData
+  stats: PlayerStats
 
 proc newNanoGame*(screenSize: Vec): NanoGame =
   new result
@@ -35,10 +38,14 @@ proc newNanoGame*(screenSize: Vec): NanoGame =
   result.background = newScrollingBackground()
   result.stageData = newStageData()
   result.spellData = newSpellData()
+  result.stats = newPlayerStats()
   load(result.spellData, result.stageData)
 
 method loadEntities*(game: NanoGame) =
   game.entities = @[]
+
+method onRemove*(game: NanoGame, entity: Entity) =
+  onRemoveXpOnDeath(entity, game.stats)
 
 importAllSystems()
 defineSystemCalls(NanoGame)

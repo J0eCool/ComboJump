@@ -177,12 +177,16 @@ method loadEntities*(game: Game) =
   #   ]),
   # ]
 
+method onRemove*(game: Game, entity: Entity) =
+  discard
+
 proc process*(game: Game, events: Events) =
   for event in events:
     case event.kind
     of addEntity:
       game.entities.add event.entity
     of removeEntity:
+      game.onRemove(event.entity)
       game.entities.remove event.entity
     of loadStage:
       game.entities = event.stage
