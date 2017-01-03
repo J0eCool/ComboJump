@@ -102,6 +102,9 @@ proc manaCost*(spell: SpellParse): int =
   for stack in spell.valueStacks:
     result += stack.len
 
+proc castTime*(spell: SpellParse): float =
+  0.5 + 0.075 * (spell.valueStacks.len - 1).float
+
 proc info*(rune: Rune): RuneInfo =
   case rune
   of num:
