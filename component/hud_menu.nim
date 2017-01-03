@@ -24,16 +24,16 @@ proc hudMenuNode(health: Health, mana: Mana, stats: ptr PlayerStats): Node =
   Node(
     children: @[
       Node(
-        pos: vec(220, 30),
+        pos: vec(220, 60),
         children: newSeqOf[Node](
           rawHealthBar(health, size=vec(400, 35))
         ),
       ),
       Node(
-        pos: vec(220, 75),
+        pos: vec(220, 105),
         children: newSeqOf[Node](
           progressBar(
-            mana,
+            mana.pairProc(),
             size=vec(400, 25),
             foreground=color(32, 32, 210, 255),
             background=color(64, 64, 92, 255),
@@ -46,19 +46,20 @@ proc hudMenuNode(health: Health, mana: Mana, stats: ptr PlayerStats): Node =
           Node(
             children: @[
               BorderedTextNode(
-                pos: vec(500, 30),
+                pos: vec(50, 18),
                 text: "Level " & $stats.level,
                 color: color(255, 255, 255, 255),
               ),
-              BindNode[int](
-                item: (proc(): int = stats.xp),
-                node: (proc(xp: int): Node =
-                  BorderedTextNode(
-                    pos: vec(500, 75),
-                    text: "XP: " & $xp & "/" & $stats[].xpToNextLevel(),
-                    color: color(255, 255, 255, 255),
-                  )
-                ),
+              Node(
+                pos: vec(270, 18),
+                children: @[
+                  progressBar(
+                    (proc(): HealthPair = (stats.xp, stats[].xpToNextLevel())),
+                    size=vec(300, 16),
+                    foreground=color(255, 255, 255, 255),
+                    background=color(64, 64, 64, 255),
+                  ),
+                ],
               ),
             ],
           )

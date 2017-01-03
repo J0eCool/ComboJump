@@ -18,9 +18,14 @@ import
 type
   HealthBar* = ref object of Component
     menu: Node
-  HealthPair = tuple[cur: int, max: int]
+  HealthPair* = tuple[cur: int, max: int]
+  HealthPairProc = proc(): HealthPair
 
-proc progressBar*(quantity: LimitedQuantity,
+proc pairProc*(quantity: LimitedQuantity): HealthPairProc =
+  result = proc(): HealthPair =
+    (max(quantity.cur.int, 0), quantity.max.int)
+
+proc progressBar*(healthProc: HealthPairProc,
                   size = vec(),
                   foreground = color(0, 0, 0, 0),
                   background = color(0, 0, 0, 0),
@@ -32,25 +37,22 @@ proc progressBar*(quantity: LimitedQuantity,
     color: color(32, 32, 32, 255),
     children: newSeqOf[Node](
       BindNode[HealthPair](
-        item: (proc(): HealthPair = (max(quantity.cur.int, 0), quantity.max.int)),
+        item: healthProc,
         node: (proc(pair: HealthPair): Node =
+          let pct = pair.cur / pair.max
           Node(children: @[
             SpriteNode(
               size: size,
               color: background,
             ),
             SpriteNode(
-              pos: vec(size.x * lerp(quantity.pct, -0.5, 0.0), 0.0),
-              size: vec(size.x * quantity.pct, size.y),
+              pos: vec(size.x * lerp(pct, -0.5, 0.0), 0.0),
+              size: vec(size.x * pct, size.y),
               color: foreground,
             ),
             BorderedTextNode(
               text: $pair.cur & " / " & $pair.max,
-              color:
-                if quantity.pct < 0.3:
-                  color(255, 0, 0, 255)
-                else:
-                  color(255, 255, 255, 255),
+              color: color(255, 255, 255, 255),
             ),
           ]),
         )
@@ -60,7 +62,7 @@ proc progressBar*(quantity: LimitedQuantity,
 
 proc rawHealthBar*(health: Health, size = vec()): Node =
   progressBar(
-    health,
+    health.pairProc(),
     size=size,
     foreground=color(210, 32, 32, 255),
     background=color(92, 64, 64, 255)
