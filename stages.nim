@@ -145,6 +145,14 @@ let
       ],
       runeReward: grow,
     ),
+    Stage(
+      name: "2-6",
+      length: 800,
+      enemies: @[
+        (goblin, 10),
+      ],
+      runeReward: createSingle,
+    ),
   ]
 
 proc currentRuneReward(stageData: StageData): Rune =
@@ -240,6 +248,18 @@ proc levelMenuNode(stageData: ptr StageData): Node =
             ),
           )
         ),
+      ),
+      stringListNode(@[
+          "Instructions:",
+          "Clear stages to collect runes",
+          "Use runes to build spells",
+          " ",
+          "Controls:",
+          "WASD - Move",
+          "IJKL - Cast spells",
+          "Esc - Return to stage select",
+        ],
+        pos=vec(400, 0),
       ),
     ],
   )

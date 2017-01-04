@@ -216,3 +216,19 @@ method updateSelf[T](list: List[T], input: InputManager) =
   list.generateChildren()
   for c in list.generatedChildren:
     c.update(input)
+
+
+# ------
+
+proc stringListNode*(lines: seq[string], pos = vec(0)): Node =
+  List[string](
+    pos: pos,
+    spacing: vec(0, 25),
+    items: (proc(): seq[string] = lines),
+    listNodes: (proc(line: string): Node =
+      BorderedTextNode(
+        text: line,
+        color: color(255, 255, 255, 255),
+      )
+    ),
+  )
