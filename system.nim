@@ -15,6 +15,7 @@ type
   System = object
     id: int
     args: seq[string]
+    types: seq[string]
     filename: string
     priority: int
   SysTable = Table[string, System]
@@ -37,12 +38,14 @@ proc fromJSON(system: var System, json: JSON) =
   assert json.kind == jsObject
   system.id = fromJSON[int](json.obj["id"])
   system.args = fromJSON[seq[string]](json.obj["args"])
+  system.types = fromJSON[seq[string]](json.obj["types"])
   system.filename = fromJSON[string](json.obj.getOrDefault("filename"))
   system.priority = fromJSON[int](json.obj["priority"])
 proc toJSON(system: System): JSON =
   result = JSON(kind: jsObject, obj: initTable[string, JSON]())
   result.obj["id"] = system.id.toJSON()
   result.obj["args"] = system.args.toJSON()
+  result.obj["types"] = system.types.toJSON()
   result.obj["filename"] = system.filename.toJSON()
   result.obj["priority"] = system.priority.toJSON()
 
@@ -147,11 +150,18 @@ proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
   if sysType == "draw":
     params.insert 1, newIdentDefs(ident("renderer"), ident("RendererPtr"))
     paramStart += 1
-  var args: seq[string] = @[]
+  var
+    args: seq[string] = @[]
+    types: seq[string] = @[]
   for i in paramStart..<params.len:
     let arg = params[i]
     args.add $arg[0].ident
+    if arg[1].kind == nnkVarTy:
+      types.add "var " & $arg[1][0].ident
+    else:
+      types.add $arg[1].ident
   systems[key].args = args
+  systems[key].types = types
   systems[key].filename = lineinfo(body).split("(")[0].replace("\\", by="/")
   systems[key].priority = priority
 
