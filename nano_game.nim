@@ -1,4 +1,4 @@
-import math, macros, sdl2
+import math, macros, sdl2, times
 
 const Profile {.intdefine.}: int = 0
 when Profile != 0:
@@ -19,6 +19,7 @@ import
   resources,
   save,
   scrolling_background,
+  single_sym_dylib,
   spell_creator,
   stages,
   system,
@@ -50,12 +51,7 @@ method onRemove*(game: NanoGame, entity: Entity) =
 importAllSystems()
 defineSystemCalls(NanoGame)
 
-import dynlib, os, times
-
-let libname = "testlib.dll"
-var
-  lastModTime = getLastModificationTime(libname)
-  lib = loadLib(libname)
+var testlib = newSingleSymDylib[proc(): int {.nimcall.}]("testlib.dll", "getSomeNum")
 
 method draw*(renderer: RendererPtr, game: NanoGame) =
   game.background.loadBackgroundAssets(game.resources, renderer)
@@ -63,27 +59,14 @@ method draw*(renderer: RendererPtr, game: NanoGame) =
   renderer.drawSystems(game)
   renderer.drawGame(game)
 
-  let
-    sym = lib.symAddr("getSomeNum")
-    symFunc = cast[proc(): int {.nimcall.}](sym)
-
   let font = game.resources.loadFont("nevis.ttf")
-  renderer.drawCachedText($symFunc(), vec(600, 600), font, color(0, 0, 0, 255))
+  renderer.drawCachedText($testlib.getSym()(), vec(600, 600), font, color(0, 0, 0, 255))
 
   renderer.drawCachedText($game.frameTime & "ms", vec(1100, 875),
                           font, color(0, 0, 0, 255))
 
 method update*(game: NanoGame, dt: float) =
-  while not fileExists(libname):
-    delay(100)
-  let newModTime = getLastModificationTime(libname)
-  if lastModTime != newModTime:
-    lib.unloadLib()
-    lastModTime = newModTime
-    lib = loadLib(libname)
-    while lib == nil:
-      delay(100)
-      lib = loadLib(libname)
+  testlib.tryLoadLib()
 
   game.dt = dt
 
