@@ -35,6 +35,13 @@
             "--out:out/nanogame", "nano_game.nim"],
         "working_dir": "$project_path"
     }, {
+        "name": "NaNo Game - Profile",
+        "cmd": ["nim", "c", "-r",
+            "-d:release", "--parallelBuild:0",
+            "--profiler:on", "--stackTrace:on", "-d:Profile=1",
+            "--out:out/nanogame", "nano_game.nim"],
+        "working_dir": "$project_path"
+    }, {
         "name": "JSON Test",
         "cmd": ["nim", "c", "-r",
             "-d:debug", "--parallelBuild:0",
