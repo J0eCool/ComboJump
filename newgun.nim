@@ -9,7 +9,6 @@ import
   component/damage,
   component/mana,
   component/movement,
-  component/player_control,
   component/targeting,
   component/transform,
   component/sprite,

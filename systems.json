@@ -17,17 +17,6 @@
         "shouldExit"
       ]
     },
-    "playerShoot": {
-      "filename": "system/player_shoot.nim",
-      "types": [
-        "float"
-      ],
-      "priority": "0",
-      "id": "34",
-      "args": [
-        "dt"
-      ]
-    },
     "updateHealthBarNodes": {
       "filename": "component/health_bar.nim",
       "types": [
@@ -111,17 +100,6 @@
       "id": "13",
       "args": [
         "stats"
-      ]
-    },
-    "playerMovement": {
-      "filename": "system/player_movement.nim",
-      "types": [
-        "float"
-      ],
-      "priority": "0",
-      "id": "33",
-      "args": [
-        "dt"
       ]
     },
     "updateEnemyProximity": {
@@ -214,35 +192,15 @@
       "args": [
       ]
     },
-    "playerInput": {
-      "filename": "system/player_input.nim",
-      "types": [
-        "InputManager"
-      ],
-      "priority": "0",
-      "id": "31",
-      "args": [
-        "input"
-      ]
-    },
     "regenLimitedQuantities": {
       "filename": "system/quantity_regen.nim",
       "types": [
         "float"
       ],
       "priority": "0",
-      "id": "35",
+      "id": "31",
       "args": [
         "dt"
-      ]
-    },
-    "clickPlayer": {
-      "filename": "system/player_input.nim",
-      "types": [
-      ],
-      "priority": "0",
-      "id": "32",
-      "args": [
       ]
     },
     "updateDamage": {
@@ -250,7 +208,7 @@
       "types": [
       ],
       "priority": "0",
-      "id": "5",
+      "id": "6",
       "args": [
       ]
     },
@@ -404,7 +362,7 @@
         "Camera"
       ],
       "priority": "0",
-      "id": "6",
+      "id": "5",
       "args": [
         "camera"
       ]

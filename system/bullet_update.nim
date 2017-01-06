@@ -10,7 +10,6 @@ import
   component/sprite,
   entity,
   event,
-  gun,
   system,
   util,
   vec

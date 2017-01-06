@@ -13,7 +13,6 @@ import
   component/health,
   component/mana,
   component/movement,
-  component/player_control,
   component/progress_bar,
   component/sprite,
   component/text,

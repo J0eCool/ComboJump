@@ -11,7 +11,6 @@ import
   camera,
   entity,
   event,
-  gun,
   input,
   player_stats,
   prefabs,

@@ -11,7 +11,6 @@ import
   component/limited_quantity,
   component/mana,
   component/movement,
-  component/player_control,
   component/player_health,
   component/progress_bar,
   component/sprite,
