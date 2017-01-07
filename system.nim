@@ -140,6 +140,7 @@ proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
     let nextId = getNextId(data)
     systems[key] = System()
     systems[key].id = nextId
+    systems[key].filename = lineinfo(body).split("(")[0].replace("\\", by="/")
 
   var params = sysProc.params
   assert params[0].kind == nnkEmpty, "System " & key & " should not have a return value"
@@ -162,7 +163,6 @@ proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
       types.add $arg[1].ident
   systems[key].args = args
   systems[key].types = types
-  systems[key].filename = lineinfo(body).split("(")[0].replace("\\", by="/")
   systems[key].priority = priority
 
   if sysType == "update":
@@ -170,6 +170,9 @@ proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
   else:
     data.draw = systems
   writeData(data)
+
+  sysProc.addPragma(ident("exportc"))
+  sysProc.addPragma(ident("dynlib"))
 
   return sysProc
 
@@ -183,8 +186,49 @@ macro importAllSystems*(): untyped =
   result = newNimNode(nnkStmtList)
   for f in walkDir("component"):
     result.add newTree(nnkImportStmt, ident(f.path))
+  for f in walkDir("menu"):
+    result.add newTree(nnkImportStmt, ident(f.path))
   for f in walkDir("system"):
     result.add newTree(nnkImportStmt, ident(f.path))
+
+proc basename(filename: string): string =
+  let parts = filename.split("/")
+  if parts.len == 1: filename else: parts[parts.len - 1]
+
+macro defineDylibs*(): untyped =
+  result = newNimNode(nnkVarSection)
+  let data = readData()
+  for sysName, v in data.update:
+    let dylibFile = "out/" & v.filename.basename[0..^5] & ".dll"
+    var callNode = newTree(nnkCall,
+      newTree(nnkBracketExpr,
+        ident("newSingleSymDylib"),
+        newTree(nnkProcTy,
+          newTree(nnkFormalParams,
+            ident("Events"),
+            newTree(nnkIdentDefs,
+              ident("entities"),
+              ident("Entities"),
+              newEmptyNode(),
+            ),
+          ),
+          newTree(nnkPragma, ident("nimcall")),
+        ),
+      ),
+      newLit(dylibFile),
+      newLit(sysName),
+    )
+    for i in 0..<v.args.len:
+      let
+        arg = v.args[i]
+        tyStr = v.types[i]
+        ty =
+          if tyStr[0..3] != "var ":
+            ident(tyStr)
+          else:
+            newTree(nnkVarTy, ident(tyStr[4..^0]))
+      callNode[0][1][0].add newTree(nnkIdentDefs, ident(arg), ty, newEmptyNode())
+    result.add newIdentDefs(ident(sysName & "Dylib"), newEmptyNode(), callNode)
 
 proc sortCallPairs(list: var seq[CallPair]) =
   list.sort(
@@ -197,7 +241,6 @@ macro defineSystemCalls*(gameType: typed): untyped =
   let
     data = readData()
     game = ident("game")
-    game2 = ident("game2")
     renderer = ident("renderer")
   let
     retVal = newEmptyNode()
@@ -209,10 +252,12 @@ macro defineSystemCalls*(gameType: typed): untyped =
   var updatePairs = newSeq[CallPair]()
   for k, v in data.update:
     let
-      sysName = ident(k)
-      callNode = newCall(sysName, newDotExpr(game, ident("entities")))
+      sysName = ident(k & "Dylib")
+      loadNode = newCall(!"tryLoadLib", sysName)
+      callNode = newCall(newCall(ident("getSym"), sysName), newDotExpr(game, ident("entities")))
     for arg in v.args:
       callNode.add newDotExpr(game, ident(arg))
+    updateDef.body.add loadNode
     updatePairs.add((v.priority, newCall(!"process", game, callNode)))
   updatePairs.sortCallPairs()
   for p in updatePairs:

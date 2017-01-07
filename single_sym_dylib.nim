@@ -6,8 +6,11 @@ type
     libName: string
     symName: string
     lastModTime: Time
-    lib: LibHandle
+    lib*: LibHandle
     frameDelay: int
+
+proc log[T](dylib: SingleSymDylib[T], message: string) =
+  echo message, " lib=", dylib.libName, " sym=", dylib.symName, " lastModified=", dylib.lastModTime
 
 proc newSingleSymDylib*[T](libName, symName: string): SingleSymDylib[T] =
   SingleSymDylib[T](
@@ -21,24 +24,34 @@ proc doLibLoad[T](dylib: var SingleSymDylib[T]) =
   while dylib.lib == nil:
     delay(100)
     dylib.lib = loadLib(dylib.libName)
+  dylib.lastModTime = getLastModificationTime(dylib.libName)
+
+# Offset each lib's load delay to stagger them and not have all the file operations at once
+var frameDelayOffset = 0
+
+const framesToDelay = 50
 
 proc tryLoadLib*[T](dylib: var SingleSymDylib[T]) =
-  if dylib.lib != nil and dylib.frameDelay < 50:
+  if (dylib.lib != nil and dylib.frameDelay < framesToDelay) or not fileExists(dylib.libName):
     dylib.frameDelay += 1
     return
-  dylib.frameDelay = 0
 
-  while not fileExists(dylib.libName):
-    delay(100)
+  dylib.frameDelay -= framesToDelay
+
   if dylib.lib == nil:
+    dylib.log "First load!"
     dylib.doLibLoad()
+    dylib.frameDelay = frameDelayOffset
+    frameDelayOffset += 1
     return
 
-  let newModTime = getLastModificationTime(dylib.libName)
-  if dylib.lastModTime != newModTime:
+  if dylib.lastModTime != getLastModificationTime(dylib.libName):
+    dylib.log "Reloading!"
     dylib.lib.unloadLib()
-    dylib.lastModTime = newModTime
     dylib.doLibLoad()
 
 proc getSym*[T](dylib: SingleSymDylib[T]): T =
-  cast[T](dylib.lib.symAddr(dylib.symName))
+  # dylib.log "getting sym"
+  result = cast[T](dylib.lib.symAddr(dylib.symName))
+  if result == nil or dylib.lib == nil:
+    dylib.log "Warning, nil!"

@@ -1,4 +1,4 @@
-import macros, sdl2
+import macros
 
 import vec
 

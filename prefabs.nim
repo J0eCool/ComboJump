@@ -4,6 +4,7 @@ import
   component/damage,
   component/enemy_attack,
   component/enemy_movement,
+  component/enemy_proximity,
   component/grid_control,
   component/health,
   component/health_bar,

@@ -24,7 +24,7 @@ type
     varSpell*: int
     varSpellIdx*: int
 
-    capacity: Table[Rune, int]
+    capacity*: Table[Rune, int]
     shouldSave*: bool
 
 proc reparseAllSpells(spellData: var SpellData)
@@ -45,10 +45,10 @@ proc newSpellData*(): SpellData =
   result.reparseAllSpells()
 
 let
-  inputs = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
-  runes = [num, count, mult, createSingle, createSpread, createBurst, despawn, wave, turn, grow, moveUp, moveSide, nearest, startPos]
+  inputs* = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
+  runes* = [num, count, mult, createSingle, createSpread, createBurst, despawn, wave, turn, grow, moveUp, moveSide, nearest, startPos]
 
-proc inputString(rune: Rune): string =
+proc inputString*(rune: Rune): string =
   for i in 0..<runes.len:
     if rune == runes[i]:
       return $inputs[i]
@@ -78,14 +78,14 @@ proc runeCount(spellData: SpellData, rune: Rune): int =
   for desc in spellData.spellDescs:
     result += desc.runeCount(rune)
 
-proc available(spellData: SpellData, rune: Rune): int =
+proc available*(spellData: SpellData, rune: Rune): int =
   return spellData.capacity[rune] - spellData.runeCount(rune)
 
 proc addRuneCapacity*(spellData: var SpellData, rune: Rune) =
   spellData.capacity[rune] += 1
   spellData.shouldSave = true
 
-proc addRune(spellData: var SpellData, rune: Rune) =
+proc addRune*(spellData: var SpellData, rune: Rune) =
   if spellData.available(rune) <= 0:
     return
   spellData.spellDescs[spellData.varSpell].insert(rune, spellData.varSpellIdx)
@@ -93,7 +93,7 @@ proc addRune(spellData: var SpellData, rune: Rune) =
   spellData.spells[spellData.varSpell] = spellData.spellDescs[spellData.varSpell].parse()
   spellData.shouldSave = true
 
-proc deleteRune(spellData: var SpellData) =
+proc deleteRune*(spellData: var SpellData) =
   if spellData.spellDescs[spellData.varSpell].len <= 0 or spellData.varSpellIdx <= 0:
     return
   spellData.spellDescs[spellData.varSpell].delete(spellData.varSpellIdx - 1)
@@ -118,147 +118,6 @@ proc moveSpell(spellData: var SpellData, dir: int) =
   spellData.varSpell += dir
   spellData.varSpell = clamp(spellData.varSpell, 0, spellData.spellDescs.len-1)
   spellData.clampSpellIndex()
-
-proc runeValueListNode*(pos: Vec, items: (proc(): seq[ValueKind])): Node =
-  List[ValueKind](
-    pos: pos,
-    size: vec(12, 0),
-    spacing: vec(-2),
-    items: items,
-    listNodesIdx: (proc(kind: ValueKind, idx: int): Node =
-      let
-        size = 12
-        spacing = 3
-      Node(
-        size: vec(size, -size),
-        children: newSeqOf[Node](
-          SpriteNode(
-            pos: vec(spacing * idx, (size + 2 - spacing) * idx),
-            size: vec(size, size),
-            textureName: kind.textureName,
-          )
-        ),
-      )
-    ),
-  )
-
-type
-  RuneMenu* = ref object of Component
-    menu: Node
-
-proc runeMenuNode(spellData: ptr SpellData): Node =
-  SpriteNode(
-    pos: vec(1020, 320),
-    size: vec(300, 600),
-    color: color(128, 128, 128, 255),
-    children: @[
-      Button(
-        pos: vec(0, -240),
-        size: vec(50, 50),
-        onClick: (proc() = spellData[].deleteRune()),
-        children: newSeqOf[Node](
-          TextNode(text: "Del")
-        ),
-      ),
-      Button(
-        pos: vec(60, -240),
-        size: vec(50, 50),
-        onClick: (proc() =
-          for r in Rune:
-            spellData[].addRuneCapacity(r)
-        ),
-        children: newSeqOf[Node](
-          TextNode(text: "+ALL")
-        ),
-      ),
-      List[Rune](
-        spacing: vec(10),
-        width: 3,
-        size: vec(300, 400),
-        items: (proc(): seq[Rune] = @runes.filter(proc(rune: Rune): bool = spellData[].capacity[rune] > 0)),
-        listNodes: (proc(rune: Rune): Node =
-          Button(
-            size: vec(90, 80),
-            onClick: (proc() =
-              spellData[].addRune(rune)
-            ),
-            children: @[
-              SpriteNode(
-                pos: vec(-16, -12),
-                size: vec(48, 48),
-                textureName: rune.textureName,
-              ),
-              TextNode(
-                pos: vec(28, 4),
-                text: "[" & rune.inputString[^1..^0] & "]",
-                color: color(0, 0, 0, 255),
-              ),
-              BindNode[int](
-                item: (proc(): int = spellData[].available(rune)),
-                node: (proc(count: int): Node =
-                  BorderedTextNode(
-                    pos: vec(28, -26),
-                    text: $count,
-                    color:
-                      if count > 0:
-                        color(255, 240, 32, 255)
-                      else:
-                        color(128, 128, 128, 255),
-                  )
-                ),
-              ),
-              runeValueListNode(
-                vec(-22, 36),
-                proc(): seq[ValueKind] =
-                  rune.info.inputSeq
-              ),
-              TextNode(
-                pos: vec(0, 28),
-                text: "->",
-              ),
-              runeValueListNode(
-                vec(20, 36),
-                proc(): seq[ValueKind] =
-                  rune.info.outputSeq
-              ),
-            ],
-          )
-        ),
-      ),
-      stringListNode(@[
-          "Spells are made of runes.",
-          "Runes pop and push values using a stack machine.",
-          "For example, [1] pushes a number (red) with value 1 onto the stack.",
-          "[2] pops a number, increments it by one, and pushes it back.",
-          "[5] pops a number, and pushes a projectile (green) with n+1 parts.",
-          " ",
-          "Controls:",
-          "Arrow keys - move the cursor",
-          "Backspace - deletes the rune in front of the cursor",
-          "Del - clears the spell the cursor is on",
-          "[Keys] - keyboard shortcuts to insert runes",
-        ],
-        pos=vec(-600, -190)
-      ),
-    ]
-  )
-
-defineDrawSystem:
-  priority = -100
-  proc drawRuneMenu*(resources: var ResourceManager) =
-    entities.forComponents entity, [
-      RuneMenu, runeMenu,
-    ]:
-      renderer.draw(runeMenu.menu, resources)
-
-defineSystem:
-  proc updateRuneMenu*(input: InputManager, spellData: var SpellData) =
-    entities.forComponents entity, [
-      RuneMenu, runeMenu,
-    ]:
-      if runeMenu.menu == nil:
-        runeMenu.menu = runeMenuNode(addr spellData)
-      menu.update(runeMenu.menu, input)
 
 defineSystem:
   proc updateSpellCreator*(input: InputManager, spellData: var SpellData) =

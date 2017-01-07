@@ -4,7 +4,7 @@ import
   component/bullet,
   component/collider,
   component/damage,
-  component/enemy_movement,
+  component/enemy_proximity,
   component/sprite,
   component/transform,
   entity,

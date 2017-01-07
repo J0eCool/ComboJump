@@ -1,7 +1,6 @@
 import
   sdl2,
-  sdl2.ttf,
-  tables
+  sdl2.ttf
 
 import
   component/collider,
@@ -15,17 +14,6 @@ import
   resources,
   system,
   vec
-
-var textCache = initTable[string, RenderedText]()
-proc drawCachedText*(renderer: RendererPtr,
-                     text: string,
-                     pos: Vec,
-                     font: FontPtr,
-                     color: Color = color(255, 255, 255, 255)) =
-  let textKey = text & "__color:" & $color
-  if not textCache.hasKey(textKey):
-    textCache[textKey] = renderer.renderText(text, font, color)
-  renderer.draw(textCache[textKey], pos)
 
 defineDrawSystem:
   proc renderSystem*(camera: Camera) =

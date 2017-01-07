@@ -1,6 +1,7 @@
 import
   sdl2,
-  sdl2.ttf
+  sdl2.ttf,
+  tables
 
 import
   component/sprite,
@@ -49,3 +50,14 @@ proc draw*(renderer: RendererPtr, sprite: SpriteData, rect: rect.Rect, flipX = f
     srcrect = sdlRect(sprite.size)
     flip = if flipX: SDL_FLIP_HORIZONTAL else: SDL_FLIP_NONE
   renderer.copyEx(sprite.texture, addr srcrect, addr dstrect, angle=0.0, center=nil, flip=flip)
+
+var textCache = initTable[string, RenderedText]()
+proc drawCachedText*(renderer: RendererPtr,
+                     text: string,
+                     pos: Vec,
+                     font: FontPtr,
+                     color: Color = color(255, 255, 255, 255)) =
+  let textKey = text & "__color:" & $color
+  if not textCache.hasKey(textKey):
+    textCache[textKey] = renderer.renderText(text, font, color)
+  renderer.draw(textCache[textKey], pos)
