@@ -122,21 +122,6 @@ proc runeMenuNode(spellData: ptr SpellData): Node =
           )
         ),
       ),
-      stringListNode(@[
-          "Spells are made of runes.",
-          "Runes pop and push values using a stack machine.",
-          "For example, [1] pushes a number (red) with value 1 onto the stack.",
-          "[2] pops a number, increments it by one, and pushes it back.",
-          "[5] pops a number, and pushes a projectile (green) with n+1 parts.",
-          " ",
-          "Controls:",
-          "Arrow keys - move the cursor",
-          "Backspace - deletes the rune in front of the cursor",
-          "Del - clears the spell the cursor is on",
-          "[Keys] - keyboard shortcuts to insert runes",
-        ],
-        pos=vec(-600, -190)
-      ),
     ]
   )
 

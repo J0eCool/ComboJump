@@ -115,18 +115,6 @@ proc levelMenuNode(stageData: ptr StageData): Node =
           )
         ),
       ),
-      stringListNode(@[
-          "Instructions:",
-          "Clear stages to collect runes",
-          "Use runes to build spells",
-          " ",
-          "Controls:",
-          "WASD - Move",
-          "IJKL - Cast spells",
-          "Esc - Return to stage select",
-        ],
-        pos=vec(400, 0),
-      ),
     ],
   )
 
