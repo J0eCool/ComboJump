@@ -42,8 +42,10 @@ defineSystem:
     if stageData.clickedStage >= 0:
       stageData.transitionTo = inStage
 
-    if stageData.transitionTo != StageState.none:
-      case stageData.transitionTo
+    while stageData.transitionTo != StageState.none:
+      let transition = stageData.transitionTo
+      stageData.transitionTo = StageState.none
+      case transition
       of inMap:
         result &= event.Event(kind: loadStage, stage: @[
           newEntity("LevelMenu", [LevelMenu().Component]),
@@ -54,6 +56,13 @@ defineSystem:
         stageData.currentStage = stageData.clickedStage
         stageData.clickedStage = -1
         stageData.currentStageInProgress = true
+      of nextStage:
+        let next = stageData.currentStage + 1
+        if next >= levels.len:
+          stageData.transitionTo = inMap
+        else:
+          stageData.clickedStage = next
+          stageData.transitionTo = inStage
       of inSpellBuilder:
         result &= event.Event(kind: loadStage, stage: @[
           newPlayer(vec(300, 200)),
@@ -63,5 +72,4 @@ defineSystem:
         ])
       else:
         discard
-      stageData.state = stageData.transitionTo
-      stageData.transitionTo = StageState.none
+      stageData.state = transition

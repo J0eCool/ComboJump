@@ -30,6 +30,7 @@ type
     freshStart
     inMap
     inStage
+    nextStage
     inSpellBuilder
   StageData* = object
     clickedStage*: int
@@ -52,7 +53,7 @@ defineSystem:
       Collider, collider,
     ]:
       if collider.collisions.len > 0:
-        stageData.transitionTo = inMap
+        stageData.transitionTo = if exitZone.stageEnd: nextStage else: inMap
         if exitZone.stageEnd:
           stageData.didCompleteStage = true
 
