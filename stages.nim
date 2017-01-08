@@ -5,19 +5,18 @@ import
 
 import
   component/collider,
-  # component/exit_zone,
   component/sprite,
   component/target_shooter,
   component/transform,
   menu/spell_hud_menu,
   menu/rune_menu,
   input,
+  enemy_kind,
   entity,
   event,
   jsonparse,
   menu,
   newgun,
-  prefabs,
   resources,
   spell_creator,
   system,
@@ -44,7 +43,7 @@ type
 
 type
   ExitZone* = ref object of Component
-    stageEnd: bool
+    stageEnd*: bool
 
 defineSystem:
   proc updateExitZones*(stageData: var StageData) =
@@ -176,26 +175,3 @@ let
 
 proc currentRuneReward*(stageData: StageData): Rune =
   levels[stageData.currentStage].runeReward
-
-proc spawnedEntities*(stage: Stage): Entities =
-  result = @[
-    newPlayer(vec(300, 200)),
-    newHud(),
-    newEntity("SpellHudMenu", [SpellHudMenu().Component]),
-    newEntity("BeginExit", [
-      ExitZone(stageEnd: false),
-      Collider(layer: playerTrigger),
-      Transform(pos: vec(600, 850), size: vec(2000, 1000)),
-      Sprite(color: color(0, 0, 0, 255)),
-    ]),
-    newEntity("EndExit", [
-      ExitZone(stageEnd: true),
-      Collider(layer: playerTrigger),
-      Transform(pos: vec(600.0, -stage.length - 150 - 500), size: vec(2000, 1000)),
-      Sprite(color: color(0, 0, 0, 255)),
-    ]),
-  ]
-  for spawn in stage.enemies:
-    for i in 0..<spawn.count:
-      let pos = vec(random(100.0, 700.0), -random(0.0, stage.length))
-      result.add newEnemy(spawn.enemy, pos)

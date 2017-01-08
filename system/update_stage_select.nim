@@ -1,3 +1,5 @@
+import sdl2
+
 import
   component/collider,
   component/sprite,
@@ -19,6 +21,29 @@ import
   system,
   vec,
   util
+
+proc spawnedEntities*(stage: Stage): Entities =
+  result = @[
+    newPlayer(vec(300, 200)),
+    newHud(),
+    newEntity("SpellHudMenu", [SpellHudMenu().Component]),
+    newEntity("BeginExit", [
+      ExitZone(stageEnd: false),
+      Collider(layer: playerTrigger),
+      Transform(pos: vec(600, 850), size: vec(2000, 1000)),
+      Sprite(color: color(0, 0, 0, 255)),
+    ]),
+    newEntity("EndExit", [
+      ExitZone(stageEnd: true),
+      Collider(layer: playerTrigger),
+      Transform(pos: vec(600.0, -stage.length - 150 - 500), size: vec(2000, 1000)),
+      Sprite(color: color(0, 0, 0, 255)),
+    ]),
+  ]
+  for spawn in stage.enemies:
+    for i in 0..<spawn.count:
+      let pos = vec(random(100.0, 700.0), -random(0.0, stage.length))
+      result.add newEnemy(spawn.enemy, pos)
 
 defineSystem:
   proc stageSelect*(input: InputManager, stageData: var StageData, spellData: var SpellData, shouldExit: var bool) =

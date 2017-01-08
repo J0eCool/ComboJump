@@ -229,13 +229,15 @@
       "filename": "component/hud_menu.nim",
       "types": [
         "InputManager",
-        "var PlayerStats"
+        "var PlayerStats",
+        "var StageData"
       ],
       "priority": "0",
       "id": "18",
       "args": [
         "input",
-        "stats"
+        "stats",
+        "stageData"
       ]
     },
     "checkCollisisons": {

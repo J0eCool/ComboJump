@@ -13,6 +13,7 @@ import
   menu,
   player_stats,
   resources,
+  stages,
   system,
   vec,
   util
@@ -20,7 +21,7 @@ import
 type HudMenu* = ref object of Component
   menu: Node
 
-proc hudMenuNode(health: Health, mana: Mana, stats: ptr PlayerStats): Node =
+proc hudMenuNode(health: Health, mana: Mana, stats: ptr PlayerStats, stageData: ptr StageData): Node =
   Node(
     children: @[
       Node(
@@ -65,6 +66,16 @@ proc hudMenuNode(health: Health, mana: Mana, stats: ptr PlayerStats): Node =
           )
         ),
       ),
+      BindNode[int](
+        item: (proc(): int = stageData.currentStage),
+        node: (proc(stageIdx: int): Node =
+          BorderedTextNode(
+            pos: vec(1100, 50),
+            text: "Stage: " & levels[stageData.currentStage].name,
+            color: color(255, 255, 255, 255),
+          )
+        ),
+      ),
     ],
   )
 
@@ -78,7 +89,7 @@ defineDrawSystem:
       renderer.draw(hudMenu.menu, resources)
 
 defineSystem:
-  proc updateHudMenu*(input: InputManager, stats: var PlayerStats) =
+  proc updateHudMenu*(input: InputManager, stats: var PlayerStats, stageData: var StageData) =
     entities.forComponents entity, [
       HudMenu, hudMenu,
     ]:
@@ -87,7 +98,7 @@ defineSystem:
           Health, health,
           Mana, mana,
         ]:
-          hudMenu.menu = hudMenuNode(health, mana, addr stats)
+          hudMenu.menu = hudMenuNode(health, mana, addr stats, addr stageData)
           break
         if hudMenu.menu == nil:
           return

@@ -20,6 +20,7 @@ import
   component/text,
   component/transform,
   component/xp_on_death,
+  enemy_kind,
   entity,
   vec
 
@@ -40,10 +41,6 @@ proc newPlayer*(pos: Vec): Entity =
 
 proc newHud*(): Entity =
   newEntity("Hud", [HudMenu().Component])
-
-type EnemyKind* = enum
-  goblin
-  ogre
 
 proc newGoblin(pos: Vec): Entity =
   newEntity("Goblin", [
