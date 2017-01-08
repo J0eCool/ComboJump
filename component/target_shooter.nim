@@ -7,6 +7,7 @@ import
   menu,
   newgun,
   option,
+  player_stats,
   spell_creator,
   resources,
   system,
@@ -24,7 +25,7 @@ const
   fireInputs* = [jump, spell1, spell2, spell3]
 
 defineSystem:
-  proc updateTargetedShoot*(input: InputManager, spellData: SpellData, dt: float) =
+  proc updateTargetedShoot*(input: InputManager, spellData: SpellData, dt: float, stats: PlayerStats) =
     result = @[]
     entities.forComponents e, [
       TargetShooter, sh,
@@ -48,6 +49,6 @@ defineSystem:
             let spell = spellData.spells[i]
             if spell.canCast() and mana.trySpend(spell.manaCost.float):
               sh.toCast = spell
-              sh.castTime = spell.castTime
+              sh.castTime = spell.castTime(stats)
               sh.castIndex = i
               break

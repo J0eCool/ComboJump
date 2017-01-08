@@ -15,6 +15,7 @@ import
   entity,
   event,
   option,
+  player_stats,
   rect,
   stack,
   vec,
@@ -101,8 +102,9 @@ proc manaCost*(spell: SpellParse): int =
   for stack in spell.valueStacks:
     result += stack.len
 
-proc castTime*(spell: SpellParse): float =
-  0.325 + 0.065 * (spell.valueStacks.len - 1).float
+proc castTime*(spell: SpellParse, stats: PlayerStats): float =
+  result = 0.325 + 0.065 * (spell.valueStacks.len - 1).float
+  result /= stats.castSpeed
 
 proc info*(rune: Rune): RuneInfo =
   case rune

@@ -14,6 +14,7 @@ import
   menu,
   newgun,
   option,
+  player_stats,
   spell_creator,
   resources,
   system,
@@ -37,7 +38,9 @@ type
   SpellHudMenu* = ref object of Component
     menu: Node
 
-proc spellHudMenuNode(spellData: ptr SpellData, targetShooter: TargetShooter): Node =
+type SpellStats = tuple[spell: SpellParse, stats: PlayerStats]
+
+proc spellHudMenuNode(spellData: ptr SpellData, stats: ptr PlayerStats, targetShooter: TargetShooter): Node =
   List[int](
     pos: vec(20, 680),
     spacing: vec(4),
@@ -47,13 +50,13 @@ proc spellHudMenuNode(spellData: ptr SpellData, targetShooter: TargetShooter): N
         size: vec(810, 48),
         color: color(128, 128, 128, 255),
         children: @[
-          BindNode[SpellParse](
-            item: (proc(): SpellParse = spellData.spells[descIdx]),
-            node: (proc(spell: SpellParse): Node =
-              case spell.kind
+          BindNode[SpellStats](
+            item: (proc(): SpellStats = (spellData.spells[descIdx], stats[])),
+            node: (proc(pair: SpellStats): Node =
+              case pair.spell.kind
               of error:
                 SpriteNode(
-                  pos: vec(-365 + 20 * spell.index, 0),
+                  pos: vec(-365 + 20 * pair.spell.index, 0),
                   size: vec(30, 30),
                   color: color(255, 0, 0, 255),
                 )
@@ -65,7 +68,7 @@ proc spellHudMenuNode(spellData: ptr SpellData, targetShooter: TargetShooter): N
                         if targetShooter.castIndex != descIdx or targetShooter.toCast.kind == error:
                           0.0
                         else:
-                          1.0 - targetShooter.castTime / targetShooter.toCast.castTime
+                          1.0 - targetShooter.castTime / targetShooter.toCast.castTime(pair.stats)
                       ),
                       node: (proc(pct: float): Node =
                         SpriteNode(
@@ -76,12 +79,12 @@ proc spellHudMenuNode(spellData: ptr SpellData, targetShooter: TargetShooter): N
                     ),
                     BorderedTextNode(
                       pos: vec(330, -13),
-                      text: "Cost: " & $spell.manaCost,
+                      text: "Cost: " & $pair.spell.manaCost,
                       color: color(32, 240, 240, 255),
                     ).Node,
                     BorderedTextNode(
                       pos: vec(280, 13),
-                      text: "Cast Time: " & ($spell.castTime)[0..4] & "s",
+                      text: "Cast Time: " & ($(pair.spell.castTime(pair.stats)))[0..4] & "s",
                       color: color(32, 240, 240, 255),
                     ),
                   ],
@@ -148,7 +151,7 @@ defineDrawSystem:
       renderer.draw(spellHudMenu.menu, resources)
 
 defineSystem:
-  proc updateSpellHudMenu*(input: InputManager, spellData: var SpellData) =
+  proc updateSpellHudMenu*(input: InputManager, spellData: var SpellData, stats: var PlayerStats) =
     entities.forComponents entity, [
       SpellHudMenu, spellHudMenu,
     ]:
@@ -156,6 +159,6 @@ defineSystem:
         entities.forComponents entity, [
           TargetShooter, targetShooter,
         ]:
-          spellHudMenu.menu = spellHudMenuNode(addr spellData, targetShooter)
+          spellHudMenu.menu = spellHudMenuNode(addr spellData, addr stats, targetShooter)
           break
       spellHudMenu.menu.update(input)

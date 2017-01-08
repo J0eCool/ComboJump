@@ -26,6 +26,13 @@ proc xpToNextLevel*(stats: PlayerStats): int =
   let lv = stats.level - 1
   36 + 12 * lv + (lv * lv div 2)
 
+proc addXp*(stats: var PlayerStats, xp: int) =
+  stats.xp += xp
+  while stats.xp >= stats.xpToNextLevel():
+    stats.xp -= stats.xpToNextLevel()
+    stats.level += 1
+  stats.shouldSave = true
+
 proc maxHealth*(stats: PlayerStats): int =
   100 + 10 * (stats.level - 1)
 
@@ -35,9 +42,5 @@ proc maxMana*(stats: PlayerStats): int =
 proc manaRegen*(stats: PlayerStats): float =
   stats.maxMana.float * 0.15
 
-proc addXp*(stats: var PlayerStats, xp: int) =
-  stats.xp += xp
-  while stats.xp >= stats.xpToNextLevel():
-    stats.xp -= stats.xpToNextLevel()
-    stats.level += 1
-  stats.shouldSave = true
+proc castSpeed*(stats: PlayerStats): float =
+  1.0 + 0.02 * (stats.level - 1).float

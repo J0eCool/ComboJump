@@ -21,13 +21,15 @@
       "filename": "menu/spell_hud_menu.nim",
       "types": [
         "InputManager",
-        "var SpellData"
+        "var SpellData",
+        "var PlayerStats"
       ],
       "priority": "0",
       "id": "9",
       "args": [
         "input",
-        "spellData"
+        "spellData",
+        "stats"
       ]
     },
     "updateHealthBarNodes": {
@@ -202,14 +204,16 @@
       "types": [
         "InputManager",
         "SpellData",
-        "float"
+        "float",
+        "PlayerStats"
       ],
       "priority": "0",
       "id": "5",
       "args": [
         "input",
         "spellData",
-        "dt"
+        "dt",
+        "stats"
       ]
     },
     "updateBackground": {
