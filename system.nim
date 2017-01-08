@@ -25,7 +25,9 @@ type
 
   CallPair = tuple[priority: int, callNode: NimNode]
 
-const sysFile = "systems.json"
+const
+  sysFile = "systems.json"
+  useDylibs = false
 
 proc tryKey(json: JSON, key: string): Option[JSON] =
   assert json.kind == jsObject
@@ -171,8 +173,9 @@ proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
     data.draw = systems
   writeData(data)
 
-  sysProc.addPragma(ident("exportc"))
-  sysProc.addPragma(ident("dynlib"))
+  when useDylibs:
+    sysProc.addPragma(ident("exportc"))
+    sysProc.addPragma(ident("dynlib"))
 
   return sysProc
 
@@ -251,13 +254,18 @@ macro defineSystemCalls*(gameType: typed): untyped =
 
   var updatePairs = newSeq[CallPair]()
   for k, v in data.update:
-    let
-      sysName = ident(k & "Dylib")
-      loadNode = newCall(!"tryLoadLib", sysName)
-      callNode = newCall(newCall(ident("getSym"), sysName), newDotExpr(game, ident("entities")))
+    when useDylibs:
+      let
+        sysName = ident(k & "Dylib")
+        loadNode = newCall(!"tryLoadLib", sysName)
+        callNode = newCall(newCall(ident("getSym"), sysName), newDotExpr(game, ident("entities")))
+      updateDef.body.add loadNode
+    else:
+      let
+        sysName = ident(k)
+        callNode = newCall(sysName, newDotExpr(game, ident("entities")))
     for arg in v.args:
       callNode.add newDotExpr(game, ident(arg))
-    updateDef.body.add loadNode
     updatePairs.add((v.priority, newCall(!"process", game, callNode)))
   updatePairs.sortCallPairs()
   for p in updatePairs:

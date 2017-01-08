@@ -49,7 +49,7 @@ method onRemove*(game: NanoGame, entity: Entity) =
   onRemoveXpOnDeath(entity, game.stats)
 
 importAllSystems()
-defineDylibs()
+# defineDylibs()
 defineSystemCalls(NanoGame)
 
 method draw*(renderer: RendererPtr, game: NanoGame) =
