@@ -73,15 +73,21 @@ proc toJSON*(stageData: StageData): JSON =
 type
   SpawnInfo = tuple[enemy: EnemyKind, count: int]
   Stage* = object
-    name*: string
+    group*: string
+    area*: string
     length*: float
     enemies*: seq[SpawnInfo]
     runeReward*: Rune
+  Group* = seq[Stage]
+
+proc name*(stage: Stage): string =
+  stage.group & "-" & stage.area
 
 let
   levels* = @[
     Stage(
-      name: "1-1",
+      group: "1",
+      area: "1",
       length: 500,
       enemies: @[
         (goblin, 4),
@@ -89,7 +95,8 @@ let
       runeReward: num,
     ),
     Stage(
-      name: "1-2",
+      group: "1",
+      area: "2",
       length: 800,
       enemies: @[
         (goblin, 5),
@@ -98,7 +105,8 @@ let
       runeReward: createSpread,
     ),
     Stage(
-      name: "1-3",
+      group: "1",
+      area: "3",
       length: 1200,
       enemies: @[
         (goblin, 8),
@@ -107,7 +115,8 @@ let
       runeReward: count,
     ),
     Stage(
-      name: "1-4",
+      group: "1",
+      area: "4",
       length: 1400,
       enemies: @[
         (goblin, 18),
@@ -115,7 +124,8 @@ let
       runeReward: despawn,
     ),
     Stage(
-      name: "1-5",
+      group: "1",
+      area: "5",
       length: 2400,
       enemies: @[
         (goblin, 22),
@@ -124,7 +134,8 @@ let
       runeReward: createBurst,
     ),
     Stage(
-      name: "2-1",
+      group: "2",
+      area: "1",
       length: 800,
       enemies: @[
         (goblin, 10),
@@ -132,7 +143,8 @@ let
       runeReward: turn,
     ),
     Stage(
-      name: "2-2",
+      group: "2",
+      area: "2",
       length: 800,
       enemies: @[
         (goblin, 10),
@@ -140,7 +152,8 @@ let
       runeReward: nearest,
     ),
     Stage(
-      name: "2-3",
+      group: "2",
+      area: "3",
       length: 800,
       enemies: @[
         (goblin, 10),
@@ -148,7 +161,8 @@ let
       runeReward: mult,
     ),
     Stage(
-      name: "2-4",
+      group: "2",
+      area: "4",
       length: 800,
       enemies: @[
         (goblin, 10),
@@ -156,7 +170,8 @@ let
       runeReward: wave,
     ),
     Stage(
-      name: "2-5",
+      group: "2",
+      area: "5",
       length: 800,
       enemies: @[
         (goblin, 10),
@@ -164,7 +179,8 @@ let
       runeReward: grow,
     ),
     Stage(
-      name: "2-6",
+      group: "2",
+      area: "6",
       length: 800,
       enemies: @[
         (goblin, 10),
@@ -175,3 +191,60 @@ let
 
 proc currentRuneReward*(stageData: StageData): Rune =
   levels[stageData.currentStage].runeReward
+
+proc groups_calc(): seq[Group] =
+  result = @[]
+  for stage in levels:
+    var groupExists = false
+    for stages in result.mitems:
+      if stage.group == stages[0].group:
+        groupExists = true
+        stages.add stage
+        break
+    if not groupExists:
+      result.add @[stage]
+let groups* = groups_calc()
+
+proc openGroups*(stageData: StageData): seq[Group] =
+  result = @[]
+  var idx = 0
+  for group in groups:
+    var g = newSeq[Stage]()
+    for stage in group:
+      g.add stage
+      if idx > stageData.highestStageBeaten:
+        result.add g
+        return
+      idx += 1
+    result.add g
+
+proc pairIndexToLevelIndex(group, stage: int): int =
+  for group in groups[0..<group]:
+    result += group.len
+  result += stage
+
+proc levelIndexToPairIndex(level: int): tuple[group: int, stage: int] =
+  var
+    group = 0
+    level = level
+  while level >= groups[group].len:
+    level -= groups[group].len
+    group += 1
+    if group >= groups.len:
+      return (-1, -1)
+  return (group, level)
+
+proc click*(stageData: var StageData, group, stage: int) =
+  stageData.clickedStage = pairIndexToLevelIndex(group, stage)
+
+proc groupIndexForLevel*(level: int): int =
+  level.levelIndexToPairIndex.group
+
+proc groupForLevel*(level: int): Group =
+  groups[level.groupIndexForLevel]
+
+proc currentGroupIndex*(stageData: StageData): int =
+  stageData.currentStage.groupIndexForLevel
+
+proc currentGroup*(stageData: StageData): Group =
+  stageData.currentStage.groupForLevel

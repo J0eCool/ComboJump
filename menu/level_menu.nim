@@ -28,14 +28,6 @@ type
   LevelMenu* = ref object of Component
     menu: Node
 
-proc maxStageIndex(stageData: StageData): int =
-  min(stageData.highestStageBeaten + 1,
-      levels.len - 1)
-
-proc maxGroupIndex(stageData: StageData): int =
-  min((stageData.highestStageBeaten + 1) div 5,
-      (levels.len - 1) div 5)
-
 proc levelMenuNode(stageData: ptr StageData): Node =
   SpriteNode(
     pos: vec(600, 450),
@@ -56,54 +48,43 @@ proc levelMenuNode(stageData: ptr StageData): Node =
         pos: vec(0, -185),
         text: "Stages:",
       ),
-      List[int](
+      List[Group](
         spacing: vec(10),
         pos: vec(0, 26),
         size: vec(300, 400),
         width: 5,
-        items: (proc(): seq[int] =
-          toSeq(0..stageData[].maxGroupIndex)
-        ),
-        listNodes: (proc(groupIdx: int): Node =
+        items: (proc(): seq[Group] = openGroups(stageData[])),
+        listNodesIdx: (proc(group: Group, groupIdx: int): Node =
           var isOpen = false
           Button(
             size: vec(50, 50),
             onClick: (proc() = isOpen = not isOpen),
-            children: newSeqOf[Node](
+            children: @[
+              TextNode(text: group[0].group),
               BindNode[bool](
                 item: (proc(): bool = isOpen),
                 node: (proc(open: bool): Node =
                   if not open:
                     Node()
                   else:
-                    List[int](
+                    List[Stage](
                       spacing: vec(10),
                       pos: vec(0, 60),
                       width: 5,
-                      items: (proc(): seq[int] =
-                        if groupIdx < stageData[].maxGroupIndex:
-                          result = toSeq(0..<5)
-                        else:
-                          result = @[]
-                          for i in 0..stageData[].maxStageIndex mod 5:
-                            result.add i
-                      ),
-                      listNodes: (proc(stageIdx: int): Node =
-                        let stageIdx = stageIdx + 5 * groupIdx
+                      items: (proc(): seq[Stage] = group),
+                      listNodesIdx: (proc(stage: Stage, stageIdx: int): Node =
                         Button(
                           size: vec(50),
-                          onClick: (proc() =
-                            stageData.clickedStage = stageIdx
-                          ),
+                          onClick: (proc() = stageData[].click(groupIdx, stageIdx)),
                           children: @[
                             TextNode(
                               pos: vec(0, -10),
-                              text: levels[stageIdx].name,
+                              text: stage.name,
                             ),
                             SpriteNode(
                               pos: vec(10, 10),
                               size: vec(24, 24),
-                              textureName: levels[stageIdx].runeReward.textureName,
+                              textureName: stage.runeReward.textureName,
                             ),
                           ],
                         )
@@ -111,7 +92,7 @@ proc levelMenuNode(stageData: ptr StageData): Node =
                     )
                 ),
               )
-            ),
+            ],
           )
         ),
       ),

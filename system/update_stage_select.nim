@@ -83,7 +83,7 @@ defineSystem:
         stageData.currentStageInProgress = true
       of nextStage:
         let next = stageData.currentStage + 1
-        if next >= levels.len:
+        if next.groupIndexForLevel != stageData.currentGroupIndex:
           stageData.transitionTo = inMap
         else:
           stageData.clickedStage = next
