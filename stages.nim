@@ -183,7 +183,7 @@ let
       area: "6",
       length: 800,
       enemies: @[
-        (goblin, 10),
+        (mushroom, 10),
       ],
       runeReward: createSingle,
     ),

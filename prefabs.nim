@@ -90,9 +90,29 @@ proc newOgre(pos: Vec): Entity =
     XpOnDeath(xp: 12),
   ])
 
+proc newMushroom(pos: Vec): Entity =
+  newEntity("Mushroom", [
+    Transform(pos: pos,
+              size: vec(52, 56)),
+    EnemyProximity(
+      attackRange: 600.0,
+    ),
+    EnemyAttack(
+      kind: ranged,
+      damage: 15,
+      attackSpeed: 0.8,
+      size: 30.0,
+      bulletSpeed: 500.0,
+    ),
+    newHealth(30),
+    Collider(layer: enemy),
+    Sprite(textureName: "Mushroom.png"),
+    HealthBar(),
+    XpOnDeath(xp: 10),
+  ])
+
 proc newEnemy*(kind: EnemyKind, pos: Vec): Entity =
   case kind
-  of goblin:
-    newGoblin(pos)
-  of ogre:
-    newOgre(pos)
+  of goblin: newGoblin(pos)
+  of ogre: newOgre(pos)
+  of mushroom: newMushroom(pos)
