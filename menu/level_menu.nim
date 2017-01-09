@@ -1,24 +1,13 @@
 import
-  sdl2,
-  sequtils,
-  tables
+  sdl2
 
 import
-  component/collider,
-  component/sprite,
-  component/target_shooter,
-  component/transform,
-  menu/spell_hud_menu,
-  menu/rune_menu,
   input,
   entity,
   event,
-  jsonparse,
   menu,
   newgun,
-  prefabs,
   resources,
-  spell_creator,
   stages,
   system,
   vec,
@@ -106,8 +95,6 @@ defineDrawSystem:
       LevelMenu, levelMenu,
     ]:
       renderer.draw(levelMenu.menu, resources)
-
-import typetraits
 
 defineSystem:
   proc updateStageSelectMenu*(input: InputManager, stageData: var StageData) =

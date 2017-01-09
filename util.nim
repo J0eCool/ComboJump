@@ -83,3 +83,6 @@ proc `max=`*[T](a: var T, b: T) =
 
 proc newSeqOf*[T](base: T): seq[T] =
   @[base]
+
+proc formatFloat*(num: float): string =
+  ($num)[0..4]
