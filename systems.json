@@ -5,7 +5,6 @@
       "types": [
         "InputManager",
         "var StageData",
-        "var SpellData",
         "var bool"
       ],
       "priority": "0",
@@ -13,7 +12,6 @@
       "args": [
         "input",
         "stageData",
-        "spellData",
         "shouldExit"
       ]
     },

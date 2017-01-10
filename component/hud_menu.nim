@@ -71,7 +71,7 @@ proc hudMenuNode(health: Health, mana: Mana, stats: ptr PlayerStats, stageData: 
         node: (proc(stageIdx: int): Node =
           BorderedTextNode(
             pos: vec(1100, 50),
-            text: "Stage: " & levels[stageData.currentStage].name,
+            text: "Stage: " & stageData[].currentStageName,
             color: color(255, 255, 255, 255),
           )
         ),

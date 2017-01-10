@@ -17,7 +17,6 @@ import
   newgun,
   prefabs,
   resources,
-  spell_creator,
   stages,
   system,
   vec,
@@ -41,13 +40,12 @@ proc spawnedEntities*(stage: Stage): Entities =
       Sprite(color: color(0, 0, 0, 255)),
     ]),
   ]
-  for spawn in stage.enemies:
-    for i in 0..<spawn.count:
-      let pos = vec(random(100.0, 700.0), -random(0.0, stage.length))
-      result.add newEnemy(spawn.enemy, pos)
+  for enemy in stage.enemies:
+    let pos = vec(random(100.0, 700.0), -random(0.0, stage.length))
+    result.add newEnemy(enemy, pos)
 
 defineSystem:
-  proc stageSelect*(input: InputManager, stageData: var StageData, spellData: var SpellData, shouldExit: var bool) =
+  proc stageSelect*(input: InputManager, stageData: var StageData, shouldExit: var bool) =
     result = @[]
 
     if input.isPressed(restart) and stageData.state == inStage:
@@ -62,7 +60,6 @@ defineSystem:
       stageData.currentStageInProgress = false
       stageData.didCompleteStage = false
       stageData.highestStageBeaten.max = stageData.currentStage
-      spellData.addRuneCapacity(stageData.currentRuneReward())
       stageData.shouldSave = true
       
     if stageData.clickedStage >= 0:
@@ -79,8 +76,8 @@ defineSystem:
         ])
         stageData.currentStageInProgress = false
       of inStage:
-        result &= event.Event(kind: loadStage, stage: levels[stageData.clickedStage].spawnedEntities())
         stageData.currentStage = stageData.clickedStage
+        result &= event.Event(kind: loadStage, stage: stageData.currentStageData.spawnedEntities())
         stageData.clickedStage = -1
         stageData.currentStageInProgress = true
       of nextStage:

@@ -10,6 +10,7 @@ import
   component/transform,
   menu/spell_hud_menu,
   menu/rune_menu,
+  areas,
   input,
   enemy_kind,
   entity,
@@ -24,6 +25,8 @@ import
   util
 
 type
+  Area = object
+    info: AreaInfo
   StageState* = enum
     none
     freshStart
@@ -40,6 +43,13 @@ type
     state*: StageState
     transitionTo*: StageState
     didCompleteStage*: bool
+
+  Stage* = object
+    group*: string
+    area*: string
+    length*: float
+    enemies*: seq[EnemyKind]
+  Group* = seq[Stage]
 
 type
   ExitZone* = ref object of Component
@@ -70,148 +80,28 @@ proc toJSON*(stageData: StageData): JSON =
   result = JSON(kind: jsObject, obj: initTable[string, JSON]())
   result.obj["highestStageBeaten"] = stageData.highestStageBeaten.toJSON()
 
-type
-  SpawnInfo = tuple[enemy: EnemyKind, count: int]
-  Stage* = object
-    group*: string
-    area*: string
-    length*: float
-    enemies*: seq[SpawnInfo]
-    runeReward*: Rune
-  Group* = seq[Stage]
+proc stage(area: AreaInfo, idx: int): Stage =
+  let desc = area.stageDesc(idx)
+  Stage(
+    group: area.name,
+    area: $(idx + 1),
+    length: desc.length,
+    enemies: desc.randomEnemyKinds(),
+  )
 
 proc name*(stage: Stage): string =
   stage.group & "-" & stage.area
 
-let
-  levels* = @[
-    Stage(
-      group: "1",
-      area: "1",
-      length: 500,
-      enemies: @[
-        (goblin, 4),
-      ],
-      runeReward: num,
-    ),
-    Stage(
-      group: "1",
-      area: "2",
-      length: 800,
-      enemies: @[
-        (goblin, 5),
-        (ogre, 1),
-      ],
-      runeReward: createSpread,
-    ),
-    Stage(
-      group: "1",
-      area: "3",
-      length: 1200,
-      enemies: @[
-        (goblin, 8),
-        (ogre, 2),
-      ],
-      runeReward: count,
-    ),
-    Stage(
-      group: "1",
-      area: "4",
-      length: 1400,
-      enemies: @[
-        (goblin, 18),
-      ],
-      runeReward: despawn,
-    ),
-    Stage(
-      group: "1",
-      area: "5",
-      length: 2400,
-      enemies: @[
-        (goblin, 22),
-        (ogre, 5),
-      ],
-      runeReward: createBurst,
-    ),
-    Stage(
-      group: "2",
-      area: "1",
-      length: 800,
-      enemies: @[
-        (goblin, 10),
-      ],
-      runeReward: turn,
-    ),
-    Stage(
-      group: "2",
-      area: "2",
-      length: 800,
-      enemies: @[
-        (goblin, 10),
-      ],
-      runeReward: nearest,
-    ),
-    Stage(
-      group: "2",
-      area: "3",
-      length: 800,
-      enemies: @[
-        (goblin, 10),
-      ],
-      runeReward: mult,
-    ),
-    Stage(
-      group: "2",
-      area: "4",
-      length: 800,
-      enemies: @[
-        (goblin, 10),
-      ],
-      runeReward: wave,
-    ),
-    Stage(
-      group: "2",
-      area: "5",
-      length: 800,
-      enemies: @[
-        (goblin, 10),
-      ],
-      runeReward: grow,
-    ),
-    Stage(
-      group: "2",
-      area: "6",
-      length: 800,
-      enemies: @[
-        (mushroom, 10),
-      ],
-      runeReward: createSingle,
-    ),
-  ]
-
-proc currentRuneReward*(stageData: StageData): Rune =
-  levels[stageData.currentStage].runeReward
-
-proc groups_calc(): seq[Group] =
-  result = @[]
-  for stage in levels:
-    var groupExists = false
-    for stages in result.mitems:
-      if stage.group == stages[0].group:
-        groupExists = true
-        stages.add stage
-        break
-    if not groupExists:
-      result.add @[stage]
-let groups* = groups_calc()
+proc `==`*(a, b: Stage): bool =
+  a.name == b.name
 
 proc openGroups*(stageData: StageData): seq[Group] =
   result = @[]
   var idx = 0
-  for group in groups:
+  for area in areaData:
     var g = newSeq[Stage]()
-    for stage in group:
-      g.add stage
+    for i in 0..<area.numStages:
+      g.add area.stage(i)
       if idx > stageData.highestStageBeaten:
         result.add g
         return
@@ -219,18 +109,18 @@ proc openGroups*(stageData: StageData): seq[Group] =
     result.add g
 
 proc pairIndexToLevelIndex(group, stage: int): int =
-  for group in groups[0..<group]:
-    result += group.len
+  for area in areaData[0..<group]:
+    result += area.numStages
   result += stage
 
 proc levelIndexToPairIndex(level: int): tuple[group: int, stage: int] =
   var
     group = 0
     level = level
-  while level >= groups[group].len:
-    level -= groups[group].len
+  while level >= areaData[group].numStages:
+    level -= areaData[group].numStages
     group += 1
-    if group >= groups.len:
+    if group >= areaData.len:
       return (-1, -1)
   return (group, level)
 
@@ -240,11 +130,12 @@ proc click*(stageData: var StageData, group, stage: int) =
 proc groupIndexForLevel*(level: int): int =
   level.levelIndexToPairIndex.group
 
-proc groupForLevel*(level: int): Group =
-  groups[level.groupIndexForLevel]
-
 proc currentGroupIndex*(stageData: StageData): int =
   stageData.currentStage.groupIndexForLevel
 
-proc currentGroup*(stageData: StageData): Group =
-  stageData.currentStage.groupForLevel
+proc currentStageData*(stageData: StageData): Stage =
+  let pair = stageData.currentStage.levelIndexToPairIndex
+  areaData[pair.group].stage(pair.stage)
+  
+proc currentStageName*(stageData: StageData): string =
+  stageData.currentStageData.name

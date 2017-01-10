@@ -65,17 +65,12 @@ proc levelMenuNode(stageData: ptr StageData): Node =
                         Button(
                           size: vec(50),
                           onClick: (proc() = stageData[].click(groupIdx, stageIdx)),
-                          children: @[
+                          children: newSeqOf[Node](
                             TextNode(
                               pos: vec(0, -10),
                               text: stage.name,
                             ),
-                            SpriteNode(
-                              pos: vec(10, 10),
-                              size: vec(24, 24),
-                              textureName: stage.runeReward.textureName,
-                            ),
-                          ],
+                          ),
                         )
                       ),
                     )
