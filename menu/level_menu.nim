@@ -20,7 +20,7 @@ type
 proc levelMenuNode(stageData: ptr StageData): Node =
   SpriteNode(
     pos: vec(600, 450),
-    size: vec(300, 600),
+    size: vec(450, 600),
     color: color(128, 128, 128, 255),
     children: @[
       Button(
@@ -40,13 +40,12 @@ proc levelMenuNode(stageData: ptr StageData): Node =
       List[Group](
         spacing: vec(10),
         pos: vec(0, 26),
-        size: vec(300, 400),
-        width: 5,
+        size: vec(400, 400),
         items: (proc(): seq[Group] = openGroups(stageData[])),
         listNodesIdx: (proc(group: Group, groupIdx: int): Node =
           var isOpen = false
           Button(
-            size: vec(50, 50),
+            size: vec(180, 30),
             onClick: (proc() = isOpen = not isOpen),
             children: @[
               TextNode(text: group[0].group),
@@ -58,18 +57,14 @@ proc levelMenuNode(stageData: ptr StageData): Node =
                   else:
                     List[Stage](
                       spacing: vec(10),
-                      pos: vec(0, 60),
-                      width: 5,
+                      pos: vec(110, -20),
                       items: (proc(): seq[Stage] = group),
                       listNodesIdx: (proc(stage: Stage, stageIdx: int): Node =
                         Button(
-                          size: vec(50),
+                          size: vec(180, 30),
                           onClick: (proc() = stageData[].click(groupIdx, stageIdx)),
                           children: newSeqOf[Node](
-                            TextNode(
-                              pos: vec(0, -10),
-                              text: stage.name,
-                            ),
+                            TextNode(text: stage.name)
                           ),
                         )
                       ),
