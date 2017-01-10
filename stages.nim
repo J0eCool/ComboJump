@@ -84,7 +84,7 @@ proc stage(area: AreaInfo, idx: int): Stage =
   let desc = area.stageDesc(idx)
   Stage(
     group: area.name,
-    area: $(idx + 1),
+    area: $idx,
     length: desc.length,
     enemies: desc.randomEnemyKinds(),
   )
@@ -101,7 +101,7 @@ proc openGroups*(stageData: StageData): seq[Group] =
   for area in areaData:
     var g = newSeq[Stage]()
     for i in 0..<area.numStages:
-      g.add area.stage(i)
+      g.add area.stage(i + 1)
       if idx > stageData.highestStageBeaten:
         result.add g
         return
@@ -135,7 +135,7 @@ proc currentGroupIndex*(stageData: StageData): int =
 
 proc currentStageData*(stageData: StageData): Stage =
   let pair = stageData.currentStage.levelIndexToPairIndex
-  areaData[pair.group].stage(pair.stage)
+  areaData[pair.group].stage(pair.stage + 1)
   
 proc currentStageName*(stageData: StageData): string =
   stageData.currentStageData.name

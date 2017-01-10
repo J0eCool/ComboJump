@@ -28,7 +28,7 @@ proc statsMenuNode(stats: ptr PlayerStats): Node =
           "Mana Regen: " & $stats.manaRegen & "/s",
           "Cast Speed: +" & formatFloat(100 * (stats.castSpeed - 1)) & "%",
         ],
-        pos=vec(250, 300),
+        pos=vec(200, 300),
       )
     ),
   )
