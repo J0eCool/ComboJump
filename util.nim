@@ -86,3 +86,6 @@ proc newSeqOf*[T](base: T): seq[T] =
 
 proc formatFloat*(num: float): string =
   ($num)[0..4]
+
+proc approxEq*(a, b: float, epsilon=0.00001): bool =
+  abs(a - b) <= epsilon

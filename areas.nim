@@ -1,3 +1,5 @@
+import unittest
+
 import
   enemy_kind,
   util
@@ -62,18 +64,19 @@ proc lerp(t: float, a, b: Spawns): Spawns =
     result.add((e, t.lerp(a.proportionOf(e), b.proportionOf(e))))
 
 proc stageDesc*(area: AreaInfo, stage: int): StageDesc =
-  if area.keyStages.len < 2:
-    return area.keyStages[0]
   var
     lo = area.keyStages[0]
-    hi = area.keyStages[1]
-  for s in area.keyStages[1..^1]:
-    if s.stage < stage:
-      break
+    hi = area.keyStages[0]
+  for s in area.keyStages:
+    if s.stage == stage:
+      return s
     lo = hi
     hi = s
+    if lo.stage < stage and hi.stage > stage:
+      break
   let t = (stage - lo.stage) / (hi.stage - lo.stage)
   return StageDesc(
+    stage: stage,
     length: t.lerp(lo.length, hi.length),
     enemies: t.lerp(lo.enemies.float, hi.enemies.float).int,
     spawns: t.lerp(lo.spawns, hi.spawns),
@@ -92,3 +95,52 @@ proc randomEnemyKinds*(stage: StageDesc): seq[EnemyKind] =
       if roll <= 0.0:
         result.add spawn.enemy
         break
+
+proc `$`(stage: StageDesc): string =
+  "Stage " & $stage.stage &
+    " : length=" & $stage.length &
+    ", enemies=" & $stage.enemies &
+    ", spawns=" & $stage.spawns
+
+# -------------
+
+suite "AreaSuite":
+  let testArea = AreaInfo(
+    name: "TestArea",
+    keyStages: @[
+      StageDesc(stage: 1, length: 500, enemies: 6,
+        spawns: @[(goblin, 1.0)]),
+      StageDesc(stage: 3, length: 1000, enemies: 12,
+        spawns: @[(goblin, 2.0), (ogre, 1.0)]),
+      StageDesc(stage: 5, length: 1500, enemies: 24,
+        spawns: @[(goblin, 2.0)]),
+    ],
+  )
+
+  test "Get first key stage":
+    let stage = testArea.stageDesc(1)
+    check:
+      stage.length.approxEq(500)
+      stage.enemies == 6
+      stage.spawns == @[(goblin, 1.0)]
+
+  test "Get last key stage":
+    let stage = testArea.stageDesc(5)
+    check:
+      stage.length.approxEq(1500)
+      stage.enemies == 24
+      stage.spawns == @[(goblin, 2.0)]
+
+  test "Lerping stages":
+    let stage = testArea.stageDesc(2)
+    check:
+      stage.length.approxEq(750)
+      stage.enemies == 9
+      stage.spawns == @[(goblin, 1.5), (ogre, 0.5)]
+
+  test "Lerping other stages":
+    let stage = testArea.stageDesc(4)
+    check:
+      stage.length.approxEq(1250)
+      stage.enemies == 18
+      stage.spawns == @[(goblin, 2.0), (ogre, 0.5)]
