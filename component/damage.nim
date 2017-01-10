@@ -12,16 +12,12 @@ type
     damage*: int
 
 defineSystem:
+  components = [Health, Collider]
   proc updateDamage*() =
-    result = @[]
-    entities.forComponents e, [
-      Health, h,
-      Collider, c,
-    ]:
-      for col in c.collisions:
-        col.withComponent Damage, d:
-          h.cur -= d.damage.float
-          c.collisionBlacklist.add col
-          if h.cur <= 0:
-            result.add Event(kind: removeEntity, entity: e)
-            break
+    for col in collider.collisions:
+      col.withComponent Damage, damage:
+        health.cur -= damage.damage.float
+        collider.collisionBlacklist.add col
+        if health.cur <= 0:
+          result.add Event(kind: removeEntity, entity: entity)
+          break

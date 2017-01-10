@@ -10,23 +10,19 @@ import
 defineSystem:
   components = [Transform, Collider]
   proc checkCollisisons*() =
-    forComponents(entities, a, [
-      Transform, a_t,
-      Collider, a_c,
+    collider.collisions = @[]
+    if collider.collisionBlacklist == nil:
+      collider.collisionBlacklist = @[]
+    forComponents(entities, b, [
+      Transform, b_t,
+      Collider, b_c,
     ]):
-      a_c.collisions = @[]
-      if a_c.collisionBlacklist == nil:
-        a_c.collisionBlacklist = @[]
-      forComponents(entities, b, [
-        Transform, b_t,
-        Collider, b_c,
-      ]):
-        if a == b:
-          continue
-        if not a_c.layer.canCollideWith(b_c.layer):
-          continue
-        if b in a_c.collisionBlacklist:
-          continue
-        if not a_t.rect.intersects(b_t.rect):
-          continue
-        a_c.collisions.add(b)
+      if entity == b:
+        continue
+      if not collider.layer.canCollideWith(b_c.layer):
+        continue
+      if b in collider.collisionBlacklist:
+        continue
+      if not transform.rect.intersects(b_t.rect):
+        continue
+      collider.collisions.add(b)

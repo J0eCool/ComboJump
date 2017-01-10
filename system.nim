@@ -95,6 +95,9 @@ proc getNextId(data: Data): int =
       return
     result += 1
 
+proc toLowerFirst(str: string): string =
+  str[0..1].toLower & str[2..^0]
+
 proc getBaseType(t: NimNode): NimNode =
   result = t
   while result.kind == nnkBracketExpr:
@@ -110,6 +113,7 @@ proc walkHierarchy(t: NimNode): seq[NimNode] =
 proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
   var
     sysProc: NimNode = nil
+    components: seq[string] = nil
     priority = 0
   for n in body:
     if n.kind == nnkProcDef:
@@ -120,7 +124,11 @@ proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
       let metaKind = $n[0]
       case metaKind
       of "components":
-        discard
+        let bracket = n[1]
+        assert bracket.kind == nnkBracket, "components metadata must be an array literal"
+        components = newSeq[string]()
+        for c in bracket:
+          components.add $c.ident
       of "priority":
         let val = n[1]
         if val.kind == nnkIntLit:
@@ -172,6 +180,19 @@ proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
   else:
     data.draw = systems
   writeData(data)
+
+  if components != nil:
+    let
+      baseBody = sysProc.body
+      forComponents = newCall("forComponents", ident("entities"), ident("entity"))
+    sysProc.body = newStmtList(newAssignment(ident("result"), prefix(newTree(nnkBracket), "@")))
+    let componentList = newTree(nnkBracket)
+    for c in components:
+      componentList.add ident(c)
+      componentList.add ident(c.toLowerFirst)
+    forComponents.add componentList
+    forComponents.add baseBody
+    sysProc.body.add forComponents
 
   when useDylibs:
     sysProc.addPragma(ident("exportc"))

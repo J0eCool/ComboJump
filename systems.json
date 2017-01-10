@@ -8,7 +8,7 @@
         "var bool"
       ],
       "priority": "0",
-      "id": "30",
+      "id": "32",
       "args": [
         "input",
         "stageData",
@@ -106,7 +106,7 @@
         "float"
       ],
       "priority": "0",
-      "id": "28",
+      "id": "30",
       "args": [
         "dt"
       ]
@@ -172,7 +172,7 @@
         "float"
       ],
       "priority": "0",
-      "id": "29",
+      "id": "31",
       "args": [
         "dt"
       ]
@@ -247,7 +247,7 @@
       "types": [
       ],
       "priority": "0",
-      "id": "27",
+      "id": "29",
       "args": [
       ]
     },
@@ -270,7 +270,7 @@
         "float"
       ],
       "priority": "0",
-      "id": "26",
+      "id": "28",
       "args": [
         "dt"
       ]
@@ -282,7 +282,7 @@
         "var PlayerStats"
       ],
       "priority": "0",
-      "id": "32",
+      "id": "27",
       "args": [
         "input",
         "stats"
@@ -296,7 +296,7 @@
         "var ResourceManager"
       ],
       "priority": "-100",
-      "id": "31",
+      "id": "26",
       "args": [
         "resources"
       ]
