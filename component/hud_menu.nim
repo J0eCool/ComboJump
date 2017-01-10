@@ -82,24 +82,20 @@ proc hudMenuNode(health: Health, mana: Mana, stats: ptr PlayerStats, stageData: 
 
 defineDrawSystem:
   priority = -100
+  components = [HudMenu]
   proc drawHudMenu*(resources: var ResourceManager, camera: Camera) =
-    entities.forComponents entity, [
-      HudMenu, hudMenu,
-    ]:
-      renderer.draw(hudMenu.menu, resources)
+    renderer.draw(hudMenu.menu, resources)
 
 defineSystem:
+  components = [HudMenu]
   proc updateHudMenu*(input: InputManager, stats: var PlayerStats, stageData: var StageData) =
-    entities.forComponents entity, [
-      HudMenu, hudMenu,
-    ]:
+    if hudMenu.menu == nil:
+      entities.forComponents entity, [
+        Health, health,
+        Mana, mana,
+      ]:
+        hudMenu.menu = hudMenuNode(health, mana, addr stats, addr stageData)
+        break
       if hudMenu.menu == nil:
-        entities.forComponents entity, [
-          Health, health,
-          Mana, mana,
-        ]:
-          hudMenu.menu = hudMenuNode(health, mana, addr stats, addr stageData)
-          break
-        if hudMenu.menu == nil:
-          return
-      hudMenu.menu.update(input)
+        return
+    hudMenu.menu.update(input)

@@ -14,18 +14,15 @@ type
     didInitialize*: bool
 
 defineSystem:
+  components = [PlayerHealth, PlayerMana]
   proc updatePlayerHealth*(stats: PlayerStats) =
-    entities.forComponents entity, [
-      PlayerHealth, playerHealth,
-      PlayerMana, playerMana,
-    ]:
-      playerHealth.max = stats.maxHealth().float
-      playerMana.max = stats.maxMana().float
-      playerMana.regenPerSecond = stats.manaRegen()
+    playerHealth.max = stats.maxHealth().float
+    playerMana.max = stats.maxMana().float
+    playerMana.regenPerSecond = stats.manaRegen()
 
-      if not playerHealth.didInitialize:
-        playerHealth.didInitialize = true
-        playerHealth.cur = playerHealth.max
-      if not playerMana.didInitialize:
-        playerMana.didInitialize = true
-        playerMana.cur = playerMana.max
+    if not playerHealth.didInitialize:
+      playerHealth.didInitialize = true
+      playerHealth.cur = playerHealth.max
+    if not playerMana.didInitialize:
+      playerMana.didInitialize = true
+      playerMana.cur = playerMana.max

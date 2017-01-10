@@ -14,13 +14,9 @@ type
     moveSpeed*: float
 
 defineSystem:
+  components = [EnemyMoveTowards, EnemyProximity, Movement]
   proc updateEnemyMoveTowards*(dt: float) =
-    entities.forComponents e, [
-      EnemyMoveTowards, em,
-      EnemyProximity, ep,
-      Movement, m,
-    ]:
-      if ep.isInRange and not ep.isAttacking:
-        m.vel = em.moveSpeed * ep.dirToPlayer
-      else:
-        m.vel = vec(0)
+    if enemyProximity.isInRange and not enemyProximity.isAttacking:
+      movement.vel = enemyMoveTowards.moveSpeed * enemyProximity.dirToPlayer
+    else:
+      movement.vel = vec(0)

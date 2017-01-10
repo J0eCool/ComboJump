@@ -81,20 +81,14 @@ proc healthBarNode(health: Health): Node =
 
 defineDrawSystem:
   priority = -100
+  components = [HealthBar, Transform]
   proc drawHealthBarNodes*(resources: var ResourceManager, camera: Camera) =
-    entities.forComponents entity, [
-      HealthBar, healthBar,
-      Transform, transform,
-    ]:
-      healthBar.menu.pos = transform.pos + camera.offset + vec(0, -75)
-      renderer.draw(healthBar.menu, resources)
+    healthBar.menu.pos = transform.pos + camera.offset + vec(0, -75)
+    renderer.draw(healthBar.menu, resources)
 
 defineSystem:
+  components = [HealthBar, Health]
   proc updateHealthBarNodes*(input: InputManager) =
-    entities.forComponents entity, [
-      HealthBar, healthBar,
-      Health, health,
-    ]:
-      if healthBar.menu == nil:
-        healthBar.menu = healthBarNode(health)
-      healthBar.menu.update(input)
+    if healthBar.menu == nil:
+      healthBar.menu = healthBarNode(health)
+    healthBar.menu.update(input)

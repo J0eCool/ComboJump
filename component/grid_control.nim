@@ -11,12 +11,9 @@ type GridControl* = ref object of Component
   dir*: Vec
 
 defineSystem:
+  components = [GridControl, Movement]
   proc gridControl*(input: InputManager) =
-    entities.forComponents e, [
-      GridControl, c,
-      Movement, m,
-    ]:
-      let raw = vec(input.getAxis(Axis.horizontal),
-                    input.getAxis(Axis.vertical))
-      m.vel = raw * c.moveSpeed
-      c.dir = raw.unit
+    let raw = vec(input.getAxis(Axis.horizontal),
+                  input.getAxis(Axis.vertical))
+    movement.vel = raw * gridControl.moveSpeed
+    gridControl.dir = raw.unit

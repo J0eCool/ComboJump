@@ -54,16 +54,11 @@ proc attackEntity*(enemyAttack: EnemyAttack, pos, dir: Vec): Entity =
           ])
 
 defineSystem:
+  components = [EnemyAttack, EnemyProximity, Transform]
   proc updateEnemyAttack*(dt: float) =
-    result = @[]
-    entities.forComponents entity, [
-      EnemyAttack, enemyAttack,
-      EnemyProximity, enemyProximity,
-      Transform, transform,
-    ]:
-      enemyAttack.cooldownTimer -= dt
-      enemyProximity.isAttacking = enemyAttack.cooldownTimer > 0.0
-      if enemyProximity.isInAttackRange and not enemyProximity.isAttacking:
-        enemyAttack.cooldownTimer = 1.0 / enemyAttack.attackSpeed
-        let attack = enemyAttack.attackEntity(transform.pos, enemyProximity.dirToPlayer)
-        result.add event.Event(kind: addEntity, entity: attack)
+    enemyAttack.cooldownTimer -= dt
+    enemyProximity.isAttacking = enemyAttack.cooldownTimer > 0.0
+    if enemyProximity.isInAttackRange and not enemyProximity.isAttacking:
+      enemyAttack.cooldownTimer = 1.0 / enemyAttack.attackSpeed
+      let attack = enemyAttack.attackEntity(transform.pos, enemyProximity.dirToPlayer)
+      result.add event.Event(kind: addEntity, entity: attack)

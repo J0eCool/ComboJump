@@ -56,15 +56,12 @@ type
     stageEnd*: bool
 
 defineSystem:
+  components = [ExitZone, Collider]
   proc updateExitZones*(stageData: var StageData) =
-    entities.forComponents e, [
-      ExitZone, exitZone,
-      Collider, collider,
-    ]:
-      if collider.collisions.len > 0:
-        stageData.transitionTo = if exitZone.stageEnd: nextStage else: inMap
-        if exitZone.stageEnd:
-          stageData.didCompleteStage = true
+    if collider.collisions.len > 0:
+      stageData.transitionTo = if exitZone.stageEnd: nextStage else: inMap
+      if exitZone.stageEnd:
+        stageData.didCompleteStage = true
 
 proc newStageData*(): StageData =
   StageData(

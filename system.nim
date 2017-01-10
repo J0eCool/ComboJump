@@ -185,11 +185,13 @@ proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
     let
       baseBody = sysProc.body
       forComponents = newCall("forComponents", ident("entities"), ident("entity"))
-    sysProc.body = newStmtList(newAssignment(ident("result"), prefix(newTree(nnkBracket), "@")))
+    sysProc.body = newStmtList()
     let componentList = newTree(nnkBracket)
     for c in components:
       componentList.add ident(c)
       componentList.add ident(c.toLowerFirst)
+    if sysType == "update":
+      sysProc.body.add newAssignment(ident("result"), prefix(newTree(nnkBracket), "@"))
     forComponents.add componentList
     forComponents.add baseBody
     sysProc.body.add forComponents

@@ -11,13 +11,10 @@ type CameraTarget* = ref object of Component
   offset*: Vec
 
 defineSystem:
+  components = [CameraTarget, Transform]
   proc updateCamera*(camera: var Camera) =
-    entities.forComponents e, [
-      CameraTarget, c,
-      Transform, t,
-    ]:
-      let diff = camera.screenSize / 2 - t.pos + c.offset
-      if not c.vertical:
-        camera.offset.x = diff.x
-      else:
-        camera.offset.y = diff.y
+    let diff = camera.screenSize / 2 - transform.pos + cameraTarget.offset
+    if not cameraTarget.vertical:
+      camera.offset.x = diff.x
+    else:
+      camera.offset.y = diff.y
