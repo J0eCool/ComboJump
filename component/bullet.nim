@@ -29,6 +29,12 @@ type
   ShootProc* = proc(pos, vel: Vec): Events
   UpdateProc* = proc(entity: Entity, dt: float)
 
+  RepeatShooter* = ref object of Component
+    numToRepeat*: int
+    toShoot*: ShootProc
+    dir*: Vec
+    shootCooldown*: float
+
 proc lifePct*(b: Bullet): float =
   1.0 - b.timeSinceSpawn / b.liveTime
 

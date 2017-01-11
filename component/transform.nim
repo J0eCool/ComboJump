@@ -1,7 +1,10 @@
-import entity, rect, vec
+import
+  entity,
+  rect,
+  vec
 
 type Transform* = ref object of Component
-  pos*, size*: Vec
+  pos*, size*, scale*: Vec
 
 proc rect*(t: Transform): Rect =
   rect(t.pos, t.size)
@@ -9,20 +12,30 @@ proc `rect=`*(t: Transform, r: Rect) =
   t.pos = r.pos
   t.size = r.size
 
-proc heirarchyOrderedTransforms(t: Transform): seq[Transform] =
-  result = @[t]
-  var cur = t.entity.parent
-  while cur != nil:
-    result &= cur.getComponent(Transform)
-    cur = cur.parent
+proc parent(transform: Transform): Transform =
+  if transform.entity.parent != nil:
+    return transform.entity.parent.getComponent(Transform)
+
+proc scaleOrDefault(transform: Transform): Vec =
+  if transform.scale == vec(0):
+    vec(1)
+  else:
+    transform.scale
+
+proc globalScale(transform: Transform): Vec =
+  if transform.parent == nil:
+    transform.scaleOrDefault
+  else:
+    transform.parent.scaleOrDefault * transform.scaleOrDefault
 
 proc globalPos*(transform: Transform): Vec =
-  for t in transform.heirarchyOrderedTransforms():
-    result += t.pos
+  if transform.parent == nil:
+    return transform.pos
+  let parent = transform.parent()
+  return parent.globalPos + parent.globalScale * transform.pos
 
 proc globalSize*(transform: Transform): Vec =
-  # TODO: scale as well as size?
-  transform.size
+  transform.size * transform.globalScale
 
 proc globalRect*(t: Transform): Rect =
   rect(t.globalPos, t.globalSize)

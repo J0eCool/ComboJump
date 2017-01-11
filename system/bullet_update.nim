@@ -31,3 +31,14 @@ defineSystem:
         if b.nextStage != nil:
           e.withComponent Transform, t:
             result &= b.nextStage(t.pos, b.dir)
+
+defineSystem:
+  components = [RepeatShooter, Transform]
+  proc updateRepeatShooter*(dt: float) =
+    repeatShooter.shootCooldown -= dt
+    if repeatShooter.shootCooldown < 0.0:
+      result &= repeatShooter.toShoot(transform.pos, repeatShooter.dir)
+      repeatShooter.shootCooldown += 0.35
+      repeatShooter.numToRepeat -= 1
+      if repeatShooter.numToRepeat <= 0:
+        result.add Event(kind: removeEntity, entity: entity)

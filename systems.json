@@ -91,6 +91,17 @@
         "stats"
       ]
     },
+    "updateRepeatShooter": {
+      "filename": "system/bullet_update.nim",
+      "types": [
+        "float"
+      ],
+      "priority": "0",
+      "id": "33",
+      "args": [
+        "dt"
+      ]
+    },
     "updateEnemyProximity": {
       "filename": "component/enemy_proximity.nim",
       "types": [

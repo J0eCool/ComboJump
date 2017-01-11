@@ -13,7 +13,7 @@ type CameraTarget* = ref object of Component
 defineSystem:
   components = [CameraTarget, Transform]
   proc updateCamera*(camera: var Camera) =
-    let diff = camera.screenSize / 2 - transform.pos + cameraTarget.offset
+    let diff = camera.screenSize / 2 - transform.globalPos + cameraTarget.offset
     if not cameraTarget.vertical:
       camera.offset.x = diff.x
     else:

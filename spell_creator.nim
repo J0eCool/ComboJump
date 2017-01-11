@@ -46,7 +46,7 @@ proc newSpellData*(): SpellData =
 
 let
   inputs* = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
-  runes* = [num, count, mult, createSingle, createSpread, createBurst, despawn, wave, turn, grow, moveUp, moveSide, nearest, startPos]
+  runes* = [num, count, mult, createSingle, createSpread, createBurst, createRepeat, despawn, wave, turn, grow, moveUp, moveSide, nearest, startPos]
 
 proc inputString*(rune: Rune): string =
   for i in 0..<runes.len:

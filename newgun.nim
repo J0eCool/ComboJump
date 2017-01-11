@@ -29,6 +29,7 @@ type
     createSingle
     createSpread
     createBurst
+    createRepeat
     despawn
 
     # update-only runes
@@ -46,6 +47,7 @@ type
     single
     spread
     burst
+    repeat
 
   ProjectileInfo = object
     onDespawn: ref ProjectileInfo
@@ -55,6 +57,9 @@ type
       discard
     of spread, burst:
       numBullets: int
+    of repeat:
+      numRepeats: int
+      repeatInfo: ref ProjectileInfo
 
   NumberProc = proc(e: Entity): Option[float]
   Number = object
@@ -142,6 +147,12 @@ proc info*(rune: Rune): RuneInfo =
     RuneInfo(
       texture: "Burst.png",
       input: @[number],
+      output: @[projectileInfo],
+    )
+  of createRepeat:
+    RuneInfo(
+      texture: "Repeat.png",
+      input: @[number, projectileInfo],
       output: @[projectileInfo],
     )
   of despawn:
@@ -290,6 +301,21 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target): Event
         b = bullet.getComponent(Bullet)
       b.startPos = p
       result.add Event(kind: addEntity, entity: bullet)
+  of repeat:
+    let
+      toShoot =
+        proc(pos, vel: Vec): Events =
+          newBulletEvents(info.repeatInfo[], pos, vel, target)
+      num = info.numRepeats + 1
+      repeater = newEntity("Repeater", [
+        Transform(pos: pos),
+        RepeatShooter(
+          numToRepeat: num,
+          toShoot: toShoot,
+          dir: dir,
+        ),
+      ])
+    result = @[Event(kind: addEntity, entity: repeater)]
 
 proc makeCountProc(v: Number): NumberProc =
   result = proc(e:Entity): Option[float] =
@@ -363,8 +389,21 @@ proc parse*(spell: SpellDesc): SpellParse =
           of createBurst: burst
           else:
             expect false, "Missing projKind case"
+            # Case statement needs to return a value, even if it's unreachable
             single
         proj = ProjectileInfo(kind: projKind, numBullets: num)
+      valueStack.push Value(kind: projectileInfo, info: proj)
+    of createRepeat:
+      let
+        arg = valueStack.pop
+        repeatProj = valueStack.pop
+        rawNum = arg.value.get(nil)
+      expect rawNum.kind == just, "Needs statically determinable number"
+      var r = new(ProjectileInfo)
+      r[] = repeatProj.info
+      let
+        num = rawNum.value.int
+        proj = ProjectileInfo(kind: repeat, numRepeats: num, repeatInfo: r)
       valueStack.push Value(kind: projectileInfo, info: proj)
     of despawn:
       let arg = valueStack.pop
