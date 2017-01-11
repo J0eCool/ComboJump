@@ -6,6 +6,7 @@ when Profile != 0:
 
 import
   game,
+  component/collider,
   component/xp_on_death,
   system/render,
   camera,
@@ -27,6 +28,7 @@ import
   util
 
 type NanoGame* = ref object of Game
+  player: Entity
   background: ScrollingBackground
   stageData: StageData
   spellData: SpellData
@@ -64,6 +66,12 @@ method draw*(renderer: RendererPtr, game: NanoGame) =
 
 method update*(game: NanoGame, dt: float) =
   game.dt = dt
+
+  game.player = nil
+  for e in game.entities:
+    let c = e.getComponent(Collider)
+    if c != nil and c.layer == Layer.player:
+      game.player = e
 
   game.updateSystems()
 

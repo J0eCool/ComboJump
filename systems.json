@@ -3,6 +3,7 @@
     "stageSelect": {
       "filename": "system/update_stage_select.nim",
       "types": [
+        "Entity",
         "InputManager",
         "var StageData",
         "var bool"
@@ -10,6 +11,7 @@
       "priority": "0",
       "id": "32",
       "args": [
+        "player",
         "input",
         "stageData",
         "shouldExit"
@@ -105,10 +107,12 @@
     "updateEnemyProximity": {
       "filename": "component/enemy_proximity.nim",
       "types": [
+        "Entity"
       ],
       "priority": "0",
       "id": "3",
       "args": [
+        "player"
       ]
     },
     "physics": {

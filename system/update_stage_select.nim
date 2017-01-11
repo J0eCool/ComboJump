@@ -22,9 +22,14 @@ import
   vec,
   util
 
-proc spawnedEntities*(stage: Stage): Entities =
+proc spawnedEntities*(stage: Stage, player: Entity): Entities =
+  let
+    player = if player != nil: player else: newPlayer(vec())
+    playerTransform = player.getComponent(Transform)
+  playerTransform.pos = vec(300, 200)
+
   result = @[
-    newPlayer(vec(300, 200)),
+    player,
     newHud(),
     newEntity("SpellHudMenu", [SpellHudMenu().Component]),
     newEntity("BeginExit", [
@@ -45,7 +50,7 @@ proc spawnedEntities*(stage: Stage): Entities =
     result.add newEnemy(enemy, pos)
 
 defineSystem:
-  proc stageSelect*(input: InputManager, stageData: var StageData, shouldExit: var bool) =
+  proc stageSelect*(player: Entity, input: InputManager, stageData: var StageData, shouldExit: var bool) =
     result = @[]
 
     if input.isPressed(restart) and stageData.state == inStage:
@@ -77,7 +82,7 @@ defineSystem:
         stageData.currentStageInProgress = false
       of inStage:
         stageData.currentStage = stageData.clickedStage
-        result &= event.Event(kind: loadStage, stage: stageData.currentStageData.spawnedEntities())
+        result &= event.Event(kind: loadStage, stage: stageData.currentStageData.spawnedEntities(player))
         stageData.clickedStage = -1
         stageData.currentStageInProgress = true
       of nextStage:

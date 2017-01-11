@@ -25,12 +25,7 @@ type
     jumpTimer: float
 
 defineSystem:
-  proc updateEnemyProximity*() =
-    var player: Entity = nil
-    for e in entities:
-      let c = e.getComponent(Collider)
-      if c != nil and c.layer == Layer.player:
-        player = e
+  proc updateEnemyProximity*(player: Entity) =
     let pt = if player == nil: nil else: player.getComponent(Transform)
 
     entities.forComponents e, [
