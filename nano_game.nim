@@ -57,6 +57,7 @@ defineSystemCalls(NanoGame)
 import
   tests/[
     areas_test,
+    transform_test,
   ]
 
 method draw*(renderer: RendererPtr, game: NanoGame) =

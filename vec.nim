@@ -95,3 +95,6 @@ proc orientation*(a, b, c: Vec): int =
 proc intersects*(a, b, c, d: Vec): bool =
   (orientation(a, b, c) != orientation(a, b, d) and
    orientation(c, d, a) != orientation(c, d, b))
+
+proc approxEq*(a, b: Vec): bool =
+  a.x.approxEq(b.x) and a.y.approxEq(b.y)

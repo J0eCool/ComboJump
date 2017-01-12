@@ -90,3 +90,7 @@ proc `$`*(e: Entity): string =
     e.name & " (id=" & $e.id & ")"
   else:
     "(nil entity)"
+
+iterator items*(entity: Entity): Entity =
+  for e in entity.children:
+    yield e

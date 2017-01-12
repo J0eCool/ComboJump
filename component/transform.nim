@@ -16,17 +16,17 @@ proc parent(transform: Transform): Transform =
   if transform.entity.parent != nil:
     return transform.entity.parent.getComponent(Transform)
 
-proc scaleOrDefault(transform: Transform): Vec =
+proc scaleOrDefault*(transform: Transform): Vec =
   if transform.scale == vec(0):
     vec(1)
   else:
     transform.scale
 
-proc globalScale(transform: Transform): Vec =
+proc globalScale*(transform: Transform): Vec =
   if transform.parent == nil:
     transform.scaleOrDefault
   else:
-    transform.parent.scaleOrDefault * transform.scaleOrDefault
+    transform.parent.globalScale * transform.scaleOrDefault
 
 proc globalPos*(transform: Transform): Vec =
   if transform.parent == nil:
