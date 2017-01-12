@@ -54,6 +54,11 @@ importAllSystems()
 # defineDylibs()
 defineSystemCalls(NanoGame)
 
+import
+  tests/[
+    areas_test,
+  ]
+
 method draw*(renderer: RendererPtr, game: NanoGame) =
   game.background.loadBackgroundAssets(game.resources, renderer)
 
