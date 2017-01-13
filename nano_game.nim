@@ -14,6 +14,7 @@ import
   entity,
   event,
   input,
+  notifications,
   player_stats,
   prefabs,
   program,
@@ -33,6 +34,7 @@ type NanoGame* = ref object of Game
   stageData: StageData
   spellData: SpellData
   stats: PlayerStats
+  notifications: N10nManager
 
 proc newNanoGame*(screenSize: Vec): NanoGame =
   new result
@@ -42,6 +44,7 @@ proc newNanoGame*(screenSize: Vec): NanoGame =
   result.stageData = newStageData()
   result.spellData = newSpellData()
   result.stats = newPlayerStats()
+  result.notifications = newN10nManager()
   load(result.spellData, result.stageData, result.stats)
 
 method loadEntities*(game: NanoGame) =
@@ -57,6 +60,7 @@ defineSystemCalls(NanoGame)
 import
   tests/[
     areas_test,
+    notifications_test,
     transform_test,
   ]
 

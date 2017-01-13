@@ -9,7 +9,7 @@
         "var bool"
       ],
       "priority": "0",
-      "id": "32",
+      "id": "33",
       "args": [
         "player",
         "input",
@@ -99,9 +99,20 @@
         "float"
       ],
       "priority": "0",
-      "id": "33",
+      "id": "29",
       "args": [
         "dt"
+      ]
+    },
+    "updateN10nManager": {
+      "filename": "notifications.nim",
+      "types": [
+        "var N10nManager"
+      ],
+      "priority": "0",
+      "id": "34",
+      "args": [
+        "notifications"
       ]
     },
     "updateEnemyProximity": {
@@ -121,7 +132,7 @@
         "float"
       ],
       "priority": "0",
-      "id": "30",
+      "id": "31",
       "args": [
         "dt"
       ]
@@ -187,7 +198,7 @@
         "float"
       ],
       "priority": "0",
-      "id": "31",
+      "id": "32",
       "args": [
         "dt"
       ]
@@ -262,7 +273,7 @@
       "types": [
       ],
       "priority": "0",
-      "id": "29",
+      "id": "30",
       "args": [
       ]
     },
