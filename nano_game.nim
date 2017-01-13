@@ -51,7 +51,7 @@ method loadEntities*(game: NanoGame) =
   game.entities = @[]
 
 method onRemove*(game: NanoGame, entity: Entity) =
-  onRemoveXpOnDeath(entity, game.stats)
+  discard
 
 importAllSystems()
 # defineDylibs()
