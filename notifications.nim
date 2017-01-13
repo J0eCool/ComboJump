@@ -3,6 +3,9 @@ import
   event,
   system
 
+# "Notification" is long to type out a lot, so use the abbreviation "N10n"
+# Similar to l10n, i18n, a11y and co
+
 type
   N10nKind* = enum
     entityRemoved

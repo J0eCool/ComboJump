@@ -51,7 +51,7 @@ method loadEntities*(game: NanoGame) =
   game.entities = @[]
 
 method onRemove*(game: NanoGame, entity: Entity) =
-  discard
+  game.notifications.add N10n(kind: entityRemoved, entity: entity)
 
 importAllSystems()
 # defineDylibs()

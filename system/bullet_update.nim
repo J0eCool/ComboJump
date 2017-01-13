@@ -10,6 +10,7 @@ import
   component/sprite,
   entity,
   event,
+  notifications,
   system,
   util,
   vec
@@ -28,10 +29,6 @@ defineSystem:
       if b.lifePct <= 0.0 or (c.collisions.len > 0 and not b.stayOnHit):
         result.add(Event(kind: removeEntity, entity: e))
 
-        if b.nextStage != nil:
-          e.withComponent Transform, t:
-            result &= b.nextStage(t.pos, b.dir)
-
 defineSystem:
   components = [RepeatShooter, Transform]
   proc updateRepeatShooter*(dt: float) =
@@ -42,3 +39,17 @@ defineSystem:
       repeatShooter.numToRepeat -= 1
       if repeatShooter.numToRepeat <= 0:
         result.add Event(kind: removeEntity, entity: entity)
+
+defineSystem:
+  proc updateBulletN10ns*(notifications: N10nManager) =
+    result = @[]
+    for n10n in notifications.get(entityRemoved):
+      let entity = n10n.entity
+      entity.withComponent Transform, transform:
+        entity.withComponent Bullet, bullet:
+          if bullet.nextStage != nil:
+            result &= bullet.nextStage(transform.pos, bullet.dir)
+
+        entity.withComponent RepeatShooter, repeatShooter:
+          if repeatShooter.nextStage != nil:
+            result &= repeatShooter.nextStage(transform.pos, repeatShooter.dir)

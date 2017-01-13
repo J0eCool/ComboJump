@@ -312,6 +312,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target): Event
         RepeatShooter(
           numToRepeat: num,
           toShoot: toShoot,
+          nextStage: despawnCallback,
           dir: dir,
         ),
       ])

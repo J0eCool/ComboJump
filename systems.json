@@ -161,6 +161,17 @@
         "dt"
       ]
     },
+    "updateBulletN10ns": {
+      "filename": "system/bullet_update.nim",
+      "types": [
+        "N10nManager"
+      ],
+      "priority": "0",
+      "id": "36",
+      "args": [
+        "notifications"
+      ]
+    },
     "updateEnemyMoveTowards": {
       "filename": "component/enemy_movement.nim",
       "types": [

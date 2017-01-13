@@ -32,6 +32,7 @@ type
   RepeatShooter* = ref object of Component
     numToRepeat*: int
     toShoot*: ShootProc
+    nextStage*: ShootProc
     dir*: Vec
     shootCooldown*: float
 
