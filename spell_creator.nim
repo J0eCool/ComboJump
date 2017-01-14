@@ -4,6 +4,7 @@ import
   tables
 
 import
+  spells/runes,
   entity,
   event,
   input,
@@ -46,11 +47,16 @@ proc newSpellData*(): SpellData =
 
 let
   inputs* = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
-  runes* = [num, count, mult, createSingle, createSpread, createBurst, createRepeat, despawn, wave, turn, grow, moveUp, moveSide, nearest, startPos]
+
+proc allRunes_calc(): seq[Rune] =
+  result = @[]
+  for rune in Rune:
+    result.add rune
+const allRunes = allRunes_calc()
 
 proc inputString*(rune: Rune): string =
-  for i in 0..<runes.len:
-    if rune == runes[i]:
+  for i in 0..<allRunes.len:
+    if rune == allRunes[i]:
       return $inputs[i]
   assert false, "Rune not found in runes array"
 
@@ -80,6 +86,12 @@ proc runeCount(spellData: SpellData, rune: Rune): int =
 
 proc available*(spellData: SpellData, rune: Rune): int =
   return spellData.capacity[rune] - spellData.runeCount(rune)
+
+proc unlockedRunes*(spellData: SpellData): seq[Rune] =
+  result = @[]
+  for rune in allRunes:
+    if spellData.capacity[rune] > 0:
+      result.add rune
 
 proc addRuneCapacity*(spellData: var SpellData, rune: Rune) =
   spellData.capacity[rune] += 1
@@ -121,9 +133,9 @@ proc moveSpell(spellData: var SpellData, dir: int) =
 
 defineSystem:
   proc updateSpellCreator*(input: InputManager, spellData: var SpellData) =
-    for i in 0..<min(inputs.len, runes.len):
+    for i in 0..<min(inputs.len, allRunes.len):
       if input.isPressed(inputs[i]):
-        spellData.addRune(runes[i])
+        spellData.addRune(allRunes[i])
     if input.isPressed(backspace):
       spellData.deleteRune()
     if input.isPressed(Input.delete):

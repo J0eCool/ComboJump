@@ -3,6 +3,7 @@ import
   sequtils
 
 import
+  spells/runes,
   component/mana,
   component/targeting,
   component/target_shooter,

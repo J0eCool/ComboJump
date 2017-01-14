@@ -12,6 +12,7 @@ import
   component/targeting,
   component/transform,
   component/sprite,
+  spells/runes,
   entity,
   event,
   option,
@@ -22,27 +23,6 @@ import
   util
 
 type
-  Rune* = enum
-    num
-    count
-    mult
-    createSingle
-    createSpread
-    createBurst
-    createRepeat
-    despawn
-
-    # update-only runes
-    wave
-    turn
-    grow
-    moveUp
-    moveSide
-    nearest
-    startPos
-
-  SpellDesc* = seq[Rune]
-
   ProjectileKind = enum
     single
     spread
