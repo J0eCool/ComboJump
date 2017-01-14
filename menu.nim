@@ -128,14 +128,16 @@ method drawSelf(text: BorderedTextNode, renderer: RendererPtr, resources: var Re
 
 type Button* = ref object of Node
   onClick*: proc()
+  hotkey*: Input
   isHeld: bool
   isMouseOver: bool
+  isKeyHeld: bool
 
 method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceManager) =
   let
     r = rect.rect(button.globalPos, button.size)
     c =
-      if button.isMouseOver and button.isHeld:
+      if (button.isMouseOver and button.isHeld) or button.isKeyHeld:
         color(198, 198, 108, 255)
       elif button.isMouseOver:
         color(172, 172, 134, 255)
@@ -144,6 +146,9 @@ method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceMa
   renderer.fillRect(r, c)
 
 method updateSelf(button: Button, input: InputManager) =
+  if button.onClick == nil:
+    return
+
   let r = rect.rect(button.globalPos, button.size)
   input.clickPressedPos.bindAs click:
     if r.contains click:
@@ -153,10 +158,16 @@ method updateSelf(button: Button, input: InputManager) =
 
   if button.isHeld:
     input.clickReleasedPos.bindAs click:
-      if button.onClick != nil and r.contains click:
+      if r.contains click:
         button.onClick()
       button.isHeld = false
       button.isMouseOver = false
+
+  if not button.isKeyHeld and input.isPressed(button.hotkey):
+    button.isKeyHeld = true
+    button.onClick()
+  elif button.isKeyHeld and input.isReleased(button.hotkey):
+    button.isKeyHeld = false
 
 
 # ------

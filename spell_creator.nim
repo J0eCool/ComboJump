@@ -47,20 +47,11 @@ proc newSpellData*(): SpellData =
   result.capacity[createSingle] = 1
   result.reparseAllSpells()
 
-let
-  inputs* = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
-
 proc allRunes_calc(): seq[Rune] =
   result = @[]
   for rune in Rune:
     result.add rune
 const allRunes = allRunes_calc()
-
-proc inputString*(rune: Rune): string =
-  for i in 0..<allRunes.len:
-    if rune == allRunes[i]:
-      return $inputs[i]
-  assert false, "Rune not found in runes array"
 
 proc reparseAllSpells(spellData: var SpellData) =
   for i in 0..<spellData.spellDescs.len:
@@ -135,9 +126,6 @@ proc moveSpell(spellData: var SpellData, dir: int) =
 
 defineSystem:
   proc updateSpellCreator*(input: InputManager, spellData: var SpellData) =
-    for i in 0..<min(inputs.len, allRunes.len):
-      if input.isPressed(inputs[i]):
-        spellData.addRune(allRunes[i])
     if input.isPressed(backspace):
       spellData.deleteRune()
     if input.isPressed(Input.delete):

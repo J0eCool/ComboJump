@@ -42,6 +42,8 @@ proc runeValueListNode*(pos: Vec, items: (proc(): seq[ValueKind])): Node =
     ),
   )
 
+const inputs = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
+
 type
   RuneMenu* = ref object of Component
     menu: Node
@@ -76,9 +78,11 @@ proc runeMenuNode(spellData: ptr SpellData): Node =
         width: 3,
         size: vec(300, 400),
         items: (proc(): seq[Rune] = spellData[].unlockedRunes),
-        listNodes: (proc(rune: Rune): Node =
+        listNodesIdx: (proc(rune: Rune, runeIndex: int): Node =
+          let hotkey = if runeIndex < inputs.len: inputs[runeIndex] else: none
           Button(
             size: vec(90, 80),
+            hotkey: hotkey,
             onClick: (proc() =
               spellData[].addRune(rune)
             ),
@@ -90,7 +94,7 @@ proc runeMenuNode(spellData: ptr SpellData): Node =
               ),
               TextNode(
                 pos: vec(28, 4),
-                text: "[" & rune.inputString[^1..^0] & "]",
+                text: if hotkey == none: "" else: "[" & ($hotkey)[^1..^0] & "]",
                 color: color(0, 0, 0, 255),
               ),
               BindNode[int](
