@@ -3,7 +3,10 @@ import
   sequtils
 
 import
-  spells/runes,
+  spells/[
+    runes,
+    spell_parser,
+  ],
   component/mana,
   component/targeting,
   component/target_shooter,
@@ -13,7 +16,6 @@ import
   event,
   input,
   menu,
-  newgun,
   option,
   player_stats,
   spell_creator,

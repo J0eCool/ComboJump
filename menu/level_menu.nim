@@ -6,7 +6,6 @@ import
   entity,
   event,
   menu,
-  newgun,
   resources,
   stages,
   system,

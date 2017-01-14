@@ -1,11 +1,11 @@
 import
   component/mana,
   component/transform,
+  spells/spell_parser,
   entity,
   event,
   input,
   menu,
-  newgun,
   option,
   player_stats,
   spell_creator,

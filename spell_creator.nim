@@ -4,13 +4,15 @@ import
   tables
 
 import
-  spells/runes,
+  spells/[
+    runes,
+    spell_parser,
+  ],
   entity,
   event,
   input,
   jsonparse,
   menu,
-  newgun,
   resources,
   system,
   vec,

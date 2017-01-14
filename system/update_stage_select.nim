@@ -14,7 +14,6 @@ import
   event,
   jsonparse,
   menu,
-  newgun,
   prefabs,
   resources,
   stages,
