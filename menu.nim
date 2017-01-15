@@ -163,11 +163,12 @@ method updateSelf(button: Button, input: InputManager) =
       button.isHeld = false
       button.isMouseOver = false
 
-  if not button.isKeyHeld and input.isPressed(button.hotkey):
-    button.isKeyHeld = true
-    button.onClick()
-  elif button.isKeyHeld and input.isReleased(button.hotkey):
-    button.isKeyHeld = false
+  if button.hotkey != Input.none:
+    if not button.isKeyHeld and input.isPressed(button.hotkey):
+      button.isKeyHeld = true
+      button.onClick()
+    elif button.isKeyHeld and input.isReleased(button.hotkey):
+      button.isKeyHeld = false
 
 
 # ------
