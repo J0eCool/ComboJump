@@ -8,8 +8,6 @@ type
     createBurst
     createRepeat
     despawn
-
-    # update-only runes
     wave
     turn
     grow

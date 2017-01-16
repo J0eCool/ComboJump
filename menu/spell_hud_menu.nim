@@ -5,6 +5,7 @@ import
 import
   spells/[
     runes,
+    rune_info,
     spell_parser,
   ],
   component/mana,

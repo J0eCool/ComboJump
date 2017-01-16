@@ -1,18 +1,22 @@
 import
-  algorithm,
   math
 from sdl2 import color
 
 import
-  component/bullet,
-  component/collider,
-  component/damage,
-  component/mana,
-  component/movement,
-  component/targeting,
-  component/transform,
-  component/sprite,
-  spells/runes,
+  component/[
+    bullet,
+    collider,
+    damage,
+    mana,
+    movement,
+    targeting,
+    transform,
+    sprite,
+  ],
+  spells/[
+    runes,
+    rune_info,
+  ],
   entity,
   event,
   option,
@@ -23,43 +27,6 @@ import
   util
 
 type
-  ProjectileKind = enum
-    single
-    spread
-    burst
-    repeat
-
-  ProjectileInfo = object
-    onDespawn: ref ProjectileInfo
-    updateCallbacks: seq[UpdateProc]
-    case kind: ProjectileKind
-    of single:
-      discard
-    of spread, burst:
-      numBullets: int
-    of repeat:
-      numRepeats: int
-      repeatInfo: ref ProjectileInfo
-
-  NumberProc = proc(e: Entity): Option[float]
-  Number = object
-    get: NumberProc
-  ValueKind* = enum
-    number
-    projectileInfo
-
-  Value = object
-    case kind: ValueKind
-    of number:
-      value: Number
-    of projectileInfo:
-      info: ProjectileInfo
-
-  RuneInfo* = object
-    texture: string
-    input: seq[ValueKind]
-    output: seq[ValueKind]
-
   SpellParseKind* = enum
     error
     success
@@ -90,114 +57,6 @@ proc manaCost*(spell: SpellParse): int =
 proc castTime*(spell: SpellParse, stats: PlayerStats): float =
   result = 0.325 + 0.065 * (spell.valueStacks.len - 1).float
   result /= stats.castSpeed
-
-proc info*(rune: Rune): RuneInfo =
-  case rune
-  of num:
-    RuneInfo(
-      texture: "Num.png",
-      input: @[],
-      output: @[number],
-    )
-  of count:
-    RuneInfo(
-      texture: "Inc.png",
-      input: @[number],
-      output: @[number],
-    )
-  of mult:
-    RuneInfo(
-      texture: "Mult.png",
-      input: @[number, number],
-      output: @[number],
-    )
-  of createSingle:
-    RuneInfo(
-      texture: "Single.png",
-      input: @[],
-      output: @[projectileInfo],
-    )
-  of createSpread:
-    RuneInfo(
-      texture: "Spread.png",
-      input: @[number],
-      output: @[projectileInfo],
-    )
-  of createBurst:
-    RuneInfo(
-      texture: "Burst.png",
-      input: @[number],
-      output: @[projectileInfo],
-    )
-  of createRepeat:
-    RuneInfo(
-      texture: "Repeat.png",
-      input: @[number, projectileInfo],
-      output: @[projectileInfo],
-    )
-  of despawn:
-    RuneInfo(
-      texture: "Despawn.png",
-      input: @[projectileInfo, projectileInfo],
-      output: @[projectileInfo],
-    )
-  of wave:
-    RuneInfo(
-      texture: "Wave.png",
-      input: @[],
-      output: @[number],
-    )
-  of turn:
-    RuneInfo(
-      texture: "Turn.png",
-      input: @[number, projectileInfo],
-      output: @[projectileInfo],
-    )
-  of grow:
-    RuneInfo(
-      texture: "Grow.png",
-      input: @[number, projectileInfo],
-      output: @[projectileInfo],
-    )
-  of moveUp:
-    RuneInfo(
-      texture: "MoveUp.png",
-      input: @[number, projectileInfo],
-      output: @[projectileInfo],
-    )
-  of moveSide:
-    RuneInfo(
-      texture: "MoveSide.png",
-      input: @[number, projectileInfo],
-      output: @[projectileInfo],
-    )
-  of nearest:
-    RuneInfo(
-      texture: "Nearest.png",
-      input: @[],
-      output: @[number],
-    )
-  of startPos:
-    RuneInfo(
-      texture: "StartPos.png",
-      input: @[],
-      output: @[number],
-    )
-
-proc textureName*(rune: Rune): string =
-  "runes/" & rune.info.texture
-
-proc textureName*(kind: ValueKind): string =
-  case kind
-  of number:
-    "redGlobe.png"
-  of projectileInfo:
-    "greenGlobe.png"
-
-proc inputSeq*(info: RuneInfo): seq[ValueKind] =
-  info.input.reversed
-proc outputSeq*(info: RuneInfo): seq[ValueKind] =
-  info.output.reversed
 
 proc newBullet(pos, dir: Vec, speed: float,
                color: sdl2.Color,
@@ -298,19 +157,6 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target): Event
       ])
     result = @[Event(kind: addEntity, entity: repeater)]
 
-proc makeCountProc(v: Number): NumberProc =
-  result = proc(e:Entity): Option[float] =
-    v.get(e).bindAs x:
-      return makeJust(x + 1.0)
-    return makeNone[float]()
-
-proc makeMultProc(n1, n2: Number): NumberProc =
-  result = proc(e: Entity): Option[float] =
-    n1.get(e).bindAs x1:
-      n2.get(e).bindAs x2:
-        return makeJust(x1 * x2)
-    return makeNone[float]()
-
 proc parse*(spell: SpellDesc): SpellParse =
   var
     valueStack = newStack[Value]()
@@ -324,12 +170,6 @@ proc parse*(spell: SpellDesc): SpellParse =
     if not cond:
       var stackTypes = "\nStack: " & $valueStack.toKinds()
       return SpellParse(kind: error, spell: spell, index: i, message: msg & stackTypes, valueStacks: valueStacks)
-  template addUpdateProc(update: UpdateProc) =
-    var proj = valueStack.pop
-    if proj.info.updateCallbacks == nil:
-      proj.info.updateCallbacks = @[]
-    proj.info.updateCallbacks.add(update)
-    valueStack.push proj
   while i < spell.len:
     let rune = spell[i]
     for x in 0..<rune.info.input.len:
@@ -338,130 +178,9 @@ proc parse*(spell: SpellDesc): SpellParse =
         k = q.len - 1 - x
       expect k >= 0, "Needs at least " & $rune.info.input.len & " arguments"
       expect q[k].kind == rune.info.input[x], "Needs argument " & $(x + 1) & " to be a " & $rune.info.input[x]
-    case rune
-    of num:
-      let
-        f = proc(e: Entity): Option[float] = makeJust(1.0)
-        n = Number(get: f)
-      valueStack.push Value(kind: number, value: n)
-    of count:
-      var num = valueStack.pop
-      let
-        f = makeCountProc(num.value)
-        n = Number(get: f)
-      valueStack.push Value(kind: number, value: n)
-    of mult:
-      let a = valueStack.pop
-      let b = valueStack.pop
-      let n = Number(get: makeMultProc(a.value, b.value))
-      valueStack.push Value(kind: number, value: n)
-    of createSingle:
-      let proj = ProjectileInfo(kind: single)
-      valueStack.push Value(kind: projectileInfo, info: proj)
-    of createSpread, createBurst:
-      let arg = valueStack.pop
-      let rawNum = arg.value.get(nil)
-      expect rawNum.kind == just, "Needs statically determinable number"
-      let
-        num = rawNum.value.int
-        projKind =
-          case rune
-          of createSpread: spread
-          of createBurst: burst
-          else:
-            expect false, "Missing projKind case"
-            # Case statement needs to return a value, even if it's unreachable
-            single
-        proj = ProjectileInfo(kind: projKind, numBullets: num)
-      valueStack.push Value(kind: projectileInfo, info: proj)
-    of createRepeat:
-      let
-        arg = valueStack.pop
-        repeatProj = valueStack.pop
-        rawNum = arg.value.get(nil)
-      expect rawNum.kind == just, "Needs statically determinable number"
-      var r = new(ProjectileInfo)
-      r[] = repeatProj.info
-      let
-        num = rawNum.value.int
-        proj = ProjectileInfo(kind: repeat, numRepeats: num, repeatInfo: r)
-      valueStack.push Value(kind: projectileInfo, info: proj)
-    of despawn:
-      let arg = valueStack.pop
-      var
-        proj = valueStack.pop
-        projToAdd = addr proj.info
-      while projToAdd.onDespawn != nil:
-        projToAdd = addr projToAdd.onDespawn[]
-      var d = new(ProjectileInfo)
-      d[] = arg.info
-      projToAdd.onDespawn = d
-      valueStack.push proj
-    of wave:
-      let
-        f = proc(e: Entity): Option[float] =
-          if e == nil:
-            return makeNone[float]()
-          let b = e.getComponent(Bullet)
-          return makeJust(cos(1.5 * TAU * b.lifePct))
-        n = Number(get: f)
-      valueStack.push Value(kind: number, value: n)
-    of turn:
-      let arg = valueStack.pop
-      let f = proc(e: Entity, dt: float) =
-        let b = e.getComponent(Bullet)
-        b.dir = b.dir.rotate(360.0.degToRad * arg.value.get(e).value * dt)
-      addUpdateProc(f)
-    of grow:
-      let arg = valueStack.pop
-      let f = proc(e: Entity, dt: float) =
-        let
-          b = e.getComponent(Bullet)
-          t = e.getComponent(Transform)
-          m = e.getComponent(Movement)
-        b.stayOnHit = true
-        t.size += vec(arg.value.get(e).value * 160.0 * b.lifePct * dt)
-        m.vel -= b.dir * b.speed
-      addUpdateProc(f)
-    of moveUp:
-      let arg = valueStack.pop
-      let f = proc(e: Entity, dt: float) =
-        let
-          b = e.getComponent(Bullet)
-          m = e.getComponent(Movement)
-        m.vel += (b.speed * arg.value.get(e).value / 2.0) * b.dir
-      addUpdateProc(f)
-    of moveSide:
-      # Copy pasted from moveUp for now. There's an issue with closures capturing
-      # inconvenient local vars, that needs to be worked around less-hackily.
-      let arg = valueStack.pop
-      let f = proc(e: Entity, dt: float) =
-        let
-          b = e.getComponent(Bullet)
-          m = e.getComponent(Movement)
-        m.vel += (b.speed * arg.value.get(e).value / 2.0) * b.dir.rotate(PI / 2)
-      addUpdateProc(f)
-    of nearest:
-      let f = proc(e:Entity): Option[float] =
-        if e == nil:
-          return makeNone[float]()
-        let
-          b = e.getComponent(Bullet)
-          t = e.getComponent(Transform)
-        result = makeJust(0.0)
-        b.target.tryPos.bindAs targetPos:
-          let
-            diff = targetPos - t.pos
-            lv = min((1.0 - b.lifePct) / 0.4, 1.0)
-          result = makeJust(b.dir.cross(diff).sign.float * lv)
-      valueStack.push(Value(kind: number, value: Number(get: f)))
-    of startPos:
-      let f = proc(e:Entity): Option[float] =
-        if e == nil:
-          return makeNone[float]()
-        let b = e.getComponent(Bullet)
-        makeJust(b.startPos)
-      valueStack.push(Value(kind: number, value: Number(get: f)))
+    let r = rune.info.parse(valueStack)
+    r.bindAs r:
+      expect false, r
     i += 1
     valueStacks.add valueStack.toKinds()
 

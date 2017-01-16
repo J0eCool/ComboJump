@@ -6,7 +6,7 @@ import
 import
   spells/[
     runes,
-    spell_parser,
+    rune_info,
   ],
   entity,
   event,
