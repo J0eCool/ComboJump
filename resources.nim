@@ -8,6 +8,7 @@ import
   component/sprite,
   component/text,
   entity,
+  logging,
   rect
 
 type ResourceManager* = object
@@ -20,10 +21,10 @@ proc loadSprite*(resources: var ResourceManager, textureName: string, renderer: 
     
   const textureFolder = "assets/textures/"
   if not resources.sprites.hasKey(textureName):
-    echo "Loading texture \"", textureName, "\""
+    log info, "Loading texture \"", textureName, "\""
     let surface = load(textureFolder & textureName)
     if surface == nil:
-      echo "  Unable to load texture at " & textureFolder, textureName
+      log error, "Unable to load texture at " & textureFolder, textureName
       return nil
     let
       texture = renderer.createTextureFromSurface(surface)
@@ -35,11 +36,11 @@ proc loadSprite*(resources: var ResourceManager, textureName: string, renderer: 
 proc loadFont*(resources: var ResourceManager, fontName: string): FontPtr =
   const fontFolder = "assets/fonts/"
   if not resources.fonts.hasKey(fontName):
-    echo "Loading font \"", fontName, "\""
+    log info, "Loading font \"", fontName, "\""
     const hardcodedFontSize = 24 # TODO: not this?
     let font = openFont(fontFolder & fontName, hardcodedFontSize)
     if font == nil:
-      echo "  Unable to load font at " & fontFolder, fontName
+      log error, "Unable to load font at " & fontFolder, fontName
       return nil
     resources.fonts[fontName] = font
   return resources.fonts[fontName]

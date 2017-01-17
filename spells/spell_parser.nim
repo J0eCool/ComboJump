@@ -19,6 +19,7 @@ import
   ],
   entity,
   event,
+  logging,
   option,
   player_stats,
   rect,
@@ -207,4 +208,4 @@ proc canCast*(parse: SpellParse): bool =
       errMsg &= parse.message
     else:
       errMsg &= "Invalid SpellParse"
-    echo errMsg
+    log info, errMsg
