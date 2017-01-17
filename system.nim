@@ -222,6 +222,8 @@ proc basename(filename: string): string =
   if parts.len == 1: filename else: parts[parts.len - 1]
 
 macro defineDylibs*(): untyped =
+  if not useDylibs:
+    return newStmtList()
   result = newNimNode(nnkVarSection)
   let data = readData()
   for sysName, v in data.update:

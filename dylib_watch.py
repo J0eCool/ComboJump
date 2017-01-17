@@ -27,7 +27,7 @@ def remove(dylib):
 def build(dylib):
     sys.stdout.flush()
     subprocess.check_call([
-        'nim', 'c', '--app:lib', '--gc:none', '--nimcache:nimcache',
+        'nim', 'c', '--app:lib', '--gc:none', '--nimcache:nimcache', '--noMain',
         '-o:' + dylib.dllname,
         dylib.filename
     ])

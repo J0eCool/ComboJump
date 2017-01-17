@@ -54,7 +54,7 @@ method onRemove*(game: NanoGame, entity: Entity) =
   game.notifications.add N10n(kind: entityRemoved, entity: entity)
 
 importAllSystems()
-# defineDylibs()
+defineDylibs()
 defineSystemCalls(NanoGame)
 
 method draw*(renderer: RendererPtr, game: NanoGame) =
