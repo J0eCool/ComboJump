@@ -26,6 +26,7 @@ proc statsMenuNode(stats: ptr PlayerStats): Node =
           "Health: " & $stats.maxHealth,
           "Mana: " & $stats.maxMana,
           "Mana Regen: " & $stats.manaRegen & "/s",
+          "Damage: +" & formatFloat(100 * (stats.damage - 1)) & "%",
           "Cast Speed: +" & formatFloat(100 * (stats.castSpeed - 1)) & "%",
         ],
         pos=vec(200, 300),

@@ -39,7 +39,7 @@ type
       index*: int
       message: string
     of success:
-      fire*: (proc(pos, dir: Vec, target: Target): Events)
+      fire*: (proc(pos, dir: Vec, target: Target, stats: PlayerStats): Events)
 
 proc `==`*(a, b: SpellParse): bool =
   if a.kind != b.kind or a.valueStacks != b.valueStacks:
@@ -59,16 +59,20 @@ proc castTime*(spell: SpellParse, stats: PlayerStats): float =
   result = 0.325 + 0.065 * (spell.valueStacks.len - 1).float
   result /= stats.castSpeed
 
+proc damage*(spell: SpellParse, stats: PlayerStats): float =
+  (5 + 0.25 * (spell.spell.len - 1).float) * stats.damage
+
 proc newBullet(pos, dir: Vec, speed: float,
                color: sdl2.Color,
                despawnCallback: ShootProc,
                updateCallback: UpdateProc,
-               target: Target): Entity =
+               target: Target,
+               damage: int): Entity =
   newEntity("Bullet", [
     Transform(pos: pos, size: vec(20)),
     Movement(vel: speed * dir),
     Collider(layer: Layer.bullet),
-    Damage(damage: 5),
+    Damage(damage: damage),
     Sprite(color: color),
     Bullet(
       liveTime: 0.6,
@@ -81,14 +85,15 @@ proc newBullet(pos, dir: Vec, speed: float,
     ),
   ])
 
-proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target): Events =
+proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target, damage: float): Events =
   let
+    baseDamage = info.damage * damage
     despawnCallback =
       if info.onDespawn == nil:
         nil
       else:
         proc(pos, vel: Vec): Events =
-          newBulletEvents(info.onDespawn[], pos, vel, target)
+          newBulletEvents(info.onDespawn[], pos, vel, target, baseDamage)
     updateCallback =
       if info.updateCallbacks == nil:
         nil
@@ -105,7 +110,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target): Event
     let
       speed = 900.0
       color = color(255, 255, 0, 255)
-      bullet = newBullet(pos, dir, speed, color, despawnCallback, updateCallback, target)
+      bullet = newBullet(pos, dir, speed, color, despawnCallback, updateCallback, target, baseDamage.int)
     result = @[Event(kind: addEntity, entity: bullet)]
   of spread:
     result = @[]
@@ -121,7 +126,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target): Event
         p = if num == 0: 0.0 else: lerp(i / (num - 1), -1.0, 1.0)
         ang = totAng * p / 2.0
         curDir = dir.rotate(ang.degToRad)
-        bullet = newBullet(pos, curDir, speed, color, despawnCallback, updateCallback, target)
+        bullet = newBullet(pos, curDir, speed, color, despawnCallback, updateCallback, target, baseDamage.int)
         b = bullet.getComponent(Bullet)
       b.startPos = p
       result.add Event(kind: addEntity, entity: bullet)
@@ -138,7 +143,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target): Event
         p = if num == 0: 0.0 else: lerp(i / (num - 1), -1.0, 1.0)
         ang = baseAng + angPer * i.float
         curDir = dir.rotate(ang.degToRad)
-        bullet = newBullet(pos, curDir, speed, color, despawnCallback, updateCallback, target)
+        bullet = newBullet(pos, curDir, speed, color, despawnCallback, updateCallback, target, baseDamage.int)
         b = bullet.getComponent(Bullet)
       b.startPos = p
       result.add Event(kind: addEntity, entity: bullet)
@@ -146,7 +151,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target): Event
     let
       toShoot =
         proc(pos, vel: Vec): Events =
-          newBulletEvents(info.repeatInfo[], pos, vel, target)
+          newBulletEvents(info.repeatInfo[], pos, vel, target, baseDamage)
       num = info.numRepeats + 1
       repeater = newEntity("Repeater", [
         Transform(pos: pos),
@@ -189,9 +194,12 @@ proc parse*(spell: SpellDesc): SpellParse =
   expect(valueStack.count == 1, "Needs exactly one argument at spell end")
   let arg = valueStack.pop
   expect(arg.kind == projectileInfo, "Spell must end with projectile")
-  let fireProc = proc(pos, dir: Vec, target: Target): Events =
-    arg.info.newBulletEvents(pos, dir, target)
-  return SpellParse(kind: success, spell: spell, fire: fireProc, valueStacks: valueStacks)
+
+  var parse = SpellParse(kind: success, spell: spell, valueStacks: valueStacks)
+  let fireProc = proc(pos, dir: Vec, target: Target, stats: PlayerStats): Events =
+    arg.info.newBulletEvents(pos, dir, target, parse.damage(stats))
+  parse.fire = fireProc
+  return parse
 
 proc canCast*(parse: SpellParse): bool =
   case parse.kind

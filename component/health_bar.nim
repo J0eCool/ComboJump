@@ -5,7 +5,6 @@ import
     enemy_stats,
     health,
     limited_quantity,
-    mana,
     transform,
   ],
   camera,

@@ -91,6 +91,11 @@ proc spellHudMenuNode(spellData: ptr SpellData, stats: ptr PlayerStats, targetSh
                       text: "Cast Time: " & formatFloat(pair.spell.castTime(pair.stats)) & "s",
                       color: color(32, 240, 240, 255),
                     ),
+                    BorderedTextNode(
+                      pos: vec(480, 0),
+                      text: "Damage: " & formatFloat(pair.spell.damage(pair.stats)),
+                      color: color(32, 240, 240, 255),
+                    ),
                   ],
                 )
             ),

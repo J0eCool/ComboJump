@@ -40,7 +40,7 @@ defineSystem:
       if sh.toCast.kind != error:
         sh.castTime -= dt
         if sh.castTime <= 0.0:
-          result &= sh.toCast.fire(t.globalPos, dir, targeting.target)
+          result &= sh.toCast.fire(t.globalPos, dir, targeting.target, stats)
           sh.toCast = SpellParse()
           sh.castIndex = -1
       else:

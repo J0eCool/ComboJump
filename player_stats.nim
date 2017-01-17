@@ -44,3 +44,6 @@ proc manaRegen*(stats: PlayerStats): float =
 
 proc castSpeed*(stats: PlayerStats): float =
   1.0 + 0.02 * (stats.level - 1).float
+
+proc damage*(stats: PlayerStats): float =
+  1.0 + 0.075 * (stats.level - 1).float

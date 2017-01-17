@@ -75,6 +75,17 @@ proc inputSeq*(info: RuneInfo): seq[ValueKind] =
 proc outputSeq*(info: RuneInfo): seq[ValueKind] =
   info.output.reversed
 
+proc damage*(projectile: ProjectileInfo): float =
+  case projectile.kind:
+  of single:
+    1.0
+  of spread:
+    8 / (10 + (projectile.numBullets - 1))
+  of burst:
+    8 / (10 + 2 * (projectile.numBullets - 1))
+  of repeat:
+    7 / (10 + 2 * (projectile.numRepeats - 1))
+
 template expect(cond: bool, msg: string = "") =
   if not cond:
     return makeJust(msg)
