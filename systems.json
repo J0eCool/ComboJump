@@ -9,7 +9,7 @@
         "var bool"
       ],
       "priority": "0",
-      "id": "35",
+      "id": "36",
       "args": [
         "player",
         "input",
@@ -110,22 +110,20 @@
         "var N10nManager"
       ],
       "priority": "0",
-      "id": "6",
+      "id": "1",
       "args": [
         "notifications"
       ]
     },
-    "updateXpOnDeathN10ns": {
-      "filename": "component/xp_on_death.nim",
+    "updateBulletN10ns": {
+      "filename": "system/bullet_update.nim",
       "types": [
-        "N10nManager",
-        "var PlayerStats"
+        "N10nManager"
       ],
       "priority": "0",
-      "id": "7",
+      "id": "32",
       "args": [
-        "notifications",
-        "stats"
+        "notifications"
       ]
     },
     "updateEnemyProximity": {
@@ -134,7 +132,7 @@
         "Entity"
       ],
       "priority": "0",
-      "id": "3",
+      "id": "5",
       "args": [
         "player"
       ]
@@ -145,7 +143,7 @@
         "float"
       ],
       "priority": "0",
-      "id": "33",
+      "id": "34",
       "args": [
         "dt"
       ]
@@ -156,20 +154,22 @@
         "float"
       ],
       "priority": "0",
-      "id": "9",
+      "id": "8",
       "args": [
         "dt"
       ]
     },
-    "updateBulletN10ns": {
-      "filename": "system/bullet_update.nim",
+    "updateEnemyStatsN10ns": {
+      "filename": "component/enemy_stats.nim",
       "types": [
-        "N10nManager"
+        "N10nManager",
+        "var PlayerStats"
       ],
       "priority": "0",
-      "id": "36",
+      "id": "9",
       "args": [
-        "notifications"
+        "notifications",
+        "stats"
       ]
     },
     "updateEnemyMoveTowards": {
@@ -178,7 +178,7 @@
         "float"
       ],
       "priority": "0",
-      "id": "4",
+      "id": "6",
       "args": [
         "dt"
       ]
@@ -212,7 +212,7 @@
       "types": [
       ],
       "priority": "0",
-      "id": "1",
+      "id": "3",
       "args": [
       ]
     },
@@ -222,7 +222,7 @@
         "float"
       ],
       "priority": "0",
-      "id": "34",
+      "id": "35",
       "args": [
         "dt"
       ]
@@ -233,7 +233,7 @@
         "var N10nManager"
       ],
       "priority": "0",
-      "id": "8",
+      "id": "7",
       "args": [
         "notifications"
       ]
@@ -244,7 +244,7 @@
         "var Camera"
       ],
       "priority": "0",
-      "id": "2",
+      "id": "4",
       "args": [
         "camera"
       ]
@@ -299,7 +299,7 @@
       "types": [
       ],
       "priority": "0",
-      "id": "32",
+      "id": "33",
       "args": [
       ]
     },
@@ -420,7 +420,7 @@
         "Camera"
       ],
       "priority": "0",
-      "id": "0",
+      "id": "2",
       "args": [
         "camera"
       ]
@@ -431,7 +431,7 @@
         "Camera"
       ],
       "priority": "0",
-      "id": "5",
+      "id": "0",
       "args": [
         "camera"
       ]

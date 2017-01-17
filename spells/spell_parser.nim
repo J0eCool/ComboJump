@@ -208,4 +208,4 @@ proc canCast*(parse: SpellParse): bool =
       errMsg &= parse.message
     else:
       errMsg &= "Invalid SpellParse"
-    log info, errMsg
+    log LogLevel.info, errMsg

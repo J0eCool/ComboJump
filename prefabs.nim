@@ -5,6 +5,7 @@ import
   component/enemy_attack,
   component/enemy_movement,
   component/enemy_proximity,
+  component/enemy_stats,
   component/grid_control,
   component/health,
   component/health_bar,
@@ -19,7 +20,6 @@ import
   component/target_shooter,
   component/text,
   component/transform,
-  component/xp_on_death,
   enemy_kind,
   entity,
   vec
@@ -63,7 +63,7 @@ proc newGoblin(pos: Vec): Entity =
     Collider(layer: enemy),
     Sprite(textureName: "Goblin.png"),
     HealthBar(),
-    XpOnDeath(xp: 5),
+    EnemyStats(xp: 5),
   ])
 
 proc newOgre(pos: Vec): Entity =
@@ -87,7 +87,7 @@ proc newOgre(pos: Vec): Entity =
     Collider(layer: enemy),
     Sprite(textureName: "Ogre.png"),
     HealthBar(),
-    XpOnDeath(xp: 12),
+    EnemyStats(xp: 12),
   ])
 
 proc newMushroom(pos: Vec): Entity =
@@ -108,7 +108,7 @@ proc newMushroom(pos: Vec): Entity =
     Collider(layer: enemy),
     Sprite(textureName: "Mushroom.png"),
     HealthBar(),
-    XpOnDeath(xp: 10),
+    EnemyStats(xp: 10),
   ])
 
 proc newEnemy*(kind: EnemyKind, pos: Vec): Entity =
