@@ -9,11 +9,11 @@ suite "AreaInfo":
   let testArea = AreaInfo(
     name: "TestArea",
     keyStages: @[
-      StageDesc(stage: 1, length: 500, enemies: 6,
+      StageDesc(stage: 1, level: 1, length: 500, enemies: 6,
         spawns: @[(goblin, 1.0)]),
-      StageDesc(stage: 3, length: 1000, enemies: 12,
+      StageDesc(stage: 3, level: 5, length: 1000, enemies: 12,
         spawns: @[(goblin, 2.0), (ogre, 1.0)]),
-      StageDesc(stage: 5, length: 1500, enemies: 24,
+      StageDesc(stage: 5, level: 3, length: 1500, enemies: 24,
         spawns: @[(goblin, 2.0)]),
     ],
   )
@@ -22,6 +22,7 @@ suite "AreaInfo":
     let stage = testArea.stageDesc(1)
     check:
       stage.length.approxEq(500)
+      stage.level == 1
       stage.enemies == 6
       stage.spawns == @[(goblin, 1.0)]
 
@@ -29,6 +30,7 @@ suite "AreaInfo":
     let stage = testArea.stageDesc(5)
     check:
       stage.length.approxEq(1500)
+      stage.level == 3
       stage.enemies == 24
       stage.spawns == @[(goblin, 2.0)]
 
@@ -36,6 +38,7 @@ suite "AreaInfo":
     let stage = testArea.stageDesc(2)
     check:
       stage.length.approxEq(750)
+      stage.level == 3
       stage.enemies == 9
       stage.spawns == @[(goblin, 1.5), (ogre, 0.5)]
 
@@ -43,5 +46,6 @@ suite "AreaInfo":
     let stage = testArea.stageDesc(4)
     check:
       stage.length.approxEq(1250)
+      stage.level == 4
       stage.enemies == 18
       stage.spawns == @[(goblin, 2.0), (ogre, 0.5)]
