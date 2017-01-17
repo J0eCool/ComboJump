@@ -1,10 +1,13 @@
 import sdl2
 
 import
-  component/health,
-  component/limited_quantity,
-  component/mana,
-  component/transform,
+  component/[
+    enemy_stats,
+    health,
+    limited_quantity,
+    mana,
+    transform,
+  ],
   camera,
   entity,
   event,
@@ -68,14 +71,28 @@ proc rawHealthBar*(health: Health, size = vec()): Node =
     background=color(92, 64, 64, 255)
   )
     
-proc healthBarNode(health: Health): Node =
+proc healthBarNode(health: Health, enemyStats: EnemyStats): Node =
   BindNode[bool](
     item: (proc(): bool = health.pct < 1.0),
     node: (proc(visible: bool): Node =
       if not visible:
         Node()
       else:
-        rawHealthBar(health, size=vec(160, 20))
+        Node(
+          children: @[
+            rawHealthBar(health, size=vec(160, 20)),
+            BorderedTextNode(
+              text: "L" & $enemyStats.level,
+              pos: vec(-60, -30),
+              color: color(255, 255, 255, 255),
+            ),
+            BorderedTextNode(
+              text: enemyStats.name,
+              pos: vec(40, -30),
+              color: color(255, 255, 255, 255),
+            ),
+          ]
+        )
     ),
   )
 
@@ -87,8 +104,8 @@ defineDrawSystem:
     renderer.draw(healthBar.menu, resources)
 
 defineSystem:
-  components = [HealthBar, Health]
+  components = [HealthBar, Health, EnemyStats]
   proc updateHealthBarNodes*(input: InputManager) =
     if healthBar.menu == nil:
-      healthBar.menu = healthBarNode(health)
+      healthBar.menu = healthBarNode(health, enemyStats)
     healthBar.menu.update(input)

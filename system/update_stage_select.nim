@@ -46,7 +46,7 @@ proc spawnedEntities*(stage: Stage, player: Entity): Entities =
   ]
   for enemy in stage.enemies:
     let pos = vec(random(100.0, 700.0), -random(0.0, stage.length))
-    result.add newEnemy(enemy, pos)
+    result.add newEnemy(enemy, stage.level, pos)
 
 defineSystem:
   proc stageSelect*(player: Entity, input: InputManager, stageData: var StageData, shouldExit: var bool) =

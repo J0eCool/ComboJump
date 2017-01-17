@@ -48,6 +48,7 @@ type
     group*: string
     area*: string
     length*: float
+    level*: int
     enemies*: seq[EnemyKind]
   Group* = seq[Stage]
 
@@ -83,6 +84,7 @@ proc stage(area: AreaInfo, idx: int): Stage =
     group: area.name,
     area: $idx,
     length: desc.length,
+    level: desc.level,
     enemies: desc.randomEnemyKinds(),
   )
 

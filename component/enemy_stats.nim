@@ -6,6 +6,8 @@ import
   system
 
 type EnemyStats* = ref object of Component
+  name*: string
+  level*: int
   xp*: int
 
 defineSystem:

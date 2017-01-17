@@ -1,25 +1,27 @@
 import
-  component/camera_target,
-  component/collider,
-  component/damage,
-  component/enemy_attack,
-  component/enemy_movement,
-  component/enemy_proximity,
-  component/enemy_stats,
-  component/grid_control,
-  component/health,
-  component/health_bar,
-  component/hud_menu,
-  component/limited_quantity,
-  component/mana,
-  component/movement,
-  component/player_health,
-  component/progress_bar,
-  component/sprite,
-  component/targeting,
-  component/target_shooter,
-  component/text,
-  component/transform,
+  component/[
+    camera_target,
+    collider,
+    damage,
+    enemy_attack,
+    enemy_movement,
+    enemy_proximity,
+    enemy_stats,
+    grid_control,
+    health,
+    health_bar,
+    hud_menu,
+    limited_quantity,
+    mana,
+    movement,
+    player_health,
+    progress_bar,
+    sprite,
+    targeting,
+    target_shooter,
+    text,
+    transform,
+  ],
   enemy_kind,
   entity,
   vec
@@ -42,7 +44,7 @@ proc newPlayer*(pos: Vec): Entity =
 proc newHud*(): Entity =
   newEntity("Hud", [HudMenu().Component])
 
-proc newGoblin(pos: Vec): Entity =
+proc newGoblin(level: int, pos: Vec): Entity =
   newEntity("Goblin", [
     Transform(pos: pos,
               size: vec(48, 56)),
@@ -63,10 +65,14 @@ proc newGoblin(pos: Vec): Entity =
     Collider(layer: enemy),
     Sprite(textureName: "Goblin.png"),
     HealthBar(),
-    EnemyStats(xp: 5),
+    EnemyStats(
+      name: "Goblin",
+      level: level,
+      xp: 5,
+    ),
   ])
 
-proc newOgre(pos: Vec): Entity =
+proc newOgre(level: int, pos: Vec): Entity =
   newEntity("Ogre", [
     Transform(pos: pos,
               size: vec(52, 80)),
@@ -87,10 +93,14 @@ proc newOgre(pos: Vec): Entity =
     Collider(layer: enemy),
     Sprite(textureName: "Ogre.png"),
     HealthBar(),
-    EnemyStats(xp: 12),
+    EnemyStats(
+      name: "Ogre",
+      level: level,
+      xp: 12,
+    ),
   ])
 
-proc newMushroom(pos: Vec): Entity =
+proc newMushroom(level: int, pos: Vec): Entity =
   newEntity("Mushroom", [
     Transform(pos: pos,
               size: vec(52, 56)),
@@ -108,11 +118,15 @@ proc newMushroom(pos: Vec): Entity =
     Collider(layer: enemy),
     Sprite(textureName: "Mushroom.png"),
     HealthBar(),
-    EnemyStats(xp: 10),
+    EnemyStats(
+      name: "Mushroom",
+      level: level,
+      xp: 10,
+    ),
   ])
 
-proc newEnemy*(kind: EnemyKind, pos: Vec): Entity =
+proc newEnemy*(kind: EnemyKind, level: int, pos: Vec): Entity =
   case kind
-  of goblin: newGoblin(pos)
-  of ogre: newOgre(pos)
-  of mushroom: newMushroom(pos)
+  of goblin: newGoblin(level, pos)
+  of ogre: newOgre(level, pos)
+  of mushroom: newMushroom(level, pos)
