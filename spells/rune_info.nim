@@ -340,6 +340,20 @@ proc startPosRuneInfo(): RuneInfo =
     ),
   )
 
+proc randomRuneInfo(): RuneInfo =
+  RuneInfo(
+    texture: "Random.png",
+    input: @[],
+    output: @[number],
+    parse: (proc(valueStack: var ValueStack): RuneParse =
+      let f = proc(e:Entity): Option[float] =
+        if e == nil:
+          return makeNone[float]()
+        let b = e.getComponent(Bullet)
+        makeJust(b.randomNum)
+      valueStack.push(Value(kind: number, value: Number(get: f)))
+    ),
+  )
 
 proc runeInfos_init(): array[Rune, RuneInfo] =
   result[num] = numRuneInfo()
@@ -357,6 +371,7 @@ proc runeInfos_init(): array[Rune, RuneInfo] =
   result[moveSide] = moveSideRuneInfo()
   result[nearest] = nearestRuneInfo()
   result[startPos] = startPosRuneInfo()
+  result[random] = randomRuneInfo()
 const runeInfos = runeInfos_init()
 
 proc info*(rune: Rune): RuneInfo =

@@ -15,5 +15,6 @@ type
     moveSide
     nearest
     startPos
+    random
 
   SpellDesc* = seq[Rune]

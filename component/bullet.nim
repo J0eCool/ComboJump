@@ -25,6 +25,7 @@ type
     target*: Target
     startPos*: float
     stayOnHit*: bool
+    randomNum*: float
 
   ShootProc* = proc(pos, vel: Vec): Events
   UpdateProc* = proc(entity: Entity, dt: float)

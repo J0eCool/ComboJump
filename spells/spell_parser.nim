@@ -77,6 +77,7 @@ proc newBullet(pos, dir: Vec, speed: float,
       dir: dir,
       speed: speed,
       target: target,
+      randomNum: random(-1.0, 1.0),
     ),
   ])
 
