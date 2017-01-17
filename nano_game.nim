@@ -5,14 +5,14 @@ when Profile != 0:
   import nimprof
 
 import
-  game,
   component/collider,
-  component/xp_on_death,
   system/render,
+  tests/testing,
   camera,
   drawing,
   entity,
   event,
+  game,
   input,
   notifications,
   player_stats,
@@ -56,13 +56,6 @@ method onRemove*(game: NanoGame, entity: Entity) =
 importAllSystems()
 # defineDylibs()
 defineSystemCalls(NanoGame)
-
-import
-  tests/[
-    areas_test,
-    notifications_test,
-    transform_test,
-  ]
 
 method draw*(renderer: RendererPtr, game: NanoGame) =
   game.background.loadBackgroundAssets(game.resources, renderer)
