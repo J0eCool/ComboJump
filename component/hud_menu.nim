@@ -49,7 +49,6 @@ proc hudMenuNode(health: Health, mana: Mana, stats: ptr PlayerStats, stageData: 
               BorderedTextNode(
                 pos: vec(50, 18),
                 text: "Level " & $stats.level,
-                color: color(255, 255, 255, 255),
               ),
               Node(
                 pos: vec(270, 18),
@@ -72,7 +71,6 @@ proc hudMenuNode(health: Health, mana: Mana, stats: ptr PlayerStats, stageData: 
           BorderedTextNode(
             pos: vec(1100, 50),
             text: "Stage: " & stageData[].currentStageName,
-            color: color(255, 255, 255, 255),
           )
         ),
       ),

@@ -53,10 +53,7 @@ proc progressBar*(healthProc: HealthPairProc,
               size: vec(size.x * pct, size.y),
               color: foreground,
             ),
-            BorderedTextNode(
-              text: $pair.cur & " / " & $pair.max,
-              color: color(255, 255, 255, 255),
-            ),
+            BorderedTextNode(text: $pair.cur & " / " & $pair.max),
           ]),
         )
       )
@@ -78,12 +75,10 @@ proc healthBarNode(health: Health, enemyStats: EnemyStats): Node =
       BorderedTextNode(
         text: "L" & $enemyStats.level,
         pos: vec(-60, -30),
-        color: color(255, 255, 255, 255),
       ),
       BorderedTextNode(
         text: enemyStats.name,
         pos: vec(40, -30),
-        color: color(255, 255, 255, 255),
       ),
     ]
   )

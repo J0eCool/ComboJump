@@ -111,6 +111,9 @@ type BorderedTextNode* = ref object of Node
   color*: Color
 
 method drawSelf(text: BorderedTextNode, renderer: RendererPtr, resources: var ResourceManager) =
+  if text.color == color(0, 0, 0, 0):
+    # default color to white
+    text.color = color(255, 255, 255, 255)
   let
     font = resources.loadFont("nevis.ttf")
     black = color(0, 0, 0, 255)
