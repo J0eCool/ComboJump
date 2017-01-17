@@ -72,28 +72,20 @@ proc rawHealthBar*(health: Health, size = vec()): Node =
   )
     
 proc healthBarNode(health: Health, enemyStats: EnemyStats): Node =
-  BindNode[bool](
-    item: (proc(): bool = health.pct < 1.0),
-    node: (proc(visible: bool): Node =
-      if not visible:
-        Node()
-      else:
-        Node(
-          children: @[
-            rawHealthBar(health, size=vec(160, 20)),
-            BorderedTextNode(
-              text: "L" & $enemyStats.level,
-              pos: vec(-60, -30),
-              color: color(255, 255, 255, 255),
-            ),
-            BorderedTextNode(
-              text: enemyStats.name,
-              pos: vec(40, -30),
-              color: color(255, 255, 255, 255),
-            ),
-          ]
-        )
-    ),
+  Node(
+    children: @[
+      rawHealthBar(health, size=vec(160, 20)),
+      BorderedTextNode(
+        text: "L" & $enemyStats.level,
+        pos: vec(-60, -30),
+        color: color(255, 255, 255, 255),
+      ),
+      BorderedTextNode(
+        text: enemyStats.name,
+        pos: vec(40, -30),
+        color: color(255, 255, 255, 255),
+      ),
+    ]
   )
 
 defineDrawSystem:
