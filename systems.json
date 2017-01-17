@@ -316,6 +316,15 @@
         "spellData"
       ]
     },
+    "initEnemyStats": {
+      "filename": "component/enemy_stats.nim",
+      "types": [
+      ],
+      "priority": "0",
+      "id": "37",
+      "args": [
+      ]
+    },
     "updateBullets": {
       "filename": "system/bullet_update.nim",
       "types": [

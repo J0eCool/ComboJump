@@ -55,20 +55,20 @@ proc newGoblin(level: int, pos: Vec): Entity =
       attackRange: 95.0,
     ),
     EnemyAttack(
-      damage: level.multiplyDamage(12),
+      damage: 12,
       attackSpeed: 1.2,
       size: 50.0,
       attackDistance: 75.0,
     ),
     EnemyMoveTowards(moveSpeed: 180.0),
-    newHealth(level.multiplyHealth(20)),
+    newHealth(20),
     Collider(layer: enemy),
     Sprite(textureName: "Goblin.png"),
     HealthBar(),
     EnemyStats(
       name: "Goblin",
       level: level,
-      xp: level.multiplyXp(5),
+      xp: 5,
     ),
   ])
 
@@ -83,20 +83,20 @@ proc newOgre(level: int, pos: Vec): Entity =
       attackRange: 120.0,
     ),
     EnemyAttack(
-      damage: level.multiplyDamage(30),
+      damage: 30,
       attackSpeed: 0.9,
       size: 70.0,
       attackDistance: 90.0,
     ),
     EnemyMoveTowards(moveSpeed: 130.0),
-    newHealth(level.multiplyHealth(50)),
+    newHealth(50),
     Collider(layer: enemy),
     Sprite(textureName: "Ogre.png"),
     HealthBar(),
     EnemyStats(
       name: "Ogre",
       level: level,
-      xp: level.multiplyXp(12),
+      xp: 12,
     ),
   ])
 
@@ -109,19 +109,19 @@ proc newMushroom(level: int, pos: Vec): Entity =
     ),
     EnemyAttack(
       kind: ranged,
-      damage: level.multiplyDamage(15),
+      damage: 15,
       attackSpeed: 0.8,
       size: 30.0,
       bulletSpeed: 500.0,
     ),
-    newHealth(level.multiplyHealth(30)),
+    newHealth(30),
     Collider(layer: enemy),
     Sprite(textureName: "Mushroom.png"),
     HealthBar(),
     EnemyStats(
       name: "Mushroom",
       level: level,
-      xp: level.multiplyXp(10),
+      xp: 10,
     ),
   ])
 
