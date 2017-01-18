@@ -216,6 +216,17 @@
       "args": [
       ]
     },
+    "updatePopupText": {
+      "filename": "component/popup_text.nim",
+      "types": [
+        "float"
+      ],
+      "priority": "0",
+      "id": "38",
+      "args": [
+        "dt"
+      ]
+    },
     "regenLimitedQuantities": {
       "filename": "system/quantity_regen.nim",
       "types": [
@@ -370,6 +381,19 @@
       ],
       "priority": "-100",
       "id": "11",
+      "args": [
+        "resources",
+        "camera"
+      ]
+    },
+    "drawPopupText": {
+      "filename": "component/popup_text.nim",
+      "types": [
+        "var ResourceManager",
+        "Camera"
+      ],
+      "priority": "-50",
+      "id": "39",
       "args": [
         "resources",
         "camera"

@@ -1,15 +1,18 @@
-import math
+import math, sdl2
 
 import
   component/[
     enemy_attack,
     health,
+    popup_text,
+    transform,
   ],
   entity,
   event,
   game_system,
   notifications,
-  player_stats
+  player_stats,
+  vec
 
 type EnemyStats* = ref object of Component
   name*: string
@@ -46,7 +49,14 @@ defineSystem:
 
 defineSystem:
   proc updateEnemyStatsN10ns*(notifications: N10nManager, stats: var PlayerStats) =
+    result = @[]
     for n10n in notifications.get(entityKilled):
-      let enemyStats = n10n.entity.getComponent(EnemyStats)
-      if enemyStats != nil:
+      let entity = n10n.entity
+      entity.withComponent EnemyStats, enemyStats:
         stats.addXp(enemyStats.xp)
+        entity.withComponent Transform, transform:
+          let popup = newEntity("XpPopup", [
+            Transform(pos: transform.pos - vec(0, 75)),
+            PopupText(text: "+" & $enemyStats.xp & " XP", color: color(0, 255, 0, 255)),
+          ])
+          result.add event.Event(kind: addEntity, entity: popup)

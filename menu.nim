@@ -99,9 +99,8 @@ type TextNode* = ref object of Node
   color*: Color
 
 method drawSelf(text: TextNode, renderer: RendererPtr, resources: var ResourceManager) =
-  renderer.drawCachedText(text.text, text.globalPos,
-                          resources.loadFont("nevis.ttf"),
-                          text.color)
+  let font = resources.loadFont("nevis.ttf")
+  renderer.drawCachedText(text.text, text.globalPos, font, text.color)
 
 
 # ------
@@ -114,18 +113,8 @@ method drawSelf(text: BorderedTextNode, renderer: RendererPtr, resources: var Re
   if text.color == color(0, 0, 0, 0):
     # default color to white
     text.color = color(255, 255, 255, 255)
-  let
-    font = resources.loadFont("nevis.ttf")
-    black = color(0, 0, 0, 255)
-    borderWidth = 2
-    str = text.text
-    pos = text.globalPos
-  for x in -1..1:
-    for y in -1..1:
-      if x != 0 or y != 0:
-        renderer.drawCachedText(str, pos + vec(x, y) * borderWidth, font, black)
-  renderer.drawCachedText(str, pos, font, text.color)
-
+  let font = resources.loadFont("nevis.ttf")
+  renderer.drawBorderedText(text.text, text.globalPos, font, text.color)
 
 # ------
 

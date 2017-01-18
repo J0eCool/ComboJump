@@ -56,8 +56,25 @@ proc drawCachedText*(renderer: RendererPtr,
                      text: string,
                      pos: Vec,
                      font: FontPtr,
-                     color: Color = color(255, 255, 255, 255)) =
+                     color: Color = color(255, 255, 255, 255),
+                    ) =
   let textKey = text & "__color:" & $color
   if not textCache.hasKey(textKey):
     textCache[textKey] = renderer.renderText(text, font, color)
   renderer.draw(textCache[textKey], pos)
+
+proc drawBorderedText*(renderer: RendererPtr,
+                       text: string,
+                       pos: Vec,
+                       font: FontPtr,
+                       color: Color = color(255, 255, 255, 255),
+                      ) =
+  let
+    black = color(0, 0, 0, 255)
+    borderWidth = 2
+  for x in -1..1:
+    for y in -1..1:
+      if x != 0 or y != 0:
+        renderer.drawCachedText(text, pos + vec(x, y) * borderWidth, font, black)
+  renderer.drawCachedText(text, pos, font, color)
+
