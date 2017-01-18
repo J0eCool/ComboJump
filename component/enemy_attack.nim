@@ -10,7 +10,7 @@ import
   component/transform,
   entity,
   event,
-  system,
+  game_system,
   util,
   vec
 

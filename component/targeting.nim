@@ -8,10 +8,10 @@ import
   drawing,
   entity,
   event,
+  game_system,
   option,
   rect,
   resources,
-  system,
   util,
   vec
 

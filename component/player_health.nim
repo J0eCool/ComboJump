@@ -4,8 +4,8 @@ import
   component/mana,
   entity,
   event,
-  player_stats,
-  system
+  game_system,
+  player_stats
 
 type
   PlayerHealth* = ref object of Health

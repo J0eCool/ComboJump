@@ -3,7 +3,7 @@ import
   camera,
   entity,
   event,
-  system,
+  game_system,
   vec
 
 type CameraTarget* = ref object of Component

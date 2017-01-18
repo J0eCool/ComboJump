@@ -10,10 +10,10 @@ import
   camera,
   entity,
   event,
+  game_system,
   input,
   menu,
   resources,
-  system,
   vec,
   util
 

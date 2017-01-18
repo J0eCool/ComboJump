@@ -4,7 +4,7 @@ import
   component/mana,
   entity,
   event,
-  system
+  game_system
 
 defineSystem:
   proc regenLimitedQuantities*(dt: float) =

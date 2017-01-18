@@ -3,11 +3,11 @@ import tables
 import
   entity,
   event,
+  game_system,
   jsonparse,
   player_stats,
   spell_creator,
-  stages,
-  system
+  stages
 
 const saveFile = "out/save.json"
 

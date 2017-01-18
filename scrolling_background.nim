@@ -7,9 +7,9 @@ import
   drawing,
   entity,
   event,
+  game_system,
   rect,
   resources,
-  system,
   util,
   vec
 

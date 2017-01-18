@@ -12,12 +12,12 @@ import
   input,
   entity,
   event,
+  game_system,
   jsonparse,
   menu,
   prefabs,
   resources,
   stages,
-  system,
   vec,
   util
 

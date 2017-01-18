@@ -3,8 +3,8 @@ import
   component/health,
   entity,
   event,
+  game_system,
   notifications,
-  system,
   util,
   vec
 

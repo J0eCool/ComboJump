@@ -15,13 +15,13 @@ import
   menu/rune_menu,
   entity,
   event,
+  game_system,
   input,
   menu,
   option,
   player_stats,
   spell_creator,
   resources,
-  system,
   vec,
   util
 

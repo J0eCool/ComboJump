@@ -16,11 +16,11 @@ import
   enemy_kind,
   entity,
   event,
+  game_system,
   jsonparse,
   menu,
   resources,
   spell_creator,
-  system,
   vec,
   util
 

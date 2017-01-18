@@ -3,7 +3,7 @@ import
   input,
   entity,
   event,
-  system,
+  game_system,
   vec
 
 type GridControl* = ref object of Component

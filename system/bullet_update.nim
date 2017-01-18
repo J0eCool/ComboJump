@@ -10,8 +10,8 @@ import
   component/sprite,
   entity,
   event,
+  game_system,
   notifications,
-  system,
   util,
   vec
 

@@ -4,8 +4,8 @@ import
   component/transform,
   entity,
   event,
+  game_system,
   rect,
-  system,
   util,
   vec
 

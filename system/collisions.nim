@@ -4,8 +4,8 @@ import
   component/transform,
   entity,
   event,
-  rect,
-  system
+  game_system,
+  rect
 
 defineSystem:
   components = [Transform, Collider]

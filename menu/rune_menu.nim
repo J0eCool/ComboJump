@@ -10,12 +10,12 @@ import
   ],
   entity,
   event,
+  game_system,
   input,
   jsonparse,
   menu,
   resources,
   spell_creator,
-  system,
   vec,
   util
 

@@ -5,10 +5,10 @@ import
   input,
   entity,
   event,
+  game_system,
   menu,
   player_stats,
   resources,
-  system,
   vec,
   util
 

@@ -7,9 +7,9 @@ import
   ],
   entity,
   event,
+  game_system,
   notifications,
-  player_stats,
-  system
+  player_stats
 
 type EnemyStats* = ref object of Component
   name*: string

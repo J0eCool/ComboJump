@@ -22,10 +22,10 @@ import
   camera,
   entity,
   event,
+  game_system,
   input,
   program,
   resources,
-  system,
   vec,
   util
 

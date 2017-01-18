@@ -10,9 +10,9 @@ import
   camera,
   drawing,
   entity,
+  game_system,
   rect,
   resources,
-  system,
   vec
 
 defineDrawSystem:
