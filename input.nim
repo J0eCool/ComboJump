@@ -45,7 +45,7 @@ type
     runeDown
 
 
-  InputState = enum
+  InputState* = enum
     inactive,
     pressed,
     held,
@@ -55,15 +55,25 @@ type
     horizontal
     vertical
 
-  InputManager* = ref object
+  InputManager* = object
     inputs: array[Input, InputState]
     axes: array[Axis, int]
     mousePos: Vec
     mouseState: InputState
     mouseWheel: int
 
+  InputPair* = tuple[input: Input, state: InputState]
+
 proc newInputManager*(): InputManager =
-  new result
+  InputManager()
+
+proc inputFromPairs*(statePairs: seq[InputPair]): InputManager =
+  var inputs: array[Input, InputState]
+  for pair in statePairs:
+    inputs[pair.input] = pair.state
+  InputManager(
+    inputs: inputs,
+  )
 
 proc keyToInput(key: Scancode): Input =
   case key
@@ -104,7 +114,7 @@ proc keyToInput(key: Scancode): Input =
   else: none
 
 proc isHeld*(manager: InputManager, key: Input): bool
-proc update*(manager: InputManager) =
+proc update*(manager: var InputManager) =
   template updateInput(i) =
     if i == pressed:
       i = held
