@@ -270,38 +270,3 @@ proc toJSON*[K, V](table: Table[K, V]): JSON =
       rawV = v.toJSON()
     assert rawK.kind == jsString
     result.obj[rawK.str] = rawV
-
-when isMainModule:
-  proc test(str: string) =
-    echo "TEST: ", str
-    echo "  Tokens: ", tokenizeJSON(str)
-    echo "  Serialized: ", deserializeJSON(str)
-    echo "  Roundtrip : ", deserializeJSON(serializeJSON(deserializeJSON(str)))
-    echo "  Pretty    :"
-    echo deserializeJSON(str).toPrettyString()
-
-  test """"lol""""
-  test """["a", "b", "c"]"""
-  test """["lol", ["butts", "lol"]]"""
-  test """{"x": "12", "y": "9", "z": null}"""
-  test """[
-    { "x":"12"
-    , "y" : "9"
-    },
-    "3",
-    [ {"x": "3"}
-    ],
-    { "list": ["a", "b", "c"]
-    , "obj":
-      { "name": "Jerry"
-      , "tags": ["player", "tall"]
-      , "height": "6'2"
-      }
-    }
-    ]"""
-
-  type TestEnum = enum
-    one
-    two
-  echo one, " serialized: ", one.toJSON(), " roundtripped: ", fromJSON[TestEnum](one.toJSON())
-  # echo "fails: ", fromJSON[TestEnum](JSON(kind: jsString, str: "three"))
