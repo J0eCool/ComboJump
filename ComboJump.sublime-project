@@ -4,25 +4,6 @@
         "folder_exclude_patterns": ["nimcache"]
     }],
     "build_systems": [{
-        "name": "Game - Debug",
-        "cmd": ["nim", "c", "-r",
-            "-d:debug", "--parallelBuild:0",
-            "--out:out/game", "game.nim"],
-        "working_dir": "$project_path"
-    }, {
-        "name": "Game - Release",
-        "cmd": ["nim", "c", "-r",
-            "-d:release", "--parallelBuild:0",
-            "--out:out/game", "game.nim"],
-        "working_dir": "$project_path"
-    }, {
-        "name": "Game - Profile",
-        "cmd": ["nim", "c", "-r",
-            "-d:release", "--parallelBuild:0",
-            "--profiler:on", "--stackTrace:on", "-d:Profile=1",
-            "--out:out/game", "game.nim"],
-        "working_dir": "$project_path"
-    }, {
         "name": "MapGen - Debug",
         "cmd": ["nim", "c", "-r",
             "-d:debug", "--parallelBuild:0",
@@ -32,6 +13,12 @@
         "name": "NaNo Game - Debug",
         "cmd": ["nim", "c", "-r",
             "-d:debug", "--parallelBuild:0",
+            "--out:out/nanogame", "nano_game.nim"],
+        "working_dir": "$project_path"
+    }, {
+        "name": "NaNo Game - Release",
+        "cmd": ["nim", "c", "-r",
+            "-d:release", "--parallelBuild:0",
             "--out:out/nanogame", "nano_game.nim"],
         "working_dir": "$project_path"
     }, {
