@@ -42,6 +42,15 @@
             "--out:out/nanogame", "nano_game.nim"],
         "working_dir": "$project_path"
     }, {
+        "name": "NaNo Game - Unit Tests",
+        "env": {
+            "NIMTEST_NO_COLOR": "1"
+        },
+        "cmd": ["nim", "c", "-r",
+            "-d:debug", "--parallelBuild:0",
+            "--out:out/nanogame_unittests", "tests/testing.nim"],
+        "working_dir": "$project_path"
+    }, {
         "name": "JSON Test",
         "cmd": ["nim", "c", "-r",
             "-d:debug", "--parallelBuild:0",
