@@ -7,7 +7,6 @@ when Profile != 0:
 import
   component/collider,
   system/render,
-  tests/testing,
   camera,
   drawing,
   entity,
@@ -26,6 +25,7 @@ import
   spell_creator,
   stages,
   vec,
+  unit_tests,
   util
 
 type NanoGame* = ref object of Game
