@@ -18,12 +18,6 @@ type
     dirToPlayer*: Vec
     isAttacking*: bool
 
-  EnemyJumpTowards* = ref object of Component
-    moveSpeed*: float
-    jumpHeight*: float
-    jumpDelay*: float
-    jumpTimer: float
-
 defineSystem:
   proc updateEnemyProximity*(player: Entity) =
     let pt = if player == nil: nil else: player.getComponent(Transform)
