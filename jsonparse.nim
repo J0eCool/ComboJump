@@ -153,6 +153,17 @@ proc parseJSONTokens(tokens: seq[JSONToken]): JSON =
 proc deserializeJSON*(str: string): JSON =
   parseJSONTokens(tokenizeJSON(str))
 
+iterator sortedPairs(dict: Table[string, JSON]): tuple[key: string, value: JSON] =
+  var sortedKeys = newSeq[string]()
+  for k in dict.keys:
+    sortedKeys.add k
+  sortedKeys.sort(
+    proc(a, b: string): int =
+      cmp[string](a, b)
+  )
+  for k in sortedKeys:
+    yield (k, dict[k])
+
 proc serializeJSON*(json: JSON, pretty=false, indents=0): string =
   let
     tab = if not pretty: "" else: "  "
@@ -176,7 +187,7 @@ proc serializeJSON*(json: JSON, pretty=false, indents=0): string =
   of jsObject:
     result = "{"
     var first = true
-    for k, v in json.obj:
+    for k, v in json.obj.sortedPairs:
       if not first:
         result &= ","
       result &= newline & indentation & tab &
@@ -206,6 +217,15 @@ proc fromJSON*[T](json: JSON): T
 proc fromJSON*(x: var int, json: JSON) =
   assert json.kind == jsString
   x = parseInt(json.str)
+proc fromJSON*(x: var bool, json: JSON) =
+  assert json.kind == jsString
+  case json.str
+  of "true":
+    x = true
+  of "false":
+    x = false
+  else:
+    assert false, "Invalid bool value " & json.str
 proc fromJSON*(str: var string, json: JSON) =
   case json.kind
   of jsString:
@@ -240,13 +260,18 @@ proc fromJSON*[K, V](table: var Table[K, V], json: JSON) =
     k.fromJSON(JSON(kind: jsString, str: rawK))
     v.fromJSON(rawV)
     table[k] = v
-
+proc fromJSON*[T: object](obj: var T, json: JSON) =
+  obj = T()
+  for field, val in obj.fieldPairs:
+    val.fromJSON(json.obj[field])
 proc fromJSON*[T](json: JSON): T =
   var x: T
   x.fromJSON(json)
   return x
 
 proc toJSON*(x: int): JSON =
+  JSON(kind: jsString, str: $x)
+proc toJSON*(x: bool): JSON =
   JSON(kind: jsString, str: $x)
 proc toJSON*(str: string): JSON =
   if str != nil:
@@ -270,3 +295,7 @@ proc toJSON*[K, V](table: Table[K, V]): JSON =
       rawV = v.toJSON()
     assert rawK.kind == jsString
     result.obj[rawK.str] = rawV
+proc toJSON*[T: object](obj: T): JSON =
+  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
+  for field, val in obj.fieldPairs:
+    result.obj[field] = val.toJSON()

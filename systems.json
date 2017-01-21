@@ -1,483 +1,483 @@
 {
-  "update": {
-    "stageSelect": {
-      "filename": "system/update_stage_select.nim",
-      "types": [
-        "Entity",
-        "InputManager",
-        "var StageData",
-        "var bool"
+  "draw": {
+    "drawBackground": {
+      "args": [
+        "background",
+        "camera"
       ],
+      "filename": "scrolling_background.nim",
+      "id": "24",
+      "priority": "100",
+      "types": [
+        "ScrollingBackground",
+        "Camera"
+      ]
+    },
+    "drawHealthBarNodes": {
+      "args": [
+        "resources",
+        "camera"
+      ],
+      "filename": "component/health_bar.nim",
+      "id": "11",
+      "priority": "-100",
+      "types": [
+        "var ResourceManager",
+        "Camera"
+      ]
+    },
+    "drawHudMenu": {
+      "args": [
+        "resources",
+        "camera"
+      ],
+      "filename": "component/hud_menu.nim",
+      "id": "20",
+      "priority": "-100",
+      "types": [
+        "var ResourceManager",
+        "Camera"
+      ]
+    },
+    "drawPopupText": {
+      "args": [
+        "resources",
+        "camera"
+      ],
+      "filename": "component/popup_text.nim",
+      "id": "39",
+      "priority": "-50",
+      "types": [
+        "var ResourceManager",
+        "Camera"
+      ]
+    },
+    "drawRuneMenu": {
+      "args": [
+        "resources"
+      ],
+      "filename": "menu/rune_menu.nim",
+      "id": "15",
+      "priority": "-100",
+      "types": [
+        "var ResourceManager"
+      ]
+    },
+    "drawSpellHudMenu": {
+      "args": [
+        "resources"
+      ],
+      "filename": "menu/spell_hud_menu.nim",
+      "id": "17",
+      "priority": "-100",
+      "types": [
+        "var ResourceManager"
+      ]
+    },
+    "drawStageSelectMenu": {
+      "args": [
+        "resources"
+      ],
+      "filename": "menu/level_menu.nim",
+      "id": "26",
+      "priority": "-100",
+      "types": [
+        "var ResourceManager"
+      ]
+    },
+    "drawStatsMenu": {
+      "args": [
+        "resources"
+      ],
+      "filename": "menu/stats_menu.nim",
+      "id": "28",
+      "priority": "-100",
+      "types": [
+        "var ResourceManager"
+      ]
+    },
+    "drawTargeting": {
+      "args": [
+        "camera"
+      ],
+      "filename": "component/targeting.nim",
+      "id": "2",
       "priority": "0",
-      "id": "36",
+      "types": [
+        "Camera"
+      ]
+    },
+    "renderSystem": {
+      "args": [
+        "camera"
+      ],
+      "filename": "system/render.nim",
+      "id": "0",
+      "priority": "0",
+      "types": [
+        "Camera"
+      ]
+    }
+  },
+  "update": {
+    "checkCollisisons": {
+      "args": [
+      ],
+      "filename": "system/collisions.nim",
+      "id": "33",
+      "priority": "0",
+      "types": [
+      ]
+    },
+    "gridControl": {
+      "args": [
+        "input"
+      ],
+      "filename": "component/grid_control.nim",
+      "id": "10",
+      "priority": "0",
+      "types": [
+        "InputManager"
+      ]
+    },
+    "initEnemyStats": {
+      "args": [
+      ],
+      "filename": "component/enemy_stats.nim",
+      "id": "37",
+      "priority": "0",
+      "types": [
+      ]
+    },
+    "physics": {
+      "args": [
+        "dt"
+      ],
+      "filename": "system/physics.nim",
+      "id": "34",
+      "priority": "0",
+      "types": [
+        "float"
+      ]
+    },
+    "regenLimitedQuantities": {
+      "args": [
+        "dt"
+      ],
+      "filename": "system/quantity_regen.nim",
+      "id": "35",
+      "priority": "0",
+      "types": [
+        "float"
+      ]
+    },
+    "stageSelect": {
       "args": [
         "player",
         "input",
         "stageData",
         "shouldExit"
+      ],
+      "filename": "system/update_stage_select.nim",
+      "id": "36",
+      "priority": "0",
+      "types": [
+        "Entity",
+        "InputManager",
+        "var StageData",
+        "var bool"
+      ]
+    },
+    "updateBackground": {
+      "args": [
+        "background",
+        "camera"
+      ],
+      "filename": "scrolling_background.nim",
+      "id": "25",
+      "priority": "0",
+      "types": [
+        "var ScrollingBackground",
+        "Camera"
+      ]
+    },
+    "updateBulletN10ns": {
+      "args": [
+        "notifications"
+      ],
+      "filename": "system/bullet_update.nim",
+      "id": "32",
+      "priority": "0",
+      "types": [
+        "N10nManager"
+      ]
+    },
+    "updateBullets": {
+      "args": [
+        "dt"
+      ],
+      "filename": "system/bullet_update.nim",
+      "id": "30",
+      "priority": "0",
+      "types": [
+        "float"
+      ]
+    },
+    "updateCamera": {
+      "args": [
+        "camera"
+      ],
+      "filename": "component/camera_target.nim",
+      "id": "4",
+      "priority": "0",
+      "types": [
+        "var Camera"
+      ]
+    },
+    "updateDamage": {
+      "args": [
+        "notifications"
+      ],
+      "filename": "component/damage.nim",
+      "id": "7",
+      "priority": "0",
+      "types": [
+        "var N10nManager"
+      ]
+    },
+    "updateEnemyAttack": {
+      "args": [
+        "dt"
+      ],
+      "filename": "component/enemy_attack.nim",
+      "id": "8",
+      "priority": "0",
+      "types": [
+        "float"
+      ]
+    },
+    "updateEnemyMoveTowards": {
+      "args": [
+        "dt"
+      ],
+      "filename": "component/enemy_movement.nim",
+      "id": "6",
+      "priority": "0",
+      "types": [
+        "float"
+      ]
+    },
+    "updateEnemyProximity": {
+      "args": [
+        "player"
+      ],
+      "filename": "component/enemy_proximity.nim",
+      "id": "5",
+      "priority": "0",
+      "types": [
+        "Entity"
+      ]
+    },
+    "updateEnemyStatsN10ns": {
+      "args": [
+        "notifications",
+        "stats"
+      ],
+      "filename": "component/enemy_stats.nim",
+      "id": "9",
+      "priority": "0",
+      "types": [
+        "N10nManager",
+        "var PlayerStats"
+      ]
+    },
+    "updateExitZones": {
+      "args": [
+        "stageData"
+      ],
+      "filename": "stages.nim",
+      "id": "19",
+      "priority": "0",
+      "types": [
+        "var StageData"
       ]
     },
     "updateHealthBarNodes": {
-      "filename": "component/health_bar.nim",
-      "types": [
-        "InputManager"
-      ],
-      "priority": "0",
-      "id": "12",
       "args": [
         "input"
+      ],
+      "filename": "component/health_bar.nim",
+      "id": "12",
+      "priority": "0",
+      "types": [
+        "InputManager"
       ]
     },
-    "updateSpellHudMenu": {
-      "filename": "menu/spell_hud_menu.nim",
-      "types": [
-        "InputManager",
-        "var SpellData",
-        "var PlayerStats"
-      ],
-      "priority": "0",
-      "id": "18",
+    "updateHudMenu": {
       "args": [
         "input",
-        "spellData",
+        "stats",
+        "stageData"
+      ],
+      "filename": "component/hud_menu.nim",
+      "id": "21",
+      "priority": "0",
+      "types": [
+        "InputManager",
+        "var PlayerStats",
+        "var StageData"
+      ]
+    },
+    "updateN10nManager": {
+      "args": [
+        "notifications"
+      ],
+      "filename": "notifications.nim",
+      "id": "1",
+      "priority": "0",
+      "types": [
+        "var N10nManager"
+      ]
+    },
+    "updatePlayerHealth": {
+      "args": [
         "stats"
+      ],
+      "filename": "component/player_health.nim",
+      "id": "22",
+      "priority": "0",
+      "types": [
+        "PlayerStats"
+      ]
+    },
+    "updatePopupText": {
+      "args": [
+        "dt"
+      ],
+      "filename": "component/popup_text.nim",
+      "id": "38",
+      "priority": "0",
+      "types": [
+        "float"
+      ]
+    },
+    "updateRepeatShooter": {
+      "args": [
+        "dt"
+      ],
+      "filename": "system/bullet_update.nim",
+      "id": "31",
+      "priority": "0",
+      "types": [
+        "float"
       ]
     },
     "updateRuneMenu": {
-      "filename": "menu/rune_menu.nim",
-      "types": [
-        "InputManager",
-        "var SpellData"
-      ],
-      "priority": "0",
-      "id": "16",
       "args": [
         "input",
         "spellData"
+      ],
+      "filename": "menu/rune_menu.nim",
+      "id": "16",
+      "priority": "0",
+      "types": [
+        "InputManager",
+        "var SpellData"
       ]
     },
     "updateSaveSystem": {
-      "filename": "save.nim",
-      "types": [
-        "var SpellData",
-        "var StageData",
-        "var PlayerStats"
-      ],
-      "priority": "0",
-      "id": "23",
       "args": [
         "spellData",
         "stageData",
         "stats"
-      ]
-    },
-    "updateExitZones": {
-      "filename": "stages.nim",
-      "types": [
-        "var StageData"
       ],
+      "filename": "save.nim",
+      "id": "23",
       "priority": "0",
-      "id": "19",
-      "args": [
-        "stageData"
-      ]
-    },
-    "updatePlayerHealth": {
-      "filename": "component/player_health.nim",
       "types": [
-        "PlayerStats"
-      ],
-      "priority": "0",
-      "id": "22",
-      "args": [
-        "stats"
-      ]
-    },
-    "updateRepeatShooter": {
-      "filename": "system/bullet_update.nim",
-      "types": [
-        "float"
-      ],
-      "priority": "0",
-      "id": "31",
-      "args": [
-        "dt"
-      ]
-    },
-    "updateN10nManager": {
-      "filename": "notifications.nim",
-      "types": [
-        "var N10nManager"
-      ],
-      "priority": "0",
-      "id": "1",
-      "args": [
-        "notifications"
-      ]
-    },
-    "updateBulletN10ns": {
-      "filename": "system/bullet_update.nim",
-      "types": [
-        "N10nManager"
-      ],
-      "priority": "0",
-      "id": "32",
-      "args": [
-        "notifications"
-      ]
-    },
-    "updateEnemyProximity": {
-      "filename": "component/enemy_proximity.nim",
-      "types": [
-        "Entity"
-      ],
-      "priority": "0",
-      "id": "5",
-      "args": [
-        "player"
-      ]
-    },
-    "physics": {
-      "filename": "system/physics.nim",
-      "types": [
-        "float"
-      ],
-      "priority": "0",
-      "id": "34",
-      "args": [
-        "dt"
-      ]
-    },
-    "updateEnemyAttack": {
-      "filename": "component/enemy_attack.nim",
-      "types": [
-        "float"
-      ],
-      "priority": "0",
-      "id": "8",
-      "args": [
-        "dt"
-      ]
-    },
-    "updateEnemyStatsN10ns": {
-      "filename": "component/enemy_stats.nim",
-      "types": [
-        "N10nManager",
+        "var SpellData",
+        "var StageData",
         "var PlayerStats"
-      ],
-      "priority": "0",
-      "id": "9",
+      ]
+    },
+    "updateSpellCreator": {
       "args": [
-        "notifications",
+        "input",
+        "spellData"
+      ],
+      "filename": "spell_creator.nim",
+      "id": "13",
+      "priority": "0",
+      "types": [
+        "InputManager",
+        "var SpellData"
+      ]
+    },
+    "updateSpellHudMenu": {
+      "args": [
+        "input",
+        "spellData",
         "stats"
-      ]
-    },
-    "updateEnemyMoveTowards": {
-      "filename": "component/enemy_movement.nim",
-      "types": [
-        "float"
       ],
+      "filename": "menu/spell_hud_menu.nim",
+      "id": "18",
       "priority": "0",
-      "id": "6",
-      "args": [
-        "dt"
-      ]
-    },
-    "gridControl": {
-      "filename": "component/grid_control.nim",
       "types": [
-        "InputManager"
-      ],
-      "priority": "0",
-      "id": "10",
-      "args": [
-        "input"
+        "InputManager",
+        "var SpellData",
+        "var PlayerStats"
       ]
     },
     "updateStageSelectMenu": {
-      "filename": "menu/level_menu.nim",
-      "types": [
-        "InputManager",
-        "var StageData"
-      ],
-      "priority": "0",
-      "id": "27",
       "args": [
         "input",
         "stageData"
+      ],
+      "filename": "menu/level_menu.nim",
+      "id": "27",
+      "priority": "0",
+      "types": [
+        "InputManager",
+        "var StageData"
       ]
     },
-    "updateTargeting": {
-      "filename": "component/targeting.nim",
-      "types": [
-      ],
-      "priority": "0",
-      "id": "3",
+    "updateStatsMenu": {
       "args": [
-      ]
-    },
-    "updatePopupText": {
-      "filename": "component/popup_text.nim",
-      "types": [
-        "float"
+        "input",
+        "stats"
       ],
+      "filename": "menu/stats_menu.nim",
+      "id": "29",
       "priority": "0",
-      "id": "38",
-      "args": [
-        "dt"
-      ]
-    },
-    "regenLimitedQuantities": {
-      "filename": "system/quantity_regen.nim",
       "types": [
-        "float"
-      ],
-      "priority": "0",
-      "id": "35",
-      "args": [
-        "dt"
-      ]
-    },
-    "updateDamage": {
-      "filename": "component/damage.nim",
-      "types": [
-        "var N10nManager"
-      ],
-      "priority": "0",
-      "id": "7",
-      "args": [
-        "notifications"
-      ]
-    },
-    "updateCamera": {
-      "filename": "component/camera_target.nim",
-      "types": [
-        "var Camera"
-      ],
-      "priority": "0",
-      "id": "4",
-      "args": [
-        "camera"
+        "InputManager",
+        "var PlayerStats"
       ]
     },
     "updateTargetedShoot": {
-      "filename": "component/target_shooter.nim",
-      "types": [
-        "InputManager",
-        "SpellData",
-        "float",
-        "PlayerStats"
-      ],
-      "priority": "0",
-      "id": "14",
       "args": [
         "input",
         "spellData",
         "dt",
         "stats"
-      ]
-    },
-    "updateBackground": {
-      "filename": "scrolling_background.nim",
-      "types": [
-        "var ScrollingBackground",
-        "Camera"
       ],
+      "filename": "component/target_shooter.nim",
+      "id": "14",
       "priority": "0",
-      "id": "25",
-      "args": [
-        "background",
-        "camera"
-      ]
-    },
-    "updateHudMenu": {
-      "filename": "component/hud_menu.nim",
       "types": [
         "InputManager",
-        "var PlayerStats",
-        "var StageData"
-      ],
-      "priority": "0",
-      "id": "21",
-      "args": [
-        "input",
-        "stats",
-        "stageData"
+        "SpellData",
+        "float",
+        "PlayerStats"
       ]
     },
-    "checkCollisisons": {
-      "filename": "system/collisions.nim",
-      "types": [
-      ],
-      "priority": "0",
-      "id": "33",
+    "updateTargeting": {
       "args": [
-      ]
-    },
-    "updateSpellCreator": {
-      "filename": "spell_creator.nim",
-      "types": [
-        "InputManager",
-        "var SpellData"
       ],
-      "priority": "0",
-      "id": "13",
-      "args": [
-        "input",
-        "spellData"
-      ]
-    },
-    "initEnemyStats": {
-      "filename": "component/enemy_stats.nim",
-      "types": [
-      ],
-      "priority": "0",
-      "id": "37",
-      "args": [
-      ]
-    },
-    "updateBullets": {
-      "filename": "system/bullet_update.nim",
-      "types": [
-        "float"
-      ],
-      "priority": "0",
-      "id": "30",
-      "args": [
-        "dt"
-      ]
-    },
-    "updateStatsMenu": {
-      "filename": "menu/stats_menu.nim",
-      "types": [
-        "InputManager",
-        "var PlayerStats"
-      ],
-      "priority": "0",
-      "id": "29",
-      "args": [
-        "input",
-        "stats"
-      ]
-    }
-  },
-  "draw": {
-    "drawStatsMenu": {
-      "filename": "menu/stats_menu.nim",
-      "types": [
-        "var ResourceManager"
-      ],
-      "priority": "-100",
-      "id": "28",
-      "args": [
-        "resources"
-      ]
-    },
-    "drawHealthBarNodes": {
-      "filename": "component/health_bar.nim",
-      "types": [
-        "var ResourceManager",
-        "Camera"
-      ],
-      "priority": "-100",
-      "id": "11",
-      "args": [
-        "resources",
-        "camera"
-      ]
-    },
-    "drawPopupText": {
-      "filename": "component/popup_text.nim",
-      "types": [
-        "var ResourceManager",
-        "Camera"
-      ],
-      "priority": "-50",
-      "id": "39",
-      "args": [
-        "resources",
-        "camera"
-      ]
-    },
-    "drawBackground": {
-      "filename": "scrolling_background.nim",
-      "types": [
-        "ScrollingBackground",
-        "Camera"
-      ],
-      "priority": "100",
-      "id": "24",
-      "args": [
-        "background",
-        "camera"
-      ]
-    },
-    "drawHudMenu": {
-      "filename": "component/hud_menu.nim",
-      "types": [
-        "var ResourceManager",
-        "Camera"
-      ],
-      "priority": "-100",
-      "id": "20",
-      "args": [
-        "resources",
-        "camera"
-      ]
-    },
-    "drawRuneMenu": {
-      "filename": "menu/rune_menu.nim",
-      "types": [
-        "var ResourceManager"
-      ],
-      "priority": "-100",
-      "id": "15",
-      "args": [
-        "resources"
-      ]
-    },
-    "drawSpellHudMenu": {
-      "filename": "menu/spell_hud_menu.nim",
-      "types": [
-        "var ResourceManager"
-      ],
-      "priority": "-100",
-      "id": "17",
-      "args": [
-        "resources"
-      ]
-    },
-    "drawTargeting": {
       "filename": "component/targeting.nim",
-      "types": [
-        "Camera"
-      ],
+      "id": "3",
       "priority": "0",
-      "id": "2",
-      "args": [
-        "camera"
-      ]
-    },
-    "renderSystem": {
-      "filename": "system/render.nim",
       "types": [
-        "Camera"
-      ],
-      "priority": "0",
-      "id": "0",
-      "args": [
-        "camera"
-      ]
-    },
-    "drawStageSelectMenu": {
-      "filename": "menu/level_menu.nim",
-      "types": [
-        "var ResourceManager"
-      ],
-      "priority": "-100",
-      "id": "26",
-      "args": [
-        "resources"
       ]
     }
   }

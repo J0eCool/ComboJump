@@ -9,6 +9,12 @@ type TestEnum = enum
   one
   two
 
+type TestObject = object
+  intVal: int
+  strVal: string
+  enumVal: TestEnum
+  arrayVal: seq[int]
+
 template testRoundtrip(name: string, ty, value, jsonString: untyped): untyped =
   test ($name & " toJSON"):
     check $toJSON(value) == jsonString
@@ -59,10 +65,21 @@ suite "JSON parsing":
   testRoundtrip(
     "Tables", Table[string, int],
     testTable,
-    """{"Bar":"101","foo":"12"}""" # TODO: make ordering of object keys deterministic
+    """{"Bar":"101","foo":"12"}"""
   )
 
-  test "Whitespace is ignored":
+  testRoundtrip(
+    "Objects", TestObject,
+    TestObject(
+      intVal: 37,
+      strVal: "test string",
+      enumVal: two,
+      arrayVal: @[6, 0, 2],
+    ),
+    """{"arrayVal":["6","0","2"],"enumVal":"two","intVal":"37","strVal":"test string"}"""
+  )
+
+  test "Whitespace is ignored when reading JSON":
     check fromJSON[seq[int]](deserializeJSON(" [\"1\", \"2\",\n \"3\" ] ")) == @[1, 2, 3]
 
 # TODO: have non-aborting fromJSON failures
