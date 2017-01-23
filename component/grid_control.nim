@@ -1,5 +1,8 @@
 import
-  component/movement,
+  component/[
+    movement,
+    target_shooter,
+  ],
   input,
   entity,
   event,
@@ -10,10 +13,19 @@ type GridControl* = ref object of Component
   moveSpeed*: float
   dir*: Vec
 
+const castingMoveSpeedMultiplier = 0.3
+
 defineSystem:
-  components = [GridControl, Movement]
+  components = [GridControl, TargetShooter, Movement]
   proc gridControl*(input: InputManager) =
-    let raw = vec(input.getAxis(Axis.horizontal),
-                  input.getAxis(Axis.vertical))
-    movement.vel = raw * gridControl.moveSpeed
+    let
+      raw = vec(input.getAxis(Axis.horizontal),
+                input.getAxis(Axis.vertical))
+      mult =
+        if targetShooter.isCasting:
+          castingMoveSpeedMultiplier
+        else:
+          1.0
+      spd = gridControl.moveSpeed * mult
+    movement.vel = raw * spd
     gridControl.dir = raw.unit

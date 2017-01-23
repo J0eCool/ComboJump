@@ -24,6 +24,9 @@ type
 const
   fireInputs* = [jump, spell1, spell2, spell3]
 
+proc isCasting*(targetShooter: TargetShooter): bool =
+  targetShooter.castTime > 0.0
+
 defineSystem:
   proc updateTargetedShoot*(input: InputManager, spellData: SpellData, dt: float, stats: PlayerStats) =
     result = @[]
