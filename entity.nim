@@ -44,11 +44,16 @@ template withComponent*(entity, t, name: expr, body: stmt): stmt {.immediate.} =
   if name != nil:
     body
 
-proc flatten*(entities: seq[Entity]): seq[Entity] =
-  result = @[]
-  for e in entities:
-    result.add e
-    result &= flatten(e.children)
+iterator flatten*(entities: Entities): Entity =
+  var toTraverse = entities
+  while toTraverse.len > 0:
+    let
+      idx = toTraverse.len - 1
+      e = toTraverse[idx]
+    toTraverse.del(idx)
+    yield e
+    if e.children.len > 0:
+      toTraverse &= e.children
 
 macro forComponents*(entities, e: expr, components: seq[expr], body: stmt): stmt {.immediate.} =
   assert(components.len mod 2 == 0, "Need a name and identifier for each component")
