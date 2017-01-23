@@ -236,12 +236,14 @@
     },
     "updateDamage": {
       "args": [
+        "player",
         "notifications"
       ],
       "filename": "component/damage.nim",
       "id": "7",
       "priority": "0",
       "types": [
+        "Entity",
         "var N10nManager"
       ]
     },
