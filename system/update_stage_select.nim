@@ -25,6 +25,12 @@ proc spawnedEntities*(stage: Stage, player: Entity): Entities =
   let
     player = if player != nil: player else: newPlayer(vec())
     playerTransform = player.getComponent(Transform)
+    screenWidth = 1200.0
+    exitPosX = screenWidth / 2
+    exitSize = vec(2000)
+    startBuffer = 450.0
+    endBuffer = 250.0
+    barrierSize = vec(100.0, (stage.length + startBuffer + endBuffer) * 3)
   playerTransform.pos = vec(300, 200)
 
   result = @[
@@ -34,14 +40,22 @@ proc spawnedEntities*(stage: Stage, player: Entity): Entities =
     newEntity("BeginExit", [
       ExitZone(stageEnd: false),
       Collider(layer: playerTrigger),
-      Transform(pos: vec(600, 850), size: vec(2000, 1000)),
+      Transform(pos: vec(exitPosX, startBuffer + exitSize.y / 2), size: exitSize),
       Sprite(color: color(0, 0, 0, 255)),
     ]),
     newEntity("EndExit", [
       ExitZone(stageEnd: true),
       Collider(layer: playerTrigger),
-      Transform(pos: vec(600.0, -stage.length - 150 - 500), size: vec(2000, 1000)),
+      Transform(pos: vec(exitPosX, -stage.length - endBuffer - exitSize.y / 2), size: exitSize),
       Sprite(color: color(0, 0, 0, 255)),
+    ]),
+    newEntity("LeftBarrier", [
+      Collider(layer: floor),
+      Transform(pos: vec(-barrierSize.x / 2, 0.0), size: barrierSize),
+    ]),
+    newEntity("RightBarrier", [
+      Collider(layer: floor),
+      Transform(pos: vec(screenWidth + barrierSize.x / 2, 0.0), size: barrierSize),
     ]),
   ]
   for enemy in stage.enemies:
