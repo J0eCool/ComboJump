@@ -15,7 +15,7 @@ type
   Collider* = ref object of Component
     layer*: Layer
     collisions*: seq[Entity]
-    collisionBlacklist*: seq[Entity]
+    collisionBlacklist: seq[Entity]
 
 proc initLayerMask(): array[Layer, set[Layer]] =
   result[player] = { floor, enemy, enemyBullet }
@@ -27,3 +27,12 @@ const layerMask = initLayerMask()
 
 proc canCollideWith*(obj, other: Layer): bool =
   layerMask[obj].contains(other)
+
+proc isBlacklisted*(collider: Collider, entity: Entity): bool =
+  collider.collisionBlacklist != nil and entity in collider.collisionBlacklist
+
+proc addToBlacklist*(collider: Collider, entity: Entity) =
+  if collider.collisionBlacklist == nil:
+    collider.collisionBlacklist = @[entity]
+  else:
+    collider.collisionBlacklist.add entity

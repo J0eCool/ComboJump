@@ -10,7 +10,6 @@ import
   entity,
   event,
   game_system,
-  notifications,
   util,
   vec
 
@@ -20,7 +19,7 @@ type
 
 defineSystem:
   components = [Health, Collider, Transform]
-  proc updateDamage*(player: Entity, notifications: var N10nManager) =
+  proc updateDamage*(player: Entity) =
     for col in collider.collisions:
       col.withComponent Damage, damage:
         health.cur -= damage.damage.float
@@ -35,8 +34,4 @@ defineSystem:
             PopupText(text: $damage.damage, color: popupColor),
           ])
         result.add event.Event(kind: addEntity, entity: popup)
-        collider.collisionBlacklist.add col
-        if health.cur <= 0:
-          result.add event.Event(kind: removeEntity, entity: entity)
-          notifications.add N10n(kind: entityKilled, entity: entity)
-          break
+        collider.addToBlacklist(col)

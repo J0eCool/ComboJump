@@ -11,8 +11,6 @@ defineSystem:
   components = [Transform, Collider]
   proc checkCollisisons*() =
     collider.collisions = @[]
-    if collider.collisionBlacklist == nil:
-      collider.collisionBlacklist = @[]
     forComponents(entities, b, [
       Transform, b_t,
       Collider, b_c,
@@ -21,7 +19,7 @@ defineSystem:
         continue
       if not collider.layer.canCollideWith(b_c.layer):
         continue
-      if b in collider.collisionBlacklist:
+      if collider.isBlacklisted(b):
         continue
       if not transform.rect.intersects(b_t.rect):
         continue
