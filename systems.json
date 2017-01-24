@@ -180,7 +180,7 @@
       ],
       "filename": "system/update_stage_select.nim",
       "id": "40",
-      "priority": "0",
+      "priority": "100",
       "types": [
         "Entity",
         "InputManager",
@@ -356,7 +356,7 @@
       ],
       "filename": "component/player_health.nim",
       "id": "26",
-      "priority": "0",
+      "priority": "5",
       "types": [
         "PlayerStats"
       ]

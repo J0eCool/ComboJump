@@ -14,6 +14,7 @@ type
     didInitialize*: bool
 
 defineSystem:
+  priority = 5
   components = [PlayerHealth, PlayerMana]
   proc updatePlayerHealth*(stats: PlayerStats) =
     playerHealth.max = stats.maxHealth().float

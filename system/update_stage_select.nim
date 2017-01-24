@@ -63,6 +63,7 @@ proc spawnedEntities*(stage: Stage, player: Entity): Entities =
     result.add newEnemy(enemy, stage.level, pos)
 
 defineSystem:
+  priority = 100
   proc stageSelect*(player: Entity, input: InputManager, stageData: var StageData, shouldExit: var bool) =
     result = @[]
 
