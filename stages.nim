@@ -71,6 +71,12 @@ proc newStageData*(): StageData =
     state: freshStart,
   )
 
+proc newTestStageData*(): StageData =
+  StageData(
+    clickedStage: -1,
+    state: inStage,
+  )
+
 proc fromJSON*(stageData: var StageData, json: JSON) =
   assert json.kind == jsObject
   stageData.highestStageBeaten.fromJSON(json.obj["highestStageBeaten"])

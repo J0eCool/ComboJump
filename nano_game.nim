@@ -14,6 +14,7 @@ import
   game,
   game_system,
   input,
+  logging,
   notifications,
   player_stats,
   prefabs,
@@ -47,6 +48,15 @@ proc newNanoGame*(screenSize: Vec): NanoGame =
   result.notifications = newN10nManager()
   load(result.spellData, result.stageData, result.stats)
 
+proc newTestNanoGame*(): NanoGame =
+  new result
+  result.background = newScrollingBackground()
+  result.spellData = newSpellData()
+  result.stats = newPlayerStats()
+  result.notifications = newN10nManager()
+
+  result.stageData = newTestStageData()
+
 method loadEntities*(game: NanoGame) =
   game.entities = @[]
 
@@ -68,6 +78,7 @@ method draw*(renderer: RendererPtr, game: NanoGame) =
                           font, color(0, 0, 0, 255))
 
 method update*(game: NanoGame, dt: float) =
+  log "NanoGame", debug, "Update - Begin"
   game.dt = dt
 
   game.player = nil
@@ -77,6 +88,8 @@ method update*(game: NanoGame, dt: float) =
       game.player = e
 
   game.updateSystems()
+  log "NanoGame", debug, "Update - End"
+
 
 when isMainModule:
   let screenSize = vec(1200, 900)

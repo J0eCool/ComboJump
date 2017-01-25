@@ -1,7 +1,8 @@
 import
   entity,
   event,
-  game_system
+  game_system,
+  logging
 
 # "Notification" is long to type out a lot, so use the abbreviation "N10n"
 # Similar to l10n, i18n, a11y and co
@@ -26,6 +27,7 @@ proc newN10nManager*(): N10nManager =
   )
 
 proc add*(notifications: var N10nManager, n10n: N10n) =
+  log "Notifications", debug, "Adding n10n - ", n10n
   notifications.buffered.add n10n
 
 proc get*(notifications: N10nManager, kind: N10nKind): seq[N10n] =

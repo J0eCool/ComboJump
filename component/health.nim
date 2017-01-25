@@ -3,6 +3,7 @@ import
   entity,
   event,
   game_system,
+  logging,
   notifications
 
 type Health* = ref object of LimitedQuantity
@@ -15,5 +16,6 @@ defineSystem:
   components = [Health]
   proc updateHealth*(notifications: var N10nManager) =
     if health.cur <= 0:
+      log "Health", debug, "Entity died - ", entity
       result.add event.Event(kind: removeEntity, entity: entity)
       notifications.add N10n(kind: entityKilled, entity: entity)

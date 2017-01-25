@@ -20,9 +20,16 @@ proc currentTimeString(): string =
     millisecondStr = "0" & millisecondStr
   localTime.format(dateFormat) & millisecondStr
 
+proc log*(category: string, level: LogLevel, message: varargs[string, `$`]) =
+  if level > logThreshold:
+    return
+  var str = currentTimeString() & " - "
+  if category != "":
+    str &= category & " - "
+  str &= ($level).toUpper & ": "
+  for x in message:
+    str &= x
+  echo str
+
 proc log*(level: LogLevel, message: varargs[string, `$`]) =
-  if level <= logThreshold:
-    var str = currentTimeString() & " - " & ($level).toUpper & ": "
-    for x in message:
-      str &= x
-    echo str
+  log("", level, message)

@@ -37,5 +37,14 @@
             "-d:debug", "--parallelBuild:0",
             "--out:out/nanogame_unittests", "unit_tests.nim"],
         "working_dir": "$project_path"
+    }, {
+        "name": "NaNo Game - Integration Tests",
+        "env": {
+            "NIMTEST_NO_COLOR": "1"
+        },
+        "cmd": ["nim", "c", "-r",
+            "-d:debug", "--parallelBuild:0",
+            "--out:out/nanogame_integrationtests", "integration_tests.nim"],
+        "working_dir": "$project_path"
     }]
 }
