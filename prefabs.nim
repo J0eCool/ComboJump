@@ -67,6 +67,7 @@ proc newGoblin(level: int, pos: Vec): Entity =
     HealthBar(),
     EnemyStats(
       name: "Goblin",
+      kind: goblin,
       level: level,
       xp: 5,
     ),
@@ -95,6 +96,7 @@ proc newOgre(level: int, pos: Vec): Entity =
     HealthBar(),
     EnemyStats(
       name: "Ogre",
+      kind: ogre,
       level: level,
       xp: 12,
     ),
@@ -120,6 +122,7 @@ proc newMushroom(level: int, pos: Vec): Entity =
     HealthBar(),
     EnemyStats(
       name: "Mushroom",
+      kind: mushroom,
       level: level,
       xp: 10,
     ),

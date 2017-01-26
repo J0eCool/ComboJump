@@ -372,6 +372,19 @@
         "float"
       ]
     },
+    "updateQuests": {
+      "args": [
+        "quests",
+        "notifications"
+      ],
+      "filename": "quests.nim",
+      "id": "41",
+      "priority": "0",
+      "types": [
+        "var QuestData",
+        "N10nManager"
+      ]
+    },
     "updateRepeatShooter": {
       "args": [
         "dt"

@@ -7,6 +7,7 @@ import
     popup_text,
     transform,
   ],
+  enemy_kind,
   entity,
   event,
   game_system,
@@ -16,6 +17,7 @@ import
 
 type EnemyStats* = ref object of Component
   name*: string
+  kind*: EnemyKind
   level*: int
   xp*: int
   didInit: bool

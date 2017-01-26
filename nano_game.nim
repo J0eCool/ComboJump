@@ -19,6 +19,7 @@ import
   player_stats,
   prefabs,
   program,
+  quests,
   resources,
   save,
   scrolling_background,
@@ -36,6 +37,7 @@ type NanoGame* = ref object of Game
   spellData: SpellData
   stats: PlayerStats
   notifications: N10nManager
+  quests: QuestData
 
 proc newNanoGame*(screenSize: Vec): NanoGame =
   new result
@@ -46,6 +48,7 @@ proc newNanoGame*(screenSize: Vec): NanoGame =
   result.spellData = newSpellData()
   result.stats = newPlayerStats()
   result.notifications = newN10nManager()
+  result.quests = newQuestData()
   load(result.spellData, result.stageData, result.stats)
 
 proc newTestNanoGame*(): NanoGame =
@@ -54,6 +57,7 @@ proc newTestNanoGame*(): NanoGame =
   result.spellData = newSpellData()
   result.stats = newPlayerStats()
   result.notifications = newN10nManager()
+  result.quests = newQuestData()
 
   result.stageData = newTestStageData()
 
