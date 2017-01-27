@@ -1,9 +1,12 @@
+import tables
+
 import
   component/enemy_stats,
   enemy_kind,
   entity,
   event,
   game_system,
+  jsonparse,
   logging,
   notifications,
   option,
@@ -28,10 +31,40 @@ type
   QuestRuntime = object
     info: QuestInfo
     requirements: seq[RequirementRuntime]
-    isComplete: bool
 
   QuestData* = object
     quests: seq[QuestRuntime]
+
+proc fromJSON*(req: var RequirementRuntime, json: JSON) =
+  assert json.kind == jsObject
+  req.progress.fromJSON(json.obj["progress"])
+proc toJSON*(req: RequirementRuntime): JSON =
+  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
+  result.obj["progress"] = req.progress.toJSON()
+
+proc fromJSON*(quest: var QuestRuntime, json: JSON) =
+  assert json.kind == jsObject
+  let requirements = json.obj["requirements"]
+  assert requirements.kind == jsArray
+  assert requirements.arr.len == quest.requirements.len
+  for i in 0..<quest.requirements.len:
+    quest.requirements[i].fromJSON(requirements.arr[i])
+proc toJSON*(quest: QuestRuntime): JSON =
+  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
+  result.obj["requirements"] = quest.requirements.toJSON()
+
+proc fromJSON*(quests: var QuestData, json: JSON) =
+  assert json.kind == jsObject
+  let questList = json.obj["quests"]
+  assert questList.kind == jsObject
+  for quest in quests.quests.mitems:
+    quest.fromJSON(questList.obj[quest.info.id])
+proc toJSON*(quests: QuestData): JSON =
+  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
+  var questTable = initTable[string, JSON]()
+  for quest in quests.quests:
+    questTable[quest.info.id] = quest.toJSON()
+  result.obj["quests"] = JSON(kind: jsObject, obj: questTable)
 
 proc questDataWithQuests(infos: seq[QuestInfo]): QuestData =
   var quests = newSeq[QuestRuntime]()
@@ -46,6 +79,20 @@ proc questDataWithQuests(infos: seq[QuestInfo]): QuestData =
 
 proc newTestQuestData*(testQuests: seq[QuestInfo]): QuestData =
   questDataWithQuests(testQuests)
+
+proc `==`(a, b: RequirementInfo): bool =
+  if not (a.kind == b.kind and a.count == b.count):
+    return false
+  case a.kind:
+  of killEnemies:
+    a.enemyKind == b.enemyKind
+proc `==`*(a, b: QuestData): bool =
+  if a.quests.len != b.quests.len:
+    return false
+  for i in 0..<a.quests.len:
+    if a.quests[i] != b.quests[i]:
+      return false
+  return true
 
 proc questForId(quests: QuestData, id: string): Option[QuestRuntime] =
   for quest in quests.quests:

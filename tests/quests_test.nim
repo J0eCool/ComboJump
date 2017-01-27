@@ -8,9 +8,25 @@ import
   areas,
   enemy_kind,
   entity,
+  jsonparse,
   notifications,
   quests,
   util
+
+let testQuestList = @[
+    QuestInfo(
+      id: "killOneGoblin",
+      requirements: @[
+        RequirementInfo(kind: killEnemies, count: 1, enemyKind: goblin),
+      ],
+    ),
+    QuestInfo(
+      id: "killThreeGoblins",
+      requirements: @[
+        RequirementInfo(kind: killEnemies, count: 3, enemyKind: goblin),
+      ],
+    ),
+  ]
 
 proc numEnemies(numDead = 0, numAlive = 0): Entities =
   result = @[]
@@ -20,29 +36,16 @@ proc numEnemies(numDead = 0, numAlive = 0): Entities =
       newHealth(if i < numDead: 0 else: 10),
     ])
 
+template updateKillFrame(numDead = 0, numAlive = 0): untyped =
+  discard updateHealth(numEnemies(numDead, numAlive), notifications)
+  discard updateN10nManager(@[], notifications)
+  discard updateQuests(@[], quests, notifications)
+
 suite "QuestInfo":
   setup:
     var
-      quests = newTestQuestData(@[
-        QuestInfo(
-          id: "killOneGoblin",
-          requirements: @[
-            RequirementInfo(kind: killEnemies, count: 1, enemyKind: goblin),
-          ],
-        ),
-        QuestInfo(
-          id: "killThreeGoblins",
-          requirements: @[
-            RequirementInfo(kind: killEnemies, count: 3, enemyKind: goblin),
-          ],
-        ),
-      ])
+      quests = newTestQuestData(testQuestList)
       notifications = newN10nManager()
-
-  template updateKillFrame(numDead = 0, numAlive = 0): untyped =
-    discard updateHealth(numEnemies(numDead, numAlive), notifications)
-    discard updateN10nManager(@[], notifications)
-    discard updateQuests(@[], quests, notifications)
 
   test "Enemy killing trigger works":
     check (not quests.isComplete("killOneGoblin"))
@@ -65,3 +68,30 @@ suite "QuestInfo":
   test "Too many counts complete long quest":
     updateKillFrame(numDead=100)
     check quests.isComplete("killThreeGoblins")
+
+
+suite "QuestInfo - serialization":
+  setup:
+    let beginQuests = newTestQuestData(testQuestList)
+
+  test "Quest equality works":
+    check beginQuests == beginQuests
+
+  test "Roundtripping initial state":
+    var endQuests = beginQuests
+    endQuests.fromJSON(toJSON(beginQuests))
+    check endQuests == beginQuests
+
+  test "Roundtripping with modified state":
+    var
+      quests = beginQuests
+      notifications = newN10nManager()
+      endQuests = beginQuests
+    updateKillFrame(numDead=5)
+    endQuests.fromJSON(toJSON(quests))
+    check endQuests == quests
+
+  #TODO: test adding quest
+  #TODO: test adding requirement to a quest
+  #TODO: test changing requirement on a quest
+  #TODO: test removing requirement on a quest
