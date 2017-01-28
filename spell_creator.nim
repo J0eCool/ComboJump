@@ -77,8 +77,11 @@ proc runeCount(spellData: SpellData, rune: Rune): int =
   for desc in spellData.spellDescs:
     result += desc.runeCount(rune)
 
+proc getCapacity*(spellData: SpellData, rune: Rune): int =
+  spellData.capacity[rune]
+
 proc available*(spellData: SpellData, rune: Rune): int =
-  return spellData.capacity[rune] - spellData.runeCount(rune)
+  spellData.capacity[rune] - spellData.runeCount(rune)
 
 proc unlockedRunes*(spellData: SpellData): seq[Rune] =
   result = @[]
