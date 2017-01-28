@@ -10,6 +10,7 @@ import
   logging,
   notifications,
   option,
+  rewards,
   util
 
 type
@@ -27,6 +28,7 @@ type
   QuestInfo* = object
     id*: string
     requirements*: seq[RequirementInfo]
+    reward*: Reward
 
   QuestRuntime = object
     info: QuestInfo
@@ -86,6 +88,8 @@ proc `==`(a, b: RequirementInfo): bool =
   case a.kind:
   of killEnemies:
     a.enemyKind == b.enemyKind
+proc `==`(a, b: QuestInfo): bool =
+  a.id == b.id and a.requirements == b.requirements
 proc `==`*(a, b: QuestData): bool =
   if a.quests.len != b.quests.len:
     return false
@@ -99,22 +103,26 @@ proc questForId(quests: QuestData, id: string): Option[QuestRuntime] =
     if quest.info.id == id:
       return makeJust(quest)
 
-iterator mrequirementsOfKind(quests: var QuestData, kind: RequirementKind): var RequirementRuntime =
+iterator mQuestsWithRequirementsOfKind(quests: var QuestData, kind: RequirementKind): var QuestRuntime =
   for quest in quests.quests.mitems:
     for req in quest.requirements.mitems:
       if req.info.kind == kind:
-        yield req
+        yield quest
+        break
+
+proc isComplete(quest: QuestRuntime): bool =
+  for req in quest.requirements:
+    if req.progress < req.info.count:
+      return false
+  return true
 
 proc isComplete*(quests: QuestData, id: string): bool =
   result = false
   quests.questForId(id).bindAs quest:
-    result = true
-    for req in quest.requirements:
-      if req.progress < req.info.count:
-        result = false
+    result = quest.isComplete
 
 defineSystem:
-  proc updateQuests*(quests: var QuestData, notifications: N10nManager) =
+  proc updateQuests*(quests: var QuestData, notifications: var N10nManager) =
     log "Quests", debug, "Updating quests"
     for n10n in notifications.get(entityKilled):
       log "Quests", debug, "Got entityKilled notification for ", n10n.entity
@@ -122,9 +130,13 @@ defineSystem:
       if enemyStats == nil:
         continue
       let enemyKind = enemyStats.kind
-      for req in quests.mrequirementsOfKind(killEnemies):
-        if enemyKind == req.info.enemyKind:
-          req.progress += 1
+      for quest in quests.mQuestsWithRequirementsOfKind(killEnemies):
+        let wasComplete = quest.isComplete
+        for req in quest.requirements.mitems:
+          if req.info.kind == killEnemies and enemyKind == req.info.enemyKind:
+            req.progress += 1
+        if (not wasComplete) and quest.isComplete:
+          notifications.add N10n(kind: gainReward, reward: quest.info.reward)
     log "Quests", debug, "Done updating quests"
 
 proc newQuestData*(): QuestData =

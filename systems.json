@@ -382,7 +382,7 @@
       "priority": "0",
       "types": [
         "var QuestData",
-        "N10nManager"
+        "var N10nManager"
       ]
     },
     "updateRepeatShooter": {

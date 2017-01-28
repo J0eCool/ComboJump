@@ -5,10 +5,12 @@ import
     enemy_stats,
     health,
   ],
+  system/update_rewards,
   enemy_kind,
   entity,
   jsonparse,
   notifications,
+  rewards,
   quests,
   util
 
@@ -18,6 +20,7 @@ let testQuestList = @[
       requirements: @[
         RequirementInfo(kind: killEnemies, count: 1, enemyKind: goblin),
       ],
+      reward: Reward(kind: rewardXp, amount: 5),
     ),
     QuestInfo(
       id: "killThreeGoblins",
@@ -68,6 +71,21 @@ suite "QuestInfo":
     updateKillFrame(numDead=100)
     check quests.isComplete("killThreeGoblins")
 
+  test "Completing quest gives reward":
+    updateKillFrame(numDead=1)
+    discard updateN10nManager(@[], notifications)
+    check notifications.get(gainReward).len == 1
+
+  test "Not completing quest gives no reward":
+    updateKillFrame()
+    discard updateN10nManager(@[], notifications)
+    check notifications.get(gainReward).len == 0
+
+  test "Completing quest twice gives no reward":
+    updateKillFrame(numDead=1)
+    updateKillFrame(numDead=1)
+    discard updateN10nManager(@[], notifications)
+    check notifications.get(gainReward).len == 0
 
 suite "QuestInfo - serialization":
   setup:
