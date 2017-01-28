@@ -5,7 +5,6 @@ import
     enemy_stats,
     health,
   ],
-  areas,
   enemy_kind,
   entity,
   jsonparse,

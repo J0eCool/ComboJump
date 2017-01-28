@@ -396,6 +396,19 @@
         "float"
       ]
     },
+    "updateRewards": {
+      "args": [
+        "notifications",
+        "stats"
+      ],
+      "filename": "system/update_rewards.nim",
+      "id": "42",
+      "priority": "0",
+      "types": [
+        "var N10nManager",
+        "var PlayerStats"
+      ]
+    },
     "updateRuneMenu": {
       "args": [
         "input",

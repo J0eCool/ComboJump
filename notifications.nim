@@ -2,7 +2,8 @@ import
   entity,
   event,
   game_system,
-  logging
+  logging,
+  rewards
 
 # "Notification" is long to type out a lot, so use the abbreviation "N10n"
 # Similar to l10n, i18n, a11y and co
@@ -11,11 +12,14 @@ type
   N10nKind* = enum
     entityRemoved
     entityKilled
+    gainReward
 
   N10n* = object
     case kind*: N10nKind
     of entityRemoved, entityKilled:
       entity*: Entity
+    of gainReward:
+      reward*: Reward
 
   N10nManager* = object
     active, buffered: seq[N10n]
