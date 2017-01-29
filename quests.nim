@@ -32,6 +32,7 @@ type
 
   QuestRuntime = object
     info: QuestInfo
+    isComplete: bool
     requirements: seq[RequirementRuntime]
 
   QuestData* = object
@@ -46,6 +47,7 @@ proc toJSON*(req: RequirementRuntime): JSON =
 
 proc fromJSON*(quest: var QuestRuntime, json: JSON) =
   assert json.kind == jsObject
+  quest.isComplete.fromJSON(json.obj["isComplete"])
   let requirements = json.obj["requirements"]
   assert requirements.kind == jsArray
   assert requirements.arr.len == quest.requirements.len
@@ -53,6 +55,7 @@ proc fromJSON*(quest: var QuestRuntime, json: JSON) =
     quest.requirements[i].fromJSON(requirements.arr[i])
 proc toJSON*(quest: QuestRuntime): JSON =
   result = JSON(kind: jsObject, obj: initTable[string, JSON]())
+  result.obj["isComplete"] = quest.isComplete.toJSON()
   result.obj["requirements"] = quest.requirements.toJSON()
 
 proc fromJSON*(quests: var QuestData, json: JSON) =
@@ -98,28 +101,40 @@ proc `==`*(a, b: QuestData): bool =
       return false
   return true
 
-proc questForId(quests: QuestData, id: string): Option[QuestRuntime] =
-  for quest in quests.quests:
-    if quest.info.id == id:
-      return makeJust(quest)
+template questForId(questData: QuestData, questId: string, binding, body: untyped): untyped =
+  for binding in questData.quests:
+    if binding.info.id == questId:
+      body
 
-iterator mQuestsWithRequirementsOfKind(quests: var QuestData, kind: RequirementKind): var QuestRuntime =
+template mquestForId(questData: var QuestData, questId: string, binding, body: untyped): untyped =
+  for binding in questData.quests.mitems:
+    if binding.info.id == questId:
+      body
+
+iterator mquestsWithRequirementsOfKind(quests: var QuestData, kind: RequirementKind): var QuestRuntime =
   for quest in quests.quests.mitems:
     for req in quest.requirements.mitems:
       if req.info.kind == kind:
         yield quest
         break
 
-proc isComplete(quest: QuestRuntime): bool =
+proc isClaimable(quest: QuestRuntime): bool =
   for req in quest.requirements:
     if req.progress < req.info.count:
       return false
   return true
 
-proc isComplete*(quests: QuestData, id: string): bool =
+proc isClaimable*(quests: QuestData, id: string): bool =
   result = false
-  quests.questForId(id).bindAs quest:
+  quests.questForId id, quest:
     result = quest.isComplete
+
+proc claimQuest*(quests: var QuestData, id: string, notifications: var N10nManager) =
+  quests.mquestForId id, quest:
+    if quest.isClaimable and (not quest.isComplete):
+      log "Quests", debug, "Claiming quest ", id
+      quest.isComplete = true
+      notifications.add N10n(kind: gainReward, reward: quest.info.reward)
 
 defineSystem:
   proc updateQuests*(quests: var QuestData, notifications: var N10nManager) =
@@ -130,13 +145,13 @@ defineSystem:
       if enemyStats == nil:
         continue
       let enemyKind = enemyStats.kind
-      for quest in quests.mQuestsWithRequirementsOfKind(killEnemies):
-        let wasComplete = quest.isComplete
-        for req in quest.requirements.mitems:
-          if req.info.kind == killEnemies and enemyKind == req.info.enemyKind:
-            req.progress += 1
-        if (not wasComplete) and quest.isComplete:
-          notifications.add N10n(kind: gainReward, reward: quest.info.reward)
+      for quest in quests.mquestsWithRequirementsOfKind(killEnemies):
+        if not quest.isComplete:
+          for req in quest.requirements.mitems:
+            if req.info.kind == killEnemies and enemyKind == req.info.enemyKind:
+              req.progress += 1
+          if quest.isClaimable:
+            claimQuest(quests, quest.info.id, notifications)
     log "Quests", debug, "Done updating quests"
 
 proc newQuestData*(): QuestData =

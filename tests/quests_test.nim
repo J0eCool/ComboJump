@@ -50,26 +50,26 @@ suite "QuestInfo":
       notifications = newN10nManager()
 
   test "Enemy killing trigger works":
-    check (not quests.isComplete("killOneGoblin"))
+    check (not quests.isClaimable("killOneGoblin"))
     updateKillFrame(numDead=1)
-    check quests.isComplete("killOneGoblin")
+    check quests.isClaimable("killOneGoblin")
 
   test "Long quest doesn't count as complete until satisfied":
     updateKillFrame(numDead=1)
-    check (not quests.isComplete("killThreeGoblins"))
+    check (not quests.isClaimable("killThreeGoblins"))
 
   test "Multiple counts complete long quest":
     updateKillFrame(numDead=3)
-    check quests.isComplete("killThreeGoblins")
+    check quests.isClaimable("killThreeGoblins")
 
   test "Multiple counts can complete over multiple frames":
     for i in 0..<3:
       updateKillFrame(numDead=1)
-    check quests.isComplete("killThreeGoblins")
+    check quests.isClaimable("killThreeGoblins")
 
   test "Too many counts complete long quest":
     updateKillFrame(numDead=100)
-    check quests.isComplete("killThreeGoblins")
+    check quests.isClaimable("killThreeGoblins")
 
   test "Completing quest gives reward":
     updateKillFrame(numDead=1)
