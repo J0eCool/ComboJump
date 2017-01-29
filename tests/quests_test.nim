@@ -68,22 +68,32 @@ suite "QuestInfo":
     check quests.isClaimable("killThreeGoblins")
 
   test "Too many counts complete long quest":
-    updateKillFrame(numDead=100)
+    for i in 0..<12:
+      updateKillFrame(numDead=1)
     check quests.isClaimable("killThreeGoblins")
 
   test "Completing quest gives reward":
     updateKillFrame(numDead=1)
+    quests.claimQuest("killOneGoblin", notifications)
     discard updateN10nManager(@[], notifications)
     check notifications.get(gainReward).len == 1
 
+  test "Not claiming quest gives no reward":
+    updateKillFrame(numDead=1)
+    discard updateN10nManager(@[], notifications)
+    check notifications.get(gainReward).len == 0
+
   test "Not completing quest gives no reward":
     updateKillFrame()
+    quests.claimQuest("killOneGoblin", notifications)
     discard updateN10nManager(@[], notifications)
     check notifications.get(gainReward).len == 0
 
   test "Completing quest twice gives no reward":
     updateKillFrame(numDead=1)
-    updateKillFrame(numDead=1)
+    quests.claimQuest("killOneGoblin", notifications)
+    discard updateN10nManager(@[], notifications)
+    quests.claimQuest("killOneGoblin", notifications)
     discard updateN10nManager(@[], notifications)
     check notifications.get(gainReward).len == 0
 

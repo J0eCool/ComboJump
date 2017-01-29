@@ -111,12 +111,17 @@ template mquestForId(questData: var QuestData, questId: string, binding, body: u
     if binding.info.id == questId:
       body
 
-iterator mquestsWithRequirementsOfKind(quests: var QuestData, kind: RequirementKind): var QuestRuntime =
+proc hasRequirementOfKind(quest: QuestRuntime, kind: RequirementKind): bool =
+  for req in quest.requirements:
+    if req.info.kind == kind:
+      return true
+  return false
+
+
+iterator mactiveQuestsWithRequirementsOfKind(quests: var QuestData, kind: RequirementKind): var QuestRuntime =
   for quest in quests.quests.mitems:
-    for req in quest.requirements.mitems:
-      if req.info.kind == kind:
-        yield quest
-        break
+    if (not quest.isComplete) and quest.hasRequirementOfKind(kind):
+      yield quest
 
 proc isClaimable(quest: QuestRuntime): bool =
   for req in quest.requirements:
@@ -127,7 +132,7 @@ proc isClaimable(quest: QuestRuntime): bool =
 proc isClaimable*(quests: QuestData, id: string): bool =
   result = false
   quests.questForId id, quest:
-    result = quest.isComplete
+    result = quest.isClaimable
 
 proc claimQuest*(quests: var QuestData, id: string, notifications: var N10nManager) =
   quests.mquestForId id, quest:
@@ -145,13 +150,11 @@ defineSystem:
       if enemyStats == nil:
         continue
       let enemyKind = enemyStats.kind
-      for quest in quests.mquestsWithRequirementsOfKind(killEnemies):
-        if not quest.isComplete:
-          for req in quest.requirements.mitems:
-            if req.info.kind == killEnemies and enemyKind == req.info.enemyKind:
-              req.progress += 1
-          if quest.isClaimable:
-            claimQuest(quests, quest.info.id, notifications)
+      for quest in quests.mactiveQuestsWithRequirementsOfKind(killEnemies):
+        for req in quest.requirements.mitems:
+          if req.info.kind == killEnemies and enemyKind == req.info.enemyKind:
+            log "Quests", debug, "Increasing count for quest ", quest
+            req.progress += 1
     log "Quests", debug, "Done updating quests"
 
 proc newQuestData*(): QuestData =
