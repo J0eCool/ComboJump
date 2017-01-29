@@ -5,10 +5,13 @@ import
   component/sprite,
   component/target_shooter,
   component/transform,
-  menu/level_menu,
-  menu/rune_menu,
-  menu/spell_hud_menu,
-  menu/stats_menu,
+  menu/[
+    level_menu,
+    quest_menu,
+    rune_menu,
+    spell_hud_menu,
+    stats_menu,
+  ],
   input,
   entity,
   event,
@@ -92,6 +95,7 @@ defineSystem:
         result &= event.Event(kind: loadStage, stage: @[
           newEntity("LevelMenu", [LevelMenu().Component]),
           newEntity("StatsMenu", [StatsMenu().Component]),
+          newEntity("QuestMenu", [QuestMenu().Component]),
         ])
         stageData.currentStageInProgress = false
       of inStage:

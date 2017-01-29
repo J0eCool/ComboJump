@@ -83,6 +83,11 @@ suite "QuestInfo":
     discard updateN10nManager(@[], notifications)
     check notifications.get(gainReward).len == 0
 
+  test "Claiming quest makes quest no longer claimable":
+    updateKillFrame(numDead=1)
+    quests.claimQuest("killOneGoblin", notifications)
+    check (not quests.isClaimable("killOneGoblin"))
+
   test "Not completing quest gives no reward":
     updateKillFrame()
     quests.claimQuest("killOneGoblin", notifications)

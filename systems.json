@@ -52,6 +52,17 @@
         "Camera"
       ]
     },
+    "drawQuestMenu": {
+      "args": [
+        "resources"
+      ],
+      "filename": "menu/quest_menu.nim",
+      "id": "43",
+      "priority": "-100",
+      "types": [
+        "var ResourceManager"
+      ]
+    },
     "drawRuneMenu": {
       "args": [
         "resources"
@@ -372,9 +383,24 @@
         "float"
       ]
     },
+    "updateQuestMenu": {
+      "args": [
+        "input",
+        "questData",
+        "notifications"
+      ],
+      "filename": "menu/quest_menu.nim",
+      "id": "44",
+      "priority": "0",
+      "types": [
+        "InputManager",
+        "var QuestData",
+        "var N10nManager"
+      ]
+    },
     "updateQuests": {
       "args": [
-        "quests",
+        "questData",
         "notifications"
       ],
       "filename": "quests.nim",
