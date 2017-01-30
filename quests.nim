@@ -15,51 +15,51 @@ import
   util
 
 type
-  RequirementKind* = enum
+  QuestStepKind* = enum
     killEnemies
-  RequirementInfo* = object
+  QuestStepInfo* = object
     count*: int
-    case kind*: RequirementKind
+    case kind*: QuestStepKind
     of killEnemies:
       enemyKind*: EnemyKind
-  Requirement* = object
-    info: RequirementInfo
+  QuestStep* = object
+    info: QuestStepInfo
     progress: int
 
   QuestInfo* = object
     id*: string
     prerequisite*: string
     name*: string
-    requirements*: seq[RequirementInfo]
+    steps*: seq[QuestStepInfo]
     rewards*: seq[Reward]
 
   Quest* = object
     info*: QuestInfo
     isComplete: bool
-    requirements*: seq[Requirement]
+    steps*: seq[QuestStep]
 
   QuestData* = object
     quests: seq[Quest]
 
-proc fromJSON*(req: var Requirement, json: JSON) =
+proc fromJSON*(step: var QuestStep, json: JSON) =
   assert json.kind == jsObject
-  req.progress.fromJSON(json.obj["progress"])
-proc toJSON*(req: Requirement): JSON =
+  step.progress.fromJSON(json.obj["progress"])
+proc toJSON*(step: QuestStep): JSON =
   result = JSON(kind: jsObject, obj: initTable[string, JSON]())
-  result.obj["progress"] = req.progress.toJSON()
+  result.obj["progress"] = step.progress.toJSON()
 
 proc fromJSON*(quest: var Quest, json: JSON) =
   assert json.kind == jsObject
   quest.isComplete.fromJSON(json.obj["isComplete"])
-  let requirements = json.obj["requirements"]
-  assert requirements.kind == jsArray
-  assert requirements.arr.len == quest.requirements.len
-  for i in 0..<quest.requirements.len:
-    quest.requirements[i].fromJSON(requirements.arr[i])
+  let steps = json.obj["steps"]
+  assert steps.kind == jsArray
+  assert steps.arr.len == quest.steps.len
+  for i in 0..<quest.steps.len:
+    quest.steps[i].fromJSON(steps.arr[i])
 proc toJSON*(quest: Quest): JSON =
   result = JSON(kind: jsObject, obj: initTable[string, JSON]())
   result.obj["isComplete"] = quest.isComplete.toJSON()
-  result.obj["requirements"] = quest.requirements.toJSON()
+  result.obj["steps"] = quest.steps.toJSON()
 
 proc fromJSON*(questData: var QuestData, json: JSON) =
   assert json.kind == jsObject
@@ -77,9 +77,9 @@ proc toJSON*(questData: QuestData): JSON =
 proc questDataWithQuests(infos: seq[QuestInfo]): QuestData =
   var quests = newSeq[Quest]()
   for info in infos:
-    var quest = Quest(info: info, requirements: @[])
-    for req in info.requirements:
-      quest.requirements.add Requirement(info: req)
+    var quest = Quest(info: info, steps: @[])
+    for step in info.steps:
+      quest.steps.add QuestStep(info: step)
     quests.add quest
   QuestData(
     quests: quests,
@@ -88,14 +88,14 @@ proc questDataWithQuests(infos: seq[QuestInfo]): QuestData =
 proc newTestQuestData*(testQuests: seq[QuestInfo]): QuestData =
   questDataWithQuests(testQuests)
 
-proc `==`(a, b: RequirementInfo): bool =
+proc `==`(a, b: QuestStepInfo): bool =
   if not (a.kind == b.kind and a.count == b.count):
     return false
   case a.kind:
   of killEnemies:
     a.enemyKind == b.enemyKind
 proc `==`(a, b: QuestInfo): bool =
-  a.id == b.id and a.requirements == b.requirements
+  a.id == b.id and a.steps == b.steps
 proc `==`*(a, b: QuestData): bool =
   if a.quests.len != b.quests.len:
     return false
@@ -104,11 +104,11 @@ proc `==`*(a, b: QuestData): bool =
       return false
   return true
 
-proc menuString*(req: Requirement): string =
-  let progress = $req.progress & "/" & $req.info.count
-  case req.info.kind
+proc menuString*(step: QuestStep): string =
+  let progress = $step.progress & "/" & $step.info.count
+  case step.info.kind
   of killEnemies:
-    "Kill " & $req.info.count & " " & $req.info.enemyKind & "s : " & progress
+    "Kill " & $step.info.count & " " & $step.info.enemyKind & "s : " & progress
 
 template questForId(questData: QuestData, questId: string, binding, body: untyped): untyped =
   for binding in questData.quests:
@@ -120,12 +120,6 @@ template mquestForId(questData: var QuestData, questId: string, binding, body: u
     if binding.info.id == questId:
       body
 
-proc hasRequirementOfKind(quest: Quest, kind: RequirementKind): bool =
-  for req in quest.requirements:
-    if req.info.kind == kind:
-      return true
-  return false
-
 proc isActive(quest: Quest, questData: QuestData): bool =
   if quest.isComplete:
     return false
@@ -135,15 +129,21 @@ proc isActive(quest: Quest, questData: QuestData): bool =
     assert false, "Quest id=" & quest.info.id & ", no prerequisite: " & quest.info.prerequisite
   return true
 
-iterator mactiveQuestsWithRequirementsOfKind(questData: var QuestData, kind: RequirementKind): var Quest =
+proc hasStepOfKind(quest: Quest, kind: QuestStepKind): bool =
+  for req in quest.steps:
+    if req.info.kind == kind:
+      return true
+  return false
+
+iterator mactiveQuestsWithStepsOfKind(questData: var QuestData, kind: QuestStepKind): var Quest =
   for quest in questData.quests.mitems:
-    if quest.isActive(questData) and quest.hasRequirementOfKind(kind):
+    if quest.isActive(questData) and quest.hasStepOfKind(kind):
       yield quest
 
 proc isClaimable*(quest: Quest): bool =
   if quest.isComplete:
     return false
-  for req in quest.requirements:
+  for req in quest.steps:
     if req.progress < req.info.count:
       return false
   return true
@@ -179,8 +179,8 @@ defineSystem:
       if enemyStats == nil:
         continue
       let enemyKind = enemyStats.kind
-      for quest in questData.mactiveQuestsWithRequirementsOfKind(killEnemies):
-        for req in quest.requirements.mitems:
+      for quest in questData.mactiveQuestsWithStepsOfKind(killEnemies):
+        for req in quest.steps.mitems:
           if req.info.kind == killEnemies and enemyKind == req.info.enemyKind:
             log "Quests", debug, "Increasing count for quest ", quest
             req.progress += 1
@@ -192,8 +192,8 @@ proc newQuestData*(): QuestData =
     QuestInfo(
       id: "killThreeGoblins",
       name: "Test goblins",
-      requirements: @[
-        RequirementInfo(kind: killEnemies, count: 3, enemyKind: goblin),
+      steps: @[
+        QuestStepInfo(kind: killEnemies, count: 3, enemyKind: goblin),
       ],
       rewards: @[
         Reward(kind: rewardXp, amount: 100),
@@ -202,9 +202,9 @@ proc newQuestData*(): QuestData =
     QuestInfo(
       id: "killMore",
       name: "Kill more stuff",
-      requirements: @[
-        RequirementInfo(kind: killEnemies, count: 3, enemyKind: ogre),
-        RequirementInfo(kind: killEnemies, count: 5, enemyKind: goblin),
+      steps: @[
+        QuestStepInfo(kind: killEnemies, count: 3, enemyKind: ogre),
+        QuestStepInfo(kind: killEnemies, count: 5, enemyKind: goblin),
       ],
       rewards: @[
         Reward(kind: rewardRune, rune: num),

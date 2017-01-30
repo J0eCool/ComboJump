@@ -17,15 +17,15 @@ import
 let testQuestList = @[
     QuestInfo(
       id: "killOneGoblin",
-      requirements: @[
-        RequirementInfo(kind: killEnemies, count: 1, enemyKind: goblin),
+      steps: @[
+        QuestStepInfo(kind: killEnemies, count: 1, enemyKind: goblin),
       ],
       rewards: @[Reward(kind: rewardXp, amount: 5)],
     ),
     QuestInfo(
       id: "killThreeGoblins",
-      requirements: @[
-        RequirementInfo(kind: killEnemies, count: 3, enemyKind: goblin),
+      steps: @[
+        QuestStepInfo(kind: killEnemies, count: 3, enemyKind: goblin),
       ],
       rewards: @[
         Reward(kind: rewardXp, amount: 5),
@@ -35,8 +35,8 @@ let testQuestList = @[
     QuestInfo(
       id: "killOneMoreGoblin",
       prerequisite: "killOneGoblin",
-      requirements: @[
-        RequirementInfo(kind: killEnemies, count: 1, enemyKind: goblin),
+      steps: @[
+        QuestStepInfo(kind: killEnemies, count: 1, enemyKind: goblin),
       ],
       rewards: @[Reward(kind: rewardXp, amount: 5)],
     ),
@@ -155,6 +155,6 @@ suite "QuestInfo - serialization":
     check endQuests == quests
 
   #TODO: test adding quest
-  #TODO: test adding requirement to a quest
-  #TODO: test changing requirement on a quest
-  #TODO: test removing requirement on a quest
+  #TODO: test adding step to a quest
+  #TODO: test changing step on a quest
+  #TODO: test removing step on a quest

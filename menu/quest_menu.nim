@@ -47,10 +47,10 @@ proc questMenuNode(questData: ptr QuestData, notifications: ptr N10nManager): No
             text: info.name,
             pos: vec(0, -30),
           ),
-          List[Requirement](
+          List[QuestStep](
             pos: vec(0, -10),
-            items: (proc(): seq[Requirement] = quest.requirements),
-            listNodes: (proc(req: Requirement): Node =
+            items: (proc(): seq[QuestStep] = quest.steps),
+            listNodes: (proc(req: QuestStep): Node =
               BorderedTextNode(
                 text: "- " & req.menuString,
                 size: vec(0, 24),
