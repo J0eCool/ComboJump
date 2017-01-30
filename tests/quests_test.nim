@@ -20,12 +20,16 @@ let testQuestList = @[
       requirements: @[
         RequirementInfo(kind: killEnemies, count: 1, enemyKind: goblin),
       ],
-      reward: Reward(kind: rewardXp, amount: 5),
+      rewards: @[Reward(kind: rewardXp, amount: 5)],
     ),
     QuestInfo(
       id: "killThreeGoblins",
       requirements: @[
         RequirementInfo(kind: killEnemies, count: 3, enemyKind: goblin),
+      ],
+      rewards: @[
+        Reward(kind: rewardXp, amount: 5),
+        Reward(kind: rewardXp, amount: 5),
       ],
     ),
   ]
@@ -101,6 +105,13 @@ suite "QuestInfo":
     quests.claimQuest("killOneGoblin", notifications)
     discard updateN10nManager(@[], notifications)
     check notifications.get(gainReward).len == 0
+
+  test "Quests can give multiple rewards":
+    updateKillFrame(numDead=3)
+    quests.claimQuest("killThreeGoblins", notifications)
+    discard updateN10nManager(@[], notifications)
+    check notifications.get(gainReward).len == 2
+
 
 suite "QuestInfo - serialization":
   setup:

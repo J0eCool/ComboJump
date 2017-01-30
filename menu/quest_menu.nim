@@ -48,9 +48,13 @@ proc questMenuNode(questData: ptr QuestData, notifications: ptr N10nManager): No
             pos: vec(0, -30),
           ),
           List[Requirement](
+            pos: vec(0, -10),
             items: (proc(): seq[Requirement] = quest.requirements),
             listNodes: (proc(req: Requirement): Node =
-              BorderedTextNode(text: "- " & req.menuString)
+              BorderedTextNode(
+                text: "- " & req.menuString,
+                size: vec(0, 24),
+              )
             ),
           ),
           claimButton,

@@ -30,7 +30,7 @@ type
     id*: string
     name*: string
     requirements*: seq[RequirementInfo]
-    reward*: Reward
+    rewards*: seq[Reward]
 
   Quest* = object
     info*: QuestInfo
@@ -148,7 +148,11 @@ proc claimQuest*(questData: var QuestData, id: string, notifications: var N10nMa
     if quest.isClaimable and (not quest.isComplete):
       log "Quests", debug, "Claiming quest ", id
       quest.isComplete = true
-      notifications.add N10n(kind: gainReward, reward: quest.info.reward)
+      for reward in quest.info.rewards:
+        notifications.add N10n(
+          kind: gainReward,
+          reward: reward,
+        )
 
 proc activeQuests*(questData: QuestData): seq[Quest] =
   result = @[]
@@ -181,14 +185,20 @@ proc newQuestData*(): QuestData =
       requirements: @[
         RequirementInfo(kind: killEnemies, count: 3, enemyKind: goblin),
       ],
-      reward: Reward(kind: rewardXp, amount: 100),
+      rewards: @[
+        Reward(kind: rewardXp, amount: 100),
+      ],
     ),
     QuestInfo(
-      id: "killThreeOgres",
-      name: "Test ogres",
+      id: "killMore",
+      name: "Kill more stuff",
       requirements: @[
         RequirementInfo(kind: killEnemies, count: 3, enemyKind: ogre),
+        RequirementInfo(kind: killEnemies, count: 5, enemyKind: goblin),
       ],
-      reward: Reward(kind: rewardRune, rune: count),
+      rewards: @[
+        Reward(kind: rewardRune, rune: num),
+        Reward(kind: rewardRune, rune: createSpread),
+      ],
     ),
   ])
