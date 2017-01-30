@@ -32,6 +32,14 @@ let testQuestList = @[
         Reward(kind: rewardXp, amount: 5),
       ],
     ),
+    QuestInfo(
+      id: "killOneMoreGoblin",
+      prerequisite: "killOneGoblin",
+      requirements: @[
+        RequirementInfo(kind: killEnemies, count: 1, enemyKind: goblin),
+      ],
+      rewards: @[Reward(kind: rewardXp, amount: 5)],
+    ),
   ]
 
 proc numEnemies(numDead = 0, numAlive = 0): Entities =
@@ -54,9 +62,11 @@ suite "QuestInfo":
       notifications = newN10nManager()
 
   test "Enemy killing trigger works":
-    check (not quests.isClaimable("killOneGoblin"))
     updateKillFrame(numDead=1)
     check quests.isClaimable("killOneGoblin")
+
+  test "Quests aren't claimable by default":
+    check (not quests.isClaimable("killOneGoblin"))
 
   test "Long quest doesn't count as complete until satisfied":
     updateKillFrame(numDead=1)
@@ -111,6 +121,16 @@ suite "QuestInfo":
     quests.claimQuest("killThreeGoblins", notifications)
     discard updateN10nManager(@[], notifications)
     check notifications.get(gainReward).len == 2
+
+  test "Quests with prerequisites can be unlocked":
+    updateKillFrame(numDead=1)
+    quests.claimQuest("killOneGoblin", notifications)
+    updateKillFrame(numDead=1)
+    check quests.isClaimable("killOneMoreGoblin")
+
+  test "Quests with prerequisites don't make progress when not active":
+    updateKillFrame(numDead=1)
+    check (not quests.isClaimable("killOneMoreGoblin"))
 
 
 suite "QuestInfo - serialization":

@@ -28,6 +28,7 @@ type
 
   QuestInfo* = object
     id*: string
+    prerequisite*: string
     name*: string
     requirements*: seq[RequirementInfo]
     rewards*: seq[Reward]
@@ -125,9 +126,18 @@ proc hasRequirementOfKind(quest: Quest, kind: RequirementKind): bool =
       return true
   return false
 
+proc isActive(quest: Quest, questData: QuestData): bool =
+  if quest.isComplete:
+    return false
+  if quest.info.prerequisite != nil:
+    questData.questForId quest.info.prerequisite, prereq:
+      return prereq.isComplete
+    assert false, "Quest id=" & quest.info.id & ", no prerequisite: " & quest.info.prerequisite
+  return true
+
 iterator mactiveQuestsWithRequirementsOfKind(questData: var QuestData, kind: RequirementKind): var Quest =
   for quest in questData.quests.mitems:
-    if (not quest.isComplete) and quest.hasRequirementOfKind(kind):
+    if quest.isActive(questData) and quest.hasRequirementOfKind(kind):
       yield quest
 
 proc isClaimable*(quest: Quest): bool =
@@ -157,7 +167,7 @@ proc claimQuest*(questData: var QuestData, id: string, notifications: var N10nMa
 proc activeQuests*(questData: QuestData): seq[Quest] =
   result = @[]
   for quest in questData.quests:
-    if (not quest.isComplete):
+    if quest.isActive(questData):
       result.add quest
 
 defineSystem:
