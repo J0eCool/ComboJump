@@ -12,3 +12,10 @@ type
       amount*: int
     of rewardRune:
       rune*: Rune
+
+proc menuString*(reward: Reward): string =
+  case reward.kind
+  of rewardXp:
+    $reward.amount & " XP"
+  of rewardRune:
+    $reward.rune & " Rune"
