@@ -7,14 +7,14 @@ import
   vec
 
 type CameraTarget* = ref object of Component
-  vertical*: bool
+  verticallyLocked*: bool
   offset*: Vec
 
 defineSystem:
   components = [CameraTarget, Transform]
   proc updateCamera*(camera: var Camera) =
     let diff = camera.screenSize / 2 - transform.globalPos + cameraTarget.offset
-    if not cameraTarget.vertical:
-      camera.offset.x = diff.x
-    else:
+    if cameraTarget.verticallyLocked:
       camera.offset.y = diff.y
+    else:
+      camera.offset = diff

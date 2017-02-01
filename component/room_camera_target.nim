@@ -1,0 +1,19 @@
+import
+  component/[
+    collider,
+    transform,
+  ],
+  camera,
+  entity,
+  event,
+  game_system,
+  vec
+
+type RoomCameraTarget* = ref object of Component
+
+defineSystem:
+  priority = -10
+  components = [RoomCameraTarget, Collider, Transform]
+  proc updateRoomCamera*(player: Entity, camera: var Camera) =
+    if player in collider.collisions:
+      camera.offset = camera.screenSize / 2 - transform.globalPos

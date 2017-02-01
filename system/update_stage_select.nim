@@ -1,10 +1,15 @@
-import sdl2
+import
+  math,
+  sdl2
 
 import
-  component/collider,
-  component/sprite,
-  component/target_shooter,
-  component/transform,
+  component/[
+    collider,
+    room_camera_target,
+    sprite,
+    target_shooter,
+    transform,
+  ],
   menu/[
     level_menu,
     quest_menu,
@@ -24,43 +29,97 @@ import
   vec,
   util
 
+proc wall(pos = vec(), size = vec(), hasDoor = false): Entities =
+  let
+    wallColor = color(128, 128, 128, 255)
+    doorWidth = 200.0
+    name = "Wall"
+  if not hasDoor:
+    return @[newEntity(name, [
+      Sprite(color: wallColor),
+      Collider(layer: Layer.floor),
+      Transform(pos: pos, size: size)
+    ])]
+
+  let
+    # isVertical = size.x < size.y
+    offset = vec(size.x / 4 + doorWidth / 4, 0.0)
+    leftPos = pos - offset
+    rightPos = pos + offset
+    partSize = vec((size.x - doorWidth) / 2, size.y)
+  @[
+    newEntity(name, [
+      Sprite(color: wallColor),
+      Collider(layer: Layer.floor),
+      Transform(pos: leftPos, size: partSize)
+    ]),
+    newEntity(name, [
+      Sprite(color: wallColor),
+      Collider(layer: Layer.floor),
+      Transform(pos: rightPos, size: partSize)
+    ]),
+  ]
+
+
+proc roomEntities(screenSize, pos: Vec): Entities =
+  let wallWidth = 50.0
+  result = @[
+    newEntity("Room", [
+      RoomCameraTarget(),
+      Collider(layer: Layer.playerTrigger),
+      Transform(
+        pos: pos + screenSize / 2,
+        size: screenSize - vec(2 * wallWidth),
+      ),
+    ]),
+  ]
+  result &= wall( # left
+    pos = pos + vec(wallWidth / 2, screenSize.y / 2),
+    size = vec(wallWidth, screenSize.y - 2 * wallWidth),
+  )
+  result &= wall( # right
+    pos = pos + vec(screenSize.x - wallWidth / 2, screenSize.y / 2),
+    size = vec(wallWidth, screenSize.y - 2 * wallWidth),
+  )
+  result &= wall( # top
+    pos = pos + vec(screenSize.x / 2, wallWidth / 2),
+    size = vec(screenSize.x, wallWidth),
+    hasDoor = true,
+  )
+  result &= wall( # bottom
+    pos = pos + vec(screenSize.x / 2, screenSize.y - wallWidth / 2),
+    size = vec(screenSize.x, wallWidth),
+    hasDoor = true,
+  )
+
 proc spawnedEntities*(stage: Stage, player: Entity): Entities =
   let
     player = if player != nil: player else: newPlayer(vec())
     playerTransform = player.getComponent(Transform)
-    screenWidth = 1200.0
-    exitPosX = screenWidth / 2
-    exitSize = vec(2000)
-    startBuffer = 450.0
-    endBuffer = 250.0
-    barrierSize = vec(100.0, (stage.length + startBuffer + endBuffer) * 3)
-  playerTransform.pos = vec(300, 200)
+    screenSize = vec(1200, 900) # TODO: don't hardcode this
+    exitSize = vec(80)
+    numRooms = ceil(stage.length / screenSize.y).int + 2
+  playerTransform.pos = vec(300, 800)
 
   result = @[
     player,
     newHud(),
-    newEntity("SpellHudMenu", [SpellHudMenu().Component]),
     newEntity("BeginExit", [
       ExitZone(stageEnd: false),
       Collider(layer: playerTrigger),
-      Transform(pos: vec(exitPosX, startBuffer + exitSize.y / 2), size: exitSize),
+      Transform(pos: vec(150, 800), size: exitSize),
       Sprite(color: color(0, 0, 0, 255)),
     ]),
     newEntity("EndExit", [
       ExitZone(stageEnd: true),
       Collider(layer: playerTrigger),
-      Transform(pos: vec(exitPosX, -stage.length - endBuffer - exitSize.y / 2), size: exitSize),
+      Transform(pos: vec(1050, 100), size: exitSize),
       Sprite(color: color(0, 0, 0, 255)),
     ]),
-    newEntity("LeftBarrier", [
-      Collider(layer: floor),
-      Transform(pos: vec(-barrierSize.x / 2, 0.0), size: barrierSize),
-    ]),
-    newEntity("RightBarrier", [
-      Collider(layer: floor),
-      Transform(pos: vec(screenWidth + barrierSize.x / 2, 0.0), size: barrierSize),
-    ]),
   ]
+  for i in 0..<numRooms:
+    let roomPos = vec(0.0, -screenSize.y * i.float)
+    result &= roomEntities(screenSize, roomPos)
   for enemy in stage.enemies:
     let pos = vec(random(100.0, 700.0), -random(0.0, stage.length))
     result.add newEnemy(enemy, stage.level, pos)

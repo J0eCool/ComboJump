@@ -437,6 +437,19 @@
         "var SpellData"
       ]
     },
+    "updateRoomCamera": {
+      "args": [
+        "player",
+        "camera"
+      ],
+      "filename": "component/room_camera_target.nim",
+      "id": "45",
+      "priority": "-10",
+      "types": [
+        "Entity",
+        "var Camera"
+      ]
+    },
     "updateRuneMenu": {
       "args": [
         "input",

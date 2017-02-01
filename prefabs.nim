@@ -33,7 +33,6 @@ proc newPlayer*(pos: Vec): Entity =
     Movement(),
     Collider(layer: player),
     GridControl(moveSpeed: 240.0),
-    CameraTarget(vertical: true, offset: vec(0, 150)),
     PlayerHealth(),
     PlayerMana(),
     Targeting(),
