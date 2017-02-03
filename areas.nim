@@ -1,5 +1,3 @@
-import math
-
 import
   enemy_kind,
   util
@@ -10,8 +8,8 @@ type
   StageDesc* = object
     stage*: int
     level*: int
-    length*: float
-    enemies*: int
+    rooms*: int
+    enemiesPerRoom*: int
     spawns*: Spawns
   AreaInfo* = object
     name*: string
@@ -21,20 +19,20 @@ const areaData* = [
   AreaInfo(
     name: "Field",
     keyStages: @[
-      StageDesc(stage: 1, level: 1, length: 1200, enemies: 5,
+      StageDesc(stage: 1, level: 1, rooms: 4, enemiesPerRoom: 3,
         spawns: @[(goblin, 1.0)]),
-      StageDesc(stage: 3, level: 1, length: 1800, enemies: 12,
+      StageDesc(stage: 3, level: 1, rooms: 5, enemiesPerRoom: 4,
         spawns: @[(goblin, 5.0), (ogre, 1.0)]),
     ],
   ),
   AreaInfo(
     name: "Grassland",
     keyStages: @[
-      StageDesc(stage: 1, level: 2, length: 1600, enemies: 10,
+      StageDesc(stage: 1, level: 2, rooms: 4, enemiesPerRoom: 3,
         spawns: @[(goblin, 5.0), (ogre, 2.0)]),
-      StageDesc(stage: 3, level: 3, length: 1200, enemies: 9,
+      StageDesc(stage: 3, level: 3, rooms: 6, enemiesPerRoom: 5,
         spawns: @[(goblin, 5.0), (ogre, 3.0)]),
-      StageDesc(stage: 5, level: 4, length: 2000, enemies: 20,
+      StageDesc(stage: 5, level: 4, rooms: 7, enemiesPerRoom: 5,
         spawns: @[(goblin, 4.0), (ogre, 4.0), (mushroom, 2.0)]),
     ],
   ),
@@ -78,9 +76,9 @@ proc stageDesc*(area: AreaInfo, stage: int): StageDesc =
   let t = (stage - lo.stage) / (hi.stage - lo.stage)
   return StageDesc(
     stage: stage,
-    level: t.lerp(lo.level.float, hi.level.float).round.int,
-    length: t.lerp(lo.length, hi.length),
-    enemies: t.lerp(lo.enemies.float, hi.enemies.float).round.int,
+    level: t.lerp(lo.level, hi.level),
+    rooms: t.lerp(lo.rooms, hi.rooms),
+    enemiesPerRoom: t.lerp(lo.enemiesPerRoom, hi.enemiesPerRoom),
     spawns: t.lerp(lo.spawns, hi.spawns),
   )
 
@@ -89,8 +87,9 @@ proc totalProportion(spawns: Spawns): float =
     result += spawn.proportion
 
 proc randomEnemyKinds*(stage: StageDesc): seq[EnemyKind] =
+  let numEnemies = int(random(0.8, 1.2) * stage.enemiesPerRoom.float)
   result = @[]
-  for i in 0..<stage.enemies:
+  for i in 0..<numEnemies:
     var roll = random(0.0, stage.spawns.totalProportion)
     for spawn in stage.spawns:
       roll -= spawn.proportion
@@ -100,6 +99,6 @@ proc randomEnemyKinds*(stage: StageDesc): seq[EnemyKind] =
 
 proc `$`(stage: StageDesc): string =
   "Stage " & $stage.stage &
-    " : length=" & $stage.length &
-    ", enemies=" & $stage.enemies &
+    " : rooms=" & $stage.rooms &
+    ", enemiesPerRoom=" & $stage.enemiesPerRoom &
     ", spawns=" & $stage.spawns

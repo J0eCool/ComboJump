@@ -1,4 +1,4 @@
-import macros, random
+import macros, math, random
 
 macro dprint*(exprs: varargs[expr]): expr =
   result = newCall("echo")
@@ -54,7 +54,9 @@ proc removeAll*[T](list: var seq[T], items: seq[T]) =
 
 proc lerp*(t, lo, hi: float): float =
   let u = clamp(t, 0, 1)
-  return u * (hi - lo) + lo
+  u * (hi - lo) + lo
+proc lerp*(t: float, lo, hi: int): int =
+  t.lerp(lo.float, hi.float).round.int
 
 proc copy*[T: ref object](c: T): T =
   new result

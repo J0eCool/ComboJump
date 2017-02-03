@@ -31,38 +31,6 @@ import
   vec,
   util
 
-proc spawnedEntities*(stage: Stage, player: Entity): Entities =
-  let
-    player = if player != nil: player else: newPlayer(vec())
-    playerTransform = player.getComponent(Transform)
-    screenSize = vec(1200, 900) # TODO: don't hardcode this
-    exitSize = vec(80)
-    numRooms = ceil(stage.length / screenSize.y).int + 2
-  playerTransform.pos = vec(300, 800)
-
-  result = @[
-    player,
-    newHud(),
-    newEntity("BeginExit", [
-      ExitZone(stageEnd: false),
-      Collider(layer: playerTrigger),
-      Transform(pos: vec(150, 800), size: exitSize),
-      Sprite(color: color(0, 0, 0, 255)),
-    ]),
-    newEntity("EndExit", [
-      ExitZone(stageEnd: true),
-      Collider(layer: playerTrigger),
-      Transform(pos: vec(1050, 100), size: exitSize),
-      Sprite(color: color(0, 0, 0, 255)),
-    ]),
-  ]
-  for i in 0..<numRooms:
-    let roomPos = vec(0.0, -screenSize.y * i.float)
-    result &= roomEntities(screenSize, roomPos)
-  for enemy in stage.enemies:
-    let pos = vec(random(100.0, 700.0), -random(0.0, stage.length))
-    result.add newEnemy(enemy, stage.level, pos)
-
 defineSystem:
   priority = 100
   proc stageSelect*(player: Entity, input: InputManager, stageData: var StageData, shouldExit: var bool) =
@@ -98,7 +66,10 @@ defineSystem:
         stageData.currentStageInProgress = false
       of inStage:
         stageData.currentStage = stageData.clickedStage
-        result &= event.Event(kind: loadStage, stage: stageData.currentStageData.spawnedEntities(player))
+        let
+          data = stageData.currentStageData
+          stage = data.area.mapForStage(data.index, player)
+        result &= event.Event(kind: loadStage, stage: stage)
         stageData.clickedStage = -1
         stageData.currentStageInProgress = true
       of nextStage:

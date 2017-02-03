@@ -46,10 +46,10 @@ type
 
   Stage* = object
     group*: string
-    area*: string
-    length*: float
+    index*: int
     level*: int
     enemies*: seq[EnemyKind]
+    area*: AreaInfo
   Group* = seq[Stage]
 
 type
@@ -88,14 +88,14 @@ proc stage(area: AreaInfo, idx: int): Stage =
   let desc = area.stageDesc(idx)
   Stage(
     group: area.name,
-    area: $idx,
-    length: desc.length,
+    index: idx,
+    area: area,
     level: desc.level,
     enemies: desc.randomEnemyKinds(),
   )
 
 proc name*(stage: Stage): string =
-  stage.group & "-" & stage.area
+  stage.group & "-" & $stage.index
 
 proc `==`*(a, b: Stage): bool =
   a.name == b.name
