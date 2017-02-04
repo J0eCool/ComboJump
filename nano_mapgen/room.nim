@@ -30,7 +30,7 @@ type
 proc wall(pos = vec(), size = vec(), door = doorWall): Entities =
   let
     wallColor = color(128, 128, 128, 255)
-    doorWidth = 200.0
+    doorWidth = 400.0
     name = "Wall"
   if door == doorWall:
     return @[newEntity(name, [
@@ -98,7 +98,7 @@ proc mapForStage*(area: AreaInfo, stageIdx: int, player: Entity): Entities =
     player = if player != nil: player else: newPlayer(vec())
     playerTransform = player.getComponent(Transform)
     screenSize = vec(1200, 900) # TODO: don't hardcode this
-    exitSize = vec(200, 40) # door width, 2x wall width. TODO: don't hardcode this
+    exitSize = vec(400, 20) # door width, wall width. TODO: don't hardcode this
   playerTransform.pos = vec(600, 800)
   result = @[
     player,
@@ -119,6 +119,7 @@ proc mapForStage*(area: AreaInfo, stageIdx: int, player: Entity): Entities =
   for i in 0..<stage.rooms:
     let roomPos = vec(0.0, -screenSize.y * i.float)
     result &= roomEntities(screenSize, roomPos)
-    for enemyKind in stage.randomEnemyKinds:
-      let pos = vec(random(100.0, 1100.0), random(100.0, 800.0))
-      result.add newEnemy(enemyKind, stage.level, pos + roomPos)
+    if i != 0 and i != stage.rooms - 1:
+      for enemyKind in stage.randomEnemyKinds:
+        let pos = vec(random(100.0, 1100.0), random(100.0, 800.0))
+        result.add newEnemy(enemyKind, stage.level, pos + roomPos)
