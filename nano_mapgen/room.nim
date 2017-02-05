@@ -90,7 +90,7 @@ proc roomEntities(screenSize, pos: Vec): Entities =
     door = doorOpen,
   )
 
-proc mapForStage*(area: AreaInfo, stageIdx: int, player: Entity): Entities =
+proc entitiesForStage*(area: AreaInfo, stageIdx: int, player: Entity): Entities =
   let
     stage = area.stageDesc(stageIdx)
     player = if player != nil: player else: newPlayer(vec())

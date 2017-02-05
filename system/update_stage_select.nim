@@ -68,7 +68,7 @@ defineSystem:
         stageData.currentStage = stageData.clickedStage
         let
           data = stageData.currentStageData
-          stage = data.area.mapForStage(data.index, player)
+          stage = data.area.entitiesForStage(data.index, player)
         result &= event.Event(kind: loadStage, stage: stage)
         stageData.clickedStage = -1
         stageData.currentStageInProgress = true
