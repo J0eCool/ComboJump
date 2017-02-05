@@ -67,10 +67,24 @@ proc findPath(map: Map, a, b: Room): seq[Room] =
     let cur = curOpt.value
     tryAdd(cur, up)
     tryAdd(cur, down)
+    tryAdd(cur, left)
+    tryAdd(cur, right)
 
   if not visited.hasKey(b.id):
     return @[]
-  @[a, b]
+
+  result = @[b]
+  while result[0] != a:
+    let cur = result[0]
+    assert(visited.hasKey(cur.id),
+      "Backtracing path finds parent that wasn't visited")
+    let
+      prevId = visited[cur.id]
+      prevOpt = map.getRoom(prevId)
+    assert prevOpt.kind != none, "Room has invalid parent"
+    let prev = prevOpt.value
+    assert(not (prev in result), "Cycle found when backtracing path")
+    result.insert(prev, 0)
 
 proc solve*(map: Map): MapSolution =
   let
