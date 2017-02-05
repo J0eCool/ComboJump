@@ -5,6 +5,7 @@ import
 import
   component/[
     collider,
+    exit_zone,
     room_camera_target,
     sprite,
     target_shooter,

@@ -4,23 +4,12 @@ import
   tables
 
 import
-  component/collider,
-  component/sprite,
-  component/target_shooter,
-  component/transform,
-  menu/spell_hud_menu,
-  menu/rune_menu,
-  spells/spell_parser,
   areas,
   input,
   enemy_kind,
-  entity,
-  event,
-  game_system,
   jsonparse,
   menu,
   resources,
-  spell_creator,
   vec,
   util
 
@@ -51,18 +40,6 @@ type
     enemies*: seq[EnemyKind]
     area*: AreaInfo
   Group* = seq[Stage]
-
-type
-  ExitZone* = ref object of Component
-    stageEnd*: bool
-
-defineSystem:
-  components = [ExitZone, Collider]
-  proc updateExitZones*(stageData: var StageData) =
-    if collider.collisions.len > 0:
-      stageData.transitionTo = if exitZone.stageEnd: nextStage else: inMap
-      if exitZone.stageEnd:
-        stageData.didCompleteStage = true
 
 proc newStageData*(): StageData =
   StageData(
