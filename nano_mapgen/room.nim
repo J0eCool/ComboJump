@@ -19,12 +19,7 @@ import
   util
 
 type
-  Direction = enum
-    left
-    right
-    up
-    down
-  DoorType = enum
+  DoorKind* = enum
     doorWall
     doorOpen
 
