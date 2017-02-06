@@ -39,11 +39,19 @@ proc wall(door = doorWall, pos = vec(), size = vec()): Entities =
     ])]
 
   let
-    # isVertical = size.x < size.y
-    offset = vec(size.x / 4 + doorWidth / 4, 0.0)
+    isVertical = size.y > size.x
+    offset =
+      if isVertical:
+        vec(0.0, size.y / 4 + doorWidth / 4)
+      else:
+        vec(size.x / 4 + doorWidth / 4, 0.0)
     leftPos = pos - offset
     rightPos = pos + offset
-    partSize = vec((size.x - doorWidth) / 2, size.y)
+    partSize =
+      if isVertical:
+        vec(size.x, (size.y - doorWidth) / 2)
+      else:
+        vec((size.x - doorWidth) / 2, size.y)
   @[
     newEntity(name, [
       Sprite(color: wallColor),

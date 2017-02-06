@@ -35,6 +35,9 @@ proc randomNormal*(lo, hi: float): float =
     hi = max(a, b)
   random(lo, hi)
 
+proc randomBool*(probability = 0.5): bool =
+  random(0.0, 0.999999) < probability
+
 proc random*[T](list: seq[T]): T =
   list[random(0, list.len - 1)]
   
