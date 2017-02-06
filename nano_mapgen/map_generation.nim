@@ -27,7 +27,7 @@ const
   wallWidth = 20.0
   doorWidth = 400.0
 
-proc wall(pos = vec(), size = vec(), door = doorWall): Entities =
+proc wall(door = doorWall, pos = vec(), size = vec()): Entities =
   let
     wallColor = color(128, 128, 128, 255)
     name = "Wall"
@@ -58,7 +58,7 @@ proc wall(pos = vec(), size = vec(), door = doorWall): Entities =
   ]
 
 
-proc roomEntities(screenSize, pos: Vec): Entities =
+proc entities(room: Room, screenSize, pos: Vec): Entities =
   result = @[
     newEntity("Room", [
       RoomCameraTarget(),
@@ -69,25 +69,25 @@ proc roomEntities(screenSize, pos: Vec): Entities =
       ),
     ]),
   ]
-  result &= wall( # left
+  result &= wall(
+    door = room.left,
     pos = pos + vec(wallWidth / 2, screenSize.y / 2),
     size = vec(wallWidth, screenSize.y - 2 * wallWidth),
-    door = doorWall,
   )
   result &= wall( # right
+    door = room.right,
     pos = pos + vec(screenSize.x - wallWidth / 2, screenSize.y / 2),
     size = vec(wallWidth, screenSize.y - 2 * wallWidth),
-    door = doorWall,
   )
   result &= wall( # top
+    door = room.up,
     pos = pos + vec(screenSize.x / 2, wallWidth / 2),
     size = vec(screenSize.x, wallWidth),
-    door = doorOpen,
   )
   result &= wall( # bottom
+    door = room.down,
     pos = pos + vec(screenSize.x / 2, screenSize.y - wallWidth / 2),
     size = vec(screenSize.x, wallWidth),
-    door = doorOpen,
   )
 
 proc entitiesForStage*(area: AreaInfo, stageIdx: int, player: Entity): Entities =
@@ -114,10 +114,13 @@ proc entitiesForStage*(area: AreaInfo, stageIdx: int, player: Entity): Entities 
       Sprite(color: color(0, 0, 0, 255)),
     ]),
   ]
-  for i in 0..<stage.rooms:
-    let roomPos = vec(0.0, -screenSize.y * i.float)
-    result &= roomEntities(screenSize, roomPos)
-    if i != 0 and i != stage.rooms - 1:
+  let
+    desc = MapDesc(length: stage.rooms)
+    map = desc.generate()
+  for room in map.rooms:
+    let roomPos = screenSize * vec(room.x, -room.y)
+    result &= room.entities(screenSize, roomPos)
+    if room.kind == roomNormal:
       const spawnBuffer = vec(100.0)
       for enemyKind in stage.randomEnemyKinds:
         let pos = random(spawnBuffer, screenSize - spawnBuffer)
