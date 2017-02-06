@@ -3,6 +3,9 @@ import
   sdl2
 
 import
+  nano_mapgen/[
+    room,
+  ],
   component/[
     collider,
     exit_zone,
@@ -19,9 +22,6 @@ import
   util
 
 type
-  DoorKind* = enum
-    doorWall
-    doorOpen
 
 const
   wallWidth = 20.0

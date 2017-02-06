@@ -32,11 +32,11 @@ proc findPath*(map: Map, a, b: Room): seq[Room] =
     visited = initTable[int, int]()
   visited[a.id] = 0
 
-  template tryAdd(room: Room, field: untyped): untyped =
-    if room.field != 0 and (not visited.hasKey(room.field)):
-      openSet.add(room.field)
-      visited[room.field] = room.id
-      if room.field == b.id:
+  template tryAdd(cur: Room, field: untyped): untyped =
+    if cur.field.kind != doorWall and (not visited.hasKey(cur.field.room)):
+      openSet.add(cur.field.room)
+      visited[cur.field.room] = cur.id
+      if cur.field.room == b.id:
         break
 
   while openSet.len > 0:

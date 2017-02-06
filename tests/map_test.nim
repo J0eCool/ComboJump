@@ -13,12 +13,12 @@ suite "Map":
       # TODO: workaround for https://github.com/nim-lang/Nim/issues/5339
       r1 = Room(
         id: 1,
-        up: 2,
+        up: Door(kind: doorOpen, room: 2),
         kind: roomStart,
       )
       r2 = Room(
         id: 2,
-        down: 1,
+        down: Door(kind: doorOpen, room: 1),
         kind: roomEnd,
       )
       map = Map(
@@ -33,12 +33,12 @@ suite "Map":
     let
       r1 = Room(
         id: 1,
-        up: 2,
+        up: Door(kind: doorOpen, room: 2),
         kind: roomStart,
       )
       r2 = Room(
         id: 2,
-        down: 1,
+        down: Door(kind: doorOpen, room: 1),
       )
       r3 = Room(
         id: 3,
@@ -54,22 +54,22 @@ suite "Map":
     let
       r1 = Room(
         id: 1,
-        up: 2,
-        right: 3,
+        up: Door(kind: doorOpen, room: 2),
+        right: Door(kind: doorOpen, room: 3),
         kind: roomStart,
       )
       r2 = Room(
         id: 2,
-        down: 1,
+        down: Door(kind: doorOpen, room: 1),
       )
       r3 = Room(
         id: 3,
-        left: 1,
-        up: 4,
+        left: Door(kind: doorOpen, room: 1),
+        up: Door(kind: doorOpen, room: 4),
       )
       r4 = Room(
         id: 4,
-        down: 3,
+        down: Door(kind: doorOpen, room: 3),
         kind: roomEnd,
       )
       map = Map(
