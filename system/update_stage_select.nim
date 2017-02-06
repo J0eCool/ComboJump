@@ -17,7 +17,7 @@ import
     stats_menu,
   ],
   nano_mapgen/[
-    room,
+    map_generation,
   ],
   input,
   entity,
