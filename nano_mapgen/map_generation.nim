@@ -4,6 +4,8 @@ import
 
 import
   nano_mapgen/[
+    map,
+    map_desc,
     room,
   ],
   component/[
@@ -20,8 +22,6 @@ import
   stages,
   vec,
   util
-
-type
 
 const
   wallWidth = 20.0

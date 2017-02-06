@@ -13,13 +13,15 @@ suite "Map":
       # TODO: workaround for https://github.com/nim-lang/Nim/issues/5339
       r1 = Room(
         id: 1,
-        up: Door(kind: doorOpen, room: 2),
         kind: roomStart,
+        x: 0, y: 0,
+        up: doorOpen,
       )
       r2 = Room(
         id: 2,
-        down: Door(kind: doorOpen, room: 1),
         kind: roomEnd,
+        x: 0, y: 1,
+        down: doorOpen,
       )
       map = Map(
         rooms: @[r1, r2],
@@ -33,16 +35,19 @@ suite "Map":
     let
       r1 = Room(
         id: 1,
-        up: Door(kind: doorOpen, room: 2),
         kind: roomStart,
+        x: 0, y: 0,
+        up: doorOpen,
       )
       r2 = Room(
         id: 2,
-        down: Door(kind: doorOpen, room: 1),
+        x: 0, y: 1,
+        down: doorOpen,
       )
       r3 = Room(
         id: 3,
         kind: roomEnd,
+        x: 2, y: 2,
       )
       map = Map(
         rooms: @[r1, r2, r3],
@@ -54,23 +59,27 @@ suite "Map":
     let
       r1 = Room(
         id: 1,
-        up: Door(kind: doorOpen, room: 2),
-        right: Door(kind: doorOpen, room: 3),
         kind: roomStart,
+        x: 0, y: 0,
+        up: doorOpen,
+        right: doorOpen,
       )
       r2 = Room(
         id: 2,
-        down: Door(kind: doorOpen, room: 1),
+        x: 0, y: 1,
+        down: doorOpen,
       )
       r3 = Room(
         id: 3,
-        left: Door(kind: doorOpen, room: 1),
-        up: Door(kind: doorOpen, room: 4),
+        x: 1, y: 0,
+        left: doorOpen,
+        up: doorOpen,
       )
       r4 = Room(
         id: 4,
-        down: Door(kind: doorOpen, room: 3),
         kind: roomEnd,
+        x: 1, y: 1,
+        down: doorOpen,
       )
       map = Map(
         rooms: @[r1, r2, r3, r4],

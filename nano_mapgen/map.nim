@@ -26,31 +26,37 @@ proc getRoom*(map: Map, id: int): Option[Room] =
       return makeJust(room)
   makeNone[Room]()
 
+proc getRoomAt*(map: Map, x, y: int): Option[Room] =
+  for room in map.rooms:
+    if room.x == x and room.y == y:
+      return makeJust(room)
+  makeNone[Room]()
+
 proc findPath*(map: Map, a, b: Room): seq[Room] =
   var
     openSet = @[a.id]
     visited = initTable[int, int]()
   visited[a.id] = 0
 
-  template tryAdd(cur: Room, field: untyped): untyped =
-    if cur.field.kind != doorWall and (not visited.hasKey(cur.field.room)):
-      openSet.add(cur.field.room)
-      visited[cur.field.room] = cur.id
-      if cur.field.room == b.id:
-        break
+  template tryAdd(cur: Room, field: untyped, dx, dy: int): untyped =
+    if cur.field != doorWall:
+      let nextOpt = map.getRoomAt(cur.x + dx, cur.y + dy)
+      nextOpt.bindAs next:
+        if not visited.hasKey(next.id):
+          openSet.add(next.id)
+          visited[next.id] = cur.id
+          if next.id == b.id:
+            break
 
   while openSet.len > 0:
     let curOpt = map.getRoom(openSet[0])
-    if curOpt.kind == none:
-      log("MapGen", error, "Invalid room ID found! ",
-        "Ignoring for now. id = ", openSet[0])
-      continue
     openSet.delete(0)
+    assert curOpt.kind != none, "Invalid room ID in openSet"
     let cur = curOpt.value
-    tryAdd(cur, up)
-    tryAdd(cur, down)
-    tryAdd(cur, left)
-    tryAdd(cur, right)
+    tryAdd(cur, up, 0, 1)
+    tryAdd(cur, down, 0, -1)
+    tryAdd(cur, left, -1, 0)
+    tryAdd(cur, right, 1, 0)
 
   if not visited.hasKey(b.id):
     return @[]
