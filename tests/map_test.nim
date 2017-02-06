@@ -1,7 +1,11 @@
 import unittest
 
 import
-  nano_mapgen/map
+  nano_mapgen/[
+    map,
+    map_solver,
+    room,
+  ]
 
 suite "Map":
   test "Simple map":

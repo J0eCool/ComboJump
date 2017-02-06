@@ -1,50 +1,32 @@
 import tables
 
 import
+  nano_mapgen/room,
   logging,
   option
 
-type
-  Direction* = enum
-    dirLeft
-    dirRight
-    dirUp
-    dirDown
-  RoomKind* = enum
-    roomNormal
-    roomStart
-    roomEnd
-  Room* = object
-    id*: int
-    left*: int
-    right*: int
-    up*: int
-    down*: int
-    kind*: RoomKind
-  Map* = object
-    rooms*: seq[Room]
-  MapSolution* = object
-    path: seq[Room]
+type Map* = object
+  rooms*: seq[Room]
 
-proc startRoom(map: Map): Option[Room] =
+proc startRoom*(map: Map): Option[Room] =
   for room in map.rooms:
     if room.kind == roomStart:
       return makeJust(room)
   makeNone[Room]()
 
-proc endRoom(map: Map): Option[Room] =
+proc endRoom*(map: Map): Option[Room] =
   for room in map.rooms:
     if room.kind == roomEnd:
       return makeJust(room)
   makeNone[Room]()
 
-proc getRoom(map: Map, id: int): Option[Room] =
+proc getRoom*(map: Map, id: int): Option[Room] =
   for room in map.rooms:
     if room.id == id:
       return makeJust(room)
   makeNone[Room]()
 
-proc findPath(map: Map, a, b: Room): seq[Room] =
+proc findPath*(map: Map, a, b: Room): seq[Room] =
   var
     openSet = @[a.id]
     visited = initTable[int, int]()
@@ -85,24 +67,3 @@ proc findPath(map: Map, a, b: Room): seq[Room] =
     let prev = prevOpt.value
     assert(not (prev in result), "Cycle found when backtracing path")
     result.insert(prev, 0)
-
-proc solve*(map: Map): MapSolution =
-  let
-    startOpt = map.startRoom()
-    endOpt = map.endRoom()
-  if startOpt.kind == none or endOpt.kind == none:
-    return MapSolution()
-
-  let
-    startRoom = startOpt.value
-    endRoom = endOpt.value
-    path = map.findPath(startRoom, endRoom)
-  MapSolution(path: path)
-
-proc length*(solution: MapSolution): int =
-  if solution.path == nil:
-    return 0
-  solution.path.len
-
-proc pathExists*(solution: MapSolution): bool =
-  solution.length > 0

@@ -4,6 +4,8 @@ import
   nano_mapgen/[
     map,
     map_desc,
+    map_solver,
+    room,
   ]
 
 suite "MapDesc":

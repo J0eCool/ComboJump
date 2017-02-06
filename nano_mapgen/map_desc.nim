@@ -1,5 +1,8 @@
 import
-  nano_mapgen/map
+  nano_mapgen/[
+    map,
+    room,
+  ]
 
 type
   MapDesc* = object
