@@ -49,7 +49,7 @@ proc shuffle*[T](list: var seq[T]) =
 proc remove*[T](list: var seq[T], item: T) =
   let index = list.find(item)
   if index >= 0:
-    list.del(index)
+    list.delete(index)
 
 proc removeAll*[T](list: var seq[T], items: seq[T]) =
   for i in items:
