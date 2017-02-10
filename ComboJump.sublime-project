@@ -59,5 +59,12 @@
             "--nimcache:nimcache",
             "--out:out/single_file", "tests/map_desc_test.nim"],
         "working_dir": "$project_path"
+    }, {
+        "name": "Nim Current File",
+        "cmd": ["nim", "c", "-r",
+            "-d:debug", "--parallelBuild:0",
+            "--nimcache:nimcache",
+            "--out:out/single_file", "$file"],
+        "working_dir": "$project_path"
     }]
 }
