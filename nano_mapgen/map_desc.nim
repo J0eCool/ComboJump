@@ -25,13 +25,9 @@ proc edgeFor(node, neighbor: MapNode): Edge =
 
 proc connect(a, b: MapNode) =
   if a.edgeFor(b) == nil:
-    if a.edges == nil:
-      a.edges = @[]
-    a.edges.add Edge(door: doorOpen, node: b)
+    a.edges.safeAdd Edge(door: doorOpen, node: b)
   if b.edgeFor(a) == nil:
-    if b.edges == nil:
-      b.edges = @[]
-    b.edges.add Edge(door: doorOpen, node: a)
+    b.edges.safeAdd Edge(door: doorOpen, node: a)
 
 proc split(a, b: MapNode): MapNode =
   let
