@@ -39,6 +39,17 @@
         "Camera"
       ]
     },
+    "drawMapMenu": {
+      "args": [
+        "resources"
+      ],
+      "filename": "menu/map_menu.nim",
+      "id": "46",
+      "priority": "-100",
+      "types": [
+        "var ResourceManager"
+      ]
+    },
     "drawPopupText": {
       "args": [
         "resources",
@@ -348,6 +359,17 @@
         "InputManager",
         "var PlayerStats",
         "var StageData"
+      ]
+    },
+    "updateMapMenu": {
+      "args": [
+        "input"
+      ],
+      "filename": "menu/map_menu.nim",
+      "id": "47",
+      "priority": "0",
+      "types": [
+        "InputManager"
       ]
     },
     "updateN10nManager": {

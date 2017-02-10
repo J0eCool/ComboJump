@@ -16,6 +16,9 @@ import
     target_shooter,
     transform,
   ],
+  menu/[
+    map_menu,
+  ],
   areas,
   entity,
   prefabs,
@@ -105,6 +108,9 @@ proc entitiesForStage*(area: AreaInfo, stageIdx: int, player: Entity): Entities 
     playerTransform = player.getComponent(Transform)
     screenSize = vec(1200, 900) # TODO: don't hardcode this
     exitSize = vec(doorWidth, wallWidth)
+
+    desc = MapDesc(length: stage.rooms)
+    map = desc.generate()
   playerTransform.pos = vec(screenSize.x / 2, screenSize.y * 2 / 3)
   result = @[
     player,
@@ -121,10 +127,9 @@ proc entitiesForStage*(area: AreaInfo, stageIdx: int, player: Entity): Entities 
       Transform(pos: vec(screenSize.x / 2.0, -(stage.rooms - 1).float * screenSize.y), size: exitSize),
       Sprite(color: color(0, 0, 0, 255)),
     ]),
+    newEntity("MapContainer", [MapContainer(map: map).Component]),
+    newEntity("MapMenu", [MapMenu().Component]),
   ]
-  let
-    desc = MapDesc(length: stage.rooms)
-    map = desc.generate()
   for room in map.rooms:
     let roomPos = screenSize * vec(room.x, -room.y)
     result &= room.entities(screenSize, roomPos)
