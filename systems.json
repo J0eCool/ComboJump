@@ -363,13 +363,15 @@
     },
     "updateMapMenu": {
       "args": [
-        "input"
+        "input",
+        "player"
       ],
       "filename": "menu/map_menu.nim",
       "id": "47",
       "priority": "0",
       "types": [
-        "InputManager"
+        "InputManager",
+        "Entity"
       ]
     },
     "updateN10nManager": {
