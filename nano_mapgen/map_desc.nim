@@ -22,6 +22,9 @@ type
   MapDesc* = object
     length*: int
 
+proc `$`(node: MapNode): string =
+  "n" & $node.id
+
 var nextMapId = 0
 proc newMapNode(kind = roomNormal): MapNode =
   result = MapNode(
@@ -67,6 +70,24 @@ proc generateNodes(desc: MapDesc): MapGraph =
   var nodes = @[startNode, endNode]
   for i in 0..<desc.length - 2:
     nodes.add split(startNode, startNode.edges[0].node)
+  let
+    mainPath = nodes
+    numSidePaths = random(0, desc.length div 2)
+  var openMainPath = mainPath
+  for i in 0..<numSidePaths:
+    let
+      sideLen = random(1, 4)
+      base = random(openMainPath)
+    var cur = base
+    for j in 0..<sideLen:
+      let next = newMapNode()
+      connect(next, cur)
+      nodes.add next
+      cur = next
+    if base.edges.len >= 4 or (base.kind != roomNormal and base.edges.len >= 3):
+      openMainPath.remove base
+      if openMainPath.len == 0:
+        break
   MapGraph(
     nodes: nodes,
     startNode: startNode,
@@ -105,19 +126,62 @@ proc findPath(a, b: MapNode): seq[MapNode] =
 proc generate*(desc: MapDesc): Map =
   var
     graph = desc.generateNodes()
-    rooms = newSeq[Room]()
-    path = findPath(graph.startNode, graph.endNode)
-  for i in 0..<path.len:
+    mainPath = findPath(graph.startNode, graph.endNode)
+    nextId = 1
+    rooms = initTable[MapNode, Room]()
+    nodesLeft = graph.nodes
+  for i in 0..<mainPath.len:
     let
-      node = path[i]
-      id = rooms.len + 1
+      node = mainPath[i]
       next = Room(
-        id: id,
+        id: nextId,
         kind: node.kind,
         x: 0,
-        y: id - 1,
+        y: nextId-1,
         up: doorOpen,
         down: doorOpen,
       )
-    rooms.add next
-  Map(rooms: rooms)
+    rooms[node] = next
+    nodesLeft.remove(node)
+    nextId += 1
+
+  while nodesLeft.len > 0:
+    var toRemove = newSeq[MapNode]()
+    for node in nodesLeft:
+      for edge in node.edges:
+        let parent = edge.node
+        if not rooms.hasKey(parent):
+          continue
+        let
+          parentRoom = rooms[parent]
+          dir =
+            if parentRoom.left == doorWall and parentRoom.right == doorWall:
+              if randomBool(): 1 else: -1
+            elif parentRoom.left == doorWall:
+              -1
+            else:
+              1
+          next = Room(
+            id: nextId,
+            kind: node.kind,
+            x: parentRoom.x + dir,
+            y: parentRoom.y,
+          )
+        rooms[node] = next
+        if dir == 1:
+          rooms[node].left = doorOpen
+          rooms[parent].right = doorOpen
+        else:
+          rooms[node].right = doorOpen
+          rooms[parent].left = doorOpen
+        toRemove.add node
+        nextId += 1
+        break
+    for node in toRemove:
+      nodesLeft.remove node
+    break
+
+  result = Map(rooms: @[])
+  for node in graph.nodes:
+    if rooms.hasKey node:
+      result.rooms.add rooms[node]
