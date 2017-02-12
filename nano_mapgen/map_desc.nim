@@ -185,3 +185,11 @@ proc generate*(desc: MapDesc): Map =
   for node in graph.nodes:
     if rooms.hasKey node:
       result.rooms.add rooms[node]
+
+when isMainModule:
+  import random
+  randomize()
+  for i in 1..10:
+    echo "Map - ", i
+    echo MapDesc(length: 9).generate.textMap
+    echo ""
