@@ -34,7 +34,7 @@ proc mapMenuNode(container: MapContainer, player: Entity): Node =
     doorOffset = roomSize / 2 - vec(border) / 4
     doorWidth = 16.0
   result = Node(
-    pos: vec(1000, 400),
+    pos: vec(1050, 825),
     children: @[],
   )
   template addDoor(n: Node, r: Room, dir: untyped, p, s: Vec) =
