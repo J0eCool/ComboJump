@@ -29,21 +29,45 @@ proc mapMenuNode(container: MapContainer, player: Entity): Node =
     roomSize = 32.0
     border = 4.0
     screenSize = vec(1200, 900) #TODO: ok stop hardcoding this
+    borderColor = color(0, 0, 0, 255)
+    roomColor = color(64, 192, 255, 255)
+    doorOffset = roomSize / 2 - vec(border) / 4
+    doorWidth = 16.0
   result = Node(
     pos: vec(1000, 400),
     children: @[],
   )
+  template addDoor(n: Node, r: Room, dir: untyped, p, s: Vec) =
+    if r.dir == doorOpen:
+      n.children.add SpriteNode(
+        pos: p,
+        size: s,
+        color: roomColor,
+      )
   for room in container.map.rooms:
     let pos = roomSize * vec(room.x, -room.y)
-    result.children.add SpriteNode(
+    var node = SpriteNode(
       pos: pos,
       size: vec(roomSize),
-      color: color(0, 0, 0, 255),
+      color: borderColor,
       children: @[SpriteNode(
         size: vec(roomSize - border),
-        color: color(64, 192, 255, 255),
+        color: roomColor,
       ).Node],
     )
+    addDoor(node, room, up,
+            vec(0.0, -doorOffset.y),
+            vec(doorWidth, border / 2))
+    addDoor(node, room, down,
+            vec(0.0, doorOffset.y),
+            vec(doorWidth, border / 2))
+    addDoor(node, room, left,
+            vec(-doorOffset.x, 0.0),
+            vec(border / 2, doorWidth))
+    addDoor(node, room, right,
+            vec(doorOffset.x, 0.0),
+            vec(border / 2, doorWidth))
+    result.children.add node
   let
     playerTransform = player.getComponent(Transform)
     getPlayerPos = proc(): Vec =
