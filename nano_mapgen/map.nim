@@ -3,7 +3,8 @@ import tables
 import
   nano_mapgen/room,
   logging,
-  option
+  option,
+  util
 
 type Map* = object
   rooms*: seq[Room]
@@ -73,3 +74,34 @@ proc findPath*(map: Map, a, b: Room): seq[Room] =
     let prev = prevOpt.value
     assert(not (prev in result), "Cycle found when backtracing path")
     result.insert(prev, 0)
+
+proc textMap*(map: Map): string =
+  let firstRoom = map.rooms[0]
+  var
+    minX = firstRoom.x
+    maxX = firstRoom.x
+    minY = firstRoom.y
+    maxY = firstRoom.y
+  for room in map.rooms:
+    minX.min = room.x
+    maxX.max = room.x
+    minY.min = room.y
+    maxY.max = room.y
+  result = "END - X = [" & $minX & ", " & $maxX & "] : Y = [" & $minY & ", " & $maxY & "]"
+  for y in minY..maxY:
+    var line = ""
+    for x in minX..maxX:
+      let roomOpt = map.getRoomAt(x, y)
+      if roomOpt.kind == none:
+        line &= "."
+        continue
+      let room = roomOpt.value
+      case room.kind
+      of roomNormal:
+        line &= "O"
+      of roomStart:
+        line &= "S"
+      of roomEnd:
+        line &= "E"
+    result = line & "\n" & result
+  result = "BEGIN\n" & result
