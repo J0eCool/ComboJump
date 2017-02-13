@@ -160,7 +160,7 @@ proc generateMap*(graph: MapGraph): Map =
     kind: roomStart,
     x: 0,
     y: 0,
-    down: doorOpen,
+    down: doorEntrance,
   )
   rooms[graph.startNode] = @[newOf(startRoom)]
   nodesLeft.remove(graph.startNode)
@@ -219,7 +219,7 @@ proc generateMap*(graph: MapGraph): Map =
         break
     for node in toRemove:
       nodesLeft.remove node
-  rooms[graph.endNode][0].up = doorOpen
+  rooms[graph.endNode][0].up = doorExit
 
   result = Map(rooms: @[])
   for node in graph.nodes:

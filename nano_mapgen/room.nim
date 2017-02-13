@@ -2,6 +2,7 @@ type
   DoorKind* = enum
     doorWall
     doorOpen
+    doorEntrance
     doorExit
     doorLocked
   RoomKind* = enum
