@@ -96,6 +96,9 @@ proc textMap*(map: Map): string =
         line &= "."
         continue
       let room = roomOpt.value
+      if room.up == doorLocked:
+        line &= "L"
+        continue
       case room.kind
       of roomNormal:
         line &= "O"
@@ -103,5 +106,7 @@ proc textMap*(map: Map): string =
         line &= "S"
       of roomEnd:
         line &= "E"
+      of roomKey:
+        line &= "K"
     result = line & "\n" & result
   result = "BEGIN\n" & result

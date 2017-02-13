@@ -44,12 +44,12 @@ proc `$`(graph: MapGraph): string =
     )
 
 var nextMapId = 0
-proc newMapNode(kind = roomNormal): MapNode =
+proc newMapNode(kind = roomNormal, length = 1): MapNode =
   result = MapNode(
     id: nextMapId,
     kind: kind,
     edges: @[],
-    length: 1,
+    length: length,
   )
   nextMapId += 1
 
@@ -62,11 +62,11 @@ proc edgeFor(node, neighbor: MapNode): Edge =
       return edge
   return nil
 
-proc connect(a, b: MapNode) =
+proc connect(a, b: MapNode, door = doorOpen) =
   if a.edgeFor(b) == nil:
-    a.edges.add Edge(door: doorOpen, node: b)
+    a.edges.add Edge(door: door, node: b)
   if b.edgeFor(a) == nil:
-    b.edges.add Edge(door: doorOpen, node: a)
+    b.edges.add Edge(door: door, node: a)
 
 proc split(a, b: MapNode): MapNode =
   let
@@ -78,39 +78,8 @@ proc split(a, b: MapNode): MapNode =
   result = newMapNode()
   a.edges.remove(e1)
   b.edges.remove(e2)
-  connect(a, result)
-  connect(b, result)
-
-proc generateNodes(desc: MapDesc): MapGraph =
-  let
-    startNode = newMapNode(roomStart)
-    endNode = newMapNode(roomEnd)
-  connect(startNode, endNode)
-  var nodes = @[startNode, endNode]
-  let mainHall = split(startNode, endNode)
-  mainHall.length = desc.length - 2
-  nodes.add mainHall
-  let
-    mainPath = nodes
-    numSidePaths = random(0, desc.length div 2)
-  var openMainPath = mainPath
-  for i in 0..<numSidePaths:
-    let
-      sideLen = random(1, 4)
-      base = random(openMainPath)
-    let next = newMapNode()
-    next.length = sideLen
-    connect(next, base)
-    nodes.add next
-    if base.edges.len >= 4 or (base.kind != roomNormal and base.edges.len >= 3):
-      openMainPath.remove base
-      if openMainPath.len == 0:
-        break
-  MapGraph(
-    nodes: nodes,
-    startNode: startNode,
-    endNode: endNode,
-  )
+  connect(a, result, e1.door)
+  connect(b, result, e2.door)
 
 proc findPath(a, b: MapNode): seq[MapNode] =
   var
@@ -140,6 +109,45 @@ proc findPath(a, b: MapNode): seq[MapNode] =
     let prev = visited[cur]
     assert(not (prev in result), "Cycle found when backtracing path")
     result.insert(prev, 0)
+
+proc generateNodes(desc: MapDesc): MapGraph =
+  let
+    startNode = newMapNode(roomStart)
+    endNode = newMapNode(roomEnd)
+  connect(startNode, endNode)
+  var nodes = @[startNode, endNode]
+  let mainHall = split(startNode, endNode)
+  mainHall.length = desc.length - 2
+  nodes.add mainHall
+  let numSidePaths = random(0, desc.length div 2)
+  for i in 0..<numSidePaths:
+    let
+      mainPath = findPath(startNode, endNode)
+      lockIdx = random(1, mainPath.len - 2)
+      sideLen = random(1, 2)
+      base = mainPath[lockIdx]
+      prev = mainPath[lockIdx - 1]
+      newHall = split(prev, base)
+      newLen = random(1, max(base.length - 1, 1))
+      newEdge = newHall.edgeFor(base)
+      keyHall = newMapNode(roomNormal, sideLen - 1)
+      keyRoom = newMapNode(roomKey)
+    newHall.length = newLen
+    base.length = max(base.length - newLen, 1)
+    newEdge.door = doorLocked
+    nodes.add newHall
+    if keyHall.length == 0:
+      connect(keyRoom, newHall)
+    else:
+      connect(keyHall, newHall)
+      connect(keyRoom, keyHall)
+      nodes.add keyHall
+    nodes.add keyRoom
+  MapGraph(
+    nodes: nodes,
+    startNode: startNode,
+    endNode: endNode,
+  )
 
 proc generateMap*(graph: MapGraph): Map =
   var
@@ -195,7 +203,7 @@ proc generateMap*(graph: MapGraph): Map =
           nextId += 1
         rooms[node] = curRooms
         template openDoors(prev, cur: untyped) =
-          room.prev = doorOpen
+          room.prev = parent.edgeFor(node).door
           for i in 0..<curRooms.len:
             let r = curRooms[i]
             r.cur = doorOpen

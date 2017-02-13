@@ -3,10 +3,12 @@ type
     doorWall
     doorOpen
     doorExit
+    doorLocked
   RoomKind* = enum
     roomNormal
     roomStart
     roomEnd
+    roomKey
   Room* = object
     id*: int
     kind*: RoomKind
