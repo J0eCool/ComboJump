@@ -1,4 +1,7 @@
-import hashes, tables
+import
+  hashes,
+  sequtils,
+  tables
 
 import
   nano_mapgen/[
@@ -15,6 +18,7 @@ type
     id: int
     kind: RoomKind
     edges: seq[Edge]
+    length: int
   MapGraph = object
     nodes: seq[MapNode]
     startNode: MapNode
@@ -25,12 +29,27 @@ type
 proc `$`(node: MapNode): string =
   "n" & $node.id
 
+proc `$`(edge: Edge): string =
+  "(" & $edge.door & " -> " & $edge.node & ")"
+
+proc `$`(graph: MapGraph): string =
+  result = "Graph with " & $graph.nodes.len & " nodes:\n"
+  for node in graph.nodes:
+    result &= (
+      "  " & $node &
+      ": len " & $node.length &
+      ", " & $node.kind &
+      " - " & $node.edges &
+      "\n"
+    )
+
 var nextMapId = 0
 proc newMapNode(kind = roomNormal): MapNode =
   result = MapNode(
     id: nextMapId,
     kind: kind,
     edges: @[],
+    length: 1,
   )
   nextMapId += 1
 
@@ -68,8 +87,9 @@ proc generateNodes(desc: MapDesc): MapGraph =
     endNode = newMapNode(roomEnd)
   connect(startNode, endNode)
   var nodes = @[startNode, endNode]
-  for i in 0..<desc.length - 2:
-    nodes.add split(startNode, startNode.edges[0].node)
+  let mainHall = split(startNode, endNode)
+  mainHall.length = desc.length - 2
+  nodes.add mainHall
   let
     mainPath = nodes
     numSidePaths = random(0, desc.length div 2)
@@ -78,12 +98,10 @@ proc generateNodes(desc: MapDesc): MapGraph =
     let
       sideLen = random(1, 4)
       base = random(openMainPath)
-    var cur = base
-    for j in 0..<sideLen:
-      let next = newMapNode()
-      connect(next, cur)
-      nodes.add next
-      cur = next
+    let next = newMapNode()
+    next.length = sideLen
+    connect(next, base)
+    nodes.add next
     if base.edges.len >= 4 or (base.kind != roomNormal and base.edges.len >= 3):
       openMainPath.remove base
       if openMainPath.len == 0:
@@ -123,27 +141,21 @@ proc findPath(a, b: MapNode): seq[MapNode] =
     assert(not (prev in result), "Cycle found when backtracing path")
     result.insert(prev, 0)
 
-proc generate*(desc: MapDesc): Map =
+proc generateMap*(graph: MapGraph): Map =
   var
-    graph = desc.generateNodes()
     mainPath = findPath(graph.startNode, graph.endNode)
-    nextId = 1
-    rooms = initTable[MapNode, Room]()
+    nextId = 2
+    rooms = initTable[MapNode, seq[ref Room]]()
     nodesLeft = graph.nodes
-  for i in 0..<mainPath.len:
-    let
-      node = mainPath[i]
-      next = Room(
-        id: nextId,
-        kind: node.kind,
-        x: 0,
-        y: nextId-1,
-        up: doorOpen,
-        down: doorOpen,
-      )
-    rooms[node] = next
-    nodesLeft.remove(node)
-    nextId += 1
+  let startRoom = Room(
+    id: 1,
+    kind: roomStart,
+    x: 0,
+    y: 0,
+    down: doorOpen,
+  )
+  rooms[graph.startNode] = @[newOf(startRoom)]
+  nodesLeft.remove(graph.startNode)
 
   while nodesLeft.len > 0:
     var toRemove = newSeq[MapNode]()
@@ -153,43 +165,69 @@ proc generate*(desc: MapDesc): Map =
         if not rooms.hasKey(parent):
           continue
         let
-          parentRoom = rooms[parent]
-          dir =
-            if parentRoom.left == doorWall and parentRoom.right == doorWall:
+          parentRooms = rooms[parent]
+          isMainPath = node in mainPath
+          openParents =
+            if isMainPath:
+              @[parentRooms[parentRooms.len - 1]]
+            else:
+              filter(parentRooms) do (room: ref Room) -> bool:
+                room.left == doorWall or room.right == doorWall
+          room = random(openParents)
+          xDir =
+            if isMainPath:
+              0
+            elif room.left == doorWall and room.right == doorWall:
               if randomBool(): 1 else: -1
-            elif parentRoom.left == doorWall:
+            elif room.left == doorWall:
               -1
             else:
               1
-          next = Room(
+          yDir = if isMainPath: 1 else: 0
+        var curRooms = newSeq[ref Room]()
+        for i in 1..node.length:
+          curRooms.add newOf(Room(
             id: nextId,
             kind: node.kind,
-            x: parentRoom.x + dir,
-            y: parentRoom.y,
-          )
-        rooms[node] = next
-        if dir == 1:
-          rooms[node].left = doorOpen
-          rooms[parent].right = doorOpen
+            x: room.x + xDir * i,
+            y: room.y + yDir * i,
+          ))
+          nextId += 1
+        rooms[node] = curRooms
+        template openDoors(prev, cur: untyped) =
+          room.prev = doorOpen
+          for i in 0..<curRooms.len:
+            let r = curRooms[i]
+            r.cur = doorOpen
+            if i != curRooms.len - 1:
+              r.prev = doorOpen
+        if yDir == 1:
+          openDoors(up, down)
+        elif xDir == 1:
+          openDoors(right, left)
         else:
-          rooms[node].right = doorOpen
-          rooms[parent].left = doorOpen
+          openDoors(left, right)
         toRemove.add node
-        nextId += 1
         break
     for node in toRemove:
       nodesLeft.remove node
-    break
 
   result = Map(rooms: @[])
   for node in graph.nodes:
     if rooms.hasKey node:
-      result.rooms.add rooms[node]
+      for room in rooms[node]:
+        result.rooms.add room[]
+
+proc generate*(desc: MapDesc): Map =
+  let graph = desc.generateNodes()
+  graph.generateMap()
 
 when isMainModule:
   import random
   randomize()
   for i in 1..10:
     echo "Map - ", i
-    echo MapDesc(length: 9).generate.textMap
+    let graph = MapDesc(length: 9).generateNodes
+    echo graph
+    echo graph.generateMap.textMap
     echo ""

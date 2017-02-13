@@ -94,3 +94,7 @@ proc formatFloat*(num: float): string =
 
 proc approxEq*(a, b: float, epsilon=0.00001): bool =
   abs(a - b) <= epsilon
+
+proc newOf*[T](item: T): ref T =
+  new(result)
+  result[] = item
