@@ -12,6 +12,7 @@ import
     health_bar,
     hud_menu,
     limited_quantity,
+    locked_door,
     mana,
     movement,
     player_health,
@@ -38,6 +39,7 @@ proc newPlayer*(pos: Vec): Entity =
     Targeting(),
     TargetShooter(),
     Sprite(textureName: "Wizard2.png"),
+    LockCollection(),
   ])
 
 proc newHud*(): Entity =

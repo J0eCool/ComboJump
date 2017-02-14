@@ -1,7 +1,9 @@
 import
-  component/collider,
-  component/movement,
-  component/transform,
+  component/[
+    collider,
+    movement,
+    transform,
+  ],
   entity,
   event,
   game_system,
@@ -10,14 +12,15 @@ import
   vec
 
 defineSystem:
+  priority = -1
   proc physics*(dt: float) =
-    var floorTransforms: seq[Transform] = @[]
+    var floorTransforms: seq[tuple[t: Transform, c: Collider]] = @[]
     entities.forComponents e, [
       Collider, c,
       Transform, t,
     ]:
       if c.layer == Layer.floor:
-        floorTransforms.add t
+        floorTransforms.add((t, c))
 
     entities.forComponents e, [
       Movement, m,
@@ -33,12 +36,15 @@ defineSystem:
       m.onGround = false
       e.withComponent Collider, c:
         if c.layer.canCollideWith Layer.floor:
-          for f in floorTransforms:
+          for fs in floorTransforms:
+            let f = fs.t
             if t != f and t.rect.intersects f.rect:
               let
                 fr = f.rect
                 s = t.size
-              var r = t.rect
+              var
+                r = t.rect
+                didCollide = true
               if intersects(oldRect.centerBottom, r.centerBottom,
                             fr.topLeft - s.vecX, fr.topRight + s.vecX):
                 r.bottom = fr.top
@@ -54,4 +60,9 @@ defineSystem:
               elif intersects(oldRect.centerRight, r.centerRight,
                               fr.topLeft - s.vecY, fr.bottomLeft + s.vecY):
                 r.right = fr.left
+              else:
+                didCollide = false
               t.rect = r
+
+              c.bufferedAdd f.entity
+              fs.c.bufferedAdd e

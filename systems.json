@@ -177,7 +177,7 @@
       ],
       "filename": "system/physics.nim",
       "id": "38",
-      "priority": "0",
+      "priority": "-1",
       "types": [
         "float"
       ]
@@ -359,6 +359,28 @@
         "InputManager",
         "var PlayerStats",
         "var StageData"
+      ]
+    },
+    "updateLockedDoors": {
+      "args": [
+        "player"
+      ],
+      "filename": "locked_door.nim",
+      "id": "49",
+      "priority": "0",
+      "types": [
+        "Entity"
+      ]
+    },
+    "updateLocks": {
+      "args": [
+        "player"
+      ],
+      "filename": "component/locked_door.nim",
+      "id": "48",
+      "priority": "0",
+      "types": [
+        "Entity"
       ]
     },
     "updateMapMenu": {

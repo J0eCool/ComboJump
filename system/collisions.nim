@@ -10,7 +10,12 @@ import
 defineSystem:
   components = [Transform, Collider]
   proc checkCollisisons*() =
-    collider.collisions = @[]
+    collider.collisions =
+      if collider.bufferedCollisions != nil:
+        collider.bufferedCollisions
+      else:
+        @[]
+    collider.bufferedCollisions = @[]
     forComponents(entities, b, [
       Transform, b_t,
       Collider, b_c,

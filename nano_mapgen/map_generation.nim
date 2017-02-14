@@ -11,6 +11,7 @@ import
   component/[
     collider,
     exit_zone,
+    locked_door,
     room_camera_target,
     sprite,
     target_shooter,
@@ -77,9 +78,10 @@ proc wall(door = doorWall, pos = vec(), size = vec()): Entities =
       Sprite(color: doorColor),
       Collider(layer: Layer.floor),
       Transform(
-        pos: pos + vec(doorWidth / 4, 0.0),
-        size: vec(doorWidth / 2, wallWidth),
+        pos: pos,
+        size: vec(doorWidth, wallWidth),
       ),
+      LockedDoor(),
     ])
   of doorEntrance, doorExit:
     result.add newEntity("Exit", [
@@ -128,6 +130,8 @@ proc entities(room: Room, screenSize, pos: Vec): Entities =
     result.add newEntity("Key", [
       Transform(pos: pos + screenSize / 2, size: vec(56, 28)),
       Sprite(textureName: "Key.png"),
+      Collider(layer: Layer.playerTrigger),
+      Key(),
     ])
 
 proc entitiesForStage*(area: AreaInfo, stageIdx: int, player: Entity): Entities =

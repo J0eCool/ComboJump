@@ -16,6 +16,7 @@ type
     layer*: Layer
     collisions*: seq[Entity]
     collisionBlacklist: seq[Entity]
+    bufferedCollisions*: seq[Entity]
 
 proc initLayerMask(): array[Layer, set[Layer]] =
   result[player] = { floor, enemy, enemyBullet }
@@ -36,3 +37,6 @@ proc addToBlacklist*(collider: Collider, entity: Entity) =
     collider.collisionBlacklist = @[entity]
   else:
     collider.collisionBlacklist.add entity
+
+proc bufferedAdd*(collider: Collider, entity: Entity) =
+  collider.bufferedCollisions.safeAdd entity
