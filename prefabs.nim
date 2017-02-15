@@ -39,7 +39,7 @@ proc newPlayer*(pos: Vec): Entity =
     Targeting(),
     TargetShooter(),
     Sprite(textureName: "Wizard2.png"),
-    LockCollection(),
+    KeyCollection(),
   ])
 
 proc newHud*(): Entity =
