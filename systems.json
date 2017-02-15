@@ -350,7 +350,8 @@
       "args": [
         "input",
         "stats",
-        "stageData"
+        "stageData",
+        "player"
       ],
       "filename": "component/hud_menu.nim",
       "id": "25",
@@ -358,7 +359,8 @@
       "types": [
         "InputManager",
         "var PlayerStats",
-        "var StageData"
+        "var StageData",
+        "Entity"
       ]
     },
     "updateLockedDoors": {

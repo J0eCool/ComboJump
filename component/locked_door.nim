@@ -9,7 +9,7 @@ import
 type
   Key* = ref object of Component
   KeyCollection* = ref object of Component
-    numKeys: int
+    numKeys*: int
   LockedDoor* = ref object of Component
 
 defineSystem:
