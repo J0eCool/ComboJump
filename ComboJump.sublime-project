@@ -50,7 +50,7 @@
             "--out:out/nanogame_integrationtests", "integration_tests.nim"],
         "working_dir": "$project_path"
     }, {
-        "name": "Nim Single Test",
+        "name": "Single Test",
         "env": {
             "NIMTEST_NO_COLOR": "1"
         },
@@ -60,7 +60,7 @@
             "--out:out/single_file", "tests/map_desc_test.nim"],
         "working_dir": "$project_path"
     }, {
-        "name": "Nim Current File",
+        "name": "Current File",
         "cmd": ["nim", "c", "-r",
             "-d:debug", "--parallelBuild:0",
             "--nimcache:nimcache",
