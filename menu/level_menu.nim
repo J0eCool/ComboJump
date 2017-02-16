@@ -16,6 +16,8 @@ type
   LevelMenu* = ref object of Component
     menu: Node
 
+defineComponent(LevelMenu)
+
 proc levelMenuNode(stageData: ptr StageData): Node =
   SpriteNode(
     pos: vec(600, 450),

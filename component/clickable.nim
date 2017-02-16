@@ -10,6 +10,8 @@ import
 type Clickable* = ref object of Component
   held*: bool
 
+defineComponent(Clickable)
+
 proc updateClicked*(entities: Entities, input: InputManager): Events =
   entities.forComponents e, [
     Clickable, c,

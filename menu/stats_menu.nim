@@ -16,6 +16,8 @@ type
   StatsMenu* = ref object of Component
     menu: Node
 
+defineComponent(StatsMenu)
+
 proc statsMenuNode(stats: ptr PlayerStats): Node =
   BindNode[PlayerStats](
     item: (proc(): PlayerStats = stats[]),

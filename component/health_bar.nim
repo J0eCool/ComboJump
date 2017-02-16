@@ -23,6 +23,8 @@ type
   HealthPair* = tuple[cur: int, max: int]
   HealthPairProc = proc(): HealthPair
 
+defineComponent(HealthBar)
+
 proc pairProc*(quantity: LimitedQuantity): HealthPairProc =
   result = proc(): HealthPair =
     (max(quantity.cur.int, 0), quantity.max.int)

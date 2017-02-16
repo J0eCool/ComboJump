@@ -12,6 +12,10 @@ type
     numKeys*: int
   LockedDoor* = ref object of Component
 
+defineComponent(Key)
+defineComponent(KeyCollection)
+defineComponent(LockedDoor)
+
 defineSystem:
   components = [Key, Collider]
   proc updateLocks*(player: Entity) =

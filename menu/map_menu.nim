@@ -24,6 +24,9 @@ type
   MapMenu* = ref object of Component
     menu: Node
 
+defineComponent(MapContainer)
+defineComponent(MapMenu)
+
 proc mapMenuNode(container: MapContainer, player: Entity): Node =
   const
     roomSize = 32.0

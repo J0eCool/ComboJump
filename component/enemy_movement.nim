@@ -13,6 +13,8 @@ type
   EnemyMoveTowards* = ref object of Component
     moveSpeed*: float
 
+defineComponent(EnemyMoveTowards)
+
 defineSystem:
   components = [EnemyMoveTowards, EnemyProximity, Movement]
   proc updateEnemyMoveTowards*(dt: float) =

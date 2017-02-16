@@ -10,6 +10,8 @@ type CameraTarget* = ref object of Component
   verticallyLocked*: bool
   offset*: Vec
 
+defineComponent(CameraTarget)
+
 defineSystem:
   components = [CameraTarget, Transform]
   proc updateCamera*(camera: var Camera) =

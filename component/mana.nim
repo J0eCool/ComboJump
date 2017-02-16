@@ -1,6 +1,10 @@
-import component/limited_quantity
+import
+  component/limited_quantity,
+  entity
 
 type Mana* = ref object of LimitedQuantity
+
+defineComponent(Mana)
 
 proc newMana*(maxMana: int): Mana =
   new result

@@ -16,3 +16,5 @@ type
     textureName*: string
     sprite*: SpriteData
     flipX*: bool
+
+defineComponent(Sprite)

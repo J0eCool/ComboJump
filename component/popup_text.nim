@@ -18,6 +18,8 @@ type
     color*: Color
     liveTime: float
 
+defineComponent(PopupText)
+
 const
   timeToLive = 1.5
   popupDist = 300

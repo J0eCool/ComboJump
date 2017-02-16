@@ -14,6 +14,9 @@ type
   PlayerMana* = ref object of Mana
     didInitialize*: bool
 
+defineComponent(PlayerHealth)
+defineComponent(PlayerMana)
+
 defineSystem:
   priority = 5
   components = [PlayerHealth, PlayerMana]

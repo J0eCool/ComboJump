@@ -11,6 +11,8 @@ import
 
 type RoomCameraTarget* = ref object of Component
 
+defineComponent(RoomCameraTarget)
+
 defineSystem:
   priority = -10
   components = [RoomCameraTarget, Collider, Transform]

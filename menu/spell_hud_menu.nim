@@ -42,6 +42,8 @@ type
   SpellHudMenu* = ref object of Component
     menu: Node
 
+defineComponent(SpellHudMenu)
+
 type SpellStats = tuple[spell: SpellParse, stats: PlayerStats]
 
 proc spellHudMenuNode(spellData: ptr SpellData, stats: ptr PlayerStats, targetShooter: TargetShooter): Node =

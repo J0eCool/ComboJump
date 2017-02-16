@@ -13,6 +13,8 @@ type Text* = ref object of Component
   font*: FontPtr
   ignoresCamera*: bool
 
+defineComponent(Text)
+
 proc newText*(text: string,
               color = color(255, 255, 255, 255),
               fontName = "nevis.ttf",

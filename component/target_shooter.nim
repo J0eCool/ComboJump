@@ -24,6 +24,8 @@ type
 const
   fireInputs* = [jump, spell1, spell2, spell3]
 
+defineComponent(TargetShooter)
+
 proc isCasting*(targetShooter: TargetShooter): bool =
   targetShooter.castTime > 0.0
 

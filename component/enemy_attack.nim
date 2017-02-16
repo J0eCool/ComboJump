@@ -27,6 +27,8 @@ type
     bulletSpeed*: float
     cooldownTimer: float
 
+defineComponent(EnemyAttack)
+
 proc attackEntity*(enemyAttack: EnemyAttack, pos, dir: Vec): Entity =
   case enemyAttack.kind
   of melee:

@@ -32,6 +32,8 @@ type
   Targeting* = ref object of Component
     target*: Target
 
+defineComponent(Targeting)
+
 proc tryPos*(target: Target): Option[Vec] =
   case target.kind
   of noTarget:

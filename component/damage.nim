@@ -17,6 +17,8 @@ type
   Damage* = ref object of Component
     damage*: int
 
+defineComponent(Damage)
+
 defineSystem:
   components = [Health, Collider, Transform]
   proc updateDamage*(player: Entity) =

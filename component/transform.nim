@@ -6,6 +6,8 @@ import
 type Transform* = ref object of Component
   pos*, size*, scale*: Vec
 
+defineComponent(Transform)
+
 proc rect*(t: Transform): Rect =
   rect(t.pos, t.size)
 proc `rect=`*(t: Transform, r: Rect) =

@@ -22,6 +22,8 @@ type EnemyStats* = ref object of Component
   xp*: int
   didInit: bool
 
+defineComponent(EnemyStats)
+
 proc multiply[T](level: int, stat: T, linear: float): T =
   let
     bonus = linear * (level - 1).float

@@ -17,6 +17,8 @@ type
   QuestMenu* = ref object of Component
     menu: Node
 
+defineComponent(QuestMenu)
+
 proc questMenuNode(questData: ptr QuestData, notifications: ptr N10nManager): Node =
   List[Quest](
     pos: vec(850, 300),

@@ -24,6 +24,8 @@ import
 type HudMenu* = ref object of Component
   menu: Node
 
+defineComponent(HudMenu)
+
 proc hudMenuNode(player: Entity, stats: ptr PlayerStats, stageData: ptr StageData): Node =
   let
     health = player.getComponent(Health)

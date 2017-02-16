@@ -8,6 +8,8 @@ import
 
 type Health* = ref object of LimitedQuantity
 
+defineComponent(Health)
+
 proc newHealth*(maxHealth: int): Health =
   new result
   result.init maxHealth

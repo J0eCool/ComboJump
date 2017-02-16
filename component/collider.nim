@@ -18,6 +18,8 @@ type
     collisionBlacklist: seq[Entity]
     bufferedCollisions*: seq[Entity]
 
+defineComponent(Collider)
+
 proc initLayerMask(): array[Layer, set[Layer]] =
   result[player] = { floor, enemy, enemyBullet }
   result[enemy] = { floor, player, bullet }

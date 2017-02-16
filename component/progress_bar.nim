@@ -9,6 +9,8 @@ type ProgressBar* = ref object of Component
   baseSize*: float
   textEntity*: string
 
+defineComponent(ProgressBar)
+
 proc newProgressBar*[T](target: string, heldTarget = "", textEntity = ""): ProgressBar =
   new result
   result.target =

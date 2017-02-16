@@ -18,6 +18,8 @@ type
     dirToPlayer*: Vec
     isAttacking*: bool
 
+defineComponent(EnemyProximity)
+
 defineSystem:
   proc updateEnemyProximity*(player: Entity) =
     let pt = if player == nil: nil else: player.getComponent(Transform)

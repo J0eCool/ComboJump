@@ -1,6 +1,11 @@
-import macros
+import
+  algorithm,
+  macros,
+  tables
 
-import vec
+import
+  jsonparse,
+  vec
 
 type
   Entity* = ref object of RootObj
@@ -99,3 +104,34 @@ proc `$`*(e: Entity): string =
 iterator items*(entity: Entity): Entity =
   for e in entity.children:
     yield e
+
+type ComponentData = Table[string, int]
+const componentFile = "components.json"
+proc readComponentData(): ComponentData =
+  result = initTable[string, int]()
+  let json = readJSONFile(componentFile)
+  if json.kind == jsError:
+    return
+  result.fromJSON(json)
+proc writeComponentData(data: ComponentData) =
+  writeFile(componentFile, data.toJson.toPrettyString)
+
+proc getNextId(data: ComponentData): int =
+  var ids = newSeq[int]()
+  for id in data.values:
+    ids.add id
+  ids.sort(cmp)
+  result = 1
+  for x in ids:
+    if x > result:
+      return
+    result += 1
+
+macro defineComponent*(component: untyped): untyped =
+  var data = readComponentData()
+  let name = $component.ident
+  if not data.hasKey(name):
+    data[name] = data.getNextId()
+  data.writeComponentData()
+
+defineComponent(Component)

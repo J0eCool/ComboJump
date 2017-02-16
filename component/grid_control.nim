@@ -13,6 +13,8 @@ type GridControl* = ref object of Component
   moveSpeed*: float
   dir*: Vec
 
+defineComponent(GridControl)
+
 const castingMoveSpeedMultiplier = 0.3
 
 defineSystem:

@@ -48,6 +48,8 @@ type
   RuneMenu* = ref object of Component
     menu: Node
 
+defineComponent(RuneMenu)
+
 proc runeMenuNode(spellData: ptr SpellData): Node =
   SpriteNode(
     pos: vec(1020, 320),

@@ -37,21 +37,8 @@ type
     dir*: Vec
     shootCooldown*: float
 
+defineComponent(Bullet)
+defineComponent(RepeatShooter)
+
 proc lifePct*(b: Bullet): float =
   1.0 - b.timeSinceSpawn / b.liveTime
-
-type HomingBullet* = ref object of Component
-  turnRate*: float
-
-type FieryBullet* = ref object of Component
-  timer*, interval*: float
-  liveTime*: float
-  size*: float
-
-proc newFieryBullet*(mana: float): FieryBullet =
-  FieryBullet(
-    timer: 0.0,
-    interval: lerp(mana, 0.05, 0.005),
-    liveTime: lerp(mana, 0.1, 0.9),
-    size: lerp(mana, 0.4, 0.9),
-  )

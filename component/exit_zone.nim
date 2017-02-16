@@ -9,6 +9,8 @@ type
   ExitZone* = ref object of Component
     stageEnd*: bool
 
+defineComponent(ExitZone)
+
 defineSystem:
   components = [ExitZone, Collider]
   proc updateExitZones*(stageData: var StageData) =
