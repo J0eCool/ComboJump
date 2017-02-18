@@ -11,12 +11,13 @@ type
   Entity* = ref object of RootObj
     id*: int
     name: string
-    components: seq[Component]
+    components*: seq[Component]
     parent*: Entity
     children: seq[Entity]
 
-  Component* = ref object of RootObj
+  ComponentObj* = object of RootObj
     entity*: Entity
+  Component* = ref ComponentObj
 
   Entities* = seq[Entity]
 
@@ -105,9 +106,9 @@ iterator items*(entity: Entity): Entity =
   for e in entity.children:
     yield e
 
-type ComponentData = Table[string, int]
+type ComponentData* = Table[string, int]
 const componentFile = "components.json"
-proc readComponentData(): ComponentData =
+proc readComponentData*(): ComponentData =
   result = initTable[string, int]()
   let json = readJSONFile(componentFile)
   if json.kind == jsError:
@@ -134,4 +135,15 @@ macro defineComponent*(component: untyped): untyped =
     data[name] = data.getNextId()
   data.writeComponentData()
 
+  let idMethod = newProc(postfix(ident("typeId"), "*"),
+    params=[
+      ident("string"),
+      newIdentDefs(ident("component"), ident(name)),
+    ],
+    procType=nnkMethodDef)
+  idMethod.body.add newLit(name)
+
+  newStmtList(
+    idMethod
+  )
 defineComponent(Component)

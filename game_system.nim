@@ -10,7 +10,6 @@ import
   jsonparse,
   option
 
-
 type
   System = object
     id: int

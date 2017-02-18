@@ -217,6 +217,9 @@ proc fromJSON*[T](json: JSON): T
 proc fromJSON*(x: var int, json: JSON) =
   assert json.kind == jsString
   x = parseInt(json.str)
+proc fromJSON*(x: var float, json: JSON) =
+  assert json.kind == jsString
+  x = parseFloat(json.str)
 proc fromJSON*(x: var bool, json: JSON) =
   assert json.kind == jsString
   case json.str
@@ -271,6 +274,8 @@ proc fromJSON*[T](json: JSON): T =
 
 proc toJSON*(x: int): JSON =
   JSON(kind: jsString, str: $x)
+proc toJSON*(x: float): JSON =
+  JSON(kind: jsString, str: $x)
 proc toJSON*(x: bool): JSON =
   JSON(kind: jsString, str: $x)
 proc toJSON*(str: string): JSON =
@@ -295,7 +300,7 @@ proc toJSON*[K, V](table: Table[K, V]): JSON =
       rawV = v.toJSON()
     assert rawK.kind == jsString
     result.obj[rawK.str] = rawV
-proc toJSON*[T: object](obj: T): JSON =
+proc toJSON*[T: object | tuple](obj: T): JSON =
   result = JSON(kind: jsObject, obj: initTable[string, JSON]())
   for field, val in obj.fieldPairs:
     result.obj[field] = val.toJSON()

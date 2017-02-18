@@ -3,8 +3,10 @@ import
   rect,
   vec
 
-type Transform* = ref object of Component
-  pos*, size*, scale*: Vec
+type
+  TransformObj* = object of Component
+    pos*, size*, scale*: Vec
+  Transform* = ref TransformObj
 
 defineComponent(Transform)
 

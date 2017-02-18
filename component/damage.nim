@@ -14,8 +14,9 @@ import
   vec
 
 type
-  Damage* = ref object of Component
+  DamageObj* = object of Component
     damage*: int
+  Damage* = ref DamageObj
 
 defineComponent(Damage)
 
