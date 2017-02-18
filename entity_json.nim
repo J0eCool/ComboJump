@@ -24,17 +24,23 @@ proc fromJSON*[T: ComponentObj](component: var T, json: JSON) =
   assert json.kind == jsObject
   for k, val in component.fieldPairs:
     when k != "entity":
-      val.fromJSON(json.obj[k])
+      if json.obj.hasKey(k):
+        val.fromJSON(json.obj[k])
 
 proc toJSON*(entity: Entity): JSON
 proc fromJSON*(entity: var Entity, json :JSON)
 
+method jsonVal*(component: Component): JSON
+method loadJson*(component: Component, json: JSON)
 macro declareToJSONMethods(): untyped =
   var data = readComponentData()
 
   const implementedNames = [
+    "Collider",
     "Component",
     "Damage",
+    # "GridControl",
+    "Movement",
     "Transform",
   ]
   result = newStmtList()
@@ -48,7 +54,7 @@ macro declareToJSONMethods(): untyped =
       ],
       procType=nnkMethodDef)
     toJsonMethod.body.add newCall(
-      newTree(nnkBracketExpr, ident("toJSON"), ident(name & "Obj")),
+      ident("toJSON"),
       newTree(nnkBracketExpr, ident("component")),
     )
     result.add toJsonMethod
@@ -61,7 +67,7 @@ macro declareToJSONMethods(): untyped =
       ],
       procType=nnkMethodDef)
     loadJsonMethod.body.add newCall(
-      newTree(nnkBracketExpr, ident("fromJSON"), ident(name & "Obj")),
+      ident("fromJSON"),
       newTree(nnkBracketExpr, ident("component")),
       ident("json"),
     )
@@ -104,3 +110,9 @@ proc fromJSON*(entity: var Entity, json: JSON) =
     components.add c
   let name = json.obj["name"].str
   entity = newEntity(name, components)
+
+var e: Entity
+e.fromJSON(deserializeJSON("""{"name":"horsebutt","components":{"Collider":{"layer":"player"}}}"""))
+echo e
+let e2 = newEntity("cump", [Collider(layer: enemy).Component])
+echo e2.toJSON()

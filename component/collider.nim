@@ -1,5 +1,8 @@
+import tables
+
 import
   entity,
+  jsonparse,
   vec
 
 type
@@ -12,11 +15,19 @@ type
     enemyBullet
     playerTrigger
 
-  Collider* = ref object of Component
+  ColliderObj* = object of ComponentObj
     layer*: Layer
     collisions*: seq[Entity]
     collisionBlacklist: seq[Entity]
     bufferedCollisions*: seq[Entity]
+  Collider* = ref ColliderObj
+
+proc toJSON*(collider: ColliderObj): JSON =
+  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
+  result.obj["layer"] = collider.layer.toJSON()
+proc fromJSON*(collider: var ColliderObj, json: JSON) =
+  assert json.kind == jsObject
+  collider.layer.fromJSON(json.obj["layer"])
 
 defineComponent(Collider)
 

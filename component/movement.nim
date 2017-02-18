@@ -6,10 +6,12 @@ import
   util,
   vec
 
-type Movement* = ref object of Component
-  vel*: Vec
-  usesGravity*: bool
-  onGround*: bool
+type
+  MovementObj* = object of ComponentObj
+    vel*: Vec
+    usesGravity*: bool
+    onGround*: bool
+  Movement* = ref MovementObj
 
 defineComponent(Movement)
 
