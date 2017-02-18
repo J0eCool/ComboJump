@@ -10,7 +10,7 @@ import
 type
   Entity* = ref object of RootObj
     id*: int
-    name: string
+    name*: string
     components*: seq[Component]
     parent*: Entity
     children: seq[Entity]

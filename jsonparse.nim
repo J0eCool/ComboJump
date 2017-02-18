@@ -263,8 +263,7 @@ proc fromJSON*[K, V](table: var Table[K, V], json: JSON) =
     k.fromJSON(JSON(kind: jsString, str: rawK))
     v.fromJSON(rawV)
     table[k] = v
-proc fromJSON*[T: object](obj: var T, json: JSON) =
-  obj = T()
+proc fromJSON*[T: object | tuple](obj: var T, json: JSON) =
   for field, val in obj.fieldPairs:
     val.fromJSON(json.obj[field])
 proc fromJSON*[T](json: JSON): T =
