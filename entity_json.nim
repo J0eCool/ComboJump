@@ -13,8 +13,7 @@ macro importAllComponents(): untyped =
   for f in walkDir("component"):
     result.add newTree(nnkImportStmt, ident(f.path))
 
-# importAllComponents()
-import component/[transform, damage]
+importAllComponents()
 
 proc toJSON*[T: ComponentObj](component: T): JSON =
   result = JSON(kind: jsObject, obj: initTable[string, JSON]())
@@ -91,29 +90,17 @@ declareToJSONMethods()
 
 proc toJSON*(entity: Entity): JSON =
   result = JSON(kind: jsObject, obj: initTable[string, JSON]())
+  var componentJson = JSON(kind: jsObject, obj: initTable[string, JSON]())
   for c in entity.components:
-    result.obj[typeId(c)] = jsonVal(c)
+    componentJson.obj[typeId(c)] = jsonVal(c)
+  result.obj["components"] = componentJson
+  result.obj["name"] = entity.name.toJSON()
 proc fromJSON*(entity: var Entity, json: JSON) =
   assert json.kind == jsObject
   var components = newSeq[Component]()
-  for k, v in json.obj:
+  for k, v in json.obj["components"].obj:
     let c = stringToComponent(k)
     loadJson(c, v)
     components.add c
-  entity = newEntity("LOADED", components)
-
-let
-  a = Transform(
-    pos: vec(2, 3),
-    size: vec(3, 4),
-  )
-  b = Damage(
-    damage: 12,
-  )
-  ent = newEntity("test", [a, b])
-
-echo toJSON(ent)
-
-var e2 = Entity()
-e2.fromJSON(deserializeJSON("""{"Damage":{"damage":"91"}}"""))
-echo e2, e2.getComponent(Damage)[], e2.getComponent(Transform)==nil
+  let name = json.obj["name"].str
+  entity = newEntity(name, components)
