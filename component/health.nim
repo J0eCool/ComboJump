@@ -6,9 +6,11 @@ import
   logging,
   notifications
 
-type Health* = ref object of LimitedQuantity
+type
+  HealthObj* = object of LimitedQuantityObj
+  Health* = ref HealthObj
 
-defineComponent(Health)
+defineComponent(Health, @[])
 
 proc newHealth*(maxHealth: int): Health =
   new result

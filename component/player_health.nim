@@ -9,13 +9,16 @@ import
   player_stats
 
 type
-  PlayerHealth* = ref object of Health
+  PlayerHealthObj* = object of HealthObj
     didInitialize*: bool
-  PlayerMana* = ref object of Mana
-    didInitialize*: bool
+  PlayerHealth* = ref PlayerHealthObj
 
-defineComponent(PlayerHealth)
-defineComponent(PlayerMana)
+  PlayerManaObj* = object of ManaObj
+    didInitialize*: bool
+  PlayerMana* = ref PlayerManaObj
+
+defineComponent(PlayerHealth, @["didInitialize"])
+defineComponent(PlayerMana, @["didInitialize"])
 
 defineSystem:
   priority = 5

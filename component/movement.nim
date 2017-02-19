@@ -13,7 +13,7 @@ type
     onGround*: bool
   Movement* = ref MovementObj
 
-defineComponent(Movement)
+defineComponent(Movement, @[])
 
 const gravity* = 2_100.0
 proc jumpSpeed*(height: float): float =

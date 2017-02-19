@@ -1,12 +1,14 @@
 import entity
 
-type LimitedQuantity* = ref object of Component
-  max*: float
-  cur*: float
-  regenPerSecond*: float
-  held*: float
+type
+  LimitedQuantityObj* = object of ComponentObj
+    max*: float
+    cur*: float
+    regenPerSecond*: float
+    held*: float
+  LimitedQuantity* = ref LimitedQuantityObj
 
-defineComponent(LimitedQuantity)
+defineComponent(LimitedQuantity, @[])
 
 proc init*(limited: LimitedQuantity, max: int) =
   limited.max = max.float

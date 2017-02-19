@@ -18,7 +18,7 @@ type
     damage*: int
   Damage* = ref DamageObj
 
-defineComponent(Damage)
+defineComponent(Damage, @[])
 
 defineSystem:
   components = [Health, Collider, Transform]

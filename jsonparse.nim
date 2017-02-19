@@ -214,9 +214,9 @@ proc writeJSONFile*(filename: string, json: JSON, pretty = false) =
   writeFile(filename, json.serializeJSON(pretty))
 
 proc fromJSON*[T](json: JSON): T
-proc fromJSON*(x: var int, json: JSON) =
+proc fromJSON*[T: int | uint8](x: var T, json: JSON) =
   assert json.kind == jsString
-  x = parseInt(json.str)
+  x = T(parseInt(json.str))
 proc fromJSON*(x: var float, json: JSON) =
   assert json.kind == jsString
   x = parseFloat(json.str)
@@ -263,7 +263,7 @@ proc fromJSON*[K, V](table: var Table[K, V], json: JSON) =
     k.fromJSON(JSON(kind: jsString, str: rawK))
     v.fromJSON(rawV)
     table[k] = v
-proc fromJSON*[T: object | tuple](obj: var T, json: JSON) =
+proc fromJSON*[T: tuple](obj: var T, json: JSON) =
   for field, val in obj.fieldPairs:
     val.fromJSON(json.obj[field])
 proc fromJSON*[T](json: JSON): T =
@@ -271,7 +271,7 @@ proc fromJSON*[T](json: JSON): T =
   x.fromJSON(json)
   return x
 
-proc toJSON*(x: int): JSON =
+proc toJSON*(x: int | uint8): JSON =
   JSON(kind: jsString, str: $x)
 proc toJSON*(x: float): JSON =
   JSON(kind: jsString, str: $x)
@@ -299,7 +299,7 @@ proc toJSON*[K, V](table: Table[K, V]): JSON =
       rawV = v.toJSON()
     assert rawK.kind == jsString
     result.obj[rawK.str] = rawV
-proc toJSON*[T: object | tuple](obj: T): JSON =
+proc toJSON*[T: tuple](obj: T): JSON =
   result = JSON(kind: jsObject, obj: initTable[string, JSON]())
   for field, val in obj.fieldPairs:
     result.obj[field] = val.toJSON()

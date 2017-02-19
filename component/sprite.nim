@@ -10,11 +10,12 @@ type
     texture*: TexturePtr
     size*: rect.Rect
 
-  Sprite* = ref object of Component
+  SpriteObj* = object of ComponentObj
     color*: Color
     ignoresCamera*: bool
     textureName*: string
     sprite*: SpriteData
     flipX*: bool
+  Sprite* = ref object of SpriteObj
 
-defineComponent(Sprite)
+defineComponent(Sprite, @["sprite"])

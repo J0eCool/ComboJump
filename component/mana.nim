@@ -2,9 +2,11 @@ import
   component/limited_quantity,
   entity
 
-type Mana* = ref object of LimitedQuantity
+type
+  ManaObj* = object of LimitedQuantityObj
+  Mana* = ref ManaObj
 
-defineComponent(Mana)
+defineComponent(Mana, @[])
 
 proc newMana*(maxMana: int): Mana =
   new result

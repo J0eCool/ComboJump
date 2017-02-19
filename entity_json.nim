@@ -15,21 +15,6 @@ macro importAllComponents(): untyped =
 
 importAllComponents()
 
-proc toJSON*[T: ComponentObj](component: T): JSON =
-  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
-  for k, v in component.fieldPairs:
-    when k != "entity":
-      result.obj[k] = toJSON(v)
-proc fromJSON*[T: ComponentObj](component: var T, json: JSON) =
-  assert json.kind == jsObject
-  for k, val in component.fieldPairs:
-    when k != "entity":
-      if json.obj.hasKey(k):
-        val.fromJSON(json.obj[k])
-
-proc toJSON*(entity: Entity): JSON
-proc fromJSON*(entity: var Entity, json :JSON)
-
 method jsonVal*(component: Component): JSON
 method loadJson*(component: Component, json: JSON)
 macro declareToJSONMethods(): untyped =
@@ -39,8 +24,16 @@ macro declareToJSONMethods(): untyped =
     "Collider",
     "Component",
     "Damage",
-    # "GridControl",
+    "GridControl",
+    "Health",
+    "LimitedQuantity",
+    "Mana",
     "Movement",
+    "PlayerHealth",
+    "PlayerMana",
+    "Sprite",
+    "Targeting",
+    "TargetShooter",
     "Transform",
   ]
   result = newStmtList()

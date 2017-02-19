@@ -22,14 +22,11 @@ type
     bufferedCollisions*: seq[Entity]
   Collider* = ref ColliderObj
 
-proc toJSON*(collider: ColliderObj): JSON =
-  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
-  result.obj["layer"] = collider.layer.toJSON()
-proc fromJSON*(collider: var ColliderObj, json: JSON) =
-  assert json.kind == jsObject
-  collider.layer.fromJSON(json.obj["layer"])
-
-defineComponent(Collider)
+defineComponent(Collider, @[
+  "collisions",
+  "collisionBlacklist",
+  "bufferedCollisions",
+])
 
 proc initLayerMask(): array[Layer, set[Layer]] =
   result[player] = { floor, enemy, enemyBullet }

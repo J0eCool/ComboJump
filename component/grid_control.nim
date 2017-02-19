@@ -9,11 +9,13 @@ import
   game_system,
   vec
 
-type GridControl* = ref object of Component
-  moveSpeed*: float
-  dir*: Vec
+type
+  GridControlObj* = object of Component
+    moveSpeed*: float
+    dir*: Vec
+  GridControl* = ref GridControlObj
 
-defineComponent(GridControl)
+defineComponent(GridControl, @[])
 
 const castingMoveSpeedMultiplier = 0.3
 

@@ -8,7 +8,7 @@ type
     pos*, size*, scale*: Vec
   Transform* = ref TransformObj
 
-defineComponent(Transform)
+defineComponent(Transform, @[])
 
 proc rect*(t: Transform): Rect =
   rect(t.pos, t.size)

@@ -29,10 +29,11 @@ type
     of entityTarget:
       entity*: Entity
 
-  Targeting* = ref object of Component
+  TargetingObj* = object of ComponentObj
     target*: Target
+  Targeting* = ref TargetingObj
 
-defineComponent(Targeting)
+defineComponent(Targeting, @["target"])
 
 proc tryPos*(target: Target): Option[Vec] =
   case target.kind

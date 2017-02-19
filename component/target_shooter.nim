@@ -16,15 +16,20 @@ import
   util
 
 type
-  TargetShooter* = ref object of Component
+  TargetShooterObj* = object of ComponentObj
     castTime*: float
     toCast*: SpellParse
     castIndex*: int
+  TargetShooter* = ref TargetShooterObj
 
 const
   fireInputs* = [jump, spell1, spell2, spell3]
 
-defineComponent(TargetShooter)
+defineComponent(TargetShooter, @[
+  "castTime",
+  "toCast",
+  "castIndex",
+])
 
 proc isCasting*(targetShooter: TargetShooter): bool =
   targetShooter.castTime > 0.0
