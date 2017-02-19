@@ -1,0 +1,26 @@
+{
+  "name": "Player",
+  "components": {
+    "Transform": {
+      "size": {
+        "x": "76",
+        "y": "68"
+      }
+    },
+    "Movement": {},
+    "Collider": {
+      "layer": "player"
+    },
+    "GridControl": {
+      "moveSpeed": "240.0"
+    },
+    "PlayerHealth": {},
+    "PlayerMana": {},
+    "Targeting": {},
+    "TargetShooter": {},
+    "Sprite": {
+      "textureName": "Wizard2.png"
+    },
+    "KeyCollection": {}
+  }
+}

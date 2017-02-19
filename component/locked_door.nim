@@ -7,14 +7,19 @@ import
   game_system
 
 type
-  Key* = ref object of Component
-  KeyCollection* = ref object of Component
-    numKeys*: int
-  LockedDoor* = ref object of Component
+  KeyObj* = object of ComponentObj
+  Key* = ref KeyObj
 
-defineComponent(Key)
-defineComponent(KeyCollection)
-defineComponent(LockedDoor)
+  KeyCollectionObj* = object of ComponentObj
+    numKeys*: int
+  KeyCollection* = ref KeyCollectionObj
+
+  LockedDoorObj* = object of ComponentObj
+  LockedDoor* = ref LockedDoorObj
+
+defineComponent(Key, @[])
+defineComponent(KeyCollection, @[])
+defineComponent(LockedDoor, @[])
 
 defineSystem:
   components = [Key, Collider]

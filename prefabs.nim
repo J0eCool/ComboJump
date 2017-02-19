@@ -25,22 +25,20 @@ import
   ],
   enemy_kind,
   entity,
+  entity_json,
+  jsonparse,
   vec
 
+proc loadPrefab*(name: string): Entity =
+  let
+    path = "assets/prefabs/" & name & ".json"
+    json = readJSONFile(path)
+  fromJSON(result, json)
+
 proc newPlayer*(pos: Vec): Entity =
-  newEntity("Player", [
-    Transform(pos: pos,
-              size: vec(76, 68)),
-    Movement(),
-    Collider(layer: player),
-    GridControl(moveSpeed: 240.0),
-    PlayerHealth(),
-    PlayerMana(),
-    Targeting(),
-    TargetShooter(),
-    Sprite(textureName: "Wizard2.png"),
-    KeyCollection(),
-  ])
+  result = loadPrefab("Player")
+  let transform = result.getComponent(Transform)
+  transform.pos = pos
 
 proc newHud*(): Entity =
   newEntity("Hud", [HudMenu().Component])

@@ -27,6 +27,9 @@ macro declareToJSONMethods(): untyped =
     "GridControl",
     "Health",
     "LimitedQuantity",
+    "Key",
+    "KeyCollection",
+    "LockedDoor",
     "Mana",
     "Movement",
     "PlayerHealth",
@@ -99,6 +102,7 @@ proc fromJSON*(entity: var Entity, json: JSON) =
   var components = newSeq[Component]()
   for k, v in json.obj["components"].obj:
     let c = stringToComponent(k)
+    assert c != nil, "Invalid component type: " & k
     loadJson(c, v)
     components.add c
   let name = json.obj["name"].str
