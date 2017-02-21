@@ -7,8 +7,9 @@ type
   Spawns = seq[SpawnInfo]
   StageDesc* = object
     stage*: int
-    level*: int
     rooms*: int
+    sidePaths*: int
+    level*: int
     enemiesPerRoom*: int
     spawns*: Spawns
   AreaInfo* = object
@@ -19,21 +20,51 @@ const areaData* = [
   AreaInfo(
     name: "Field",
     keyStages: @[
-      StageDesc(stage: 1, level: 1, rooms: 4, enemiesPerRoom: 3,
-        spawns: @[(goblin, 1.0)]),
-      StageDesc(stage: 3, level: 1, rooms: 5, enemiesPerRoom: 4,
-        spawns: @[(goblin, 5.0), (ogre, 1.0)]),
+      StageDesc(
+        stage: 1,
+        rooms: 4,
+        sidePaths: 0,
+        level: 1,
+        enemiesPerRoom: 3,
+        spawns: @[(goblin, 1.0)]
+      ),
+      StageDesc(
+        stage: 3,
+        rooms: 5,
+        sidePaths: 0,
+        level: 1,
+        enemiesPerRoom: 4,
+        spawns: @[(goblin, 5.0), (ogre, 1.0)]
+      ),
     ],
   ),
   AreaInfo(
     name: "Grassland",
     keyStages: @[
-      StageDesc(stage: 1, level: 2, rooms: 4, enemiesPerRoom: 3,
-        spawns: @[(goblin, 5.0), (ogre, 2.0)]),
-      StageDesc(stage: 3, level: 3, rooms: 6, enemiesPerRoom: 5,
-        spawns: @[(goblin, 5.0), (ogre, 3.0)]),
-      StageDesc(stage: 5, level: 4, rooms: 7, enemiesPerRoom: 5,
-        spawns: @[(goblin, 4.0), (ogre, 4.0), (mushroom, 2.0)]),
+      StageDesc(
+        stage: 1,
+        rooms: 4,
+        sidePaths: 1,
+        level: 2,
+        enemiesPerRoom: 3,
+        spawns: @[(goblin, 5.0), (ogre, 2.0)]
+      ),
+      StageDesc(
+        stage: 3,
+        rooms: 6,
+        sidePaths: 0,
+        level: 3,
+        enemiesPerRoom: 5,
+        spawns: @[(goblin, 5.0), (ogre, 3.0)]
+      ),
+      StageDesc(
+        stage: 5,
+        rooms: 5,
+        sidePaths: 1,
+        level: 4,
+        enemiesPerRoom: 5,
+        spawns: @[(goblin, 4.0), (ogre, 4.0), (mushroom, 2.0)]
+      ),
     ],
   ),
 ]
@@ -76,8 +107,9 @@ proc stageDesc*(area: AreaInfo, stage: int): StageDesc =
   let t = (stage - lo.stage) / (hi.stage - lo.stage)
   return StageDesc(
     stage: stage,
-    level: t.lerp(lo.level, hi.level),
     rooms: t.lerp(lo.rooms, hi.rooms),
+    sidePaths: t.lerp(lo.sidePaths, hi.sidePaths),
+    level: t.lerp(lo.level, hi.level),
     enemiesPerRoom: t.lerp(lo.enemiesPerRoom, hi.enemiesPerRoom),
     spawns: t.lerp(lo.spawns, hi.spawns),
   )

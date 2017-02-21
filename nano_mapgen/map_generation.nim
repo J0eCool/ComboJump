@@ -140,7 +140,10 @@ proc entitiesForStage*(area: AreaInfo, stageIdx: int, player: Entity): Entities 
     player = if player != nil: player else: newPlayer(vec())
     playerTransform = player.getComponent(Transform)
     screenSize = vec(1200, 900) # TODO: don't hardcode this
-    desc = MapDesc(length: stage.rooms)
+    desc = MapDesc(
+      length: stage.rooms,
+      numSidePaths: stage.sidePaths,
+    )
     map = desc.generate()
   playerTransform.pos = vec(screenSize.x / 2, screenSize.y * 2 / 3)
   result = @[
