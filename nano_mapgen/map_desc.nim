@@ -235,15 +235,15 @@ proc generateMap*(graph: MapGraph): Map =
     if (room.right == doorOpen and room.left == doorWall and
         room.up == doorWall and room.down == doorWall):
       let shouldBe = result.getRoomAt(room.x + 1, room.y + 1)
-      if shouldBe.kind == none:
+      if shouldBe.kind == none and randomBool(0.65):
+        let
+          parent = result.getRoomAt(room.x + 1, room.y).value
+          parentIdx = result.getIndex(parent)
         room.x += 1
         room.y += 1
         room.right = doorWall
         room.down = doorOpen
         result.rooms[i] = room
-        let
-          parent = result.getRoomAt(room.x + 1, room.y).value
-          parentIdx = result.getIndex(parent)
         result.rooms[parentIdx].left = doorWall
         result.rooms[parentIdx].up = doorOpen
 
@@ -256,7 +256,7 @@ when isMainModule:
   randomize()
   for i in 1..10:
     echo "Map - ", i
-    let graph = MapDesc(length: 9, numSidePaths: 2).generateNodes
+    let graph = MapDesc(length: 5, numSidePaths: 2).generateNodes
     echo graph
     echo graph.generateMap.textMap
     echo ""
