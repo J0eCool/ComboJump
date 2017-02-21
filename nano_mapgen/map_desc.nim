@@ -8,6 +8,7 @@ import
     map,
     room,
   ],
+  option,
   util
 
 type
@@ -226,6 +227,25 @@ proc generateMap*(graph: MapGraph): Map =
     if rooms.hasKey node:
       for room in rooms[node]:
         result.rooms.add room[]
+
+  # Run convolutions
+  # TODO: framework for this, move to its own function, etc
+  for i in 0..<result.rooms.len:
+    var room = result.rooms[i]
+    if (room.right == doorOpen and room.left == doorWall and
+        room.up == doorWall and room.down == doorWall):
+      let shouldBe = result.getRoomAt(room.x + 1, room.y + 1)
+      if shouldBe.kind == none:
+        room.x += 1
+        room.y += 1
+        room.right = doorWall
+        room.down = doorOpen
+        result.rooms[i] = room
+        let
+          parent = result.getRoomAt(room.x + 1, room.y).value
+          parentIdx = result.getIndex(parent)
+        result.rooms[parentIdx].left = doorWall
+        result.rooms[parentIdx].up = doorOpen
 
 proc generate*(desc: MapDesc): Map =
   let graph = desc.generateNodes()

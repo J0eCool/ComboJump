@@ -33,6 +33,12 @@ proc getRoomAt*(map: Map, x, y: int): Option[Room] =
       return makeJust(room)
   makeNone[Room]()
 
+proc getIndex*(map: Map, room: Room): int =
+  for i in 0..<map.rooms.len:
+    if map.rooms[i].id == room.id:
+      return i
+  -1
+
 proc findPath*(map: Map, a, b: Room): seq[Room] =
   var
     openSet = @[a.id]
