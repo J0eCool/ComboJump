@@ -25,6 +25,7 @@ type
     endNode: MapNode
   MapDesc* = object
     length*: int
+    numSidePaths*: int
 
 proc `$`(node: MapNode): string =
   "n" & $node.id
@@ -119,8 +120,7 @@ proc generateNodes(desc: MapDesc): MapGraph =
   let mainHall = split(startNode, endNode)
   mainHall.length = desc.length - 2
   nodes.add mainHall
-  let numSidePaths = random(0, desc.length div 2)
-  for i in 0..<numSidePaths:
+  for i in 0..<desc.numSidePaths:
     let
       mainPath = findPath(startNode, endNode)
       lockIdx = random(1, mainPath.len - 2)
@@ -236,7 +236,7 @@ when isMainModule:
   randomize()
   for i in 1..10:
     echo "Map - ", i
-    let graph = MapDesc(length: 9).generateNodes
+    let graph = MapDesc(length: 9, numSidePaths: 2).generateNodes
     echo graph
     echo graph.generateMap.textMap
     echo ""
