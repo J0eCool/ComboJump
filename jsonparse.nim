@@ -1,5 +1,6 @@
 import
   algorithm,
+  macros,
   parseutils,
   sequtils,
   strutils,
@@ -303,3 +304,79 @@ proc toJSON*[T: tuple](obj: T): JSON =
   result = JSON(kind: jsObject, obj: initTable[string, JSON]())
   for field, val in obj.fieldPairs:
     result.obj[field] = val.toJSON()
+
+macro autoObjectJSONProcs*(objType: untyped, blacklist: seq[string] = @[]): untyped =
+  let
+    importTableStmt = newTree(nnkImportStmt, ident("tables"))
+    toJsonProc = newProc(postfix(ident("toJSON"), "*"),
+      params=[
+        ident("JSON"),
+        newIdentDefs(ident("obj"), objType),
+      ])
+    resAssign = newAssignment(ident("result"),
+      newTree(nnkObjConstr, ident("JSON"),
+        newColonExpr(ident("kind"), ident("jsObject")),
+        newColonExpr(ident("obj"),
+          newCall(newTree(nnkBracketExpr,
+            ident("initTable"), ident("string"), ident("JSON")
+          ))
+        ),
+      )
+    )
+    toForStmt = newTree(nnkForStmt, ident("k"), ident("v"),
+      newDotExpr(ident("obj"), ident("fieldPairs")),
+      newTree(nnkWhenStmt,
+        newTree(nnkElifBranch,
+          newTree(nnkInfix, ident("notin"), ident("k"), blacklist),
+          newAssignment(
+            newTree(nnkBracketExpr,
+              newDotExpr(ident("result"), ident("obj")),
+              ident("k")
+            ),
+            newCall(ident("toJSON"), ident("v"))
+          )
+        )
+      )
+    )
+  toJsonProc.body.add resAssign
+  toJsonProc.body.add toForStmt
+
+  let
+    fromJsonProc = newProc(postfix(ident("fromJSON"), "*"),
+      params=[
+        newEmptyNode(),
+        newIdentDefs(ident("obj"),
+          newTree(nnkVarTy, objType)
+        ),
+        newIdentDefs(ident("json"), ident("JSON")),
+      ])
+    fromForStmt = newTree(nnkForStmt, ident("k"), ident("v"),
+      newDotExpr(ident("obj"), ident("fieldPairs")),
+      newTree(nnkWhenStmt,
+        newTree(nnkElifBranch,
+          newTree(nnkInfix, ident("notin"), ident("k"), blacklist),
+          newTree(nnkIfStmt,
+            newTree(nnkElifBranch,
+              newCall("hasKey",
+                newDotExpr(ident("json"), ident("obj")),
+                ident("k"),
+              ),
+              newCall("fromJSON",
+                ident("v"),
+                newTree(nnkBracketExpr,
+                  newDotExpr(ident("json"), ident("obj")),
+                  ident("k")
+                ),
+              )
+            )
+          )
+        )
+      )
+    )
+  fromJsonProc.body.add fromForStmt
+
+  newStmtList(
+    importTableStmt,
+    toJsonProc,
+    fromJsonProc,
+  )

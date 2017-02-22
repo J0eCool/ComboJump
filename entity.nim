@@ -135,94 +135,24 @@ macro defineComponent*(component: untyped, jsonBlacklist: untyped = nil): untype
     data[name] = data.getNextId()
   data.writeComponentData()
 
-  let
-    importTableStmt = newTree(nnkImportStmt, ident("tables"))
-    importJsonStmt = newTree(nnkImportStmt, ident("jsonparse"))
-    idMethod = newProc(postfix(ident("typeId"), "*"),
-      params=[
-        ident("string"),
-        newIdentDefs(ident("component"), ident(name)),
-      ],
-      procType=nnkMethodDef)
+  let idMethod = newProc(postfix(ident("typeId"), "*"),
+    params=[
+      ident("string"),
+      newIdentDefs(ident("component"), ident(name)),
+    ],
+    procType=nnkMethodDef)
   idMethod.body.add newLit(name)
   result = newStmtList(
-    importTableStmt,
-    importJsonStmt,
     idMethod,
   )
 
   if jsonBlacklist == nil:
     return
 
-  jsonBlacklist[1].add newStrLitNode("entity")
-  let
-    toJsonProc = newProc(postfix(ident("toJSON"), "*"),
-      params=[
-        ident("JSON"),
-        newIdentDefs(ident("component"), ident(name & "Obj")),
-      ])
-    resAssign = newAssignment(ident("result"),
-      newTree(nnkObjConstr, ident("JSON"),
-        newColonExpr(ident("kind"), ident("jsObject")),
-        newColonExpr(ident("obj"),
-          newCall(newTree(nnkBracketExpr,
-            ident("initTable"), ident("string"), ident("JSON")
-          ))
-        ),
-      )
-    )
-    toForStmt = newTree(nnkForStmt, ident("k"), ident("v"),
-      newDotExpr(ident("component"), ident("fieldPairs")),
-      newTree(nnkWhenStmt,
-        newTree(nnkElifBranch,
-          newTree(nnkInfix, ident("notin"), ident("k"), jsonBlacklist),
-          newAssignment(
-            newTree(nnkBracketExpr,
-              newDotExpr(ident("result"), ident("obj")),
-              ident("k")
-            ),
-            newCall(ident("toJSON"), ident("v"))
-          )
-        )
-      )
-    )
-  toJsonProc.body.add resAssign
-  toJsonProc.body.add toForStmt
-  result.add toJsonProc
+  let importJsonStmt = newTree(nnkImportStmt, ident("jsonparse"))
+  result.add importJsonStmt
 
-  let
-    fromJsonProc = newProc(postfix(ident("fromJSON"), "*"),
-      params=[
-        newEmptyNode(),
-        newIdentDefs(ident("component"),
-          newTree(nnkVarTy, ident(name & "Obj"))
-        ),
-        newIdentDefs(ident("json"), ident("JSON")),
-      ])
-    fromForStmt = newTree(nnkForStmt, ident("k"), ident("v"),
-      newDotExpr(ident("component"), ident("fieldPairs")),
-      newTree(nnkWhenStmt,
-        newTree(nnkElifBranch,
-          newTree(nnkInfix, ident("notin"), ident("k"), jsonBlacklist),
-          newTree(nnkIfStmt,
-            newTree(nnkElifBranch,
-              newCall("hasKey",
-                newDotExpr(ident("json"), ident("obj")),
-                ident("k"),
-              ),
-              newCall("fromJSON",
-                ident("v"),
-                newTree(nnkBracketExpr,
-                  newDotExpr(ident("json"), ident("obj")),
-                  ident("k")
-                ),
-              )
-            )
-          )
-        )
-      )
-    )
-  fromJsonProc.body.add fromForStmt
-  result.add fromJsonProc
+  jsonBlacklist[1].add newStrLitNode("entity")
+  result.add newCall("autoObjectJSONProcs", ident(name & "Obj"), jsonBlacklist)
 
 defineComponent(Component, @[])

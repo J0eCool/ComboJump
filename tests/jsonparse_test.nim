@@ -9,13 +9,13 @@ type TestEnum = enum
   one
   two
 
-# FIXME: reenable automatic object serialization
+type TestObject = object
+  intVal: int
+  strVal: string
+  enumVal: TestEnum
+  arrayVal: seq[int]
 
-# type TestObject = object
-#   intVal: int
-#   strVal: string
-#   enumVal: TestEnum
-#   arrayVal: seq[int]
+autoObjectJSONProcs(TestObject)
 
 template testRoundtrip(name: string, ty, value, jsonString: untyped): untyped =
   test($name & " toJSON"):
@@ -70,16 +70,16 @@ suite "JSON parsing":
     """{"Bar":"101","foo":"12"}"""
   )
 
-  # testRoundtrip(
-  #   "Objects", TestObject,
-  #   TestObject(
-  #     intVal: 37,
-  #     strVal: "test string",
-  #     enumVal: two,
-  #     arrayVal: @[6, 0, 2],
-  #   ),
-  #   """{"arrayVal":["6","0","2"],"enumVal":"two","intVal":"37","strVal":"test string"}"""
-  # )
+  testRoundtrip(
+    "Objects", TestObject,
+    TestObject(
+      intVal: 37,
+      strVal: "test string",
+      enumVal: two,
+      arrayVal: @[6, 0, 2],
+    ),
+    """{"arrayVal":["6","0","2"],"enumVal":"two","intVal":"37","strVal":"test string"}"""
+  )
 
   test "Whitespace is ignored when reading JSON":
     check fromJSON[seq[int]](deserializeJSON(" [\"1\", \"2\",\n \"3\" ] ")) == @[1, 2, 3]
