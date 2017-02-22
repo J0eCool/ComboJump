@@ -12,7 +12,7 @@
       "layer": "player"
     },
     "GridControl": {
-      "moveSpeed": "240.0"
+      "moveSpeed": "440.0"
     },
     "PlayerHealth": {},
     "PlayerMana": {},

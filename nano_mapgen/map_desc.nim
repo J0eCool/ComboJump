@@ -161,7 +161,7 @@ proc generateMap*(graph: MapGraph): Map =
     kind: roomStart,
     x: 0,
     y: 0,
-    down: doorEntrance,
+    left: doorEntrance,
   )
   rooms[graph.startNode] = @[newOf(startRoom)]
   nodesLeft.remove(graph.startNode)
@@ -181,18 +181,18 @@ proc generateMap*(graph: MapGraph): Map =
               @[parentRooms[parentRooms.len - 1]]
             else:
               filter(parentRooms) do (room: ref Room) -> bool:
-                room.left == doorWall or room.right == doorWall
+                room.up == doorWall or room.down == doorWall
           room = random(openParents)
-          xDir =
+          xDir = if isMainPath: 1 else: 0
+          yDir =
             if isMainPath:
               0
-            elif room.left == doorWall and room.right == doorWall:
+            elif room.up == doorWall and room.down == doorWall:
               if randomBool(): 1 else: -1
-            elif room.left == doorWall:
-              -1
-            else:
+            elif room.up == doorWall:
               1
-          yDir = if isMainPath: 1 else: 0
+            else:
+              -1
         var curRooms = newSeq[ref Room]()
         for i in 1..node.length:
           curRooms.add newOf(Room(
@@ -210,17 +210,17 @@ proc generateMap*(graph: MapGraph): Map =
             r.cur = doorOpen
             if i != curRooms.len - 1:
               r.prev = doorOpen
-        if yDir == 1:
-          openDoors(up, down)
-        elif xDir == 1:
+        if xDir == 1:
           openDoors(right, left)
+        elif yDir == 1:
+          openDoors(up, down)
         else:
-          openDoors(left, right)
+          openDoors(down, up)
         toRemove.add node
         break
     for node in toRemove:
       nodesLeft.remove node
-  rooms[graph.endNode][0].up = doorExit
+  rooms[graph.endNode][0].right = doorExit
 
   result = Map(rooms: @[])
   for node in graph.nodes:
@@ -232,20 +232,20 @@ proc generateMap*(graph: MapGraph): Map =
   # TODO: framework for this, move to its own function, etc
   for i in 0..<result.rooms.len:
     var room = result.rooms[i]
-    if (room.right == doorOpen and room.left == doorWall and
-        room.up == doorWall and room.down == doorWall):
-      let shouldBe = result.getRoomAt(room.x + 1, room.y + 1)
+    if (room.down == doorOpen and room.left == doorWall and
+        room.up == doorWall and room.right == doorWall):
+      let shouldBe = result.getRoomAt(room.x + 1, room.y - 1)
       if shouldBe.kind == none and randomBool(0.65):
         let
-          parent = result.getRoomAt(room.x + 1, room.y).value
+          parent = result.getRoomAt(room.x, room.y - 1).value
           parentIdx = result.getIndex(parent)
         room.x += 1
-        room.y += 1
-        room.right = doorWall
-        room.down = doorOpen
+        room.y -= 1
+        room.down = doorWall
+        room.left = doorOpen
         result.rooms[i] = room
-        result.rooms[parentIdx].left = doorWall
-        result.rooms[parentIdx].up = doorOpen
+        result.rooms[parentIdx].up = doorWall
+        result.rooms[parentIdx].right = doorOpen
 
 proc generate*(desc: MapDesc): Map =
   let graph = desc.generateNodes()
