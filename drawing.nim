@@ -5,11 +5,15 @@ import
 
 import
   component/sprite,
+  color,
   rect,
   util,
   vec
 
 type RenderedText* = tuple[texture: TexturePtr, size: Vec]
+
+proc sdlColor*(c: color.Color): sdl2.Color =
+  color(c.r, c.g, c.b, c.a)
 
 proc sdlRect*(r: rect.Rect): sdl2.Rect =
   rect(r.x.cint, r.y.cint, r.w.cint, r.h.cint)
@@ -21,17 +25,17 @@ proc fillRect*(renderer: RendererPtr, r: rect.Rect) =
   var sdlRect = (r - r.size / 2).sdlRect
   renderer.fillRect sdlRect
 
-proc fillRect*(renderer: RendererPtr, r: rect.Rect, color: Color) =
-  renderer.setDrawColor color
+proc fillRect*(renderer: RendererPtr, r: rect.Rect, color: color.Color) =
+  renderer.setDrawColor color.sdlColor
   renderer.fillRect(r)
 
 proc drawRect*(renderer: RendererPtr, r: rect.Rect) =
   var sdlRect = (r - r.size / 2).sdlRect
   renderer.drawRect sdlRect
 
-proc renderText*(renderer: RendererPtr, text: string, font: FontPtr, color: Color): RenderedText =
+proc renderText*(renderer: RendererPtr, text: string, font: FontPtr, color: color.Color): RenderedText =
   let
-    surface = font.renderTextBlended(text, color)
+    surface = font.renderTextBlended(text, color.sdlColor)
     texture = renderer.createTexture surface
     size = vec(surface.w, surface.h)
   (texture, size)
@@ -56,7 +60,7 @@ proc drawCachedText*(renderer: RendererPtr,
                      text: string,
                      pos: Vec,
                      font: FontPtr,
-                     color: Color = color(255, 255, 255, 255),
+                     color: color.Color = rgb(255, 255, 255),
                     ) =
   let textKey = text & "__color:" & $color
   if not textCache.hasKey(textKey):
@@ -67,10 +71,10 @@ proc drawBorderedText*(renderer: RendererPtr,
                        text: string,
                        pos: Vec,
                        font: FontPtr,
-                       color: Color = color(255, 255, 255, 255),
+                       color: color.Color = rgb(255, 255, 255),
                       ) =
   let
-    black = color(0, 0, 0, 255)
+    black = rgb(0, 0, 0)
     borderWidth = 2
   for x in -1..1:
     for y in -1..1:

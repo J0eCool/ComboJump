@@ -1,4 +1,4 @@
-import math, sdl2
+import math
 
 import
   component/[
@@ -7,6 +7,7 @@ import
     popup_text,
     transform,
   ],
+  color,
   enemy_kind,
   entity,
   event,
@@ -61,6 +62,6 @@ defineSystem:
         entity.withComponent Transform, transform:
           let popup = newEntity("XpPopup", [
             Transform(pos: transform.pos - vec(0, 75)),
-            PopupText(text: "+" & $enemyStats.xp & " XP", color: color(0, 255, 0, 255)),
+            PopupText(text: "+" & $enemyStats.xp & " XP", color: rgb(0, 255, 0)),
           ])
           result.add event.Event(kind: addEntity, entity: popup)

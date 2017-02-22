@@ -1,4 +1,4 @@
-import sdl2
+from sdl2 import RendererPtr
 
 import
   component/[
@@ -10,6 +10,7 @@ import
     transform,
   ],
   camera,
+  color,
   entity,
   event,
   game_system,
@@ -45,8 +46,8 @@ proc hudMenuNode(player: Entity, stats: ptr PlayerStats, stageData: ptr StageDat
           progressBar(
             mana.pairProc(),
             size=vec(400, 25),
-            foreground=color(32, 32, 210, 255),
-            background=color(64, 64, 92, 255),
+            foreground=rgb(32, 32, 210),
+            background=rgb(64, 64, 92),
           )
         ),
       ),
@@ -65,8 +66,8 @@ proc hudMenuNode(player: Entity, stats: ptr PlayerStats, stageData: ptr StageDat
                   progressBar(
                     (proc(): HealthPair = (stats.xp, stats[].xpToNextLevel())),
                     size=vec(300, 16),
-                    foreground=color(255, 255, 255, 255),
-                    background=color(64, 64, 64, 255),
+                    foreground=rgb(255, 255, 255),
+                    background=rgb(64, 64, 64),
                   ),
                 ],
               ),

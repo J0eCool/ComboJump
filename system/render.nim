@@ -25,8 +25,7 @@ defineDrawSystem:
       if s.sprite != nil:
         renderer.draw s.sprite, r, s.flipX
       else:
-        renderer.setDrawColor s.color
-        renderer.fillRect r
+        renderer.fillRect r, s.color
 
     entities.forComponents e, [
       Transform, t,

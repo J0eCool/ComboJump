@@ -1,5 +1,4 @@
 import
-  sdl2,
   sequtils,
   tables
 

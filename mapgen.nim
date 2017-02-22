@@ -9,6 +9,7 @@ import
 
 import
   system/render,
+  color,
   drawing,
   input,
   option,
@@ -117,7 +118,7 @@ proc draw(renderer: RendererPtr, nodes: seq[GraphNode], font: FontPtr, camera: V
     renderer.drawRect rect(pos, nodeSize)
 
     let text = $n.id
-    renderer.drawCachedText(text, pos, font, color(64, 64, 64, 255))
+    renderer.drawCachedText(text, pos, font, rgb(64, 64, 64))
 
 type
   Stage = enum
@@ -412,7 +413,7 @@ method draw*(renderer: RendererPtr, map: MapGen) =
     stageText = "Stage: " & $map.stage
 
   renderer.draw map.nodes, font, map.camera, map.zoomScale
-  renderer.drawCachedText stageText, vec(600, 830), font, color(64, 64, 64, 255)
+  renderer.drawCachedText stageText, vec(600, 830), font, rgb(64, 64, 64)
 
 method update*(map: MapGen, dt: float) =
   #TODO: split into subfunctions

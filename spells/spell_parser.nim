@@ -1,6 +1,5 @@
 import
   math
-from sdl2 import color
 
 import
   component/[
@@ -17,6 +16,7 @@ import
     runes,
     rune_info,
   ],
+  color,
   entity,
   event,
   logging,
@@ -63,7 +63,7 @@ proc damage*(spell: SpellParse, stats: PlayerStats): float =
   (5 + 0.25 * (spell.spell.len - 1).float) * stats.damage
 
 proc newBullet(pos, dir: Vec, speed: float,
-               color: sdl2.Color,
+               color: Color,
                despawnCallback: ShootProc,
                updateCallback: UpdateProc,
                target: Target,
@@ -109,14 +109,14 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target, damage
   of single:
     let
       speed = 900.0
-      color = color(255, 255, 0, 255)
+      color = rgb(255, 255, 0)
       bullet = newBullet(pos, dir, speed, color, despawnCallback, updateCallback, target, baseDamage.int)
     result = @[Event(kind: addEntity, entity: bullet)]
   of spread:
     result = @[]
     let
       speed = 600.0
-      color = color(0, 255, 255, 255)
+      color = rgb(0, 255, 255)
       num = info.numBullets + 1
       angPer = 10.0
       baseAng = 15.0
@@ -134,7 +134,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target, damage
     result = @[]
     let
       speed = 600.0
-      color = color(255, 0, 255, 255)
+      color = rgb(255, 0, 255)
       num = info.numBullets * 2
       angPer = 360.0 / num.float
       baseAng = random(0.0, 360.0)

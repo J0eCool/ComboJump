@@ -1,5 +1,4 @@
-import
-  sdl2
+from sdl2 import RendererPtr
 
 import
   component/[
@@ -9,6 +8,7 @@ import
     map,
     room,
   ],
+  color,
   input,
   entity,
   event,
@@ -32,8 +32,8 @@ proc mapMenuNode(container: MapContainer, player: Entity): Node =
     roomSize = 32.0
     border = 4.0
     screenSize = vec(1200, 900) #TODO: ok stop hardcoding this
-    borderColor = color(0, 0, 0, 255)
-    roomColor = color(64, 192, 255, 255)
+    borderColor = rgb(0, 0, 0)
+    roomColor = rgb(64, 192, 255)
     doorOffset = roomSize / 2 - vec(border) / 4
     doorWidth = 16.0
   result = Node(
@@ -81,7 +81,7 @@ proc mapMenuNode(container: MapContainer, player: Entity): Node =
       SpriteNode(
         pos: (pos / screenSize - vec(0.5)) * vec(roomSize),
         size: vec(12),
-        color: color(255, 255, 64, 255),
+        color: rgb(255, 255, 64),
       )
     ),
   )

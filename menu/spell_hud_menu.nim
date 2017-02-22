@@ -1,5 +1,5 @@
+from sdl2 import RendererPtr
 import
-  sdl2,
   sequtils
 
 import
@@ -8,11 +8,14 @@ import
     rune_info,
     spell_parser,
   ],
-  component/mana,
-  component/targeting,
-  component/target_shooter,
-  component/transform,
+  component/[
+    mana,
+    targeting,
+    target_shooter,
+    transform,
+  ],
   menu/rune_menu,
+  color,
   entity,
   event,
   game_system,
@@ -54,7 +57,7 @@ proc spellHudMenuNode(spellData: ptr SpellData, stats: ptr PlayerStats, targetSh
     listNodes: (proc(descIdx: int): Node =
       SpriteNode(
         size: vec(810, 48),
-        color: color(128, 128, 128, 255),
+        color: rgb(128, 128, 128),
         children: @[
           BindNode[SpellStats](
             item: (proc(): SpellStats = (spellData.spells[descIdx], stats[])),
@@ -64,7 +67,7 @@ proc spellHudMenuNode(spellData: ptr SpellData, stats: ptr PlayerStats, targetSh
                 SpriteNode(
                   pos: vec(-365 + 20 * pair.spell.index, 0),
                   size: vec(30, 30),
-                  color: color(255, 0, 0, 255),
+                  color: rgb(255, 0, 0),
                 )
               of success:
                 Node(
@@ -79,24 +82,24 @@ proc spellHudMenuNode(spellData: ptr SpellData, stats: ptr PlayerStats, targetSh
                       node: (proc(pct: float): Node =
                         SpriteNode(
                           size: vec(810 * pct, 48),
-                          color: color(32, 240, 240, 255),
+                          color: rgb(32, 240, 240),
                         )
                       ),
                     ),
                     BorderedTextNode(
                       pos: vec(330, -13),
                       text: "Cost: " & $pair.spell.manaCost,
-                      color: color(32, 240, 240, 255),
+                      color: rgb(32, 240, 240),
                     ).Node,
                     BorderedTextNode(
                       pos: vec(280, 13),
                       text: "Cast Time: " & formatFloat(pair.spell.castTime(pair.stats)) & "s",
-                      color: color(32, 240, 240, 255),
+                      color: rgb(32, 240, 240),
                     ),
                     BorderedTextNode(
                       pos: vec(480, 0),
                       text: "Damage: " & formatFloat(pair.spell.damage(pair.stats)),
-                      color: color(32, 240, 240, 255),
+                      color: rgb(32, 240, 240),
                     ),
                   ],
                 )

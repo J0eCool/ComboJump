@@ -1,6 +1,5 @@
 import
-  math,
-  sdl2
+  math
 
 import
   nano_mapgen/[
@@ -20,6 +19,7 @@ import
   menu/[
     map_menu,
   ],
+  color,
   areas,
   entity,
   prefabs,
@@ -33,8 +33,8 @@ const
 
 proc wall(door = doorWall, pos = vec(), size = vec()): Entities =
   const
-    wallColor = color(128, 128, 128, 255)
-    doorColor = color(160, 128, 32, 255)
+    wallColor = rgb(128, 128, 128)
+    doorColor = rgb(160, 128, 32)
     exitSize = vec(doorWidth, wallWidth)
     wallName = "Wall"
   if door == doorWall:
@@ -91,7 +91,7 @@ proc wall(door = doorWall, pos = vec(), size = vec()): Entities =
         pos: pos,
         size: exitSize,
       ),
-      Sprite(color: color(0, 0, 0, 255)),
+      Sprite(color: rgb(0, 0, 0)),
     ])
 
 

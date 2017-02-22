@@ -1,7 +1,7 @@
-import
-  sdl2
+from sdl2 import RendererPtr
 
 import
+  color,
   input,
   entity,
   event,
@@ -43,7 +43,7 @@ proc questMenuNode(questData: ptr QuestData, notifications: ptr N10nManager): No
             )
       SpriteNode(
         size: vec(300, 80),
-        color: color(128, 128, 128, 255),
+        color: rgb(128, 128, 128),
         children: @[
           BorderedTextNode(
             text: info.name,

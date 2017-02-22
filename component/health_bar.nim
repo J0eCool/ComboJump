@@ -1,4 +1,4 @@
-import sdl2
+from sdl2 import RendererPtr
 
 import
   component/[
@@ -8,6 +8,7 @@ import
     transform,
   ],
   camera,
+  color,
   entity,
   event,
   game_system,
@@ -31,14 +32,14 @@ proc pairProc*(quantity: LimitedQuantity): HealthPairProc =
 
 proc progressBar*(healthProc: HealthPairProc,
                   size = vec(),
-                  foreground = color(0, 0, 0, 0),
-                  background = color(0, 0, 0, 0),
+                  foreground = rgb(0, 0, 0),
+                  background = rgb(0, 0, 0),
                  ): Node =
   let
     border = 10.0
   SpriteNode(
     size: size + vec(border),
-    color: color(32, 32, 32, 255),
+    color: rgb(32, 32, 32),
     children: newSeqOf[Node](
       BindNode[HealthPair](
         item: healthProc,
@@ -65,8 +66,8 @@ proc rawHealthBar*(health: Health, size = vec()): Node =
   progressBar(
     health.pairProc(),
     size=size,
-    foreground=color(210, 32, 32, 255),
-    background=color(92, 64, 64, 255)
+    foreground=rgb(210, 32, 32),
+    background=rgb(92, 64, 64)
   )
     
 proc healthBarNode(health: Health, enemyStats: EnemyStats): Node =

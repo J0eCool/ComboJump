@@ -1,9 +1,9 @@
-import
-  sdl2
+from sdl2 import RendererPtr
 
 import
   component/sprite,
   system/render,
+  color,
   drawing,
   input,
   option,
@@ -110,9 +110,9 @@ type BorderedTextNode* = ref object of Node
   color*: Color
 
 method drawSelf(text: BorderedTextNode, renderer: RendererPtr, resources: var ResourceManager) =
-  if text.color == color(0, 0, 0, 0):
+  if text.color == rgba(0, 0, 0, 0):
     # default color to white
-    text.color = color(255, 255, 255, 255)
+    text.color = rgb(255, 255, 255)
   let font = resources.loadFont("nevis.ttf")
   renderer.drawBorderedText(text.text, text.globalPos, font, text.color)
 
@@ -130,11 +130,11 @@ method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceMa
     r = rect.rect(button.globalPos, button.size)
     c =
       if (button.isMouseOver and button.isHeld) or button.isKeyHeld:
-        color(198, 198, 108, 255)
+        rgb(198, 198, 108)
       elif button.isMouseOver:
-        color(172, 172, 134, 255)
+        rgb(172, 172, 134)
       else:
-        color(160, 160, 160, 255)
+        rgb(160, 160, 160)
   renderer.fillRect(r, c)
 
 method updateSelf(button: Button, input: InputManager) =
@@ -232,7 +232,7 @@ proc stringListNode*(lines: seq[string], pos = vec(0)): Node =
     listNodes: (proc(line: string): Node =
       BorderedTextNode(
         text: line,
-        color: color(255, 255, 255, 255),
+        color: rgb(255, 255, 255),
       )
     ),
   )

@@ -1,9 +1,9 @@
-import
-  sdl2
+from sdl2 import RendererPtr
 
 import
   component/sprite,
   camera,
+  color,
   drawing,
   entity,
   event,
@@ -53,13 +53,15 @@ proc loadBackgroundAssets*(
 defineDrawSystem:
   priority = 100
   proc drawBackground*(background: ScrollingBackground, camera: Camera) =
-    renderer.setDrawColor color(67, 167, 81, 255)
-    renderer.fillRect rect.rect(camera.screenSize / 2, camera.screenSize)
+    let
+      bgColor = rgb(67, 167, 81)
+      bgRect = rect(camera.screenSize / 2, camera.screenSize)
+    renderer.fillRect bgRect, bgColor
 
     for deco in background.decos:
       let
         info = deco.info
-        r = rect.rect(deco.pos + vec(0.0, camera.offset.y), info.size)
+        r = rect(deco.pos + vec(0.0, camera.offset.y), info.size)
       renderer.draw info.sprite, r
 
 defineSystem:

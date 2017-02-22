@@ -8,6 +8,7 @@ import
   component/collider,
   system/render,
   camera,
+  color,
   drawing,
   entity,
   event,
@@ -79,7 +80,7 @@ method draw*(renderer: RendererPtr, game: NanoGame) =
 
   let font = game.resources.loadFont("nevis.ttf")
   renderer.drawCachedText($game.frameTime & "ms", vec(1100, 875),
-                          font, color(0, 0, 0, 255))
+                          font, rgb(0, 0, 0))
 
 method update*(game: NanoGame, dt: float) =
   log "NanoGame", debug, "Update - Begin"

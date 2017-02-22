@@ -1,7 +1,7 @@
-import
-  sdl2
+from sdl2 import TexturePtr
 
 import
+  color,
   entity,
   rect
 

@@ -1,12 +1,14 @@
 import math
-from sdl2 import color
 
 import
-  component/collider,
-  component/health,
-  component/movement,
-  component/transform,
-  component/sprite,
+  component/[
+    collider,
+    health,
+    movement,
+    transform,
+    sprite,
+  ],
+  color,
   entity,
   event,
   option,

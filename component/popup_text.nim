@@ -1,10 +1,11 @@
-import sdl2
+from sdl2 import RendererPtr
 
 import
   component/[
     transform,
   ],
   camera,
+  color,
   drawing,
   entity,
   event,

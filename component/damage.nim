@@ -1,5 +1,3 @@
-import sdl2
-
 import
   component/[
     collider,
@@ -7,6 +5,7 @@ import
     popup_text,
     transform,
   ],
+  color,
   entity,
   event,
   game_system,
@@ -29,9 +28,9 @@ defineSystem:
         let
           popupColor =
             if entity == player:
-              color(255, 0, 0, 255)
+              rgb(255, 0, 0)
             else:
-              color(255, 255, 0, 255)
+              rgb(255, 255, 0)
           popup = newEntity("DamagePopup", [
             Transform(pos: transform.pos + randomVec(50.0)),
             PopupText(text: $damage.damage, color: popupColor),

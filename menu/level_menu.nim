@@ -1,7 +1,7 @@
-import
-  sdl2
+from sdl2 import RendererPtr
 
 import
+  color,
   input,
   entity,
   event,
@@ -22,7 +22,7 @@ proc levelMenuNode(stageData: ptr StageData): Node =
   SpriteNode(
     pos: vec(600, 450),
     size: vec(450, 600),
-    color: color(128, 128, 128, 255),
+    color: rgb(128, 128, 128),
     children: @[
       Button(
         pos: vec(40, -265),

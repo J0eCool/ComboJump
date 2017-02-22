@@ -1,10 +1,10 @@
-import
-  sdl2
+from sdl2 import RendererPtr
 
 import
   component/transform,
   component/collider,
   camera,
+  color,
   drawing,
   entity,
   event,
@@ -50,8 +50,10 @@ defineDrawSystem:
       Targeting, t,
     ]:
       t.target.tryPos.bindAs pos:
-        renderer.setDrawColor color(255, 67, 81, 255)
-        renderer.fillRect rect(pos, vec(50)) + camera.offset
+        let
+          targetColor = rgb(255, 67, 81)
+          targetRect = rect(pos, vec(50)) + camera.offset
+        renderer.fillRect targetRect, targetColor
 
 defineSystem:
   proc updateTargeting*() =

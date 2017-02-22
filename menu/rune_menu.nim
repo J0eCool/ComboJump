@@ -1,5 +1,5 @@
+from sdl2 import RendererPtr
 import
-  sdl2,
   sequtils,
   tables
 
@@ -8,6 +8,7 @@ import
     runes,
     rune_info,
   ],
+  color,
   entity,
   event,
   game_system,
@@ -54,7 +55,7 @@ proc runeMenuNode(spellData: ptr SpellData): Node =
   SpriteNode(
     pos: vec(1020, 320),
     size: vec(300, 600),
-    color: color(128, 128, 128, 255),
+    color: rgb(128, 128, 128),
     children: @[
       Button(
         pos: vec(0, -240),
@@ -97,7 +98,7 @@ proc runeMenuNode(spellData: ptr SpellData): Node =
               TextNode(
                 pos: vec(28, 4),
                 text: if hotkey == none: "" else: "[" & ($hotkey)[^1..^0] & "]",
-                color: color(0, 0, 0, 255),
+                color: rgb(0, 0, 0),
               ),
               BindNode[int](
                 item: (proc(): int = spellData[].available(rune)),
@@ -107,9 +108,9 @@ proc runeMenuNode(spellData: ptr SpellData): Node =
                     text: $count,
                     color:
                       if count > 0:
-                        color(255, 240, 32, 255)
+                        rgb(255, 240, 32)
                       else:
-                        color(128, 128, 128, 255),
+                        rgb(128, 128, 128),
                   )
                 ),
               ),

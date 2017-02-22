@@ -1,13 +1,14 @@
-import sdl2
-
 import
-  component/bullet,
-  component/collider,
-  component/damage,
-  component/enemy_proximity,
-  component/movement,
-  component/sprite,
-  component/transform,
+  component/[
+    bullet,
+    collider,
+    damage,
+    enemy_proximity,
+    movement,
+    sprite,
+    transform,
+  ],
+  color,
   entity,
   event,
   game_system,
@@ -40,7 +41,7 @@ proc attackEntity*(enemyAttack: EnemyAttack, pos, dir: Vec): Entity =
               pos: pos + dir * enemyAttack.attackDistance,
               size: vec(enemyAttack.size),
             ),
-            Sprite(color: color(255, 0, 0, 255)),
+            Sprite(color: rgb(255, 0, 0)),
           ])
   of ranged:
     newEntity("EnemyAttack", [
@@ -52,7 +53,7 @@ proc attackEntity*(enemyAttack: EnemyAttack, pos, dir: Vec): Entity =
               size: vec(enemyAttack.size),
             ),
             Movement(vel: dir * enemyAttack.bulletSpeed),
-            Sprite(color: color(255, 0, 0, 255)),
+            Sprite(color: rgb(255, 0, 0)),
           ])
 
 defineSystem:
