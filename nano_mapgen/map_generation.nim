@@ -45,35 +45,45 @@ proc wall(door = doorWall, pos = vec(), size = vec()): Entities =
 
   let
     isVertical = size.y > size.x
-    offset =
-      if isVertical:
-        vec(0.0, size.y / 4 + doorWidth / 4)
-      else:
-        vec(size.x / 4 + doorWidth / 4, 0.0)
-    leftPos = pos - offset
-    rightPos = pos + offset
-    partSize =
-      if isVertical:
-        vec(size.x, (size.y - doorWidth) / 2)
-      else:
-        vec((size.x - doorWidth) / 2, size.y)
     doorSize =
       if isVertical:
         vec(wallWidth, doorWidth)
       else:
         vec(doorWidth, wallWidth)
-  result = @[
-    newEntity(wallName, [
-      Sprite(color: wallColor),
-      Collider(layer: Layer.floor),
-      Transform(pos: leftPos, size: partSize)
-    ]),
-    newEntity(wallName, [
-      Sprite(color: wallColor),
-      Collider(layer: Layer.floor),
-      Transform(pos: rightPos, size: partSize)
-    ]),
-  ]
+    doorOffset =
+      if isVertical:
+        vec(0.0, size.y - doorWidth) / 2
+      else:
+        vec(0)
+  if isVertical:
+    let
+      partPos = pos - vec(0.0, doorWidth / 2)
+      partSize = vec(size.x, size.y - doorWidth)
+    result = @[
+      newEntity(wallName, [
+        Sprite(color: wallColor),
+        Collider(layer: Layer.floor),
+        Transform(pos: partPos, size: partSize)
+      ]),
+    ]
+  else:
+    let
+      offset = vec(size.x / 4 + doorWidth / 4, 0.0)
+      leftPos = pos - offset
+      rightPos = pos + offset
+      partSize = vec((size.x - doorWidth) / 2, size.y)
+    result = @[
+      newEntity(wallName, [
+        Sprite(color: wallColor),
+        Collider(layer: Layer.floor),
+        Transform(pos: leftPos, size: partSize)
+      ]),
+      newEntity(wallName, [
+        Sprite(color: wallColor),
+        Collider(layer: Layer.floor),
+        Transform(pos: rightPos, size: partSize)
+      ]),
+    ]
   case door
   of doorWall, doorOpen:
     discard
@@ -82,7 +92,7 @@ proc wall(door = doorWall, pos = vec(), size = vec()): Entities =
       Sprite(color: doorColor),
       Collider(layer: Layer.floor),
       Transform(
-        pos: pos,
+        pos: pos + doorOffset,
         size: doorSize,
       ),
       LockedDoor(),
@@ -92,7 +102,7 @@ proc wall(door = doorWall, pos = vec(), size = vec()): Entities =
       ExitZone(stageEnd: door == doorExit),
       Collider(layer: playerTrigger),
       Transform(
-        pos: pos,
+        pos: pos + doorOffset,
         size: doorSize,
       ),
       Sprite(color: rgb(0, 0, 0)),
