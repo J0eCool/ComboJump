@@ -35,7 +35,6 @@ proc wall(door = doorWall, pos = vec(), size = vec()): Entities =
   const
     wallColor = rgb(128, 128, 128)
     doorColor = rgb(160, 128, 32)
-    exitSize = vec(doorWidth, wallWidth)
     wallName = "Wall"
   if door == doorWall:
     return @[newEntity(wallName, [
@@ -58,6 +57,11 @@ proc wall(door = doorWall, pos = vec(), size = vec()): Entities =
         vec(size.x, (size.y - doorWidth) / 2)
       else:
         vec((size.x - doorWidth) / 2, size.y)
+    doorSize =
+      if isVertical:
+        vec(wallWidth, doorWidth)
+      else:
+        vec(doorWidth, wallWidth)
   result = @[
     newEntity(wallName, [
       Sprite(color: wallColor),
@@ -79,7 +83,7 @@ proc wall(door = doorWall, pos = vec(), size = vec()): Entities =
       Collider(layer: Layer.floor),
       Transform(
         pos: pos,
-        size: vec(doorWidth, wallWidth),
+        size: doorSize,
       ),
       LockedDoor(),
     ])
@@ -89,7 +93,7 @@ proc wall(door = doorWall, pos = vec(), size = vec()): Entities =
       Collider(layer: playerTrigger),
       Transform(
         pos: pos,
-        size: exitSize,
+        size: doorSize,
       ),
       Sprite(color: rgb(0, 0, 0)),
     ])
