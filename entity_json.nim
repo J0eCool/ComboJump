@@ -107,9 +107,3 @@ proc fromJSON*(entity: var Entity, json: JSON) =
     components.add c
   let name = json.obj["name"].str
   entity = newEntity(name, components)
-
-var e: Entity
-e.fromJSON(deserializeJSON("""{"name":"horsebutt","components":{"Collider":{"layer":"player"}}}"""))
-echo e
-let e2 = newEntity("cump", [Collider(layer: enemy).Component])
-echo e2.toJSON()
