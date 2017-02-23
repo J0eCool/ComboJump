@@ -159,8 +159,8 @@ proc entitiesForStage*(area: AreaInfo, stageIdx: int, player: Entity): Entities 
   for room in map.rooms:
     let roomPos = screenSize * vec(room.x, -room.y)
     result &= room.entities(screenSize, roomPos)
-    if room.kind == roomNormal:
-      const spawnBuffer = vec(100.0)
-      for enemyKind in stage.randomEnemyKinds:
-        let pos = random(spawnBuffer, screenSize - spawnBuffer)
-        result.add newEnemy(enemyKind, stage.level, pos + roomPos)
+    # if room.kind == roomNormal:
+    #   const spawnBuffer = vec(100.0)
+    #   for enemyKind in stage.randomEnemyKinds:
+    #     let pos = random(spawnBuffer, screenSize - spawnBuffer)
+    #     result.add newEnemy(enemyKind, stage.level, pos + roomPos)
