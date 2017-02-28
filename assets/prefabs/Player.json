@@ -7,12 +7,15 @@
         "y": "68"
       }
     },
-    "Movement": {},
+    "Movement": {
+      "usesGravity": "true"
+    },
     "Collider": {
       "layer": "player"
     },
-    "GridControl": {
-      "moveSpeed": "440.0"
+    "PlatformerControl": {
+      "moveSpeed": "400.0",
+      "jumpHeight": "230.0"
     },
     "PlayerHealth": {},
     "PlayerMana": {},

@@ -409,6 +409,17 @@
         "var N10nManager"
       ]
     },
+    "updatePlatformerControl": {
+      "args": [
+        "input"
+      ],
+      "filename": "platformer_control.nim",
+      "id": "50",
+      "priority": "0",
+      "types": [
+        "InputManager"
+      ]
+    },
     "updatePlayerHealth": {
       "args": [
         "stats"

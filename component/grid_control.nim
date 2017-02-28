@@ -31,5 +31,6 @@ defineSystem:
         else:
           1.0
       spd = gridControl.moveSpeed * mult
-    movement.vel = raw * spd
+      vel = raw * spd
+    movement.vel = vel
     gridControl.dir = raw.unit

@@ -23,6 +23,7 @@
   "MapContainer": "34",
   "MapMenu": "35",
   "Movement": "12",
+  "PlatformerControl": "40",
   "PlayerHealth": "28",
   "PlayerMana": "29",
   "PopupText": "10",
