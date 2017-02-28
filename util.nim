@@ -22,8 +22,11 @@ proc sign*(x: SomeNumber): int =
   else:
     0
 
+# generates a random float between lo and hi, not including hi
 proc random*(lo, hi: float): float =
   random(hi - lo) + lo
+
+# generates a random int between lo and hi, including hi
 proc random*(lo, hi: int): int =
   random(hi - lo + 1) + lo
 
@@ -36,7 +39,7 @@ proc randomNormal*(lo, hi: float): float =
   random(lo, hi)
 
 proc randomBool*(probability = 0.5): bool =
-  random(0.0, 0.999999) < probability
+  random(0.0, 1.0) < probability
 
 proc random*[T](list: seq[T]): T =
   list[random(0, list.len - 1)]
