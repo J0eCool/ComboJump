@@ -13,17 +13,19 @@ type
   PlatformerControlObj* = object of Component
     moveSpeed*: float
     jumpHeight*: float
+    dropDownTimer: float
   PlatformerControl* = ref PlatformerControlObj
 
-defineComponent(PlatformerControl, @[])
+defineComponent(PlatformerControl, @["dropDownTimer"])
 
 const
   castingMoveSpeedMultiplier = 0.3
   jumpReleaseMultiplier = 0.25
+  timeToDropDown = 0.25
 
 defineSystem:
   components = [PlatformerControl, TargetShooter, Movement]
-  proc updatePlatformerControl*(input: InputManager) =
+  proc updatePlatformerControl*(dt: float, input: InputManager) =
     let
       raw = vec(input.getAxis(Axis.horizontal),
                 input.getAxis(Axis.vertical))
@@ -37,7 +39,14 @@ defineSystem:
       vel = dir * spd
     movement.vel.x = vel.x
 
-    if input.isPressed(Input.jump):
+    if platformerControl.dropDownTimer > 0.0:
+      platformerControl.dropDownTimer -= dt
+
+    if movement.onGround and input.isHeld(Input.jump) and raw.y > 0.0:
+      platformerControl.dropDownTimer = timeToDropDown
+    elif input.isPressed(Input.jump):
       movement.vel.y = jumpSpeed(platformerControl.jumpHeight)
-    if input.isReleased(Input.jump) and (not movement.isFalling):
+    elif input.isReleased(Input.jump) and (not movement.isFalling):
       movement.vel.y *= jumpReleaseMultiplier
+
+    movement.canDropDown = platformerControl.dropDownTimer > 0.0

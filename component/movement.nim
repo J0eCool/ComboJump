@@ -11,6 +11,7 @@ type
     vel*: Vec
     usesGravity*: bool
     onGround*: bool
+    canDropDown*: bool
   Movement* = ref MovementObj
 
 defineComponent(Movement, @[])

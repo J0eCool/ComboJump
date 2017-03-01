@@ -68,7 +68,7 @@ defineSystem:
               c.bufferedAdd f.entity
               fs.c.bufferedAdd e
 
-          if m.isFalling:
+          if m.isFalling and (not m.canDropDown):
             for fs in platformTransforms:
               let
                 f = fs.t

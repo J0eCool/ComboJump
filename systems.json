@@ -411,12 +411,14 @@
     },
     "updatePlatformerControl": {
       "args": [
+        "dt",
         "input"
       ],
       "filename": "platformer_control.nim",
       "id": "50",
       "priority": "0",
       "types": [
+        "float",
         "InputManager"
       ]
     },
