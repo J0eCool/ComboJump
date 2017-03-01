@@ -39,6 +39,5 @@ defineSystem:
 
     if input.isPressed(Input.jump):
       movement.vel.y = jumpSpeed(platformerControl.jumpHeight)
-    let isJumping = movement.vel.y * gravity < 0.0
-    if input.isReleased(Input.jump) and isJumping:
+    if input.isReleased(Input.jump) and (not movement.isFalling):
       movement.vel.y *= jumpReleaseMultiplier

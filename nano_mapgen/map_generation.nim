@@ -119,6 +119,14 @@ proc entities(room: Room, screenSize, pos: Vec): Entities =
         size: screenSize - vec(2 * wallWidth),
       ),
     ]),
+    newEntity("Platform", [
+      Transform(
+        pos: pos + screenSize / 2 + vec(0, 150),
+        size: vec(500, 20),
+      ),
+      Collider(layer: Layer.oneWayPlatform),
+      Sprite(color: rgb(200, 128, 16)),
+    ]),
   ]
   result &= wall(
     door = room.left,

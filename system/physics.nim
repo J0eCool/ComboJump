@@ -14,13 +14,17 @@ import
 defineSystem:
   priority = -1
   proc physics*(dt: float) =
-    var floorTransforms: seq[tuple[t: Transform, c: Collider]] = @[]
+    var
+      floorTransforms: seq[tuple[t: Transform, c: Collider]] = @[]
+      platformTransforms: seq[tuple[t: Transform, c: Collider]] = @[]
     entities.forComponents e, [
       Collider, c,
       Transform, t,
     ]:
       if c.layer == Layer.floor:
         floorTransforms.add((t, c))
+      elif c.layer == Layer.oneWayPlatform:
+        platformTransforms.add((t, c))
 
     entities.forComponents e, [
       Movement, m,
@@ -44,7 +48,6 @@ defineSystem:
                 s = t.size
               var
                 r = t.rect
-                didCollide = true
               if intersects(oldRect.centerBottom, r.centerBottom,
                             fr.topLeft - s.vecX, fr.topRight + s.vecX):
                 r.bottom = fr.top
@@ -60,9 +63,28 @@ defineSystem:
               elif intersects(oldRect.centerRight, r.centerRight,
                               fr.topLeft - s.vecY, fr.bottomLeft + s.vecY):
                 r.right = fr.left
-              else:
-                didCollide = false
               t.rect = r
 
               c.bufferedAdd f.entity
               fs.c.bufferedAdd e
+
+          if m.isFalling:
+            for fs in platformTransforms:
+              let
+                f = fs.t
+                feetHeight = 2.0
+                feet = rect(t.pos + vec(0.0, (t.size.x - feetHeight) / 2),
+                            vec(t.size.x, feetHeight))
+              if t != f and feet.intersects f.rect:
+                let
+                  fr = f.rect
+                  s = t.size
+                var
+                  r = t.rect
+                r.bottom = fr.top
+                m.onGround = true
+                m.vel.y = 0
+                t.rect = r
+
+                c.bufferedAdd f.entity
+                fs.c.bufferedAdd e

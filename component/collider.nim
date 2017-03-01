@@ -9,6 +9,7 @@ type
   Layer* = enum
     none
     floor
+    oneWayPlatform
     player
     enemy
     bullet
@@ -28,13 +29,16 @@ defineComponent(Collider, @[
   "bufferedCollisions",
 ])
 
-proc initLayerMask(): array[Layer, set[Layer]] =
-  result[player] = { floor, enemy, enemyBullet }
-  result[enemy] = { floor, player, bullet }
-  result[bullet] = { enemy }
-  result[enemyBullet] = { player }
-  result[playerTrigger] = { player }
-const layerMask = initLayerMask()
+const layerMask: array[Layer, set[Layer]] = [
+  none: {},
+  floor: {},
+  oneWayPlatform: {},
+  player: { floor, oneWayPlatform, enemy, enemyBullet },
+  enemy: { floor, oneWayPlatform, player, bullet },
+  bullet: { enemy },
+  enemyBullet: { player },
+  playerTrigger: { player },
+]
 
 proc canCollideWith*(obj, other: Layer): bool =
   layerMask[obj].contains(other)
