@@ -1,7 +1,7 @@
 import
   component/[
     movement,
-    target_shooter,
+    spell_shooter,
   ],
   input,
   entity,
@@ -20,13 +20,13 @@ defineComponent(GridControl, @[])
 const castingMoveSpeedMultiplier = 0.3
 
 defineSystem:
-  components = [GridControl, TargetShooter, Movement]
+  components = [GridControl, SpellShooter, Movement]
   proc gridControl*(input: InputManager) =
     let
       raw = vec(input.getAxis(Axis.horizontal),
                 input.getAxis(Axis.vertical))
       mult =
-        if targetShooter.isCasting:
+        if spellShooter.isCasting:
           castingMoveSpeedMultiplier
         else:
           1.0

@@ -20,7 +20,7 @@
     "PlayerHealth": {},
     "PlayerMana": {},
     "Targeting": {},
-    "TargetShooter": {},
+    "SpellShooter": {},
     "Sprite": {
       "textureName": "Wizard2.png"
     },

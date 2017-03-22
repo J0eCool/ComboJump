@@ -1,18 +1,8 @@
 import math
 
 import
-  component/[
-    collider,
-    health,
-    movement,
-    transform,
-    sprite,
-  ],
-  color,
   entity,
   event,
-  option,
-  targeting,
   util,
   vec
 
@@ -24,7 +14,6 @@ type
     onUpdate*: UpdateProc
     dir*: Vec
     speed*: float
-    target*: Target
     startPos*: float
     stayOnHit*: bool
     randomNum*: float

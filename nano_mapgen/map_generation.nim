@@ -13,7 +13,6 @@ import
     locked_door,
     room_camera_target,
     sprite,
-    target_shooter,
     transform,
   ],
   menu/[

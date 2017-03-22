@@ -10,8 +10,7 @@ import
   ],
   component/[
     mana,
-    targeting,
-    target_shooter,
+    spell_shooter,
     transform,
   ],
   menu/rune_menu,
@@ -49,7 +48,7 @@ defineComponent(SpellHudMenu)
 
 type SpellStats = tuple[spell: SpellParse, stats: PlayerStats]
 
-proc spellHudMenuNode(spellData: ptr SpellData, stats: ptr PlayerStats, targetShooter: TargetShooter): Node =
+proc spellHudMenuNode(spellData: ptr SpellData, stats: ptr PlayerStats, spellShooter: SpellShooter): Node =
   List[int](
     pos: vec(20, 680),
     spacing: vec(4),
@@ -74,10 +73,10 @@ proc spellHudMenuNode(spellData: ptr SpellData, stats: ptr PlayerStats, targetSh
                   children: @[
                     BindNode[float](
                       item: (proc(): float =
-                        if targetShooter.castIndex != descIdx or targetShooter.toCast.kind == error:
+                        if spellShooter.castIndex != descIdx or spellShooter.toCast.kind == error:
                           0.0
                         else:
-                          1.0 - targetShooter.castTime / targetShooter.toCast.castTime(pair.stats)
+                          1.0 - spellShooter.castTime / spellShooter.toCast.castTime(pair.stats)
                       ),
                       node: (proc(pct: float): Node =
                         SpriteNode(
@@ -171,8 +170,8 @@ defineSystem:
     ]:
       if spellHudMenu.menu == nil:
         entities.forComponents entity, [
-          TargetShooter, targetShooter,
+          SpellShooter, spellShooter,
         ]:
-          spellHudMenu.menu = spellHudMenuNode(addr spellData, addr stats, targetShooter)
+          spellHudMenu.menu = spellHudMenuNode(addr spellData, addr stats, spellShooter)
           break
       spellHudMenu.menu.update(input)

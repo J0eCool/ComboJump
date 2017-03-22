@@ -1,7 +1,7 @@
 import
   component/[
     movement,
-    target_shooter,
+    spell_shooter,
   ],
   input,
   entity,
@@ -24,14 +24,14 @@ const
   timeToDropDown = 0.25
 
 defineSystem:
-  components = [PlatformerControl, TargetShooter, Movement]
+  components = [PlatformerControl, SpellShooter, Movement]
   proc updatePlatformerControl*(dt: float, input: InputManager) =
     let
       raw = vec(input.getAxis(Axis.horizontal),
                 input.getAxis(Axis.vertical))
       dir = vec(raw.x, 0.0)
       mult =
-        if targetShooter.isCasting:
+        if spellShooter.isCasting:
           castingMoveSpeedMultiplier
         else:
           1.0

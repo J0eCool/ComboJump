@@ -6,7 +6,6 @@ import
   component/[
     collider,
     sprite,
-    target_shooter,
     transform,
   ],
   menu/[

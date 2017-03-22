@@ -1,6 +1,5 @@
 import
   component/[
-    camera_target,
     collider,
     damage,
     enemy_attack,
@@ -18,8 +17,6 @@ import
     player_health,
     progress_bar,
     sprite,
-    targeting,
-    target_shooter,
     text,
     transform,
   ],

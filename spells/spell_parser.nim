@@ -8,7 +8,6 @@ import
     damage,
     mana,
     movement,
-    targeting,
     transform,
     sprite,
   ],
@@ -39,7 +38,7 @@ type
       index*: int
       message: string
     of success:
-      fire*: (proc(pos, dir: Vec, target: Target, stats: PlayerStats): Events)
+      fire*: (proc(pos, dir: Vec, stats: PlayerStats): Events)
 
 proc `==`*(a, b: SpellParse): bool =
   if a.kind != b.kind or a.valueStacks != b.valueStacks:
@@ -66,7 +65,6 @@ proc newBullet(pos, dir: Vec, speed: float,
                color: Color,
                despawnCallback: ShootProc,
                updateCallback: UpdateProc,
-               target: Target,
                damage: int): Entity =
   newEntity("Bullet", [
     Transform(pos: pos, size: vec(20)),
@@ -80,12 +78,11 @@ proc newBullet(pos, dir: Vec, speed: float,
       onUpdate: updateCallback,
       dir: dir,
       speed: speed,
-      target: target,
       randomNum: random(-1.0, 1.0),
     ),
   ])
 
-proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target, damage: float): Events =
+proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, damage: float): Events =
   let
     baseDamage = info.damage * damage
     despawnCallback =
@@ -93,7 +90,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target, damage
         nil
       else:
         proc(pos, vel: Vec): Events =
-          newBulletEvents(info.onDespawn[], pos, vel, target, baseDamage)
+          newBulletEvents(info.onDespawn[], pos, vel, baseDamage)
     updateCallback =
       if info.updateCallbacks == nil:
         nil
@@ -110,7 +107,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target, damage
     let
       speed = 900.0
       color = rgb(255, 255, 0)
-      bullet = newBullet(pos, dir, speed, color, despawnCallback, updateCallback, target, baseDamage.int)
+      bullet = newBullet(pos, dir, speed, color, despawnCallback, updateCallback, baseDamage.int)
     result = @[Event(kind: addEntity, entity: bullet)]
   of spread:
     result = @[]
@@ -126,7 +123,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target, damage
         p = if num == 0: 0.0 else: lerp(i / (num - 1), -1.0, 1.0)
         ang = totAng * p / 2.0
         curDir = dir.rotate(ang.degToRad)
-        bullet = newBullet(pos, curDir, speed, color, despawnCallback, updateCallback, target, baseDamage.int)
+        bullet = newBullet(pos, curDir, speed, color, despawnCallback, updateCallback, baseDamage.int)
         b = bullet.getComponent(Bullet)
       b.startPos = p
       result.add Event(kind: addEntity, entity: bullet)
@@ -143,7 +140,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target, damage
         p = if num == 0: 0.0 else: lerp(i / (num - 1), -1.0, 1.0)
         ang = baseAng + angPer * i.float
         curDir = dir.rotate(ang.degToRad)
-        bullet = newBullet(pos, curDir, speed, color, despawnCallback, updateCallback, target, baseDamage.int)
+        bullet = newBullet(pos, curDir, speed, color, despawnCallback, updateCallback, baseDamage.int)
         b = bullet.getComponent(Bullet)
       b.startPos = p
       result.add Event(kind: addEntity, entity: bullet)
@@ -151,7 +148,7 @@ proc newBulletEvents(info: ProjectileInfo, pos, dir: Vec, target: Target, damage
     let
       toShoot =
         proc(pos, vel: Vec): Events =
-          newBulletEvents(info.repeatInfo[], pos, vel, target, baseDamage)
+          newBulletEvents(info.repeatInfo[], pos, vel, baseDamage)
       num = info.numRepeats + 1
       repeater = newEntity("Repeater", [
         Transform(pos: pos),
@@ -196,8 +193,8 @@ proc parse*(spell: SpellDesc): SpellParse =
   expect(arg.kind == projectileInfo, "Spell must end with projectile")
 
   var parse = SpellParse(kind: success, spell: spell, valueStacks: valueStacks)
-  let fireProc = proc(pos, dir: Vec, target: Target, stats: PlayerStats): Events =
-    arg.info.newBulletEvents(pos, dir, target, parse.damage(stats))
+  let fireProc = proc(pos, dir: Vec, stats: PlayerStats): Events =
+    arg.info.newBulletEvents(pos, dir, parse.damage(stats))
   parse.fire = fireProc
   return parse
 

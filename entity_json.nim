@@ -35,9 +35,9 @@ macro declareToJSONMethods(): untyped =
     "PlayerHealth",
     "PlayerMana",
     "PlatformerControl",
+    "SpellShooter",
     "Sprite",
     "Targeting",
-    "TargetShooter",
     "Transform",
   ]
   result = newStmtList()

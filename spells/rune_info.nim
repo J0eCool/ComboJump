@@ -321,17 +321,19 @@ proc nearestRuneInfo(): RuneInfo =
     output: @[number],
     parse: (proc(valueStack: var ValueStack): RuneParse =
       let f = proc(e:Entity): Option[float] =
-        if e == nil:
-          return makeNone[float]()
-        let
-          b = e.getComponent(Bullet)
-          t = e.getComponent(Transform)
-        result = makeJust(0.0)
-        b.target.tryPos.bindAs targetPos:
-          let
-            diff = targetPos - t.pos
-            lv = min((1.0 - b.lifePct) / 0.4, 1.0)
-          result = makeJust(b.dir.cross(diff).sign.float * lv)
+        assert false, "TODO: Implement real Nearest rune"
+        makeNone[float]()
+        # if e == nil:
+        #   return makeNone[float]()
+        # let
+        #   b = e.getComponent(Bullet)
+        #   t = e.getComponent(Transform)
+        # result = makeJust(0.0)
+        # b.target.tryPos.bindAs targetPos:
+        #   let
+        #     diff = targetPos - t.pos
+        #     lv = min((1.0 - b.lifePct) / 0.4, 1.0)
+        #   result = makeJust(b.dir.cross(diff).sign.float * lv)
       valueStack.push(Value(kind: number, value: Number(get: f)))
     ),
   )
