@@ -19,6 +19,7 @@ type
     castTime*: float
     toCast*: SpellParse
     castIndex*: int
+    castInstantly*: bool
   SpellShooter* = ref SpellShooterObj
 
 const
@@ -28,10 +29,11 @@ defineComponent(SpellShooter, @[
   "castTime",
   "toCast",
   "castIndex",
+  "castInstantly",
 ])
 
 proc isCasting*(spellShooter: SpellShooter): bool =
-  spellShooter.castTime > 0.0
+  spellShooter.castTime > 0.0 and (not spellShooter.toCast.instantFire)
 
 defineSystem:
   components = [SpellShooter, Mana, Transform]
@@ -40,7 +42,8 @@ defineSystem:
     if spellShooter.toCast.kind != error:
       spellShooter.castTime -= dt
       if spellShooter.castTime <= 0.0:
-        result &= spellShooter.toCast.fire(transform.globalPos, dir, stats)
+        if not spellShooter.toCast.instantFire:
+          result &= spellShooter.toCast.fire(transform.globalPos, dir, stats)
         spellShooter.toCast = SpellParse()
         spellShooter.castIndex = -1
     else:
@@ -51,4 +54,6 @@ defineSystem:
             spellShooter.toCast = spell
             spellShooter.castTime = spell.castTime(stats)
             spellShooter.castIndex = i
+            if spell.instantFire:
+              result &= spell.fire(transform.globalPos, dir, stats)
             break

@@ -33,6 +33,7 @@ type
   SpellParse* = object
     spell: SpellDesc
     valueStacks*: seq[seq[ValueKind]]
+    instantFire*: bool
     case kind*: SpellParseKind
     of error:
       index*: int
@@ -57,6 +58,8 @@ proc manaCost*(spell: SpellParse): int =
 proc castTime*(spell: SpellParse, stats: PlayerStats): float =
   result = 0.325 + 0.065 * (spell.valueStacks.len - 1).float
   result /= stats.castSpeed
+  if spell.instantFire:
+    result /= 2.0
 
 proc damage*(spell: SpellParse, stats: PlayerStats): float =
   (5 + 0.25 * (spell.spell.len - 1).float) * stats.damage
@@ -192,7 +195,12 @@ proc parse*(spell: SpellDesc): SpellParse =
   let arg = valueStack.pop
   expect(arg.kind == projectileInfo, "Spell must end with projectile")
 
-  var parse = SpellParse(kind: success, spell: spell, valueStacks: valueStacks)
+  var parse = SpellParse(
+    kind: success,
+    spell: spell,
+    valueStacks: valueStacks,
+    instantFire: true,
+  )
   let fireProc = proc(pos, dir: Vec, stats: PlayerStats): Events =
     arg.info.newBulletEvents(pos, dir, parse.damage(stats))
   parse.fire = fireProc
