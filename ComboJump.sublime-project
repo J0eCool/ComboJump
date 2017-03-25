@@ -10,6 +10,13 @@
             "--out:out/mapgen", "mapgen.nim"],
         "working_dir": "$project_path"
     }, {
+        "name": "Spell Creator Prototype",
+        "cmd": ["nim", "c", "-r",
+            "-d:debug", "--parallelBuild:0",
+            "--out:out/spell_creator_prototype",
+            "spell_creator_prototype.nim"],
+        "working_dir": "$project_path"
+    }, {
         "name": "NaNo Game - Debug",
         "env": {
             "NIMTEST_OUTPUT_LVL": "PRINT_FAILURES"
