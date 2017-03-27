@@ -172,6 +172,7 @@ type List*[T] = ref object of Node
   spacing*: Vec
   width*: int
   horizontal*: bool
+  ignoreSpacing*: bool
   generatedChildren: seq[Node]
   cachedItems: seq[T]
 
@@ -207,7 +208,11 @@ proc generateChildren[T](list: List[T]) =
         s = n.size + list.spacing
         x = indexOffset(i, list.width, list.horizontal)
         y = indexOffset(i, list.width, not list.horizontal)
-      n.pos = (vec(x, y) + vec(0.5)) * s - list.size / 2
+      n.pos =
+        if list.ignoreSpacing:
+          n.pos
+        else:
+          n.pos + (vec(x, y) + vec(0.5)) * s - list.size / 2
       n.parent = list
       list.generatedChildren.add n
 
