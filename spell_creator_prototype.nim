@@ -1,4 +1,4 @@
-import sdl2
+import sdl2, sequtils, tables
 
 import
   component/[
@@ -42,6 +42,9 @@ type
 
   RuneTile = object
     dirs: array[TileDir, DirSubData]
+
+  Slot = tuple[x: int, y: int]
+  RuneGrid = Table[Slot, RuneTile]
 
   SpellCreatorPrototype = ref object of Game
     menu: Node
@@ -147,6 +150,16 @@ proc runeTileNode(tile: RuneTile, pos: Vec): Node =
     ],
   )
 
+proc runeGridNode(grid: RuneGrid): Node =
+  List[Slot](
+    pos: vec(600, 450),
+    ignoreSpacing: true,
+    items: (proc(): seq[Slot] = toSeq(grid.keys())),
+    listNodes: (proc(slot: Slot): Node =
+      runeTileNode(grid[slot], vec(160 * slot.x, 80 * slot.y) / 2),
+    ),
+  )
+
 proc newSpellCreatorPrototype(screenSize: Vec): SpellCreatorPrototype =
   new result
   result.camera.screenSize = screenSize
@@ -164,6 +177,7 @@ method loadEntities(spellCreator: SpellCreatorPrototype) =
         dirUL: (kind, greenCol),
       ],
     )
+
   proc randomDir(): DirKind =
     var dirs = newSeq[DirKind]()
     for dir in DirKind:
@@ -182,17 +196,20 @@ method loadEntities(spellCreator: SpellCreatorPrototype) =
         dirUL: (randomDir(), randomCol()),
       ],
     )
-  var randTiles = newSeq[Node]()
-  for i in 0..5:
-    randTiles.add runeTileNode(randomTile(), vec(200 * i - 300, 200))
-  spellCreator.menu = Node(
-    pos: vec(400, 400),
-    children: @[
-      runeTileNode(tileWithAll(baseDir), vec(0, 0)),
-      runeTileNode(tileWithAll(slotDir), vec(200, 0)),
-      runeTileNode(tileWithAll(arrowDir), vec(400, 0)),
-    ] & randTiles,
-  )
+
+  var grid: RuneGrid = initTable[Slot, RuneTile]()
+  let
+    w = 5
+    h = 9
+  for i in 0..<w:
+    for j in 0..<h:
+      let
+        dx = if j mod 2 == 0: 0 else: 1
+        x = 2 * (i - w div 2) + dx
+        y = j - h div 2
+      if randomBool(0.5):
+        grid[(x, y)] = randomTile()
+  spellCreator.menu = runeGridNode(grid)
 
 method update*(spellCreator: SpellCreatorPrototype, dt: float) =
   menu.update(spellCreator.menu, spellCreator.input)
