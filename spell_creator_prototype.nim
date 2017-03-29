@@ -32,10 +32,16 @@ type
     slotDir
     arrowDir
 
-  RuneTile = object
-    dirs: array[TileDir, DirKind]
+  DirColor = enum
+    noneCol
+    redCol
+    greenCol
 
-  DirData = tuple[dir: TileDir, kind: DirKind]
+  DirSubData = tuple[kind: DirKind, color: DirColor]
+  DirData = tuple[dir: TileDir, kind: DirKind, color: DirColor]
+
+  RuneTile = object
+    dirs: array[TileDir, DirSubData]
 
   SpellCreatorPrototype = ref object of Game
     menu: Node
@@ -43,7 +49,8 @@ type
 proc dirData(tile: RuneTile): seq[DirData] =
   result = @[]
   for dir in TileDir:
-    result.add((dir, tile.dirs[dir]))
+    let sub = tile.dirs[dir]
+    result.add((dir, sub.kind, sub.color))
 
 proc offset(dir: TileDir): Vec =
   const
@@ -81,14 +88,23 @@ proc textureSuffix(dir: TileDir): string =
   of dirUL:
     "UL.png"
 
-proc textureBase(kind: DirKind): string =
-  case kind
+proc texture(color: DirColor): string =
+  case color
+  of noneCol:
+    "ERROR"
+  of redCol:
+    "Red"
+  of greenCol:
+    "Green"
+
+proc textureBase(sub: DirSubData): string =
+  case sub.kind
   of baseDir:
     "Base"
   of slotDir:
-    "SlotRed"
+    "Slot" & sub.color.texture
   of arrowDir:
-    "ArrowRed"
+    "Arrow" & sub.color.texture
 
 proc size(dir: TileDir): Vec =
   case dir
@@ -97,8 +113,11 @@ proc size(dir: TileDir): Vec =
   of dirUR, dirDR, dirDL, dirUL:
     vec(28, 28)
 
+proc subData(data: DirData): DirSubData =
+  (data.kind, data.color)
+
 proc textureName(data: DirData): string =
-  "runes/tiles/" & data.kind.textureBase & data.dir.textureSuffix
+  "runes/tiles/" & data.subData.textureBase & data.dir.textureSuffix
 
 proc runeTileNode(tile: RuneTile, pos: Vec): Node =
   Node(
@@ -137,12 +156,12 @@ method loadEntities(spellCreator: SpellCreatorPrototype) =
   proc tileWithAll(kind: DirKind): RuneTile =
     RuneTile(
       dirs: [
-        dirU: kind,
-        dirUR: kind,
-        dirDR: kind,
-        dirD: kind,
-        dirDL: kind,
-        dirUL: kind,
+        dirU: (kind, redCol),
+        dirUR: (kind, greenCol),
+        dirDR: (kind, redCol),
+        dirD: (kind, greenCol),
+        dirDL: (kind, redCol),
+        dirUL: (kind, greenCol),
       ],
     )
   proc randomDir(): DirKind =
@@ -150,15 +169,17 @@ method loadEntities(spellCreator: SpellCreatorPrototype) =
     for dir in DirKind:
       dirs.add dir
     dirs.random
+  proc randomCol(): DirColor =
+    @[redCol, greenCol].random
   proc randomTile(): RuneTile =
     RuneTile(
       dirs: [
-        dirU: randomDir(),
-        dirUR: randomDir(),
-        dirDR: randomDir(),
-        dirD: randomDir(),
-        dirDL: randomDir(),
-        dirUL: randomDir(),
+        dirU: (randomDir(), randomCol()),
+        dirUR: (randomDir(), randomCol()),
+        dirDR: (randomDir(), randomCol()),
+        dirD: (randomDir(), randomCol()),
+        dirDL: (randomDir(), randomCol()),
+        dirUL: (randomDir(), randomCol()),
       ],
     )
   var randTiles = newSeq[Node]()
