@@ -14,6 +14,7 @@ import
   game,
   game_system,
   menu,
+  option,
   program,
   util,
   vec
@@ -45,7 +46,9 @@ type
     rotation: int
 
   Slot = tuple[x: int, y: int]
-  RuneGrid = Table[Slot, RuneTile]
+  RuneGrid = object
+    tiles: Table[Slot, RuneTile]
+    w, h: int
 
   SpellCreatorPrototype = ref object of Game
     menu: Node
@@ -158,24 +161,64 @@ proc runeTileNode(tile: RuneTile, pos: Vec, onClick: proc()): Node =
     ],
   )
 
-proc runeGridNode(grid: ptr RuneGrid): Node =
-  type Pair = tuple[slot: Slot, tile: RuneTile]
-  List[Pair](
-    pos: vec(600, 450),
-    ignoreSpacing: true,
-    items: (proc(): seq[Pair] =
-      result = @[]
-      for k, v in grid[]:
-        result.add((k, v))
-    ),
-    listNodes: (proc(pair: Pair): Node =
+proc newGrid(w, h: int): RuneGrid =
+  RuneGrid(
+    w: w,
+    h: h,
+    tiles: initTable[Slot, RuneTile](),
+  )
+
+iterator slots(grid: RuneGrid): Slot =
+  for i in 0..<grid.w:
+    for j in 0..<grid.h:
       let
-        slot = pair.slot
-        tile = pair.tile
-      proc onClick() =
-        grid[][slot].rotation += 1
-      runeTileNode(tile, vec(160 * slot.x, 80 * slot.y) / 2, onClick),
-    ),
+        dx = if j mod 2 == 0: 0 else: 1
+        x = 2 * (i - grid.w div 2) + dx
+        y = j - grid.h div 2
+      yield (x, y)
+
+proc runeGridNode(grid: ptr RuneGrid): Node =
+  type Pair = tuple[slot: Slot, tileOpt: Option[RuneTile]]
+  proc gridItems(): seq[Pair] =
+    result = @[]
+    for slot in grid[].slots:
+      let tileOpt =
+        if grid.tiles.hasKey(slot):
+          makeJust(grid.tiles[slot])
+        else:
+          makeNone[RuneTile]()
+      result.add((slot, tileOpt))
+  proc pos(slot: Slot): Vec =
+    vec(160 * slot.x, 80 * slot.y) / 2
+  Node(
+    pos: vec(600, 450),
+    children: @[
+      List[Pair](
+        ignoreSpacing: true,
+        items: gridItems,
+        listNodes: (proc(pair: Pair): Node =
+          SpriteNode(
+            pos: pair.slot.pos,
+            size: vec(124, 84),
+            textureName: "runes/tiles/HexSpace.png",
+          )
+        ),
+      ).Node,
+      List[Pair](
+        ignoreSpacing: true,
+        items: gridItems,
+        listNodes: (proc(pair: Pair): Node =
+          let
+            slot = pair.slot
+            tileOpt = pair.tileOpt
+          proc onClick() =
+            grid.tiles[slot].rotation += 1
+          bindOr(tileOpt, tile,
+                 Node(),
+                 runeTileNode(tile, slot.pos, onClick))
+        ),
+      ).Node,
+    ],
   )
 
 proc newSpellCreatorPrototype(screenSize: Vec): SpellCreatorPrototype =
@@ -215,18 +258,10 @@ method loadEntities(spellCreator: SpellCreatorPrototype) =
       ],
     )
 
-  spellCreator.grid = initTable[Slot, RuneTile]()
-  let
-    w = 5
-    h = 9
-  for i in 0..<w:
-    for j in 0..<h:
-      let
-        dx = if j mod 2 == 0: 0 else: 1
-        x = 2 * (i - w div 2) + dx
-        y = j - h div 2
-      if randomBool(0.5):
-        spellCreator.grid[(x, y)] = randomTile()
+  spellCreator.grid = newGrid(5, 9)
+  for slot in spellCreator.grid.slots:
+    if randomBool(0.5):
+      spellCreator.grid.tiles[slot] = randomTile()
   spellCreator.menu = runeGridNode(addr spellCreator.grid)
 
 method update*(spellCreator: SpellCreatorPrototype, dt: float) =

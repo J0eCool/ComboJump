@@ -25,12 +25,27 @@ template bindAs*(opt, name: expr, body: stmt): stmt {.immediate.} =
     let name = opt.value
     body
 
+# TODO: this only works when called like `bindOr(a, b, c, d)`
+template bindOr*(opt: typed, name, orBody, body: untyped): untyped =
+  case opt.kind
+  of none:
+    orBody
+  of just:
+    let name = opt.value
+    body
+
 proc isNone*[T](opt: Option[T]): bool =
   opt.kind == none
 
-proc get*[T: ref object](opt: Option[T]): T =
+proc getOr*[T](opt: Option[T], orVal: T): T =
   case opt.kind
   of none:
-    nil
+    orVal
   of just:
     opt.value
+
+proc get*[T: ref object](opt: Option[T]): T =
+  getOr(opt, nil)
+
+proc `==`*[T](a, b: Option[T]): bool =
+  a.kind == b.kind and (a.kind == none or a.value == b.value)
