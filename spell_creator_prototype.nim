@@ -5,6 +5,10 @@ import
     sprite,
     transform,
   ],
+  spells/[
+    runes,
+    rune_info,
+  ],
   system/[
     render,
   ],
@@ -33,16 +37,13 @@ type
     slotDir
     arrowDir
 
-  DirColor = enum
-    noneCol
-    redCol
-    greenCol
+  DirData = tuple[dir: TileDir, kind: DirKind, value: ValueKind]
 
-  DirSubData = tuple[kind: DirKind, color: DirColor]
-  DirData = tuple[dir: TileDir, kind: DirKind, color: DirColor]
-
+  RuneTileInfo = object
+    dirs: seq[DirData]
+    rune: Rune
   RuneTile = object
-    dirs: array[TileDir, DirSubData]
+    info: RuneTileInfo
     rotation: int
 
   Slot = tuple[x: int, y: int]
@@ -58,11 +59,14 @@ proc dirData(tile: RuneTile): seq[DirData] =
   result = @[]
   for dir in TileDir:
     let
-      sub = tile.dirs[dir]
       rotatedNum = ord(dir) + tile.rotation
       numDirs = ord(high(TileDir)) + 1
       rot = TileDir(rotatedNum mod numDirs)
-    result.add((rot, sub.kind, sub.color))
+    result.add((rot, baseDir, number))
+    for data in tile.info.dirs:
+      if data.dir == dir:
+        result[result.len - 1].kind = data.kind
+        result[result.len - 1].value = data.value
 
 proc offset(dir: TileDir): Vec =
   const
@@ -100,23 +104,23 @@ proc textureSuffix(dir: TileDir): string =
   of dirUL:
     "UL.png"
 
-proc texture(color: DirColor): string =
-  case color
-  of noneCol:
-    "ERROR"
-  of redCol:
+proc texture(kind: ValueKind): string =
+  case kind
+  of number:
     "Red"
-  of greenCol:
+  of projectileInfo:
     "Green"
 
-proc textureBase(sub: DirSubData): string =
-  case sub.kind
-  of baseDir:
-    "Base"
-  of slotDir:
-    "Slot" & sub.color.texture
-  of arrowDir:
-    "Arrow" & sub.color.texture
+proc textureName(data: DirData): string =
+  let baseName =
+    case data.kind
+    of baseDir:
+      "Base"
+    of slotDir:
+      "Slot" & data.value.texture
+    of arrowDir:
+      "Arrow" & data.value.texture
+  "runes/tiles/" & baseName & data.dir.textureSuffix
 
 proc size(dir: TileDir): Vec =
   case dir
@@ -124,12 +128,6 @@ proc size(dir: TileDir): Vec =
     vec(36, 28)
   of dirUR, dirDR, dirDL, dirUL:
     vec(28, 28)
-
-proc subData(data: DirData): DirSubData =
-  (data.kind, data.color)
-
-proc textureName(data: DirData): string =
-  "runes/tiles/" & data.subData.textureBase & data.dir.textureSuffix
 
 proc runeTileNode(tile: RuneTile, pos: Vec, onClick: proc()): Node =
   Node(
@@ -145,7 +143,7 @@ proc runeTileNode(tile: RuneTile, pos: Vec, onClick: proc()): Node =
       ),
       SpriteNode(
         size: vec(48, 48),
-        textureName: "runes/Burst.png",
+        textureName: tile.info.rune.textureName,
       ),
       List[DirData](
         ignoreSpacing: true,
@@ -226,41 +224,96 @@ proc newSpellCreatorPrototype(screenSize: Vec): SpellCreatorPrototype =
   result.camera.screenSize = screenSize
   result.title = "Spell Creator (prototype)"
 
+proc tileInfo(rune: Rune): RuneTileInfo =
+  result = RuneTileInfo(rune: rune)
+  case rune
+  of num:
+    result.dirs = @[
+      (dirD, arrowDir, number),
+    ]
+  of count:
+    result.dirs = @[
+      (dirD, arrowDir, number),
+      (dirU, slotDir, number),
+    ]
+  of mult:
+    result.dirs = @[
+      (dirD, arrowDir, number),
+      (dirUL, slotDir, number),
+      (dirUR, slotDir, number),
+    ]
+  of createSingle:
+    result.dirs = @[
+      (dirD, arrowDir, projectileInfo),
+    ]
+  of createSpread:
+    result.dirs = @[
+      (dirD, arrowDir, projectileInfo),
+      (dirU, slotDir, number),
+    ]
+  of createBurst:
+    result.dirs = @[
+      (dirD, arrowDir, projectileInfo),
+      (dirUL, slotDir, number),
+    ]
+
+  of createRepeat:
+    result.dirs = @[
+      (dirD, arrowDir, projectileInfo),
+      (dirDR, slotDir, number),
+      (dirUL, slotDir, projectileInfo),
+    ]
+  of despawn:
+    result.dirs = @[
+      (dirD, arrowDir, projectileInfo),
+      (dirUR, slotDir, projectileInfo),
+    ]
+  of wave:
+    result.dirs = @[
+      (dirD, arrowDir, number),
+    ]
+  of turn:
+    result.dirs = @[
+      (dirD, arrowDir, projectileInfo),
+      (dirDL, slotDir, projectileInfo),
+      (dirUL, slotDir, number),
+    ]
+  of grow:
+    result.dirs = @[
+      (dirD, arrowDir, projectileInfo),
+      (dirU, slotDir, projectileInfo),
+      (dirUL, slotDir, number),
+    ]
+  # TODO: non-placeholder below this line
+  of moveUp:
+    result.dirs = @[
+      (dirD, arrowDir, number),
+    ]
+  of moveSide:
+    result.dirs = @[
+      (dirD, arrowDir, number),
+    ]
+  of nearest:
+    result.dirs = @[
+      (dirD, arrowDir, number),
+    ]
+  of startPos:
+    result.dirs = @[
+      (dirD, arrowDir, number),
+    ]
+  of random:
+    result.dirs = @[
+      (dirD, arrowDir, number),
+    ]
+
 method loadEntities(spellCreator: SpellCreatorPrototype) =
-  proc tileWithAll(kind: DirKind): RuneTile =
-    RuneTile(
-      dirs: [
-        dirU: (kind, redCol),
-        dirUR: (kind, greenCol),
-        dirDR: (kind, redCol),
-        dirD: (kind, greenCol),
-        dirDL: (kind, redCol),
-        dirUL: (kind, greenCol),
-      ],
-    )
-
-  proc randomDir(): DirKind =
-    var dirs = newSeq[DirKind]()
-    for dir in DirKind:
-      dirs.add dir
-    dirs.random
-  proc randomCol(): DirColor =
-    @[redCol, greenCol].random
   proc randomTile(): RuneTile =
-    RuneTile(
-      dirs: [
-        dirU: (randomDir(), randomCol()),
-        dirUR: (randomDir(), randomCol()),
-        dirDR: (randomDir(), randomCol()),
-        dirD: (randomDir(), randomCol()),
-        dirDL: (randomDir(), randomCol()),
-        dirUL: (randomDir(), randomCol()),
-      ],
-    )
-
+    const possibleRunes = @[num, count, mult, createSingle, createSpread, createBurst]
+    let rune = random(possibleRunes)
+    RuneTile(info: rune.tileInfo)
   spellCreator.grid = newGrid(5, 9)
   for slot in spellCreator.grid.slots:
-    if randomBool(0.5):
+    if randomBool(0.75):
       spellCreator.grid.tiles[slot] = randomTile()
   spellCreator.menu = runeGridNode(addr spellCreator.grid)
 
