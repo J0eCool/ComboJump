@@ -13,8 +13,6 @@ import
     render,
   ],
   camera,
-  color,
-  drawing,
   entity,
   event,
   game,
@@ -26,6 +24,8 @@ import
   rect,
   util,
   vec
+
+const runeInputs = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
 
 type
   TileDir = enum
@@ -58,6 +58,14 @@ type
   SpellCreatorPrototype = ref object of Game
     menu: Node
     grid: RuneGrid
+
+type InputEventHandler = ref object of Node
+  handler*: proc(event: InputEvent)
+
+method updateSelf(node: InputEventHandler, input: InputManager) =
+  for event in input.getEvents:
+    if node.contains(event.pos):
+      node.handler(event)
 
 proc dirData(tile: RuneTile): seq[DirData] =
   result = @[]
@@ -180,62 +188,10 @@ iterator slots(grid: RuneGrid): Slot =
       yield (x, y)
 
 proc slotToPos(grid: RuneGrid, slot: Slot): Vec =
-  vec(80 * slot.x + 600, 40 * slot.y + 450)
-
-proc posToSlot(grid: RuneGrid, pos: Vec): Slot =
-  # let p = pos - vec(600, 450)
-  # var closest = (2 * grid.w, 2 * grid.h)
-  # echo "Grid slots:"
-  # for slot in grid.slots:
-  #   dprint "  ", slot, grid.slotToPos(slot)
-
-  result =
-    ( int((pos.x - 600) / 80)
-    , int((pos.y - 450) / 40)
-    )
-  if result.x mod 2 == 1:
-    result.x -= 1
-  if result.y mod 2 == 0:
-    result.x += 1
-
-proc runeGridNode(grid: ptr RuneGrid): Node =
-  type Pair = tuple[slot: Slot, tileOpt: Option[RuneTile]]
-  proc gridItems(): seq[Pair] =
-    result = @[]
-    for slot in grid[].slots:
-      let tileOpt =
-        if grid.tiles.hasKey(slot):
-          makeJust(grid.tiles[slot])
-        else:
-          makeNone[RuneTile]()
-      result.add((slot, tileOpt))
-  proc gridList(nodes: (proc(pair: Pair): Node)): Node =
-    List[Pair](
-      ignoreSpacing: true,
-      items: gridItems,
-      listNodes: nodes,
-    )
-  Node(
-    children: @[
-      gridList(proc(pair: Pair): Node =
-        SpriteNode(
-          pos: slotToPos(grid[], pair.slot),
-          size: vec(124, 84),
-          textureName: "runes/tiles/HexSpace.png",
-        )
-      ),
-      gridList(proc(pair: Pair): Node =
-        let
-          slot = pair.slot
-          tileOpt = pair.tileOpt
-        proc onClick() =
-          grid.tiles[slot].rotation += 1
-        bindOr(tileOpt, tile,
-               Node(),
-               runeTileNode(tile, slotToPos(grid[], slot), onClick))
-      ),
-    ],
-  )
+  const
+    offset = vec(600, 450)
+    size = vec(80, 40)
+  offset + size * vec(slot.x, slot.y)
 
 proc newSpellCreatorPrototype(screenSize: Vec): SpellCreatorPrototype =
   new result
@@ -324,49 +280,65 @@ proc tileInfo(rune: Rune): RuneTileInfo =
       (dirD, arrowDir, number),
     ]
 
-const inputs = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
-
-proc placeRune(grid: var RuneGrid, rune: Rune, pos: Vec) =
-  let slot = grid.posToSlot(pos)
-  grid.tiles[slot] = RuneTile(info: rune.tileInfo)
-
-proc handleInput(grid: var RuneGrid, input: InputManager) =
-  for rune in Rune:
-    let runeIdx = ord(rune)
-    if runeIdx < inputs.len:
-      if input.isPressed(inputs[runeIdx]):
-        grid.placeRune(rune, input.mousePos)
+proc runeGridNode(grid: ptr RuneGrid): Node =
+  type Pair = tuple[slot: Slot, tileOpt: Option[RuneTile]]
+  proc gridItems(): seq[Pair] =
+    result = @[]
+    for slot in grid[].slots:
+      let tileOpt =
+        if grid.tiles.hasKey(slot):
+          makeJust(grid.tiles[slot])
+        else:
+          makeNone[RuneTile]()
+      result.add((slot, tileOpt))
+  proc gridList(nodes: (proc(pair: Pair): Node)): Node =
+    List[Pair](
+      ignoreSpacing: true,
+      items: gridItems,
+      listNodes: nodes,
+    )
+  Node(
+    children: @[
+      gridList(proc(pair: Pair): Node =
+        let slot = pair.slot
+        proc eventHandler(event: InputEvent) =
+          if event.state == pressed:
+            let inputIdx = runeInputs.find(event.kind)
+            if inputIdx >= 0 and inputIdx < ord(high(Rune)):
+              let rune = Rune(inputIdx)
+              grid.tiles[slot] = RuneTile(info: rune.tileInfo)
+            elif event.kind == backspace or event.kind == Input.delete:
+              grid.tiles.del slot
+        SpriteNode(
+          pos: grid[].slotToPos(slot),
+          size: vec(124, 84),
+          textureName: "runes/tiles/HexSpace.png",
+          children: newSeqOf[Node](
+            InputEventHandler(
+              size: vec(56, 60),
+              handler: eventHandler,
+            )
+          ),
+        )
+      ),
+      gridList(proc(pair: Pair): Node =
+        let
+          slot = pair.slot
+          tileOpt = pair.tileOpt
+        proc onClick() =
+          grid.tiles[slot].rotation += 1
+        bindOr(tileOpt, tile,
+               Node(),
+               runeTileNode(tile, grid[].slotToPos(slot), onClick))
+      ),
+    ],
+  )
 
 method loadEntities(spellCreator: SpellCreatorPrototype) =
-  proc randomTile(): RuneTile =
-    const possibleRunes = @[
-      num,
-      count,
-      mult,
-      createSingle,
-      createSpread,
-      createBurst,
-      createRepeat,
-      despawn,
-      wave,
-      turn,
-      grow,
-      # moveUp,
-      # moveSide,
-      # nearest,
-      # startPos,
-      # random,
-    ]
-    let rune = random(possibleRunes)
-    RuneTile(info: rune.tileInfo)
   spellCreator.grid = newGrid(5, 9)
-  for slot in spellCreator.grid.slots:
-    if randomBool(0.75):
-      spellCreator.grid.tiles[slot] = randomTile()
   spellCreator.menu = runeGridNode(addr spellCreator.grid)
 
 method update*(spellCreator: SpellCreatorPrototype, dt: float) =
-  handleInput(spellCreator.grid, spellCreator.input)
   menu.update(spellCreator.menu, spellCreator.input)
 
   if spellCreator.input.isPressed(Input.menu):
@@ -377,12 +349,6 @@ method draw*(renderer: RendererPtr, spellCreator: SpellCreatorPrototype) =
 
   renderer.renderSystem(spellCreator.entities, spellCreator.camera)
   renderer.draw(spellCreator.menu, spellCreator.resources)
-
-  let
-    grid = spellCreator.grid
-    gridPos = grid.slotToPos(grid.posToSlot(spellCreator.input.mousePos))
-    size = vec(50, 50)
-  renderer.fillRect(rect.rect(gridPos, size), rgb(0, 0, 255))
 
 when isMainModule:
   let screenSize = vec(1200, 900)

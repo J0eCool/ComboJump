@@ -48,6 +48,11 @@ proc update*(node: Node, input: InputManager) =
   for c in node.children:
     c.update(input)
 
+proc rect*(node: Node): Rect =
+  rect.rect(node.globalPos, node.size)
+
+proc contains*(node: Node, pos: Vec): bool =
+  node.rect.contains(pos)
 
 # ------
 
@@ -126,22 +131,20 @@ type Button* = ref object of Node
   isKeyHeld: bool
 
 method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceManager) =
-  let
-    r = rect.rect(button.globalPos, button.size)
-    c =
-      if (button.isMouseOver and button.isHeld) or button.isKeyHeld:
-        rgb(198, 198, 108)
-      elif button.isMouseOver:
-        rgb(172, 172, 134)
-      else:
-        rgb(160, 160, 160)
-  renderer.fillRect(r, c)
+  let c =
+    if (button.isMouseOver and button.isHeld) or button.isKeyHeld:
+      rgb(198, 198, 108)
+    elif button.isMouseOver:
+      rgb(172, 172, 134)
+    else:
+      rgb(160, 160, 160)
+  renderer.fillRect(button.rect, c)
 
 method updateSelf(button: Button, input: InputManager) =
   if button.onClick == nil:
     return
 
-  let r = rect.rect(button.globalPos, button.size)
+  let r = button.rect
   input.clickPressedPos.bindAs click:
     if r.contains click:
       button.isHeld = true

@@ -46,14 +46,19 @@ type
 
 
   InputState* = enum
-    inactive,
-    pressed,
-    held,
-    released,
+    inactive
+    pressed
+    held
+    released
 
   Axis* = enum
     horizontal
     vertical
+
+  InputEvent* = object
+    kind*: Input
+    state*: InputState
+    pos*: Vec
 
   InputManager* = object
     inputs: array[Input, InputState]
@@ -61,6 +66,7 @@ type
     mousePos: Vec
     mouseState: InputState
     mouseWheel: int
+    bufferedEvents: seq[InputEvent]
 
   InputPair* = tuple[input: Input, state: InputState]
 
@@ -115,6 +121,8 @@ proc keyToInput(key: Scancode): Input =
 
 proc isHeld*(manager: InputManager, key: Input): bool
 proc update*(manager: var InputManager) =
+  manager.bufferedEvents = @[]
+
   template updateInput(i) =
     if i == pressed:
       i = held
@@ -139,6 +147,11 @@ proc update*(manager: var InputManager) =
     let input = keyToInput e.key.keysym.scancode
     if not (v == pressed and manager.inputs[input] == held):
       manager.inputs[input] = v
+      manager.bufferedEvents.add InputEvent(
+        kind: input,
+        state: v,
+        pos: manager.mousePos,
+      )
   var event = defaultEvent
   while pollEvent(event):
     case event.kind
@@ -191,3 +204,6 @@ proc mouseWheel*(manager: InputManager): int =
 
 proc getAxis*(manager: InputManager, axis: Axis): int =
   manager.axes[axis]
+
+proc getEvents*(manager: InputManager): seq[InputEvent] =
+  manager.bufferedEvents
