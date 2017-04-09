@@ -13,13 +13,17 @@ import
     render,
   ],
   camera,
+  color,
+  drawing,
   entity,
   event,
   game,
   game_system,
+  input,
   menu,
   option,
   program,
+  rect,
   util,
   vec
 
@@ -175,6 +179,25 @@ iterator slots(grid: RuneGrid): Slot =
         y = j - grid.h div 2
       yield (x, y)
 
+proc slotToPos(grid: RuneGrid, slot: Slot): Vec =
+  vec(80 * slot.x + 600, 40 * slot.y + 450)
+
+proc posToSlot(grid: RuneGrid, pos: Vec): Slot =
+  # let p = pos - vec(600, 450)
+  # var closest = (2 * grid.w, 2 * grid.h)
+  # echo "Grid slots:"
+  # for slot in grid.slots:
+  #   dprint "  ", slot, grid.slotToPos(slot)
+
+  result =
+    ( int((pos.x - 600) / 80)
+    , int((pos.y - 450) / 40)
+    )
+  if result.x mod 2 == 1:
+    result.x -= 1
+  if result.y mod 2 == 0:
+    result.x += 1
+
 proc runeGridNode(grid: ptr RuneGrid): Node =
   type Pair = tuple[slot: Slot, tileOpt: Option[RuneTile]]
   proc gridItems(): seq[Pair] =
@@ -186,36 +209,31 @@ proc runeGridNode(grid: ptr RuneGrid): Node =
         else:
           makeNone[RuneTile]()
       result.add((slot, tileOpt))
-  proc pos(slot: Slot): Vec =
-    vec(160 * slot.x, 80 * slot.y) / 2
+  proc gridList(nodes: (proc(pair: Pair): Node)): Node =
+    List[Pair](
+      ignoreSpacing: true,
+      items: gridItems,
+      listNodes: nodes,
+    )
   Node(
-    pos: vec(600, 450),
     children: @[
-      List[Pair](
-        ignoreSpacing: true,
-        items: gridItems,
-        listNodes: (proc(pair: Pair): Node =
-          SpriteNode(
-            pos: pair.slot.pos,
-            size: vec(124, 84),
-            textureName: "runes/tiles/HexSpace.png",
-          )
-        ),
-      ).Node,
-      List[Pair](
-        ignoreSpacing: true,
-        items: gridItems,
-        listNodes: (proc(pair: Pair): Node =
-          let
-            slot = pair.slot
-            tileOpt = pair.tileOpt
-          proc onClick() =
-            grid.tiles[slot].rotation += 1
-          bindOr(tileOpt, tile,
-                 Node(),
-                 runeTileNode(tile, slot.pos, onClick))
-        ),
-      ).Node,
+      gridList(proc(pair: Pair): Node =
+        SpriteNode(
+          pos: slotToPos(grid[], pair.slot),
+          size: vec(124, 84),
+          textureName: "runes/tiles/HexSpace.png",
+        )
+      ),
+      gridList(proc(pair: Pair): Node =
+        let
+          slot = pair.slot
+          tileOpt = pair.tileOpt
+        proc onClick() =
+          grid.tiles[slot].rotation += 1
+        bindOr(tileOpt, tile,
+               Node(),
+               runeTileNode(tile, slotToPos(grid[], slot), onClick))
+      ),
     ],
   )
 
@@ -306,9 +324,39 @@ proc tileInfo(rune: Rune): RuneTileInfo =
       (dirD, arrowDir, number),
     ]
 
+const inputs = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n0, z, x, c, v, b, n, m]
+
+proc placeRune(grid: var RuneGrid, rune: Rune, pos: Vec) =
+  let slot = grid.posToSlot(pos)
+  grid.tiles[slot] = RuneTile(info: rune.tileInfo)
+
+proc handleInput(grid: var RuneGrid, input: InputManager) =
+  for rune in Rune:
+    let runeIdx = ord(rune)
+    if runeIdx < inputs.len:
+      if input.isPressed(inputs[runeIdx]):
+        grid.placeRune(rune, input.mousePos)
+
 method loadEntities(spellCreator: SpellCreatorPrototype) =
   proc randomTile(): RuneTile =
-    const possibleRunes = @[num, count, mult, createSingle, createSpread, createBurst]
+    const possibleRunes = @[
+      num,
+      count,
+      mult,
+      createSingle,
+      createSpread,
+      createBurst,
+      createRepeat,
+      despawn,
+      wave,
+      turn,
+      grow,
+      # moveUp,
+      # moveSide,
+      # nearest,
+      # startPos,
+      # random,
+    ]
     let rune = random(possibleRunes)
     RuneTile(info: rune.tileInfo)
   spellCreator.grid = newGrid(5, 9)
@@ -318,13 +366,23 @@ method loadEntities(spellCreator: SpellCreatorPrototype) =
   spellCreator.menu = runeGridNode(addr spellCreator.grid)
 
 method update*(spellCreator: SpellCreatorPrototype, dt: float) =
+  handleInput(spellCreator.grid, spellCreator.input)
   menu.update(spellCreator.menu, spellCreator.input)
+
+  if spellCreator.input.isPressed(Input.menu):
+    spellCreator.shouldExit = true
 
 method draw*(renderer: RendererPtr, spellCreator: SpellCreatorPrototype) =
   renderer.drawGame(spellCreator)
 
   renderer.renderSystem(spellCreator.entities, spellCreator.camera)
   renderer.draw(spellCreator.menu, spellCreator.resources)
+
+  let
+    grid = spellCreator.grid
+    gridPos = grid.slotToPos(grid.posToSlot(spellCreator.input.mousePos))
+    size = vec(50, 50)
+  renderer.fillRect(rect.rect(gridPos, size), rgb(0, 0, 255))
 
 when isMainModule:
   let screenSize = vec(1200, 900)
