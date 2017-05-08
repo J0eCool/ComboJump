@@ -1,4 +1,8 @@
-import sdl2, sequtils, tables
+import
+  hashes,
+  sdl2,
+  sequtils,
+  tables
 
 import
   system/[
@@ -14,6 +18,7 @@ import
   program,
   rect,
   resources,
+  stack,
   util,
   vec
 
@@ -26,13 +31,31 @@ proc bordered(node: Node, borderWidth = 1.0): Node =
 
 type
   ASTNode = ref object of RootObj
+  Variable = ref object of ASTNode
+    name: string
+  Value = int # TODO: non-int values
+  VariableValues = Table[string, Value]
+  Execution = object
+    output: seq[string]
+    variables: VariableValues # TODO: Stack of scopes
 
 method size(node: ASTNode): Vec {.base.} =
   vec()
 method menu(node: ASTNode, pos: Vec): Node {.base.} =
   Node()
-method execute(node: ASTNode, output: var seq[string]): int {.base.} =
+method execute(node: ASTNode, execution: var Execution): Value {.base.} =
   0
+
+proc newExecution(): Execution =
+  Execution(
+    output: @[],
+    variables: initTable[string, Value](),
+  )
+
+proc getValue(execution: Execution, varName: string): Value =
+  for name, value in execution.variables:
+    if name == varName:
+      return value
 
 type
   Empty = ref object of ASTNode
@@ -65,8 +88,52 @@ method menu(literal: Literal, pos: Vec): Node =
       ),
     ],
   )
-method execute(literal: Literal, output: var seq[string]): int =
+method execute(literal: Literal, execution: var Execution): Value =
   literal.value
+
+type VariableAssign = ref object of ASTNode
+  variable: Variable
+  value: ASTNode
+
+method size(variable: Variable): Vec =
+  vec(64, 36)
+method menu(variable: Variable, pos: Vec): Node =
+  Node(
+    pos: pos,
+    children: @[
+      bordered(SpriteNode(
+        size: variable.size,
+        color: color.lightGray,
+      )),
+      BorderedTextNode(
+        text: variable.name,
+      ),
+    ],
+  )
+method execute(variable: Variable, execution: var Execution): Value =
+  execution.getValue(variable.name)
+
+method size(assign: VariableAssign): Vec =
+  assign.value.size + vec(110, 6)
+method menu(assign: VariableAssign, pos: Vec): Node =
+  # TODO: reuse infix logic from binary exprs
+  Node(
+    pos: pos,
+    children: @[
+      bordered(SpriteNode(
+        size: assign.size,
+        color: color.gray,
+      )),
+      assign.variable.menu(vec((assign.variable.size.x - assign.size.x) / 2 + 2, 0)),
+      BorderedTextNode(
+        pos: vec(0, 0),
+        text: ":=",
+      ),
+      assign.value.menu(vec((assign.size.x - assign.value.size.x) / 2 - 2, 0)),
+    ],
+  )
+method execute(assign: VariableAssign, execution: var Execution): Value =
+  execution.variables[assign.variable.name] = assign.value.execute(execution)
 
 type
   BinaryExpr = ref object of ASTNode
@@ -129,10 +196,10 @@ method menu(binary: BinaryExpr, pos: Vec): Node =
       binary.right.menu(binary.rightPos),
     ],
   )
-method execute(binary: BinaryExpr, output: var seq[string]): int =
+method execute(binary: BinaryExpr, execution: var Execution): Value =
   let
-    lval = binary.left.execute(output)
-    rval = binary.right.execute(output)
+    lval = binary.left.execute(execution)
+    rval = binary.right.execute(execution)
   perform(binary.op, lval, rval)
 
 type
@@ -156,8 +223,8 @@ method menu(print: Print, pos: Vec): Node =
       print.ast.menu(vec((print.size.x - print.ast.size.x) / 2 - 2, 0)),
     ],
   )
-method execute(print: Print, output: var seq[string]): int =
-  output.add $print.ast.execute(output)
+method execute(print: Print, execution: var Execution): Value =
+  execution.output.add $print.ast.execute(execution)
   0
 
 type StmtList = ref object of ASTNode
@@ -188,72 +255,71 @@ method menu(list: StmtList, pos: Vec): Node =
     children: stmtNodes,
   ))
   result.pos = pos + size / 2
-method execute(list: StmtList, output: var seq[string]): int =
+method execute(list: StmtList, execution: var Execution): Value =
   for statement in list.statements:
-    discard statement.execute(output)
+    discard statement.execute(execution)
   0
 
 proc output(ast: ASTNode): seq[string] =
-  result = @[]
-  discard ast.execute(result)
+  var execution = newExecution()
+  discard ast.execute(execution)
+  execution.output
 
 type
   QLangPrototype = ref object of Program
     resources: ResourceManager
     ast: ASTNode
+    cachedOutput: seq[string]
 
 proc newQLangPrototype(screenSize: Vec): QLangPrototype =
   new result
-  # result.camera.screenSize = screenSize
   result.title = "QLang (prototype)"
   result.resources = newResourceManager()
   result.ast = StmtList(
     statements: @[
-      Print(
-        ast: BinaryExpr(
-          op: subtract,
-          left: BinaryExpr(
-            op: divide,
-            left: Literal(value: 30),
-            right: Literal(value: 2),
-          ),
-          right: BinaryExpr(
-            op: multiply,
-            left: BinaryExpr(
-              op: add,
-              left: Literal(value: 2),
-              right: Literal(value: 1),
-            ),
-            right: Literal(value: 4),
-          ),
-        ),
-      ).ASTNode,
-      Print(
-        ast: Literal(value: 7),
-      ).ASTNode,
+      VariableAssign(
+        variable: Variable(name: "foo"),
+        value: Literal(value: 5),
+      ),
       Print(
         ast: BinaryExpr(
           op: multiply,
-          left: Literal(value: 6),
+          left: Variable(name: "foo"),
           right: Literal(value: 9),
         ),
-      ).ASTNode,
+      ),
+      VariableAssign(
+        variable: Variable(name: "foo"),
+        value: BinaryExpr(
+          left: Variable(name: "foo"),
+          right: Literal(value: 2),
+        ),
+      ),
+      Print(
+        ast: BinaryExpr(
+          op: multiply,
+          left: Variable(name: "foo"),
+          right: Literal(value: 9),
+        ),
+      ),
     ],
   )
 
 proc outputNode(program: QLangPrototype): Node =
-  let outputLines = output(program.ast)
-  stringListNode(@["Output:"] & outputLines, vec(900, 600))
+  stringListNode(@["Output:"] & program.cachedOutput, vec(900, 600))
+
+proc menu(program: QLangPrototype): Node =
+  let offset = vec(50, 50)
+  menu(program.ast, offset)
 
 method update*(program: QLangPrototype, dt: float) =
+  if program.cachedOutput == nil:
+    program.cachedOutput = output(program.ast)
   if program.input.isPressed(Input.menu):
     program.shouldExit = true
 
 method draw*(renderer: RendererPtr, program: QLangPrototype) =
-  let
-    menuOffset = vec(50, 50)
-    menu = menu(program.ast, menuOffset)
-  renderer.draw(menu, program.resources)
+  renderer.draw(program.menu, program.resources)
   renderer.draw(program.outputNode, program.resources)
 
 when isMainModule:
