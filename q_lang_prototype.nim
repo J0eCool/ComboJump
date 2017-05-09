@@ -31,7 +31,9 @@ proc bordered(node: Node, borderWidth = 1.0): Node =
 
 type
   ASTNode = ref object of RootObj
-  Variable = ref object of ASTNode
+  ExprNode = ref object of ASTNode
+  StmtNode = ref object of ASTNode
+  Variable = ref object of ExprNode
     name: string
   Value = int # TODO: non-int values
   VariableValues = Table[string, Value]
@@ -39,18 +41,21 @@ type
     output: seq[string]
     variables: VariableValues # TODO: Stack of scopes
 
-method size(node: ASTNode): Vec {.base.} =
-  vec()
-method menu(node: ASTNode, pos: Vec): Node {.base.} =
-  Node()
-method execute(node: ASTNode, execution: var Execution): Value {.base.} =
-  0
-
 proc newExecution(): Execution =
   Execution(
     output: @[],
     variables: initTable[string, Value](),
   )
+
+method size(node: ASTNode): Vec {.base.} =
+  vec()
+method menu(node: ASTNode, pos: Vec): Node {.base.} =
+  Node()
+
+method execute(statement: StmtNode, execution: var Execution) {.base.} =
+  discard
+method eval(expression: ExprNode, execution: Execution): Value {.base.} =
+  discard
 
 proc getValue(execution: Execution, varName: string): Value =
   for name, value in execution.variables:
@@ -70,7 +75,7 @@ method menu(empty: Empty, pos: Vec): Node =
   result.pos = pos
 
 type
-  Literal = ref object of ASTNode
+  Literal = ref object of ExprNode
     value: int
 
 method size(literal: Literal): Vec =
@@ -88,12 +93,12 @@ method menu(literal: Literal, pos: Vec): Node =
       ),
     ],
   )
-method execute(literal: Literal, execution: var Execution): Value =
+method eval(literal: Literal, execution: Execution): Value =
   literal.value
 
-type VariableAssign = ref object of ASTNode
+type VariableAssign = ref object of StmtNode
   variable: Variable
-  value: ASTNode
+  value: ExprNode
 
 method size(variable: Variable): Vec =
   vec(64, 36)
@@ -110,7 +115,7 @@ method menu(variable: Variable, pos: Vec): Node =
       ),
     ],
   )
-method execute(variable: Variable, execution: var Execution): Value =
+method eval(variable: Variable, execution: Execution): Value =
   execution.getValue(variable.name)
 
 method size(assign: VariableAssign): Vec =
@@ -132,14 +137,14 @@ method menu(assign: VariableAssign, pos: Vec): Node =
       assign.value.menu(vec((assign.size.x - assign.value.size.x) / 2 - 2, 0)),
     ],
   )
-method execute(assign: VariableAssign, execution: var Execution): Value =
-  execution.variables[assign.variable.name] = assign.value.execute(execution)
+method execute(assign: VariableAssign, execution: var Execution) =
+  execution.variables[assign.variable.name] = assign.value.eval(execution)
 
 type
-  BinaryExpr = ref object of ASTNode
+  BinaryExpr = ref object of ExprNode
     op: BinaryOp
-    left: ASTNode
-    right: ASTNode
+    left: ExprNode
+    right: ExprNode
   BinaryOp = enum
     add
     subtract
@@ -157,7 +162,7 @@ proc displayText(op: BinaryOp): string =
   of divide:
     "/"
 
-proc perform(op: BinaryOp, left, right: int): int =
+proc perform(op: BinaryOp, left, right: Value): Value =
   case op
   of add:
     left + right
@@ -196,15 +201,15 @@ method menu(binary: BinaryExpr, pos: Vec): Node =
       binary.right.menu(binary.rightPos),
     ],
   )
-method execute(binary: BinaryExpr, execution: var Execution): Value =
+method eval(binary: BinaryExpr, execution: Execution): Value =
   let
-    lval = binary.left.execute(execution)
-    rval = binary.right.execute(execution)
+    lval = binary.left.eval(execution)
+    rval = binary.right.eval(execution)
   perform(binary.op, lval, rval)
 
 type
-  Print = ref object of ASTNode
-    ast: ASTNode
+  Print = ref object of StmtNode
+    ast: ExprNode
 
 method size(print: Print): Vec =
   print.ast.size + vec(95, 10)
@@ -223,12 +228,11 @@ method menu(print: Print, pos: Vec): Node =
       print.ast.menu(vec((print.size.x - print.ast.size.x) / 2 - 2, 0)),
     ],
   )
-method execute(print: Print, execution: var Execution): Value =
-  execution.output.add $print.ast.execute(execution)
-  0
+method execute(print: Print, execution: var Execution) =
+  execution.output.add $print.ast.eval(execution)
 
-type StmtList = ref object of ASTNode
-  statements: seq[ASTNode]
+type StmtList = ref object of StmtNode
+  statements: seq[StmtNode]
 
 const
   listBorder = 5.0
@@ -255,20 +259,19 @@ method menu(list: StmtList, pos: Vec): Node =
     children: stmtNodes,
   ))
   result.pos = pos + size / 2
-method execute(list: StmtList, execution: var Execution): Value =
+method execute(list: StmtList, execution: var Execution) =
   for statement in list.statements:
-    discard statement.execute(execution)
-  0
+    statement.execute(execution)
 
-proc output(ast: ASTNode): seq[string] =
+proc output(statement: StmtNode): seq[string] =
   var execution = newExecution()
-  discard ast.execute(execution)
+  statement.execute(execution)
   execution.output
 
 type
   QLangPrototype = ref object of Program
     resources: ResourceManager
-    ast: ASTNode
+    ast: StmtNode
     cachedOutput: seq[string]
 
 proc newQLangPrototype(screenSize: Vec): QLangPrototype =
