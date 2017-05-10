@@ -30,11 +30,6 @@ proc bordered(node: Node, borderWidth = 1.0): Node =
   )
 
 type
-  ASTNode = ref object of RootObj
-  ExprNode = ref object of ASTNode
-  StmtNode = ref object of ASTNode
-  Variable = ref object of ExprNode
-    name: string
   Value = int # TODO: non-int values
   VariableValues = Table[string, Value]
   Execution = object
@@ -47,20 +42,41 @@ proc newExecution(): Execution =
     variables: initTable[string, Value](),
   )
 
+proc getValue(execution: Execution, varName: string): Value =
+  for name, value in execution.variables:
+    if name == varName:
+      return value
+
+type
+  ASTNode = ref object of RootObj
+  ExprNode = ref object of ASTNode
+  StmtNode = ref object of ASTNode
+  Variable = ref object of ExprNode
+    name: string
+
+var selected: ASTNode = nil
+proc selectedColor(node: ASTNode, baseColor: color.Color): color.Color =
+  if node == selected:
+    color.lightYellow
+  else:
+    baseColor
+
 method size(node: ASTNode): Vec {.base.} =
   vec()
 method menu(node: ASTNode, pos: Vec): Node {.base.} =
   Node()
+method children(node: ASTNode): seq[ASTNode] {.base.} =
+  @[]
+
+proc flattenedNodes(ast: ASTNode): seq[ASTNode] =
+  result = @[ast]
+  for node in ast.children:
+    result.add flattenedNodes(node)
 
 method execute(statement: StmtNode, execution: var Execution) {.base.} =
   discard
 method eval(expression: ExprNode, execution: Execution): Value {.base.} =
   discard
-
-proc getValue(execution: Execution, varName: string): Value =
-  for name, value in execution.variables:
-    if name == varName:
-      return value
 
 type
   Empty = ref object of ASTNode
@@ -70,7 +86,7 @@ method size(empty: Empty): Vec =
 method menu(empty: Empty, pos: Vec): Node =
   result = bordered(SpriteNode(
     size: empty.size,
-    color: color.lightGray,
+    color: empty.selectedColor(color.lightGray),
   ))
   result.pos = pos
 
@@ -86,7 +102,7 @@ method menu(literal: Literal, pos: Vec): Node =
     children: @[
       bordered(SpriteNode(
         size: literal.size,
-        color: color.lightGray,
+        color: literal.selectedColor(color.lightGray),
       )),
       BorderedTextNode(
         text: $literal.value,
@@ -108,7 +124,7 @@ method menu(variable: Variable, pos: Vec): Node =
     children: @[
       bordered(SpriteNode(
         size: variable.size,
-        color: color.lightGray,
+        color: variable.selectedColor(color.lightGray),
       )),
       BorderedTextNode(
         text: variable.name,
@@ -127,7 +143,7 @@ method menu(assign: VariableAssign, pos: Vec): Node =
     children: @[
       bordered(SpriteNode(
         size: assign.size,
-        color: color.gray,
+        color: assign.selectedColor(color.gray),
       )),
       assign.variable.menu(vec((assign.variable.size.x - assign.size.x) / 2 + 2, 0)),
       BorderedTextNode(
@@ -139,6 +155,8 @@ method menu(assign: VariableAssign, pos: Vec): Node =
   )
 method execute(assign: VariableAssign, execution: var Execution) =
   execution.variables[assign.variable.name] = assign.value.eval(execution)
+method children(assign: VariableAssign): seq[ASTNode] =
+  @[assign.variable.ASTNode, assign.value.ASTNode]
 
 type
   BinaryExpr = ref object of ExprNode
@@ -191,7 +209,7 @@ method menu(binary: BinaryExpr, pos: Vec): Node =
     children: @[
       bordered(SpriteNode(
         size: binary.size,
-        color: color.gray,
+        color: binary.selectedColor(color.gray),
       )),
       BorderedTextNode(
         pos: binary.centerPos,
@@ -206,6 +224,8 @@ method eval(binary: BinaryExpr, execution: Execution): Value =
     lval = binary.left.eval(execution)
     rval = binary.right.eval(execution)
   perform(binary.op, lval, rval)
+method children(binary: BinaryExpr): seq[ASTNode] =
+  @[binary.left.ASTNode, binary.right.ASTNode]
 
 type
   Print = ref object of StmtNode
@@ -219,7 +239,7 @@ method menu(print: Print, pos: Vec): Node =
     children: @[
       bordered(SpriteNode(
         size: print.size,
-        color: color.darkGray,
+        color: print.selectedColor(color.darkGray),
       )),
       BorderedTextNode(
         pos: vec(50 - print.size.x / 2, 0),
@@ -230,6 +250,8 @@ method menu(print: Print, pos: Vec): Node =
   )
 method execute(print: Print, execution: var Execution) =
   execution.output.add $print.ast.eval(execution)
+method children(print: Print): seq[ASTNode] =
+  @[print.ast.ASTNode]
 
 type StmtList = ref object of StmtNode
   statements: seq[StmtNode]
@@ -255,13 +277,17 @@ method menu(list: StmtList, pos: Vec): Node =
     curY += statement.size.y + listItemSpacing
   result = bordered(SpriteNode(
     size: list.size,
-    color: darkGray,
+    color: list.selectedColor(color.darkGray),
     children: stmtNodes,
   ))
   result.pos = pos + size / 2
 method execute(list: StmtList, execution: var Execution) =
   for statement in list.statements:
     statement.execute(execution)
+method children(list: StmtList): seq[ASTNode] =
+  result = @[]
+  for statement in list.statements:
+    result.add statement
 
 proc output(statement: StmtNode): seq[string] =
   var execution = newExecution()
@@ -315,11 +341,26 @@ proc menu(program: QLangPrototype): Node =
   let offset = vec(50, 50)
   menu(program.ast, offset)
 
+proc moveSelected(ast: ASTNode, dir: int) =
+  let allNodes = ast.flattenedNodes
+  if allNodes.len == 0:
+    return
+
+  let index = allNodes.find(selected)
+  if index == -1 or index + dir < 0 or index + dir >= allNodes.len:
+    selected = if dir > 0: allNodes[0] else: allNodes[allNodes.len - 1]
+  else:
+    selected = allNodes[index + dir]
+
 method update*(program: QLangPrototype, dt: float) =
   if program.cachedOutput == nil:
     program.cachedOutput = output(program.ast)
   if program.input.isPressed(Input.menu):
     program.shouldExit = true
+  if program.input.isPressed(Input.runeRight):
+    moveSelected(program.ast, 1)
+  if program.input.isPressed(Input.runeLeft):
+    moveSelected(program.ast, -1)
 
 method draw*(renderer: RendererPtr, program: QLangPrototype) =
   renderer.draw(program.menu, program.resources)
