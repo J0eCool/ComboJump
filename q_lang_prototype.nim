@@ -341,26 +341,65 @@ proc menu(program: QLangPrototype): Node =
   let offset = vec(50, 50)
   menu(program.ast, offset)
 
+proc findParentOf(ast: ASTNode, child: ASTNode): ASTNode =
+  for node in ast.flattenedNodes:
+    if child in node.children:
+      return node
+
 proc moveSelected(ast: ASTNode, dir: int) =
-  let allNodes = ast.flattenedNodes
-  if allNodes.len == 0:
+  if selected == nil:
+    selected = ast
+  let parent = ast.findParentOf(selected)
+  if parent == nil:
     return
 
-  let index = allNodes.find(selected)
-  if index == -1 or index + dir < 0 or index + dir >= allNodes.len:
-    selected = if dir > 0: allNodes[0] else: allNodes[allNodes.len - 1]
-  else:
-    selected = allNodes[index + dir]
+  let siblings = parent.children
+  assert siblings.len > 0, "Parent of selected node should have at least one child"
+
+  let
+    index = siblings.find(selected)
+    newIndex = index + dir
+    outOfBounds = newIndex < 0 or newIndex >= siblings.len
+  selected =
+    if outOfBounds and dir > 0:
+      siblings[siblings.len - 1]
+    elif outOfBounds and dir < 0:
+      siblings[0]
+    else:
+      siblings[newIndex]
+
+proc moveUp(ast: ASTNode) =
+  if selected == nil:
+    selected = ast
+    return
+
+  let parent = ast.findParentOf(selected)
+  if parent != nil:
+    selected = parent
+
+proc moveDown(ast: ASTNode) =
+  if selected == nil:
+    selected = ast
+    return
+
+  if selected.children.len > 0:
+    selected = selected.children[0]
 
 method update*(program: QLangPrototype, dt: float) =
-  if program.cachedOutput == nil:
-    program.cachedOutput = output(program.ast)
   if program.input.isPressed(Input.menu):
     program.shouldExit = true
+
   if program.input.isPressed(Input.runeRight):
     moveSelected(program.ast, 1)
   if program.input.isPressed(Input.runeLeft):
     moveSelected(program.ast, -1)
+  if program.input.isPressed(Input.runeUp):
+    moveUp(program.ast)
+  if program.input.isPressed(Input.runeDown):
+    moveDown(program.ast)
+
+  if program.cachedOutput == nil:
+    program.cachedOutput = output(program.ast)
 
 method draw*(renderer: RendererPtr, program: QLangPrototype) =
   renderer.draw(program.menu, program.resources)
