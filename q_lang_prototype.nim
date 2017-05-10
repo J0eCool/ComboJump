@@ -51,8 +51,6 @@ type
   ASTNode = ref object of RootObj
   ExprNode = ref object of ASTNode
   StmtNode = ref object of ASTNode
-  Variable = ref object of ExprNode
-    name: string
 
 var selected: ASTNode = nil
 proc selectedColor(node: ASTNode, baseColor: color.Color): color.Color =
@@ -67,6 +65,8 @@ method menu(node: ASTNode, pos: Vec): Node {.base.} =
   Node()
 method children(node: ASTNode): seq[ASTNode] {.base.} =
   @[]
+method handleInput(node: ASTNode, input: InputManager): bool {.base.} =
+  false
 
 proc flattenedNodes(ast: ASTNode): seq[ASTNode] =
   result = @[ast]
@@ -111,10 +111,20 @@ method menu(literal: Literal, pos: Vec): Node =
   )
 method eval(literal: Literal, execution: Execution): Value =
   literal.value
+method handleInput(literal: Literal, input: InputManager): bool =
+  const numButtons = [n0, n1, n2, n3, n4, n5, n6, n7, n8, n9]
+  for idx in 0..<numButtons.len:
+    let button = numButtons[idx]
+    if input.isPressed(button):
+      literal.value *= 10
+      literal.value += idx
+      result = true
+  if input.isPressed(Input.backspace):
+    literal.value = literal.value div 10
+    result = true
 
-type VariableAssign = ref object of StmtNode
-  variable: Variable
-  value: ExprNode
+type Variable = ref object of ExprNode
+    name: string
 
 method size(variable: Variable): Vec =
   vec(64, 36)
@@ -133,6 +143,20 @@ method menu(variable: Variable, pos: Vec): Node =
   )
 method eval(variable: Variable, execution: Execution): Value =
   execution.getValue(variable.name)
+method handleInput(variable: Variable, input: InputManager): bool =
+  const keys = [z, x, c, v, b, n, m] # TODO: more keys
+  for idx in 0..<keys.len:
+    let key = keys[idx]
+    if input.isPressed(key):
+      variable.name &= $key
+      result = true
+  if input.isPressed(Input.backspace):
+    variable.name = variable.name[0..<variable.name.len-1]
+    result = true
+
+type VariableAssign = ref object of StmtNode
+  variable: Variable
+  value: ExprNode
 
 method size(assign: VariableAssign): Vec =
   assign.value.size + vec(110, 6)
@@ -397,6 +421,9 @@ method update*(program: QLangPrototype, dt: float) =
     moveUp(program.ast)
   if program.input.isPressed(Input.runeDown):
     moveDown(program.ast)
+  if selected != nil:
+    if selected.handleInput(program.input):
+      program.cachedOutput = nil
 
   if program.cachedOutput == nil:
     program.cachedOutput = output(program.ast)

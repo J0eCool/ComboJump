@@ -82,6 +82,7 @@ proc inputFromPairs*(statePairs: seq[InputPair]): InputManager =
   )
 
 proc keyToInput(key: Scancode): Input =
+  # TODO: one-to-many relationship between keys and inputs
   case key
   of SDL_SCANCODE_A: left
   of SDL_SCANCODE_D: right
