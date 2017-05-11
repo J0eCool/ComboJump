@@ -111,15 +111,14 @@ method menu(literal: Literal, pos: Vec): Node =
   )
 method eval(literal: Literal, execution: Execution): Value =
   literal.value
-method handleInput(literal: Literal, input: InputManager): bool =
-  const numButtons = [n0, n1, n2, n3, n4, n5, n6, n7, n8, n9]
-  for idx in 0..<numButtons.len:
-    let button = numButtons[idx]
-    if input.isPressed(button):
+method handleInput(literal: Literal, inputMan: InputManager): bool =
+  for idx in 0..<input.allNumbers.len:
+    let button = input.allNumbers[idx]
+    if inputMan.isPressed(button):
       literal.value *= 10
       literal.value += idx
       result = true
-  if input.isPressed(Input.backspace):
+  if inputMan.isPressed(Input.backspace):
     literal.value = literal.value div 10
     result = true
 
@@ -143,14 +142,13 @@ method menu(variable: Variable, pos: Vec): Node =
   )
 method eval(variable: Variable, execution: Execution): Value =
   execution.getValue(variable.name)
-method handleInput(variable: Variable, input: InputManager): bool =
-  const keys = [z, x, c, v, b, n, m] # TODO: more keys
-  for idx in 0..<keys.len:
-    let key = keys[idx]
-    if input.isPressed(key):
-      variable.name &= $key
+method handleInput(variable: Variable, inputMan: InputManager): bool =
+  for idx in 0..<input.allLetters.len:
+    let key = input.allLetters[idx]
+    if inputMan.isPressed(key):
+      variable.name &= key.letterKeyStr
       result = true
-  if input.isPressed(Input.backspace):
+  if inputMan.isPressed(Input.backspace):
     variable.name = variable.name[0..<variable.name.len-1]
     result = true
 
@@ -413,13 +411,13 @@ method update*(program: QLangPrototype, dt: float) =
   if program.input.isPressed(Input.menu):
     program.shouldExit = true
 
-  if program.input.isPressed(Input.runeRight):
+  if program.input.isPressed(Input.arrowRight):
     moveSelected(program.ast, 1)
-  if program.input.isPressed(Input.runeLeft):
+  if program.input.isPressed(Input.arrowLeft):
     moveSelected(program.ast, -1)
-  if program.input.isPressed(Input.runeUp):
+  if program.input.isPressed(Input.arrowUp):
     moveUp(program.ast)
-  if program.input.isPressed(Input.runeDown):
+  if program.input.isPressed(Input.arrowDown):
     moveDown(program.ast)
   if selected != nil:
     if selected.handleInput(program.input):

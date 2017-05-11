@@ -1,4 +1,4 @@
-import sdl2
+import sdl2, strutils
 
 import
   option,
@@ -22,16 +22,6 @@ type
     delete
     quit
 
-    n1
-    n2
-    n3
-    n4
-    n5
-    n6
-    n7
-    n8
-    n9
-    n0
     z
     x
     c
@@ -43,6 +33,49 @@ type
     runeRight
     runeUp
     runeDown
+
+    arrowLeft
+    arrowRight
+    arrowUp
+    arrowDown
+
+    n0
+    n1
+    n2
+    n3
+    n4
+    n5
+    n6
+    n7
+    n8
+    n9
+
+    keyA
+    keyB
+    keyC
+    keyD
+    keyE
+    keyF
+    keyG
+    keyH
+    keyI
+    keyJ
+    keyK
+    keyL
+    keyM
+    keyN
+    keyO
+    keyP
+    keyQ
+    keyR
+    keyS
+    keyT
+    keyU
+    keyV
+    keyW
+    keyX
+    keyY
+    keyZ
 
 
   InputState* = enum
@@ -81,44 +114,56 @@ proc inputFromPairs*(statePairs: seq[InputPair]): InputManager =
     inputs: inputs,
   )
 
-proc keyToInput(key: Scancode): Input =
-  # TODO: one-to-many relationship between keys and inputs
+proc keyToInputs(key: Scancode): seq[Input] =
   case key
-  of SDL_SCANCODE_A: left
-  of SDL_SCANCODE_D: right
-  of SDL_SCANCODE_W: up
-  of SDL_SCANCODE_S: down
-  of SDL_SCANCODE_K: jump
-  of SDL_SCANCODE_J: spell1
-  of SDL_SCANCODE_I: spell2
-  of SDL_SCANCODE_L: spell3
-  of SDL_SCANCODE_R: restart
-  of SDL_SCANCODE_ESCAPE: menu
-  of SDL_SCANCODE_BACKSPACE: backspace
-  of SDL_SCANCODE_DELETE: delete
+  of SDL_SCANCODE_ESCAPE:    @[menu]
+  of SDL_SCANCODE_BACKSPACE: @[backspace]
+  of SDL_SCANCODE_DELETE:    @[delete]
 
-  of SDL_SCANCODE_1: n1
-  of SDL_SCANCODE_2: n2
-  of SDL_SCANCODE_3: n3
-  of SDL_SCANCODE_4: n4
-  of SDL_SCANCODE_5: n5
-  of SDL_SCANCODE_6: n6
-  of SDL_SCANCODE_7: n7
-  of SDL_SCANCODE_8: n8
-  of SDL_SCANCODE_9: n9
-  of SDL_SCANCODE_0: n0
-  of SDL_SCANCODE_Z: z
-  of SDL_SCANCODE_X: x
-  of SDL_SCANCODE_C: c
-  of SDL_SCANCODE_V: v
-  of SDL_SCANCODE_B: b
-  of SDL_SCANCODE_N: n
-  of SDL_SCANCODE_M: m
-  of SDL_SCANCODE_LEFT: runeLeft
-  of SDL_SCANCODE_RIGHT: runeRight
-  of SDL_SCANCODE_UP: runeUp
-  of SDL_SCANCODE_DOWN: runeDown
-  else: none
+  of SDL_SCANCODE_LEFT:      @[arrowLeft, runeLeft]
+  of SDL_SCANCODE_RIGHT:     @[arrowRight, runeRight]
+  of SDL_SCANCODE_UP:        @[arrowUp, runeUp]
+  of SDL_SCANCODE_DOWN:      @[arrowDown, runeDown]
+
+  of SDL_SCANCODE_1:         @[n1]
+  of SDL_SCANCODE_2:         @[n2]
+  of SDL_SCANCODE_3:         @[n3]
+  of SDL_SCANCODE_4:         @[n4]
+  of SDL_SCANCODE_5:         @[n5]
+  of SDL_SCANCODE_6:         @[n6]
+  of SDL_SCANCODE_7:         @[n7]
+  of SDL_SCANCODE_8:         @[n8]
+  of SDL_SCANCODE_9:         @[n9]
+  of SDL_SCANCODE_0:         @[n0]
+
+  of SDL_SCANCODE_A:         @[keyA, left]
+  of SDL_SCANCODE_B:         @[keyB, b]
+  of SDL_SCANCODE_C:         @[keyC, c]
+  of SDL_SCANCODE_D:         @[keyD, right]
+  of SDL_SCANCODE_E:         @[keyE]
+  of SDL_SCANCODE_F:         @[keyF]
+  of SDL_SCANCODE_G:         @[keyG]
+  of SDL_SCANCODE_H:         @[keyH]
+  of SDL_SCANCODE_I:         @[keyI, spell2]
+  of SDL_SCANCODE_J:         @[keyJ, spell1]
+  of SDL_SCANCODE_K:         @[keyK, jump]
+  of SDL_SCANCODE_L:         @[keyL, spell3]
+  of SDL_SCANCODE_M:         @[keyM, m]
+  of SDL_SCANCODE_N:         @[keyN, n]
+  of SDL_SCANCODE_O:         @[keyO]
+  of SDL_SCANCODE_P:         @[keyP]
+  of SDL_SCANCODE_Q:         @[keyQ]
+  of SDL_SCANCODE_R:         @[keyR, restart]
+  of SDL_SCANCODE_S:         @[keyS, down]
+  of SDL_SCANCODE_T:         @[keyT]
+  of SDL_SCANCODE_U:         @[keyU]
+  of SDL_SCANCODE_V:         @[keyV, v]
+  of SDL_SCANCODE_W:         @[keyW, up]
+  of SDL_SCANCODE_X:         @[keyX, x]
+  of SDL_SCANCODE_Y:         @[keyY]
+  of SDL_SCANCODE_Z:         @[keyZ, z]
+
+  else: @[]
 
 proc isHeld*(manager: InputManager, key: Input): bool
 proc update*(manager: var InputManager) =
@@ -145,14 +190,15 @@ proc update*(manager: var InputManager) =
   updateAxis(vertical, up, down)
 
   template setForEvent(e, v) =
-    let input = keyToInput e.key.keysym.scancode
-    if not (v == pressed and manager.inputs[input] == held):
-      manager.inputs[input] = v
-      manager.bufferedEvents.add InputEvent(
-        kind: input,
-        state: v,
-        pos: manager.mousePos,
-      )
+    let inputs = keyToInputs e.key.keysym.scancode
+    for input in inputs:
+      if not (v == pressed and manager.inputs[input] == held):
+        manager.inputs[input] = v
+        manager.bufferedEvents.add InputEvent(
+          kind: input,
+          state: v,
+          pos: manager.mousePos,
+        )
   var event = defaultEvent
   while pollEvent(event):
     case event.kind
@@ -208,3 +254,22 @@ proc getAxis*(manager: InputManager, axis: Axis): int =
 
 proc getEvents*(manager: InputManager): seq[InputEvent] =
   manager.bufferedEvents
+
+const
+  allLetters* = @[
+    keyA, keyB, keyC, keyD, keyE,
+    keyF, keyG, keyH, keyI, keyJ,
+    keyK, keyL, keyM, keyN, keyO,
+    keyP, keyQ, keyR, keyS, keyT,
+    keyU, keyV, keyW, keyX, keyY,
+    keyZ,
+  ]
+  allNumbers* = @[
+    n0, n1, n2, n3, n4, n5, n6, n7, n8, n9
+  ]
+
+proc letterKeyStr*(button: Input): string =
+  if not (button in allLetters):
+    ""
+  else:
+    ($button)[3..4].toLowerAscii

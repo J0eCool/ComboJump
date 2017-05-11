@@ -37,7 +37,7 @@ proc renderText*(renderer: RendererPtr, text: string, font: FontPtr, color: colo
   let
     surface = font.renderTextBlended(text, color.sdlColor)
     texture = renderer.createTexture surface
-    size = vec(surface.w, surface.h)
+    size = if surface == nil: vec() else: vec(surface.w, surface.h)
   (texture, size)
 
 proc draw*(renderer: RendererPtr, rendered: RenderedText, pos: Vec) =
