@@ -34,6 +34,10 @@ type
     runeUp
     runeDown
 
+    ctrl
+    shift
+    alt
+
     arrowLeft
     arrowRight
     arrowUp
@@ -121,6 +125,10 @@ proc keyToInputs(key: Scancode): seq[Input] =
   of SDL_SCANCODE_ESCAPE:    @[menu]
   of SDL_SCANCODE_BACKSPACE: @[backspace]
   of SDL_SCANCODE_DELETE:    @[delete]
+
+  of SDL_SCANCODE_LCTRL:     @[ctrl]
+  of SDL_SCANCODE_LSHIFT:    @[shift]
+  of SDL_SCANCODE_LALT:      @[alt]
 
   of SDL_SCANCODE_LEFT:      @[arrowLeft, runeLeft]
   of SDL_SCANCODE_RIGHT:     @[arrowRight, runeRight]

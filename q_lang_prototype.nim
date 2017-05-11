@@ -67,6 +67,12 @@ method children(node: ASTNode): seq[ASTNode] {.base.} =
   @[]
 method handleInput(node: ASTNode, input: InputManager) {.base.} =
   discard
+method addNode(node: ASTNode, toAdd: ASTNode): bool {.base.} =
+  false
+method replaceOnAdd(node: ASTNode): bool {.base.} =
+  false
+method replaceChild(node: ASTNode, child: ASTNode, toAdd: ASTNode) {.base.} =
+  discard
 
 proc flattenedNodes(ast: ASTNode): seq[ASTNode] =
   result = @[ast]
@@ -79,7 +85,7 @@ method eval(expression: ExprNode, execution: Execution): Value {.base.} =
   0
 
 type
-  Empty = ref object of ASTNode
+  Empty = ref object of ExprNode
 
 method size(empty: Empty): Vec =
   vec(24)
@@ -89,6 +95,8 @@ method menu(empty: Empty, pos: Vec): Node =
     color: empty.selectedColor(color.lightGray),
   ))
   result.pos = pos
+method replaceOnAdd(empty: Empty): bool =
+  true
 
 type
   Literal = ref object of ExprNode
@@ -143,6 +151,8 @@ method menu(variable: Variable, pos: Vec): Node =
 method eval(variable: Variable, execution: Execution): Value =
   execution.getValue(variable.name)
 method handleInput(variable: Variable, inputMan: InputManager) =
+  if inputMan.isHeld(Input.ctrl):
+    return
   for idx in 0..<input.allLetters.len:
     let key = input.allLetters[idx]
     if inputMan.isPressed(key):
@@ -179,6 +189,11 @@ method execute(assign: VariableAssign, execution: var Execution) =
   execution.variables[assign.variable.name] = assign.value.eval(execution)
 method children(assign: VariableAssign): seq[ASTNode] =
   @[assign.variable.ASTNode, assign.value.ASTNode]
+method replaceChild(assign: VariableAssign, child, toAdd: ExprNode) =
+  if assign.variable.ExprNode == child:
+    assign.variable = toAdd.Variable
+  if assign.value == child:
+    assign.value = toAdd
 
 type
   BinaryExpr = ref object of ExprNode
@@ -248,6 +263,11 @@ method eval(binary: BinaryExpr, execution: Execution): Value =
   perform(binary.op, lval, rval)
 method children(binary: BinaryExpr): seq[ASTNode] =
   @[binary.left.ASTNode, binary.right.ASTNode]
+method replaceChild(binary: BinaryExpr, child, toAdd: ExprNode) =
+  if binary.left == child:
+    binary.left = toAdd
+  elif binary.right == child:
+    binary.right = toAdd
 
 type
   Print = ref object of StmtNode
@@ -274,6 +294,9 @@ method execute(print: Print, execution: var Execution) =
   execution.output.add $print.ast.eval(execution)
 method children(print: Print): seq[ASTNode] =
   @[print.ast.ASTNode]
+method replaceChild(print: Print, child, toAdd: ExprNode) =
+  if print.ast == child:
+    print.ast = toAdd
 
 type StmtList = ref object of StmtNode
   statements: seq[StmtNode]
@@ -310,6 +333,9 @@ method children(list: StmtList): seq[ASTNode] =
   result = @[]
   for statement in list.statements:
     result.add statement
+method addNode(list: StmtList, toAdd: StmtNode): bool =
+  list.statements.add toAdd
+  true
 
 proc output(statement: StmtNode): seq[string] =
   var execution = newExecution()
@@ -355,6 +381,7 @@ proc newQLangPrototype(screenSize: Vec): QLangPrototype =
       ),
     ],
   )
+  selected = result.ast
 
 proc outputNode(program: QLangPrototype): Node =
   stringListNode(@["Output:"] & program.cachedOutput, vec(900, 600))
@@ -407,6 +434,26 @@ proc moveDown(ast: ASTNode) =
   if selected.children.len > 0:
     selected = selected.children[0]
 
+proc addNode(program: QLangPrototype, toAdd: ASTNode) =
+  var addTo = selected
+  while addTo != nil:
+    if addTo.addNode(toAdd):
+      selected = toAdd
+      return
+    let parent = program.ast.findParentOf(addTo)
+    if addTo.replaceOnAdd:
+      parent.replaceChild(addTo, toAdd)
+      selected = toAdd
+      return
+    addTo = parent
+
+proc newBinaryExpr(op: BinaryOp): BinaryExpr =
+  BinaryExpr(
+    op: op,
+    left: Empty(),
+    right: Empty(),
+  )
+
 method update*(program: QLangPrototype, dt: float) =
   if program.input.isPressed(Input.menu):
     program.shouldExit = true
@@ -421,6 +468,21 @@ method update*(program: QLangPrototype, dt: float) =
     moveDown(program.ast)
   if program.input.isPressed(Input.f5):
     program.cachedOutput = nil
+  if program.input.isHeld(Input.ctrl):
+    if program.input.isPressed(Input.keyL):
+      program.addNode(Literal(value: 0))
+    if program.input.isPressed(Input.keyV):
+      program.addNode(Variable(name: ""))
+    if program.input.isPressed(Input.keyP):
+      program.addNode(Print(ast: Empty()))
+    if program.input.isPressed(Input.keyA):
+      program.addNode(newBinaryExpr(add))
+    if program.input.isPressed(Input.keyS):
+      program.addNode(newBinaryExpr(subtract))
+    if program.input.isPressed(Input.keyM):
+      program.addNode(newBinaryExpr(multiply))
+    if program.input.isPressed(Input.keyD):
+      program.addNode(newBinaryExpr(divide))
   if selected != nil:
     selected.handleInput(program.input)
 
