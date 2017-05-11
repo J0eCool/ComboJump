@@ -39,6 +39,8 @@ type
     arrowUp
     arrowDown
 
+    f5
+
     n0
     n1
     n2
@@ -124,6 +126,8 @@ proc keyToInputs(key: Scancode): seq[Input] =
   of SDL_SCANCODE_RIGHT:     @[arrowRight, runeRight]
   of SDL_SCANCODE_UP:        @[arrowUp, runeUp]
   of SDL_SCANCODE_DOWN:      @[arrowDown, runeDown]
+
+  of SDL_SCANCODE_F5:        @[f5]
 
   of SDL_SCANCODE_1:         @[n1]
   of SDL_SCANCODE_2:         @[n2]

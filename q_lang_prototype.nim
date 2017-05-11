@@ -65,8 +65,8 @@ method menu(node: ASTNode, pos: Vec): Node {.base.} =
   Node()
 method children(node: ASTNode): seq[ASTNode] {.base.} =
   @[]
-method handleInput(node: ASTNode, input: InputManager): bool {.base.} =
-  false
+method handleInput(node: ASTNode, input: InputManager) {.base.} =
+  discard
 
 proc flattenedNodes(ast: ASTNode): seq[ASTNode] =
   result = @[ast]
@@ -76,7 +76,7 @@ proc flattenedNodes(ast: ASTNode): seq[ASTNode] =
 method execute(statement: StmtNode, execution: var Execution) {.base.} =
   discard
 method eval(expression: ExprNode, execution: Execution): Value {.base.} =
-  discard
+  0
 
 type
   Empty = ref object of ASTNode
@@ -111,16 +111,16 @@ method menu(literal: Literal, pos: Vec): Node =
   )
 method eval(literal: Literal, execution: Execution): Value =
   literal.value
-method handleInput(literal: Literal, inputMan: InputManager): bool =
+method handleInput(literal: Literal, inputMan: InputManager) =
   for idx in 0..<input.allNumbers.len:
     let button = input.allNumbers[idx]
     if inputMan.isPressed(button):
       literal.value *= 10
       literal.value += idx
-      result = true
   if inputMan.isPressed(Input.backspace):
     literal.value = literal.value div 10
-    result = true
+  if inputMan.isPressed(Input.delete):
+    literal.value = 0
 
 type Variable = ref object of ExprNode
     name: string
@@ -142,15 +142,15 @@ method menu(variable: Variable, pos: Vec): Node =
   )
 method eval(variable: Variable, execution: Execution): Value =
   execution.getValue(variable.name)
-method handleInput(variable: Variable, inputMan: InputManager): bool =
+method handleInput(variable: Variable, inputMan: InputManager) =
   for idx in 0..<input.allLetters.len:
     let key = input.allLetters[idx]
     if inputMan.isPressed(key):
       variable.name &= key.letterKeyStr
-      result = true
   if inputMan.isPressed(Input.backspace):
     variable.name = variable.name[0..<variable.name.len-1]
-    result = true
+  if inputMan.isPressed(Input.delete):
+    variable.name = ""
 
 type VariableAssign = ref object of StmtNode
   variable: Variable
@@ -419,9 +419,10 @@ method update*(program: QLangPrototype, dt: float) =
     moveUp(program.ast)
   if program.input.isPressed(Input.arrowDown):
     moveDown(program.ast)
+  if program.input.isPressed(Input.f5):
+    program.cachedOutput = nil
   if selected != nil:
-    if selected.handleInput(program.input):
-      program.cachedOutput = nil
+    selected.handleInput(program.input)
 
   if program.cachedOutput == nil:
     program.cachedOutput = output(program.ast)
