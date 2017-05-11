@@ -71,7 +71,9 @@ method addNode(node: ASTNode, toAdd: ASTNode): bool {.base.} =
   false
 method replaceOnAdd(node: ASTNode): bool {.base.} =
   false
-method replaceChild(node: ASTNode, child: ASTNode, toAdd: ASTNode) {.base.} =
+method replaceChild(node: ASTNode, child, toAdd: ASTNode): bool {.base.} =
+  false
+method removeChild(node: ASTNode, child: ASTNode) {.base.} =
   discard
 
 proc flattenedNodes(ast: ASTNode): seq[ASTNode] =
@@ -120,6 +122,8 @@ method menu(literal: Literal, pos: Vec): Node =
 method eval(literal: Literal, execution: Execution): Value =
   literal.value
 method handleInput(literal: Literal, inputMan: InputManager) =
+  if inputMan.isHeld(Input.ctrl):
+    return
   for idx in 0..<input.allNumbers.len:
     let button = input.allNumbers[idx]
     if inputMan.isPressed(button):
@@ -189,11 +193,18 @@ method execute(assign: VariableAssign, execution: var Execution) =
   execution.variables[assign.variable.name] = assign.value.eval(execution)
 method children(assign: VariableAssign): seq[ASTNode] =
   @[assign.variable.ASTNode, assign.value.ASTNode]
-method replaceChild(assign: VariableAssign, child, toAdd: ExprNode) =
+method replaceChild(assign: VariableAssign, child, toAdd: ExprNode): bool =
   if assign.variable.ExprNode == child:
     assign.variable = toAdd.Variable
+    return true
   if assign.value == child:
     assign.value = toAdd
+    return true
+method removeChild(assign: VariableAssign, child: ExprNode) =
+  if assign.variable.ExprNode == child:
+    assign.variable = Variable(name: "")
+  if assign.value == child:
+    assign.value = Empty()
 
 type
   BinaryExpr = ref object of ExprNode
@@ -263,11 +274,18 @@ method eval(binary: BinaryExpr, execution: Execution): Value =
   perform(binary.op, lval, rval)
 method children(binary: BinaryExpr): seq[ASTNode] =
   @[binary.left.ASTNode, binary.right.ASTNode]
-method replaceChild(binary: BinaryExpr, child, toAdd: ExprNode) =
+method replaceChild(binary: BinaryExpr, child, toAdd: ExprNode): bool =
   if binary.left == child:
     binary.left = toAdd
+    return true
   elif binary.right == child:
     binary.right = toAdd
+    return true
+method removeChild(binary: BinaryExpr, child: ExprNode) =
+  if binary.left == child:
+    binary.left = Empty()
+  elif binary.right == child:
+    binary.right = Empty()
 
 type
   Print = ref object of StmtNode
@@ -294,9 +312,13 @@ method execute(print: Print, execution: var Execution) =
   execution.output.add $print.ast.eval(execution)
 method children(print: Print): seq[ASTNode] =
   @[print.ast.ASTNode]
-method replaceChild(print: Print, child, toAdd: ExprNode) =
+method replaceChild(print: Print, child, toAdd: ExprNode): bool =
   if print.ast == child:
     print.ast = toAdd
+    return true
+method removeChild(print: Print, child: ExprNode) =
+  if print.ast == child:
+    print.ast = Empty()
 
 type StmtList = ref object of StmtNode
   statements: seq[StmtNode]
@@ -399,8 +421,7 @@ proc moveSelected(ast: ASTNode, dir: int) =
   if selected == nil:
     selected = ast
   let parent = ast.findParentOf(selected)
-  if parent == nil:
-    return
+  assert parent != nil, "Selected node should have parent in AST"
 
   let siblings = parent.children
   assert siblings.len > 0, "Parent of selected node should have at least one child"
@@ -442,10 +463,21 @@ proc addNode(program: QLangPrototype, toAdd: ASTNode) =
       return
     let parent = program.ast.findParentOf(addTo)
     if addTo.replaceOnAdd:
-      parent.replaceChild(addTo, toAdd)
-      selected = toAdd
-      return
+      if parent.replaceChild(addTo, toAdd):
+        selected = toAdd
+        return
     addTo = parent
+
+proc deleteSelected(program: QLangPrototype) =
+  if selected == nil:
+    return
+  let parent = program.ast.findParentOf(selected)
+  assert parent != nil, "Selected node should have parent in AST"
+  let idx = parent.children.find(selected)
+  assert idx != -1, "Selected node must be in children of parent"
+  parent.removeChild(selected)
+  let clampedIdx = idx.clamp(0, parent.children.len - 1)
+  selected = parent.children[clampedIdx]
 
 proc newBinaryExpr(op: BinaryOp): BinaryExpr =
   BinaryExpr(
@@ -469,6 +501,8 @@ method update*(program: QLangPrototype, dt: float) =
   if program.input.isPressed(Input.f5):
     program.cachedOutput = nil
   if program.input.isHeld(Input.ctrl):
+    if program.input.isPressed(Input.delete):
+      program.deleteSelected()
     if program.input.isPressed(Input.keyL):
       program.addNode(Literal(value: 0))
     if program.input.isPressed(Input.keyV):
