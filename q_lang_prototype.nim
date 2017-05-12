@@ -49,10 +49,11 @@ proc getValue(execution: Execution, varName: string): Value =
 
 type
   ASTNode = ref object of RootObj
+    dirty: bool
   ExprNode = ref object of ASTNode
   StmtNode = ref object of ASTNode
 
-var selected: ASTNode = nil
+var selected: ASTNode = nil # TODO: Not global!
 proc selectedColor(node: ASTNode, baseColor: color.Color): color.Color =
   if node == selected:
     color.lightYellow
@@ -61,8 +62,16 @@ proc selectedColor(node: ASTNode, baseColor: color.Color): color.Color =
 
 method size(node: ASTNode): Vec {.base.} =
   vec()
-method menu(node: ASTNode, pos: Vec): Node {.base.} =
+method menuSelf(node: ASTNode, pos: Vec): Node {.base.} =
   Node()
+proc menu(node: ASTNode, pos: Vec): Node =
+  BindNode[bool](
+    item: (proc(): bool = node.dirty),
+    node: (proc(_: bool): Node =
+      node.dirty = false
+      node.menuSelf(pos)
+    ),
+  )
 method children(node: ASTNode): seq[ASTNode] {.base.} =
   @[]
 method handleInput(node: ASTNode, input: InputManager) {.base.} =
@@ -91,7 +100,7 @@ type
 
 method size(empty: Empty): Vec =
   vec(24)
-method menu(empty: Empty, pos: Vec): Node =
+method menuSelf(empty: Empty, pos: Vec): Node =
   result = bordered(SpriteNode(
     size: empty.size,
     color: empty.selectedColor(color.lightGray),
@@ -106,7 +115,7 @@ type
 
 method size(literal: Literal): Vec =
   vec(36)
-method menu(literal: Literal, pos: Vec): Node =
+method menuSelf(literal: Literal, pos: Vec): Node =
   Node(
     pos: pos,
     children: @[
@@ -129,17 +138,20 @@ method handleInput(literal: Literal, inputMan: InputManager) =
     if inputMan.isPressed(button):
       literal.value *= 10
       literal.value += idx
+      literal.dirty = true
   if inputMan.isPressed(Input.backspace):
     literal.value = literal.value div 10
+    literal.dirty = true
   if inputMan.isPressed(Input.delete):
     literal.value = 0
+    literal.dirty = true
 
 type Variable = ref object of ExprNode
     name: string
 
 method size(variable: Variable): Vec =
   vec(64, 36)
-method menu(variable: Variable, pos: Vec): Node =
+method menuSelf(variable: Variable, pos: Vec): Node =
   Node(
     pos: pos,
     children: @[
@@ -161,10 +173,13 @@ method handleInput(variable: Variable, inputMan: InputManager) =
     let key = input.allLetters[idx]
     if inputMan.isPressed(key):
       variable.name &= key.letterKeyStr
+      variable.dirty = true
   if inputMan.isPressed(Input.backspace):
     variable.name = variable.name[0..<variable.name.len-1]
+    variable.dirty = true
   if inputMan.isPressed(Input.delete):
     variable.name = ""
+    variable.dirty = true
 
 type VariableAssign = ref object of StmtNode
   variable: Variable
@@ -172,7 +187,7 @@ type VariableAssign = ref object of StmtNode
 
 method size(assign: VariableAssign): Vec =
   assign.value.size + vec(110, 6)
-method menu(assign: VariableAssign, pos: Vec): Node =
+method menuSelf(assign: VariableAssign, pos: Vec): Node =
   # TODO: reuse infix logic from binary exprs
   Node(
     pos: pos,
@@ -251,7 +266,7 @@ method size(binary: BinaryExpr): Vec =
     sizeL = binary.left.size
     sizeR = binary.right.size
   vec(sizeL.x + sizeR.x + 42, max(sizeL.y, sizeR.y) + 10)
-method menu(binary: BinaryExpr, pos: Vec): Node =
+method menuSelf(binary: BinaryExpr, pos: Vec): Node =
   Node(
     pos: pos,
     children: @[
@@ -293,7 +308,7 @@ type
 
 method size(print: Print): Vec =
   print.ast.size + vec(95, 10)
-method menu(print: Print, pos: Vec): Node =
+method menuSelf(print: Print, pos: Vec): Node =
   Node(
     pos: pos,
     children: @[
@@ -333,7 +348,7 @@ method size(list: StmtList): Vec =
   result.x += listBorder
   result.y += listBorder
   result.y += listItemSpacing * (list.statements.len - 1).float
-method menu(list: StmtList, pos: Vec): Node =
+method menuSelf(list: StmtList, pos: Vec): Node =
   let size = list.size
   var
     stmtNodes = newSeq[Node]()
@@ -369,6 +384,7 @@ type
     resources: ResourceManager
     ast: StmtNode
     cachedOutput: seq[string]
+    menu: Node
 
 proc newQLangPrototype(screenSize: Vec): QLangPrototype =
   new result
@@ -404,13 +420,11 @@ proc newQLangPrototype(screenSize: Vec): QLangPrototype =
     ],
   )
   selected = result.ast
+  let offset = vec(50, 50)
+  result.menu = result.ast.menu(offset)
 
 proc outputNode(program: QLangPrototype): Node =
   stringListNode(@["Output:"] & program.cachedOutput, vec(900, 600))
-
-proc menu(program: QLangPrototype): Node =
-  let offset = vec(50, 50)
-  menu(program.ast, offset)
 
 proc findParentOf(ast: ASTNode, child: ASTNode): ASTNode =
   for node in ast.flattenedNodes:
@@ -418,8 +432,9 @@ proc findParentOf(ast: ASTNode, child: ASTNode): ASTNode =
       return node
 
 proc moveSelected(ast: ASTNode, dir: int) =
-  if selected == nil:
+  if selected == nil or selected == ast:
     selected = ast
+    return
   let parent = ast.findParentOf(selected)
   assert parent != nil, "Selected node should have parent in AST"
 
@@ -465,6 +480,7 @@ proc addNode(program: QLangPrototype, toAdd: ASTNode) =
     if addTo.replaceOnAdd:
       if parent.replaceChild(addTo, toAdd):
         selected = toAdd
+        parent.dirty = true
         return
     addTo = parent
 
@@ -478,6 +494,7 @@ proc deleteSelected(program: QLangPrototype) =
   parent.removeChild(selected)
   let clampedIdx = idx.clamp(0, parent.children.len - 1)
   selected = parent.children[clampedIdx]
+  parent.dirty = true
 
 proc newBinaryExpr(op: BinaryOp): BinaryExpr =
   BinaryExpr(
@@ -487,8 +504,11 @@ proc newBinaryExpr(op: BinaryOp): BinaryExpr =
   )
 
 method update*(program: QLangPrototype, dt: float) =
+  let prevSelected = selected
   if program.input.isPressed(Input.menu):
     program.shouldExit = true
+
+  program.menu.update(program.input)
 
   if program.input.isPressed(Input.arrowRight):
     moveSelected(program.ast, 1)
@@ -522,6 +542,10 @@ method update*(program: QLangPrototype, dt: float) =
 
   if program.cachedOutput == nil:
     program.cachedOutput = output(program.ast)
+
+  if selected != prevSelected:
+    prevSelected.dirty = true
+    selected.dirty = true
 
 method draw*(renderer: RendererPtr, program: QLangPrototype) =
   renderer.draw(program.menu, program.resources)
