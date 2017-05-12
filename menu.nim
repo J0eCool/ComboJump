@@ -126,6 +126,7 @@ method drawSelf(text: BorderedTextNode, renderer: RendererPtr, resources: var Re
 type Button* = ref object of Node
   onClick*: proc()
   hotkey*: Input
+  color*: Color
   isHeld: bool
   isMouseOver: bool
   isKeyHeld: bool
@@ -136,8 +137,10 @@ method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceMa
       rgb(198, 198, 108)
     elif button.isMouseOver:
       rgb(172, 172, 134)
-    else:
+    elif button.color.a == 0:
       rgb(160, 160, 160)
+    else:
+      button.color
   renderer.fillRect(button.rect, c)
 
 method updateSelf(button: Button, input: InputManager) =

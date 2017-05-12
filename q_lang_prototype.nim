@@ -22,13 +22,6 @@ import
   util,
   vec
 
-proc bordered(node: Node, borderWidth = 1.0): Node =
-  SpriteNode(
-    size: node.size + vec(2 * borderWidth),
-    color: color.black,
-    children: @[node],
-  )
-
 type
   Value = int # TODO: non-int values
   VariableValues = Table[string, Value]
@@ -95,16 +88,30 @@ method execute(statement: StmtNode, execution: var Execution) {.base.} =
 method eval(expression: ExprNode, execution: Execution): Value {.base.} =
   0
 
+proc bodyNode(ast: ASTNode, size: Vec, color: color.Color, children: seq[Node] = @[]): Node =
+  const borderWidth = 1.0
+  SpriteNode(
+    size: size + vec(2 * borderWidth),
+    color: black,
+    children: @[
+      Button(
+        size: size,
+        color: ast.selectedColor(color),
+        onClick: (proc() =
+          selected = ast
+        ),
+        children: children,
+      ).Node,
+    ],
+  )
+
 type
   Empty = ref object of ExprNode
 
 method size(empty: Empty): Vec =
   vec(24)
 method menuSelf(empty: Empty, pos: Vec): Node =
-  result = bordered(SpriteNode(
-    size: empty.size,
-    color: empty.selectedColor(color.lightGray),
-  ))
+  result = empty.bodyNode(empty.size, color.lightGray)
   result.pos = pos
 method replaceOnAdd(empty: Empty): bool =
   true
@@ -119,10 +126,7 @@ method menuSelf(literal: Literal, pos: Vec): Node =
   Node(
     pos: pos,
     children: @[
-      bordered(SpriteNode(
-        size: literal.size,
-        color: literal.selectedColor(color.lightGray),
-      )),
+      literal.bodyNode(literal.size, color.lightGray),
       BorderedTextNode(
         text: $literal.value,
       ),
@@ -155,10 +159,7 @@ method menuSelf(variable: Variable, pos: Vec): Node =
   Node(
     pos: pos,
     children: @[
-      bordered(SpriteNode(
-        size: variable.size,
-        color: variable.selectedColor(color.lightGray),
-      )),
+      variable.bodyNode(variable.size, color.lightGray),
       BorderedTextNode(
         text: variable.name,
       ),
@@ -192,10 +193,7 @@ method menuSelf(assign: VariableAssign, pos: Vec): Node =
   Node(
     pos: pos,
     children: @[
-      bordered(SpriteNode(
-        size: assign.size,
-        color: assign.selectedColor(color.gray),
-      )),
+      assign.bodyNode(assign.size, color.gray),
       assign.variable.menu(vec((assign.variable.size.x - assign.size.x) / 2 + 2, 0)),
       BorderedTextNode(
         pos: vec(0, 0),
@@ -270,10 +268,7 @@ method menuSelf(binary: BinaryExpr, pos: Vec): Node =
   Node(
     pos: pos,
     children: @[
-      bordered(SpriteNode(
-        size: binary.size,
-        color: binary.selectedColor(color.gray),
-      )),
+      binary.bodyNode(binary.size, color.gray),
       BorderedTextNode(
         pos: binary.centerPos,
         text: binary.op.displayText,
@@ -312,10 +307,7 @@ method menuSelf(print: Print, pos: Vec): Node =
   Node(
     pos: pos,
     children: @[
-      bordered(SpriteNode(
-        size: print.size,
-        color: print.selectedColor(color.darkGray),
-      )),
+      print.bodyNode(print.size, color.darkGray),
       BorderedTextNode(
         pos: vec(50 - print.size.x / 2, 0),
         text: "PRINT",
@@ -357,11 +349,7 @@ method menuSelf(list: StmtList, pos: Vec): Node =
     let pos = vec(0.0, curY + statement.size.y / 2)
     stmtNodes.add statement.menu(pos)
     curY += statement.size.y + listItemSpacing
-  result = bordered(SpriteNode(
-    size: list.size,
-    color: list.selectedColor(color.darkGray),
-    children: stmtNodes,
-  ))
+  result = list.bodyNode(list.size, color.darkGray, stmtNodes)
   result.pos = pos + size / 2
 method execute(list: StmtList, execution: var Execution) =
   for statement in list.statements:
@@ -431,6 +419,13 @@ proc findParentOf(ast: ASTNode, child: ASTNode): ASTNode =
     if child in node.children:
       return node
 
+proc findAllParentsOf(ast: ASTNode, child: ASTNode): seq[ASTNode] =
+  result = @[]
+  var cur = child
+  while cur != nil:
+    result.add cur
+    cur = ast.findParentOf(cur)
+
 proc moveSelected(ast: ASTNode, dir: int) =
   if selected == nil or selected == ast:
     selected = ast
@@ -480,7 +475,6 @@ proc addNode(program: QLangPrototype, toAdd: ASTNode) =
     if addTo.replaceOnAdd:
       if parent.replaceChild(addTo, toAdd):
         selected = toAdd
-        parent.dirty = true
         return
     addTo = parent
 
@@ -494,7 +488,6 @@ proc deleteSelected(program: QLangPrototype) =
   parent.removeChild(selected)
   let clampedIdx = idx.clamp(0, parent.children.len - 1)
   selected = parent.children[clampedIdx]
-  parent.dirty = true
 
 proc newBinaryExpr(op: BinaryOp): BinaryExpr =
   BinaryExpr(
@@ -544,8 +537,10 @@ method update*(program: QLangPrototype, dt: float) =
     program.cachedOutput = output(program.ast)
 
   if selected != prevSelected:
-    prevSelected.dirty = true
-    selected.dirty = true
+    for node in program.ast.findAllParentsOf(prevSelected):
+      node.dirty = true
+    for node in program.ast.findAllParentsOf(selected):
+      node.dirty = true
 
 method draw*(renderer: RendererPtr, program: QLangPrototype) =
   renderer.draw(program.menu, program.resources)
