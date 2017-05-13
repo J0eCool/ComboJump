@@ -2,7 +2,8 @@ import
   hashes,
   sdl2,
   sequtils,
-  tables
+  tables,
+  typetraits
 
 import
   system/[
@@ -13,6 +14,7 @@ import
   entity,
   event,
   input,
+  jsonparse,
   menu,
   option,
   program,
@@ -41,10 +43,26 @@ proc getValue(execution: Execution, varName: string): Value =
       return value
 
 type
-  ASTNode = ref object of RootObj
+  ASTNodeObj = object of RootObj
     dirty: bool
-  ExprNode = ref object of ASTNode
-  StmtNode = ref object of ASTNode
+  ASTNode = ref ASTNodeObj
+  ExprNodeObj = object of ASTNode
+  ExprNode = ref ExprNodeObj
+  StmtNodeObj = object of ASTNode
+  StmtNode = ref StmtNodeObj
+
+template astJson(t, p: untyped) =
+  autoObjectJSONProcs(t)
+  method toJSON(node: p): JSON =
+    result = toJSON(node[])
+    assert result.kind == jsObject
+    result.obj["kind"] = JSON(kind: jsString, str: p.type.name)
+  method fromJSON(node: p, json: JSON) =
+    fromJSON(node[], json)
+
+astJson(ASTNodeObj, ASTNode)
+astJson(ExprNodeObj, ExprNode)
+astJson(StmtNodeObj, StmtNode)
 
 var selected: ASTNode = nil # TODO: Not global!
 proc selectedColor(node: ASTNode, baseColor: color.Color): color.Color =
@@ -106,7 +124,10 @@ proc bodyNode(ast: ASTNode, size: Vec, color: color.Color, children: seq[Node] =
   )
 
 type
-  Empty = ref object of ExprNode
+  EmptyObj = object of ExprNode
+  Empty = ref EmptyObj
+
+astJson(EmptyObj, Empty)
 
 method size(empty: Empty): Vec =
   vec(24)
@@ -117,8 +138,11 @@ method replaceOnAdd(empty: Empty): bool =
   true
 
 type
-  Literal = ref object of ExprNode
+  Literal = ref LiteralObj
+  LiteralObj = object of ExprNode
     value: int
+
+astJson(LiteralObj, Literal)
 
 method size(literal: Literal): Vec =
   vec(36)
@@ -150,8 +174,12 @@ method handleInput(literal: Literal, inputMan: InputManager) =
     literal.value = 0
     literal.dirty = true
 
-type Variable = ref object of ExprNode
-    name: string
+type
+  Variable = ref VariableObj
+  VariableObj = object of ExprNode
+    ident: string
+
+astJson(VariableObj, Variable)
 
 method size(variable: Variable): Vec =
   vec(64, 36)
@@ -161,30 +189,34 @@ method menuSelf(variable: Variable, pos: Vec): Node =
     children: @[
       variable.bodyNode(variable.size, color.lightGray),
       BorderedTextNode(
-        text: variable.name,
+        text: variable.ident,
       ),
     ],
   )
 method eval(variable: Variable, execution: Execution): Value =
-  execution.getValue(variable.name)
+  execution.getValue(variable.ident)
 method handleInput(variable: Variable, inputMan: InputManager) =
   if inputMan.isHeld(Input.ctrl):
     return
   for idx in 0..<input.allLetters.len:
     let key = input.allLetters[idx]
     if inputMan.isPressed(key):
-      variable.name &= key.letterKeyStr
+      variable.ident &= key.letterKeyStr
       variable.dirty = true
   if inputMan.isPressed(Input.backspace):
-    variable.name = variable.name[0..<variable.name.len-1]
+    variable.ident = variable.ident[0..<variable.ident.len-1]
     variable.dirty = true
   if inputMan.isPressed(Input.delete):
-    variable.name = ""
+    variable.ident = ""
     variable.dirty = true
 
-type VariableAssign = ref object of StmtNode
-  variable: Variable
-  value: ExprNode
+type
+  VariableAssign = ref VariableAssignObj
+  VariableAssignObj = object of StmtNode
+    variable: Variable
+    value: ExprNode
+
+astJson(VariableAssignObj, VariableAssign)
 
 method size(assign: VariableAssign): Vec =
   assign.value.size + vec(110, 6)
@@ -203,7 +235,7 @@ method menuSelf(assign: VariableAssign, pos: Vec): Node =
     ],
   )
 method execute(assign: VariableAssign, execution: var Execution) =
-  execution.variables[assign.variable.name] = assign.value.eval(execution)
+  execution.variables[assign.variable.ident] = assign.value.eval(execution)
 method children(assign: VariableAssign): seq[ASTNode] =
   @[assign.variable.ASTNode, assign.value.ASTNode]
 method replaceChild(assign: VariableAssign, child, toAdd: ExprNode): bool =
@@ -215,12 +247,13 @@ method replaceChild(assign: VariableAssign, child, toAdd: ExprNode): bool =
     return true
 method removeChild(assign: VariableAssign, child: ExprNode) =
   if assign.variable.ExprNode == child:
-    assign.variable = Variable(name: "")
+    assign.variable = Variable(ident: "")
   if assign.value == child:
     assign.value = Empty()
 
 type
-  BinaryExpr = ref object of ExprNode
+  BinaryExpr = ref BinaryExprObj
+  BinaryExprObj = object of ExprNode
     op: BinaryOp
     left: ExprNode
     right: ExprNode
@@ -229,6 +262,8 @@ type
     subtract
     multiply
     divide
+
+astJson(BinaryExprObj, BinaryExpr)
 
 proc displayText(op: BinaryOp): string =
   case op
@@ -298,8 +333,11 @@ method removeChild(binary: BinaryExpr, child: ExprNode) =
     binary.right = Empty()
 
 type
-  Print = ref object of StmtNode
+  Print = ref PrintObj
+  PrintObj = object of StmtNode
     ast: ExprNode
+
+astJson(PrintObj, Print)
 
 method size(print: Print): Vec =
   print.ast.size + vec(95, 10)
@@ -327,8 +365,12 @@ method removeChild(print: Print, child: ExprNode) =
   if print.ast == child:
     print.ast = Empty()
 
-type StmtList = ref object of StmtNode
-  statements: seq[StmtNode]
+type
+  StmtList = ref StmtListObj
+  StmtListObj = object of StmtNode
+    statements: seq[StmtNode]
+
+astJson(StmtListObj, StmtList)
 
 const
   listBorder = 5.0
@@ -381,27 +423,27 @@ proc newQLangPrototype(screenSize: Vec): QLangPrototype =
   result.ast = StmtList(
     statements: @[
       VariableAssign(
-        variable: Variable(name: "foo"),
+        variable: Variable(ident: "foo"),
         value: Literal(value: 5),
       ),
       Print(
         ast: BinaryExpr(
           op: multiply,
-          left: Variable(name: "foo"),
+          left: Variable(ident: "foo"),
           right: Literal(value: 9),
         ),
       ),
       VariableAssign(
-        variable: Variable(name: "foo"),
+        variable: Variable(ident: "foo"),
         value: BinaryExpr(
-          left: Variable(name: "foo"),
+          left: Variable(ident: "foo"),
           right: Literal(value: 2),
         ),
       ),
       Print(
         ast: BinaryExpr(
           op: multiply,
-          left: Variable(name: "foo"),
+          left: Variable(ident: "foo"),
           right: Literal(value: 9),
         ),
       ),
@@ -410,6 +452,8 @@ proc newQLangPrototype(screenSize: Vec): QLangPrototype =
   selected = result.ast
   let offset = vec(50, 50)
   result.menu = result.ast.menu(offset)
+
+  echo result.ast.toJSON.toPrettyString
 
 proc outputNode(program: QLangPrototype): Node =
   stringListNode(@["Output:"] & program.cachedOutput, vec(900, 600))
@@ -519,7 +563,7 @@ method update*(program: QLangPrototype, dt: float) =
     if program.input.isPressed(Input.keyL):
       program.addNode(Literal(value: 0))
     if program.input.isPressed(Input.keyV):
-      program.addNode(Variable(name: ""))
+      program.addNode(Variable(ident: ""))
     if program.input.isPressed(Input.keyP):
       program.addNode(Print(ast: Empty()))
     if program.input.isPressed(Input.keyA):
