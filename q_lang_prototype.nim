@@ -52,11 +52,11 @@ type
   StmtNode = ref StmtNodeObj
 
 template astJson(t, p: untyped) =
-  autoObjectJSONProcs(t)
+  autoObjectJSONProcs(t, @["dirty"])
   method toJSON(node: p): JSON =
     result = toJSON(node[])
     assert result.kind == jsObject
-    result.obj["kind"] = JSON(kind: jsString, str: p.type.name)
+    result.obj["_kind"] = JSON(kind: jsString, str: p.type.name)
   method fromJSON(node: p, json: JSON) =
     fromJSON(node[], json)
 
@@ -317,6 +317,18 @@ method eval(binary: BinaryExpr, execution: Execution): Value =
     lval = binary.left.eval(execution)
     rval = binary.right.eval(execution)
   perform(binary.op, lval, rval)
+method handleInput(binary: BinaryExpr, input: InputManager) =
+  binary.dirty = true
+  if input.isPressed(Input.keyA):
+    binary.op = add
+  elif input.isPressed(Input.keyS):
+    binary.op = subtract
+  elif input.isPressed(Input.keyM):
+    binary.op = multiply
+  elif input.isPressed(Input.keyD):
+    binary.op = divide
+  else:
+    binary.dirty = false
 method children(binary: BinaryExpr): seq[ASTNode] =
   @[binary.left.ASTNode, binary.right.ASTNode]
 method replaceChild(binary: BinaryExpr, child, toAdd: ExprNode): bool =
@@ -533,13 +545,6 @@ proc deleteSelected(program: QLangPrototype) =
   let clampedIdx = idx.clamp(0, parent.children.len - 1)
   selected = parent.children[clampedIdx]
 
-proc newBinaryExpr(op: BinaryOp): BinaryExpr =
-  BinaryExpr(
-    op: op,
-    left: Empty(),
-    right: Empty(),
-  )
-
 method update*(program: QLangPrototype, dt: float) =
   let prevSelected = selected
   if program.input.isPressed(Input.menu):
@@ -566,14 +571,12 @@ method update*(program: QLangPrototype, dt: float) =
       program.addNode(Variable(ident: ""))
     if program.input.isPressed(Input.keyP):
       program.addNode(Print(ast: Empty()))
-    if program.input.isPressed(Input.keyA):
-      program.addNode(newBinaryExpr(add))
-    if program.input.isPressed(Input.keyS):
-      program.addNode(newBinaryExpr(subtract))
-    if program.input.isPressed(Input.keyM):
-      program.addNode(newBinaryExpr(multiply))
-    if program.input.isPressed(Input.keyD):
-      program.addNode(newBinaryExpr(divide))
+    if program.input.isPressed(Input.keyB):
+      program.addNode(BinaryExpr(
+        op: add,
+        left: Empty(),
+        right: Empty(),
+      ))
   if selected != nil:
     selected.handleInput(program.input)
 
