@@ -167,7 +167,7 @@ method menuSelf(literal: Literal, pos: Vec): Node =
   Node(
     pos: pos,
     children: @[
-      literal.bodyNode(literal.size, color.lightGray),
+      literal.bodyNode(literal.size, color.blue),
       BorderedTextNode(
         text: $literal.value,
       ),
@@ -204,7 +204,7 @@ method menuSelf(variable: Variable, pos: Vec): Node =
   Node(
     pos: pos,
     children: @[
-      variable.bodyNode(variable.size, color.lightGray),
+      variable.bodyNode(variable.size, color.green),
       BorderedTextNode(
         text: variable.ident,
       ),
