@@ -3,3 +3,4 @@ out/*
 *.sublime-workspace
 profile_results.txt
 nimsuggest.log
+qlang_code.json

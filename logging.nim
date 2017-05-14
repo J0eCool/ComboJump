@@ -9,7 +9,7 @@ type LogLevel* = enum
   debug
 
 const
-  logThreshold = warning
+  logThreshold = info
   showDate = false
   dateFormat = (if showDate: "yyyy-MM-dd " else: "") & "HH:mm:ss'.'"
 

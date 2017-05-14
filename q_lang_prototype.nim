@@ -16,6 +16,7 @@ import
   input,
   jsonparse,
   menu,
+  logging,
   option,
   program,
   rect,
@@ -23,6 +24,8 @@ import
   stack,
   util,
   vec
+
+const savedCodeFile = "qlang_code.json"
 
 type
   Value = int # TODO: non-int values
@@ -51,14 +54,28 @@ type
   StmtNodeObj = object of ASTNode
   StmtNode = ref StmtNodeObj
 
+var astKindConstructors = initTable[string, (proc(): ASTNode)]()
+method fromJSON_impl(node: ASTNode, json: JSON)
+
 template astJson(t, p: untyped) =
   autoObjectJSONProcs(t, @["dirty"])
+  astKindConstructors[p.type.name] = (proc(): ASTNode = new p)
   method toJSON(node: p): JSON =
     result = toJSON(node[])
     assert result.kind == jsObject
     result.obj["_kind"] = JSON(kind: jsString, str: p.type.name)
-  method fromJSON(node: p, json: JSON) =
+  method fromJSON_impl(node: p, json: JSON) =
+    echo "Loading in kind ", p.type.name
     fromJSON(node[], json)
+
+proc fromJSON[T: ASTNode](node: var T, json: JSON) =
+  echo "Loading from json: ", json
+  assert json.kind == jsObject
+  let kindJson = json.obj["_kind"]
+  assert kindJson.kind == jsString
+  let constructor = astKindConstructors[kindJson.str]
+  node = cast[T](constructor())
+  fromJSON_impl(node, json)
 
 astJson(ASTNodeObj, ASTNode)
 astJson(ExprNodeObj, ExprNode)
@@ -432,35 +449,40 @@ proc newQLangPrototype(screenSize: Vec): QLangPrototype =
   new result
   result.title = "QLang (prototype)"
   result.resources = newResourceManager()
-  result.ast = StmtList(
-    statements: @[
-      VariableAssign(
-        variable: Variable(ident: "foo"),
-        value: Literal(value: 5),
-      ),
-      Print(
-        ast: BinaryExpr(
-          op: multiply,
-          left: Variable(ident: "foo"),
-          right: Literal(value: 9),
+  let loadedJson = readJSONFile(savedCodeFile)
+  if loadedJson.kind != jsError:
+    echo "Loaded: ", loadedJson
+    fromJSON(result.ast, loadedJson)
+  else:
+    result.ast = StmtList(
+      statements: @[
+        VariableAssign(
+          variable: Variable(ident: "foo"),
+          value: Literal(value: 5),
         ),
-      ),
-      VariableAssign(
-        variable: Variable(ident: "foo"),
-        value: BinaryExpr(
-          left: Variable(ident: "foo"),
-          right: Literal(value: 2),
+        Print(
+          ast: BinaryExpr(
+            op: multiply,
+            left: Variable(ident: "foo"),
+            right: Literal(value: 9),
+          ),
         ),
-      ),
-      Print(
-        ast: BinaryExpr(
-          op: multiply,
-          left: Variable(ident: "foo"),
-          right: Literal(value: 9),
+        VariableAssign(
+          variable: Variable(ident: "foo"),
+          value: BinaryExpr(
+            left: Variable(ident: "foo"),
+            right: Literal(value: 2),
+          ),
         ),
-      ),
-    ],
-  )
+        Print(
+          ast: BinaryExpr(
+            op: multiply,
+            left: Variable(ident: "foo"),
+            right: Literal(value: 9),
+          ),
+        ),
+      ],
+    )
   selected = result.ast
   let offset = vec(50, 50)
   result.menu = result.ast.menu(offset)
@@ -563,6 +585,9 @@ method update*(program: QLangPrototype, dt: float) =
   if program.input.isPressed(Input.f5):
     program.cachedOutput = nil
   if program.input.isHeld(Input.ctrl):
+    if program.input.isPressed(Input.keyS):
+      writeJSONFile(savedCodeFile, program.ast.toJSON, pretty=true)
+      log info, "Saved to file ", savedCodeFile
     if program.input.isPressed(Input.delete):
       program.deleteSelected()
     if program.input.isPressed(Input.keyL):
