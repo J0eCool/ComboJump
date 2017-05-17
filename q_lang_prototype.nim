@@ -54,6 +54,8 @@ type
   StmtNodeObj = object of ASTNode
   StmtNode = ref StmtNodeObj
 
+var selected: ASTNode = nil # TODO: Not global!
+
 var astKindConstructors = initTable[string, (proc(): ASTNode)]()
 method fromJSON_impl(node: ASTNode, json: JSON)
 
@@ -65,11 +67,9 @@ template astJson(t, p: untyped) =
     assert result.kind == jsObject
     result.obj["_kind"] = JSON(kind: jsString, str: p.type.name)
   method fromJSON_impl(node: p, json: JSON) =
-    echo "Loading in kind ", p.type.name
     fromJSON(node[], json)
 
 proc fromJSON[T: ASTNode](node: var T, json: JSON) =
-  echo "Loading from json: ", json
   assert json.kind == jsObject
   let kindJson = json.obj["_kind"]
   assert kindJson.kind == jsString
@@ -80,13 +80,6 @@ proc fromJSON[T: ASTNode](node: var T, json: JSON) =
 astJson(ASTNodeObj, ASTNode)
 astJson(ExprNodeObj, ExprNode)
 astJson(StmtNodeObj, StmtNode)
-
-var selected: ASTNode = nil # TODO: Not global!
-proc selectedColor(node: ASTNode, baseColor: color.Color): color.Color =
-  if node == selected:
-    color.lightYellow
-  else:
-    baseColor
 
 method size(node: ASTNode): Vec {.base.} =
   vec()
@@ -124,14 +117,16 @@ method eval(expression: ExprNode, execution: Execution): Value {.base.} =
   0
 
 proc bodyNode(ast: ASTNode, size: Vec, color: color.Color, children: seq[Node] = @[]): Node =
-  const borderWidth = 1.0
+  let
+    borderWidth = if ast == selected: 3.0   else: 1.0
+    borderColor = if ast == selected: white else: black
   SpriteNode(
     size: size + vec(2 * borderWidth),
-    color: black,
+    color: borderColor,
     children: @[
       Button(
         size: size,
-        color: ast.selectedColor(color),
+        color: color,
         onClick: (proc() =
           selected = ast
         ),
@@ -451,8 +446,7 @@ proc newQLangPrototype(screenSize: Vec): QLangPrototype =
   result.resources = newResourceManager()
   let loadedJson = readJSONFile(savedCodeFile)
   if loadedJson.kind != jsError:
-    echo "Loaded: ", loadedJson
-    fromJSON(result.ast, loadedJson)
+    result.ast.fromJSON(loadedJson)
   else:
     result.ast = StmtList(
       statements: @[
@@ -461,25 +455,7 @@ proc newQLangPrototype(screenSize: Vec): QLangPrototype =
           value: Literal(value: 5),
         ),
         Print(
-          ast: BinaryExpr(
-            op: multiply,
-            left: Variable(ident: "foo"),
-            right: Literal(value: 9),
-          ),
-        ),
-        VariableAssign(
-          variable: Variable(ident: "foo"),
-          value: BinaryExpr(
-            left: Variable(ident: "foo"),
-            right: Literal(value: 2),
-          ),
-        ),
-        Print(
-          ast: BinaryExpr(
-            op: multiply,
-            left: Variable(ident: "foo"),
-            right: Literal(value: 9),
-          ),
+          ast: Variable(ident: "foo"),
         ),
       ],
     )
