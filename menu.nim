@@ -29,7 +29,7 @@ proc updateParents(node: Node) =
     c.parent = node
     c.updateParents()
 
-proc globalPos(node: Node): Vec =
+proc globalPos*(node: Node): Vec =
   result = node.pos
   var cur = node.parent
   while cur != nil:
