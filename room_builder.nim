@@ -19,6 +19,8 @@ import
   util,
   vec
 
+const savedTileFile = "saved_room.json"
+
 type
   TileGrid = seq[seq[bool]]
   Coord = tuple[x, y: int]
@@ -114,7 +116,11 @@ type
 proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   new result
   result.title = "Room Builder (prototype)"
-  result.grid = newGrid(12, 9)
+  let loadedJson = readJSONFile(savedTileFile)
+  if loadedJson.kind != jsError:
+    result.grid.fromJSON(loadedJson)
+  else:
+    result.grid = newGrid(12, 9)
   result.menu = newGridEditor(addr result.grid)
 
 method update*(program: RoomBuilder, dt: float) =
@@ -122,6 +128,11 @@ method update*(program: RoomBuilder, dt: float) =
 
   if program.input.isPressed(Input.menu):
     program.shouldExit = true
+
+  if program.input.isHeld(Input.ctrl):
+    if program.input.isPressed(Input.keyS):
+      writeJSONFile(savedTileFile, program.grid.toJSON, pretty=true)
+      log info, "Saved to file ", savedTileFile
 
 method draw*(renderer: RendererPtr, program: RoomBuilder) =
   renderer.draw(program.menu, program.resources)

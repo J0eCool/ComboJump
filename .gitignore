@@ -4,3 +4,4 @@ out/*
 profile_results.txt
 nimsuggest.log
 qlang_code.json
+saved_room.json
