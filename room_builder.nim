@@ -22,16 +22,34 @@ import
 const savedTileFile = "saved_room.json"
 
 type
-  TileGrid = seq[seq[bool]]
+  TileGrid = object
+    w, h: int
+    data: seq[seq[bool]]
   Coord = tuple[x, y: int]
 
 proc newGrid(w, h: int): TileGrid =
-  result = @[]
+  result = TileGrid(
+    w: w,
+    h: h,
+    data: @[],
+  )
   for x in 0..<w:
     var line: seq[bool] = @[]
     for y in 0..<h:
       line.add false
-    result.add line
+    result.data.add line
+
+proc toJSON(grid: TileGrid): JSON =
+  var obj = initTable[string, JSON]()
+  obj["w"] = grid.w.toJSON
+  obj["h"] = grid.h.toJSON
+  obj["data"] = grid.data.toJSON
+  JSON(kind: jsObject, obj: obj)
+proc fromJSON(grid: var TileGrid, json: JSON) =
+  assert json.kind == jsObject
+  grid.w.fromJSON(json.obj["w"])
+  grid.h.fromJSON(json.obj["h"])
+  grid.data.fromJSON(json.obj["data"])
 
 type GridEditor = ref object of Node
   grid: ptr TileGrid
@@ -63,32 +81,29 @@ proc posToCoord(editor: GridEditor, pos: Vec): Coord =
 
 proc isCoordIsInRange(editor: GridEditor, coord: Coord): bool =
   let grid = editor.grid[]
-  if coord.x < 0 or coord.x >= grid.len:
-    return false
-  if coord.y < 0 or coord.y >= grid[coord.x].len:
-    return false
-  return true
+  ( coord.x >= 0 and coord.x < grid.w and
+    coord.y >= 0 and coord.y < grid.h )
 
 proc getTile(editor: GridEditor, coord: Coord): bool =
   if editor.isCoordIsInRange(coord):
-    editor.grid[][coord.x][coord.y]
+    editor.grid.data[coord.x][coord.y]
   else:
     false
 
 proc setTile(editor: GridEditor, coord: Coord, val: bool) =
   if editor.isCoordIsInRange(coord):
-    editor.grid[][coord.x][coord.y] = val
+    editor.grid.data[coord.x][coord.y] = val
 
 method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var ResourceManager) =
   let grid = editor.grid[]
-  for x in 0..<grid.len:
-    for y in 0..<grid[x].len:
+  for x in 0..<grid.w:
+    for y in 0..<grid.h:
       let
         r = editor.gridRect(x, y)
         color =
           if (x, y) == editor.hovered:
             yellow
-          elif grid[x][y]:
+          elif grid.data[x][y]:
             white
           else:
             black
