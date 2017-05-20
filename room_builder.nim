@@ -39,17 +39,34 @@ proc newGrid(w, h: int): TileGrid =
       line.add false
     result.data.add line
 
+proc toBoolString(grid: seq[seq[bool]]): string =
+  result = ""
+  for line in grid:
+    for item in line:
+      result &= (if item: "1" else: "0")
+
+proc fromBoolString(input: string, w, h: int): seq[seq[bool]] =
+  result = @[]
+  var line = newSeq[bool]();
+  for c in input:
+    line.add(c == '1')
+    if line.len >= h:
+      result.add line
+      line = @[]
+
 proc toJSON(grid: TileGrid): JSON =
   var obj = initTable[string, JSON]()
   obj["w"] = grid.w.toJSON
   obj["h"] = grid.h.toJSON
-  obj["data"] = grid.data.toJSON
+  obj["dataStr"] = grid.data.toBoolString.toJSON
   JSON(kind: jsObject, obj: obj)
 proc fromJSON(grid: var TileGrid, json: JSON) =
   assert json.kind == jsObject
   grid.w.fromJSON(json.obj["w"])
   grid.h.fromJSON(json.obj["h"])
-  grid.data.fromJSON(json.obj["data"])
+  var dataStr: string
+  dataStr.fromJSON(json.obj["dataStr"])
+  grid.data = dataStr.fromBoolString(grid.w, grid.h)
 
 type GridEditor = ref object of Node
   grid: ptr TileGrid
