@@ -71,8 +71,6 @@ proc fromJSON(grid: var TileGrid, json: JSON) =
 type GridEditor = ref object of Node
   grid: ptr TileGrid
   clickId: int
-  clickedSet: HashSet[Coord]
-  clickIsSetting: bool
   tileSize: Vec
   hovered: Coord
 
@@ -81,7 +79,6 @@ proc newGridEditor(grid: ptr TileGrid): GridEditor =
     pos: vec(120, 120),
     grid: grid,
     clickId: 0,
-    clickedSet: initSet[Coord](),
     tileSize: vec(60),
     hovered: (-1, -1),
   )
@@ -130,14 +127,9 @@ method updateSelf(editor: GridEditor, input: InputManager) =
   let hovered = editor.posToCoord(input.mousePos)
   editor.hovered = hovered
 
-  if input.isMousePressed:
-    editor.clickedSet = initSet[Coord]()
-    editor.clickIsSetting = not editor.getTile(hovered)
-  if  input.isMouseHeld and
-      editor.isCoordIsInRange(hovered) and
-      (not editor.clickedSet.contains(hovered)):
-    editor.clickedSet.incl(hovered)
-    editor.setTile(hovered, editor.clickIsSetting)
+  if input.isMouseHeld and editor.isCoordIsInRange(hovered):
+    let value = not input.isHeld(ctrl)
+    editor.setTile(hovered, value)
 
 type
   RoomBuilder = ref object of Program
