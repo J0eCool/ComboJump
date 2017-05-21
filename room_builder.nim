@@ -114,13 +114,16 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
     for y in 0..<grid.h:
       let
         r = editor.gridRect(x, y)
-        color =
-          if (x, y) == editor.hovered:
-            yellow
-          elif grid.data[x][y]:
-            white
+        baseColor =
+          if grid.data[x][y]:
+            lightGray
           else:
             black
+        color =
+          if (x, y) == editor.hovered:
+            average(baseColor, lightYellow)
+          else:
+            baseColor
       renderer.fillRect r, color
 
 method updateSelf(editor: GridEditor, input: InputManager) =

@@ -6,13 +6,39 @@ type Color* = object
   b*: int
   a*: int
 
+autoObjectJSONProcs(Color)
+
 proc rgb*(r, g, b: int): Color =
   Color(r: r, g: g, b: b, a: 255)
 
 proc rgba*(r, g, b, a: int): Color =
   Color(r: r, g: g, b: b, a: a)
 
-autoObjectJSONProcs(Color)
+template declareBinaryOp(op: untyped): untyped =
+  proc op*(a, b: Color): Color =
+    Color(
+      r: op(a.r, b.r),
+      g: op(a.g, b.g),
+      b: op(a.b, b.b),
+      a: op(a.a, b.a),
+    )
+
+template declareScalarOp(op: untyped): untyped =
+  proc op*(c: Color, s: float): Color =
+    Color(
+      r: op(c.r.float, s).int,
+      g: op(c.g.float, s).int,
+      b: op(c.b.float, s).int,
+      a: op(c.a.float, s).int,
+    )
+
+declareBinaryOp(`+`)
+declareBinaryOp(`*`)
+declareScalarOp(`*`)
+declareScalarOp(`/`)
+
+proc average*(a, b: Color): Color =
+  (a + b) / 2
 
 const
   gray*        = rgb(128, 128, 128)
