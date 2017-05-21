@@ -109,22 +109,45 @@ proc setTile(editor: GridEditor, coord: Coord, val: bool) =
     editor.grid.data[coord.x][coord.y] = val
 
 method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var ResourceManager) =
+  const
+    tileColor = lightGray
+    hoverColor = lightYellow
   let grid = editor.grid[]
+
+  # Draw tiles
   for x in 0..<grid.w:
     for y in 0..<grid.h:
       let
-        r = editor.gridRect(x, y)
-        baseColor =
-          if grid.data[x][y]:
-            lightGray
-          else:
-            black
-        color =
-          if (x, y) == editor.hovered:
-            average(baseColor, lightYellow)
-          else:
-            baseColor
-      renderer.fillRect r, color
+        isFull = grid.data[x][y]
+        isHovered = (x, y) == editor.hovered
+      if isFull or isHovered:
+        let
+          r = editor.gridRect(x, y)
+          color =
+            if isHovered and isFull:
+              average(tileColor, hoverColor)
+            elif isHovered:
+              hoverColor
+            else:
+              tileColor
+        renderer.fillRect r, color
+
+  # Draw grid lines
+  let
+    totalSize = vec(grid.w, grid.h) * editor.tileSize
+    offset = editor.pos - editor.tileSize / 2
+    lineWidth = 2.0
+    lineColor = darkGray
+  for x in 0..grid.w:
+    let
+      pos = vec(x.float * editor.tileSize.x, totalSize.y / 2) + offset
+      r = rect(pos, vec(lineWidth, totalSize.y))
+    renderer.fillRect r, lineColor
+  for y in 0..grid.h:
+    let
+      pos = vec(totalSize.x / 2, y.float * editor.tileSize.y) + offset
+      r = rect(pos, vec(totalSize.x, lineWidth))
+    renderer.fillRect r, lineColor
 
 method updateSelf(editor: GridEditor, input: InputManager) =
   let hovered = editor.posToCoord(input.mousePos)
