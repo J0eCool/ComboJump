@@ -153,9 +153,11 @@ method updateSelf(editor: GridEditor, input: InputManager) =
   let hovered = editor.posToCoord(input.mousePos)
   editor.hovered = hovered
 
-  if input.isMouseHeld and editor.isCoordIsInRange(hovered):
-    let value = not input.isHeld(ctrl)
-    editor.setTile(hovered, value)
+  if editor.isCoordIsInRange(hovered):
+    if input.isMouseHeld(mouseLeft):
+      editor.setTile(hovered, true)
+    if input.isMouseHeld(mouseRight):
+      editor.setTile(hovered, false)
 
 type
   RoomBuilder = ref object of Program

@@ -94,6 +94,11 @@ type
     horizontal
     vertical
 
+  MouseButton* = enum
+    mouseLeft
+    mouseRight
+    mouseMiddle
+
   InputEvent* = object
     kind*: Input
     state*: InputState
@@ -103,7 +108,7 @@ type
     inputs: array[Input, InputState]
     axes: array[Axis, int]
     mousePos: Vec
-    mouseState: InputState
+    mouseState: array[MouseButton, InputState]
     mouseWheel: int
     bufferedEvents: seq[InputEvent]
 
@@ -177,6 +182,18 @@ proc keyToInputs(key: Scancode): seq[Input] =
 
   else: @[]
 
+proc mouseEventToButton(event: MouseButtonEventPtr): MouseButton =
+  case event.button
+  of 1:
+    mouseLeft
+  of 2:
+    mouseMiddle
+  of 3:
+    mouseRight
+  else:
+    echo "Unexpected mouse button ", event.button, ", defaulting to left button"
+    mouseLeft
+
 proc isHeld*(manager: InputManager, key: Input): bool
 proc update*(manager: var InputManager) =
   manager.bufferedEvents = @[]
@@ -188,7 +205,8 @@ proc update*(manager: var InputManager) =
       i = inactive
   for i in Input:
     updateInput(manager.inputs[i])
-  updateInput(manager.mouseState)
+  for b in MouseButton:
+    updateInput(manager.mouseState[b])
   manager.mouseWheel = 0
 
   template updateAxis(a, neg, pos) =
@@ -224,11 +242,14 @@ proc update*(manager: var InputManager) =
       let pos = vec(event.motion.x, event.motion.y)
       manager.mousePos = pos
     of MouseButtonDown:
-      let pos = vec(event.button.x, event.button.y)
+      let
+        pos = vec(event.button.x, event.button.y)
+        button = mouseEventToButton event.button
       manager.mousePos = pos
-      manager.mouseState = pressed
+      manager.mouseState[button] = pressed
     of MouseButtonUp:
-      manager.mouseState = released
+      let button = mouseEventToButton event.button
+      manager.mouseState[button] = released
     of MouseWheel:
       manager.mouseWheel = event.wheel.y.int
     else: discard
@@ -246,11 +267,12 @@ proc isReleased*(manager: InputManager, key: Input): bool =
 proc mousePos*(manager: InputManager): Vec =
   manager.mousePos
 
-proc isMousePressed*(manager: InputManager): bool =
-  manager.mouseState == pressed
+proc isMousePressed*(manager: InputManager, button: MouseButton = mouseLeft): bool =
+  manager.mouseState[button] == pressed
 
-proc isMouseHeld*(manager: InputManager): bool =
-  manager.mouseState == pressed or manager.mouseState == held
+proc isMouseHeld*(manager: InputManager, button: MouseButton = mouseLeft): bool =
+  ( manager.mouseState[button] == pressed or
+    manager.mouseState[button] == held)
 
 proc clickPressedPos*(manager: InputManager): Option[Vec] =
   if manager.isMousePressed:
@@ -261,7 +283,7 @@ proc clickHeldPos*(manager: InputManager): Option[Vec] =
     return makeJust(manager.mousePos)
 
 proc clickReleasedPos*(manager: InputManager): Option[Vec] =
-  if manager.mouseState == released:
+  if manager.mouseState[mouseLeft] == released:
     return makeJust(manager.mousePos)
 
 proc mouseWheel*(manager: InputManager): int =
