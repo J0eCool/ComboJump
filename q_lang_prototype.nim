@@ -177,17 +177,7 @@ method eval(literal: Literal, execution: Execution): Value =
 method handleInput(literal: Literal, inputMan: InputManager) =
   if inputMan.isHeld(Input.ctrl):
     return
-  for idx in 0..<input.allNumbers.len:
-    let key = input.allNumbers[idx]
-    if inputMan.isPressed(key):
-      literal.value &= key.letterKeyStr
-      literal.dirty = true
-  if inputMan.isPressed(Input.backspace):
-    literal.value = literal.value[0..<literal.value.len-1]
-    literal.dirty = true
-  if inputMan.isPressed(Input.delete):
-    literal.value = ""
-    literal.dirty = true
+  literal.dirty = literal.value.handleTextInput(inputMan, ignoreLetters=true)
 
 type
   Variable = ref VariableObj
@@ -213,17 +203,7 @@ method eval(variable: Variable, execution: Execution): Value =
 method handleInput(variable: Variable, inputMan: InputManager) =
   if inputMan.isHeld(Input.ctrl):
     return
-  for idx in 0..<input.allLetters.len:
-    let key = input.allLetters[idx]
-    if inputMan.isPressed(key):
-      variable.ident &= key.letterKeyStr
-      variable.dirty = true
-  if inputMan.isPressed(Input.backspace):
-    variable.ident = variable.ident[0..<variable.ident.len-1]
-    variable.dirty = true
-  if inputMan.isPressed(Input.delete):
-    variable.ident = ""
-    variable.dirty = true
+  variable.dirty = variable.ident.handleTextInput(inputMan)
 
 type
   VariableAssign = ref VariableAssignObj
@@ -465,8 +445,6 @@ proc newQLangPrototype(screenSize: Vec): QLangPrototype =
   selected = result.ast
   let offset = vec(50, 50)
   result.menu = result.ast.menu(offset)
-
-  echo result.ast.toJSON.toPrettyString
 
 proc outputNode(program: QLangPrototype): Node =
   stringListNode(@["Output:"] & program.cachedOutput, vec(900, 600))

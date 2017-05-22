@@ -315,3 +315,22 @@ proc letterKeyStr*(button: Input): string =
     ($button)[1..2]
   else:
     ""
+
+proc handleTextInput*(text: var string, input: InputManager,
+                      ignoreLetters = false, ignoreNumbers = false): bool =
+  # Returns true when text is modified
+  template handleArray(arr: seq[Input]) =
+    for key in arr:
+      if input.isPressed(key):
+        text &= key.letterKeyStr
+        result = true
+  if not ignoreLetters:
+    handleArray(allLetters)
+  if not ignoreNumbers:
+    handleArray(allNumbers)
+  if input.isPressed(Input.backspace):
+    text = text[0..<text.len-1]
+    result = true
+  if input.isPressed(Input.delete):
+    text = ""
+    result = true
