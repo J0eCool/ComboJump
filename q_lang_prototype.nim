@@ -2,6 +2,7 @@ import
   hashes,
   sdl2,
   sequtils,
+  strutils,
   tables,
   typetraits
 
@@ -152,7 +153,7 @@ method replaceOnAdd(empty: Empty): bool =
 type
   Literal = ref LiteralObj
   LiteralObj = object of ExprNode
-    value: int
+    value: string
 
 astJson(LiteralObj, Literal)
 
@@ -164,26 +165,28 @@ method menuSelf(literal: Literal, pos: Vec): Node =
     children: @[
       literal.bodyNode(literal.size, color.blue),
       BorderedTextNode(
-        text: $literal.value,
+        text: literal.value,
       ),
     ],
   )
 method eval(literal: Literal, execution: Execution): Value =
-  literal.value
+  try:
+    literal.value.parseInt
+  except:
+    0
 method handleInput(literal: Literal, inputMan: InputManager) =
   if inputMan.isHeld(Input.ctrl):
     return
   for idx in 0..<input.allNumbers.len:
-    let button = input.allNumbers[idx]
-    if inputMan.isPressed(button):
-      literal.value *= 10
-      literal.value += idx
+    let key = input.allNumbers[idx]
+    if inputMan.isPressed(key):
+      literal.value &= key.letterKeyStr
       literal.dirty = true
   if inputMan.isPressed(Input.backspace):
-    literal.value = literal.value div 10
+    literal.value = literal.value[0..<literal.value.len-1]
     literal.dirty = true
   if inputMan.isPressed(Input.delete):
-    literal.value = 0
+    literal.value = ""
     literal.dirty = true
 
 type
@@ -452,7 +455,7 @@ proc newQLangPrototype(screenSize: Vec): QLangPrototype =
       statements: @[
         VariableAssign(
           variable: Variable(ident: "foo"),
-          value: Literal(value: 5),
+          value: Literal(value: "5"),
         ),
         Print(
           ast: Variable(ident: "foo"),
@@ -567,7 +570,7 @@ method update*(program: QLangPrototype, dt: float) =
     if program.input.isPressed(Input.delete):
       program.deleteSelected()
     if program.input.isPressed(Input.keyL):
-      program.addNode(Literal(value: 0))
+      program.addNode(Literal(value: ""))
     if program.input.isPressed(Input.keyV):
       program.addNode(Variable(ident: ""))
     if program.input.isPressed(Input.keyP):

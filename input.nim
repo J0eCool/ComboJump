@@ -309,7 +309,9 @@ const
   ]
 
 proc letterKeyStr*(button: Input): string =
-  if not (button in allLetters):
-    ""
-  else:
+  if button in allLetters:
     ($button)[3..4].toLowerAscii
+  elif button in allNumbers:
+    ($button)[1..2]
+  else:
+    ""
