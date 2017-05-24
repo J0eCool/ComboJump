@@ -50,15 +50,23 @@ proc draw*(renderer: RendererPtr, rendered: RenderedText, pos: Vec) =
 
 proc draw*(renderer: RendererPtr,
            sprite: SpriteData,
-           rect: rect.Rect,
+           toRect: rect.Rect,
+           sliceRect: rect.Rect,
            flipX = false,
            angle = 0.0) =
   var
-    dstrect = sdlRect(rect - rect.size / 2)
-    srcrect = sdlRect(sprite.size)
+    dstrect = sdlRect(toRect - toRect.size / 2)
+    srcrect = sdlRect(sliceRect)
     flip = if flipX: SDL_FLIP_HORIZONTAL else: SDL_FLIP_NONE
   renderer.copyEx(sprite.texture, addr srcrect, addr dstrect,
                   angle=angle, center=nil, flip=flip)
+
+proc draw*(renderer: RendererPtr,
+           sprite: SpriteData,
+           toRect: rect.Rect,
+           flipX = false,
+           angle = 0.0) =
+  draw(renderer, sprite, toRect, sprite.size, flipX, angle)
 
 var textCache = initTable[string, RenderedText]()
 proc drawCachedText*(renderer: RendererPtr,

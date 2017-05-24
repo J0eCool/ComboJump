@@ -25,7 +25,38 @@ type
   TileGrid = object
     w, h: int
     data: seq[seq[bool]]
+    subtiles: seq[seq[SubTile]]
   Coord = tuple[x, y: int]
+  SubTile = enum
+    tileNone
+    tileUL
+    tileUC
+    tileUR
+    tileCL
+    tileCC
+    tileCR
+    tileDL
+    tileDC
+    tileDR
+    tileCornerUL
+    tileCornerUR
+    tileCornerDL
+    tileCornerDR
+
+proc recalculateSubtiles(grid: var TileGrid) =
+  grid.subtiles = @[]
+  for x in 0..<2*grid.w:
+    var line: seq[SubTile] = @[]
+    for y in 0..<2*grid.h:
+      line.add tileNone
+    grid.subtiles.add line
+
+  for x in 0..<grid.w:
+    for y in 0..<grid.h:
+      if grid.data[x][y]:
+        for dx in 0..1:
+          for dy in 0..1:
+            grid.subtiles[2*x+dx][2*y+dy] = (tileCC.int + dx).SubTile
 
 proc newGrid(w, h: int): TileGrid =
   result = TileGrid(
@@ -38,6 +69,26 @@ proc newGrid(w, h: int): TileGrid =
     for y in 0..<h:
       line.add false
     result.data.add line
+  result.recalculateSubtiles()
+
+proc clipRect(subtile: SubTile, tileSize = 16.0): Rect =
+  let tilePos =
+    case subtile
+    of tileUL:       vec(0, 0)
+    of tileUC:       vec(1, 0)
+    of tileUR:       vec(2, 0)
+    of tileCL:       vec(0, 1)
+    of tileCC:       vec(1, 1)
+    of tileCR:       vec(2, 1)
+    of tileDL:       vec(0, 1)
+    of tileDC:       vec(1, 2)
+    of tileDR:       vec(2, 2)
+    of tileCornerUL: vec(3, 0)
+    of tileCornerUR: vec(4, 0)
+    of tileCornerDL: vec(3, 1)
+    of tileCornerDR: vec(4, 1)
+    else:            vec()
+  rect(vec(tileSize), tileSize * tilePos)
 
 proc toBoolString(grid: seq[seq[bool]]): string =
   result = ""
@@ -67,6 +118,7 @@ proc fromJSON(grid: var TileGrid, json: JSON) =
   var dataStr: string
   dataStr.fromJSON(json.obj["dataStr"])
   grid.data = dataStr.fromBoolString(grid.w, grid.h)
+  grid.recalculateSubtiles()
 
 type GridEditor = ref object of Node
   grid: ptr TileGrid
@@ -83,9 +135,14 @@ proc newGridEditor(grid: ptr TileGrid): GridEditor =
     hovered: (-1, -1),
   )
 
-proc gridRect(editor: GridEditor, x, y: int): Rect =
-  let pos = vec(x, y) * editor.tileSize + editor.globalPos
-  rect(pos, editor.tileSize)
+proc gridRect(editor: GridEditor, x, y: int, isSubtile = false): Rect =
+  let
+    base = vec(x, y)
+    scale = if isSubtile: 0.5 else: 1.0
+    size = editor.tileSize * scale
+    offset = if isSubtile: -0.5 * size else: vec()
+    pos = base * size + offset + editor.globalPos
+  rect(pos, size)
 
 proc posToCoord(editor: GridEditor, pos: Vec): Coord =
   let
@@ -107,6 +164,7 @@ proc getTile(editor: GridEditor, coord: Coord): bool =
 proc setTile(editor: GridEditor, coord: Coord, val: bool) =
   if editor.isCoordIsInRange(coord):
     editor.grid.data[coord.x][coord.y] = val
+    editor.grid[].recalculateSubtiles()
 
 method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var ResourceManager) =
   const
@@ -115,6 +173,7 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
   let grid = editor.grid[]
 
   # Draw tiles
+  let sprite = resources.loadSprite("tilemaps/white-border.png", renderer)
   for x in 0..<grid.w:
     for y in 0..<grid.h:
       let
@@ -130,7 +189,15 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
               hoverColor
             else:
               tileColor
-        renderer.fillRect r, color
+        if isHovered:
+          renderer.fillRect r, color
+
+  for x in 0..<2*grid.w:
+    for y in 0..<2*grid.h:
+      let tile = grid.subtiles[x][y]
+      if tile != tileNone:
+        let r = editor.gridRect(x, y, isSubtile=true)
+        renderer.draw(sprite, r, tile.clipRect)
 
   # Draw grid lines
   let
@@ -168,6 +235,7 @@ type
 proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   new result
   result.title = "Room Builder (prototype)"
+  result.resources = newResourceManager()
   let loadedJson = readJSONFile(savedTileFile)
   if loadedJson.kind != jsError:
     result.grid.fromJSON(loadedJson)

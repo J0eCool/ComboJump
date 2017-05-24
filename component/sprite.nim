@@ -8,7 +8,7 @@ import
 type
   SpriteData* = ref object
     texture*: TexturePtr
-    size*: rect.Rect
+    size*: Rect
 
   SpriteObj* = object of ComponentObj
     color*: Color
