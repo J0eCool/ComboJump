@@ -38,10 +38,10 @@ type
     tileDL
     tileDC
     tileDR
-    tileCornerUL
-    tileCornerUR
-    tileCornerDL
-    tileCornerDR
+    tileCorUL
+    tileCorUR
+    tileCorDL
+    tileCorDR
 
 proc recalculateSubtiles(grid: var TileGrid) =
   grid.subtiles = @[]
@@ -51,12 +51,50 @@ proc recalculateSubtiles(grid: var TileGrid) =
       line.add tileNone
     grid.subtiles.add line
 
-  for x in 0..<grid.w:
-    for y in 0..<grid.h:
-      if grid.data[x][y]:
-        for dx in 0..1:
-          for dy in 0..1:
-            grid.subtiles[2*x+dx][2*y+dy] = (tileCC.int + dx).SubTile
+  const numDirs = 4
+  type Filter = tuple
+    ins: array[numDirs, bool]
+    outs: array[numDirs, SubTile]
+  const
+    deltas: array[numDirs, Coord] = [(0, 0), (1, 0), (0, 1), (1, 1)]
+    filters: seq[Filter] = @[
+      ([false, false, false, false], [ tileNone,   tileNone,  tileNone,  tileNone]),
+      ([false, false, false,  true], [ tileNone,   tileNone,  tileNone,    tileUL]),
+      ([false, false,  true, false], [ tileNone,   tileNone,    tileUR,  tileNone]),
+      ([false, false,  true,  true], [ tileNone,   tileNone,    tileUC,    tileUC]),
+      ([false,  true, false, false], [ tileNone,     tileDL,  tileNone,  tileNone]),
+      ([false,  true, false,  true], [ tileNone,     tileCL,  tileNone,    tileCL]),
+      ([false,  true,  true, false], [ tileNone,     tileDL,    tileUR,  tileNone]),
+      ([false,  true,  true,  true], [ tileNone,     tileCL,    tileUC, tileCorUL]),
+      ([ true, false, false, false], [   tileDR,   tileNone,  tileNone,  tileNone]),
+      ([ true, false, false,  true], [   tileDR,   tileNone,  tileNone,    tileUL]),
+      ([ true, false,  true, false], [   tileCR,   tileNone,    tileCR,  tileNone]),
+      ([ true, false,  true,  true], [   tileCR,   tileNone, tileCorUR,    tileUC]),
+      ([ true,  true, false, false], [   tileDC,     tileDC,  tileNone,  tileNone]),
+      ([ true,  true, false,  true], [   tileDC,  tileCorDL,  tileNone,    tileCL]),
+      ([ true,  true,  true, false], [tileCorDR,     tileDC,    tileCR,  tileNone]),
+      ([ true,  true,  true,  true], [   tileCC,     tileCC,    tileCC,    tileCC]),
+    ]
+
+  for i in -1..grid.w:
+    for j in -1..grid.h:
+      for filter in filters:
+        var found = true
+        for k in 0..<numDirs:
+          let
+            d = deltas[k]
+            x = (i + d.x).clamp(0, grid.w - 1)
+            y = (j + d.y).clamp(0, grid.h - 1)
+          if grid.data[x][y] != filter.ins[k]:
+            found = false
+            break
+        if found:
+          for k in 0..<numDirs:
+            let
+              d = deltas[k]
+              x = (2*i + d.x + 1).clamp(0, 2*grid.w - 1)
+              y = (2*j + d.y + 1).clamp(0, 2*grid.h - 1)
+            grid.subtiles[x][y] = filter.outs[k]
 
 proc newGrid(w, h: int): TileGrid =
   result = TileGrid(
@@ -74,21 +112,21 @@ proc newGrid(w, h: int): TileGrid =
 proc clipRect(subtile: SubTile, tileSize = 16.0): Rect =
   let tilePos =
     case subtile
-    of tileUL:       vec(0, 0)
-    of tileUC:       vec(1, 0)
-    of tileUR:       vec(2, 0)
-    of tileCL:       vec(0, 1)
-    of tileCC:       vec(1, 1)
-    of tileCR:       vec(2, 1)
-    of tileDL:       vec(0, 1)
-    of tileDC:       vec(1, 2)
-    of tileDR:       vec(2, 2)
-    of tileCornerUL: vec(3, 0)
-    of tileCornerUR: vec(4, 0)
-    of tileCornerDL: vec(3, 1)
-    of tileCornerDR: vec(4, 1)
-    else:            vec()
-  rect(vec(tileSize), tileSize * tilePos)
+    of tileUL:    vec(0, 0)
+    of tileUC:    vec(1, 0)
+    of tileUR:    vec(2, 0)
+    of tileCL:    vec(0, 1)
+    of tileCC:    vec(1, 1)
+    of tileCR:    vec(2, 1)
+    of tileDL:    vec(0, 2)
+    of tileDC:    vec(1, 2)
+    of tileDR:    vec(2, 2)
+    of tileCorDR: vec(3, 0)
+    of tileCorDL: vec(4, 0)
+    of tileCorUR: vec(3, 1)
+    of tileCorUL: vec(4, 1)
+    else:         vec()
+  rect(tileSize * tilePos, vec(tileSize))
 
 proc toBoolString(grid: seq[seq[bool]]): string =
   result = ""
@@ -189,8 +227,7 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
               hoverColor
             else:
               tileColor
-        if isHovered:
-          renderer.fillRect r, color
+        renderer.fillRect r, color
 
   for x in 0..<2*grid.w:
     for y in 0..<2*grid.h:
