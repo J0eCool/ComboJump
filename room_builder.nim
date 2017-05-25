@@ -163,6 +163,8 @@ type GridEditor = ref object of Node
   clickId: int
   tileSize: Vec
   hovered: Coord
+  drawGridLines: bool
+  drawSubtiles: bool
 
 proc newGridEditor(grid: ptr TileGrid): GridEditor =
   GridEditor(
@@ -171,6 +173,8 @@ proc newGridEditor(grid: ptr TileGrid): GridEditor =
     clickId: 0,
     tileSize: vec(60),
     hovered: (-1, -1),
+    drawGridLines: true,
+    drawSubtiles: true,
   )
 
 proc gridRect(editor: GridEditor, x, y: int, isSubtile = false): Rect =
@@ -188,19 +192,19 @@ proc posToCoord(editor: GridEditor, pos: Vec): Coord =
     scaled = local / editor.tileSize
   (scaled.x.int, scaled.y.int)
 
-proc isCoordIsInRange(editor: GridEditor, coord: Coord): bool =
+proc isCoordInRange(editor: GridEditor, coord: Coord): bool =
   let grid = editor.grid[]
   ( coord.x >= 0 and coord.x < grid.w and
     coord.y >= 0 and coord.y < grid.h )
 
 proc getTile(editor: GridEditor, coord: Coord): bool =
-  if editor.isCoordIsInRange(coord):
+  if editor.isCoordInRange(coord):
     editor.grid.data[coord.x][coord.y]
   else:
     false
 
 proc setTile(editor: GridEditor, coord: Coord, val: bool) =
-  if editor.isCoordIsInRange(coord):
+  if editor.isCoordInRange(coord):
     editor.grid.data[coord.x][coord.y] = val
     editor.grid[].recalculateSubtiles()
 
@@ -211,57 +215,70 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
   let grid = editor.grid[]
 
   # Draw tiles
-  let sprite = resources.loadSprite("tilemaps/white-border.png", renderer)
-  for x in 0..<grid.w:
-    for y in 0..<grid.h:
-      let
-        isFull = grid.data[x][y]
-        isHovered = (x, y) == editor.hovered
-      if isFull or isHovered:
-        let
-          r = editor.gridRect(x, y)
-          color =
-            if isHovered and isFull:
-              average(tileColor, hoverColor)
-            elif isHovered:
-              hoverColor
-            else:
-              tileColor
-        renderer.fillRect r, color
+  if not editor.drawSubtiles:
+    for x in 0..<grid.w:
+      for y in 0..<grid.h:
+        let isFull = grid.data[x][y]
+        if isFull:
+          let r = editor.gridRect(x, y)
+          renderer.fillRect r, tileColor
 
-  for x in 0..<2*grid.w:
-    for y in 0..<2*grid.h:
-      let tile = grid.subtiles[x][y]
-      if tile != tileNone:
-        let r = editor.gridRect(x, y, isSubtile=true)
-        renderer.draw(sprite, r, tile.clipRect)
+  # Draw subtiles
+  if editor.drawSubtiles:
+    let sprite = resources.loadSprite("tilemaps/white-border.png", renderer)
+    for x in 0..<2*grid.w:
+      for y in 0..<2*grid.h:
+        let tile = grid.subtiles[x][y]
+        if tile != tileNone:
+          let r = editor.gridRect(x, y, isSubtile=true)
+          renderer.draw(sprite, r, tile.clipRect)
+
+  # Draw hovered tile
+  if editor.isCoordInRange(editor.hovered):
+    let
+      x = editor.hovered.x
+      y = editor.hovered.y
+    let
+      isFull = grid.data[x][y]
+      r = editor.gridRect(x, y)
+      color =
+        if isFull:
+          average(tileColor, hoverColor)
+        else:
+          hoverColor
+    renderer.fillRect r, color
 
   # Draw grid lines
-  let
-    totalSize = vec(grid.w, grid.h) * editor.tileSize
-    offset = editor.pos - editor.tileSize / 2
-    lineWidth = 2.0
-    lineColor = darkGray
-  for x in 0..grid.w:
+  if editor.drawGridLines:
     let
-      pos = vec(x.float * editor.tileSize.x, totalSize.y / 2) + offset
-      r = rect(pos, vec(lineWidth, totalSize.y))
-    renderer.fillRect r, lineColor
-  for y in 0..grid.h:
-    let
-      pos = vec(totalSize.x / 2, y.float * editor.tileSize.y) + offset
-      r = rect(pos, vec(totalSize.x, lineWidth))
-    renderer.fillRect r, lineColor
+      totalSize = vec(grid.w, grid.h) * editor.tileSize
+      offset = editor.pos - editor.tileSize / 2
+      lineWidth = 2.0
+      lineColor = darkGray
+    for x in 0..grid.w:
+      let
+        pos = vec(x.float * editor.tileSize.x, totalSize.y / 2) + offset
+        r = rect(pos, vec(lineWidth, totalSize.y))
+      renderer.fillRect r, lineColor
+    for y in 0..grid.h:
+      let
+        pos = vec(totalSize.x / 2, y.float * editor.tileSize.y) + offset
+        r = rect(pos, vec(totalSize.x, lineWidth))
+      renderer.fillRect r, lineColor
 
 method updateSelf(editor: GridEditor, input: InputManager) =
   let hovered = editor.posToCoord(input.mousePos)
   editor.hovered = hovered
 
-  if editor.isCoordIsInRange(hovered):
+  if editor.isCoordInRange(hovered):
     if input.isMouseHeld(mouseLeft):
       editor.setTile(hovered, true)
     if input.isMouseHeld(mouseRight):
       editor.setTile(hovered, false)
+  if input.isPressed(space):
+    editor.drawSubtiles = not editor.drawSubtiles
+  if input.isPressed(keyG):
+    editor.drawGridLines = not editor.drawGridLines
 
 type
   RoomBuilder = ref object of Program
