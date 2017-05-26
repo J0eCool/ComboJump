@@ -168,10 +168,10 @@ type GridEditor = ref object of Node
 
 proc newGridEditor(grid: ptr TileGrid): GridEditor =
   GridEditor(
-    pos: vec(120, 120),
+    pos: vec(90, 120),
     grid: grid,
     clickId: 0,
-    tileSize: vec(60),
+    tileSize: vec(64),
     hovered: (-1, -1),
     drawGridLines: true,
     drawSubtiles: true,
@@ -225,7 +225,7 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
 
   # Draw subtiles
   if editor.drawSubtiles:
-    let sprite = resources.loadSprite("tilemaps/white-border.png", renderer)
+    let sprite = resources.loadSprite("tilemaps/DirtTiles.png", renderer)
     for x in 0..<2*grid.w:
       for y in 0..<2*grid.h:
         let tile = grid.subtiles[x][y]
@@ -294,7 +294,7 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   if loadedJson.kind != jsError:
     result.grid.fromJSON(loadedJson)
   else:
-    result.grid = newGrid(12, 9)
+    result.grid = newGrid(16, 12)
   result.menu = newGridEditor(addr result.grid)
 
 method update*(program: RoomBuilder, dt: float) =
