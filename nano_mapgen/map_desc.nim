@@ -180,8 +180,9 @@ proc generateMap*(graph: MapGraph): Map =
             if isMainPath:
               @[parentRooms[parentRooms.len - 1]]
             else:
-              filter(parentRooms) do (room: ref Room) -> bool:
+              filter(parentRooms, proc(room: ref Room): bool =
                 room.up == doorWall or room.down == doorWall
+              )
           room = random(openParents)
           xDir = if isMainPath: 1 else: 0
           yDir =

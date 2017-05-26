@@ -1,6 +1,6 @@
 import macros, math, random
 
-macro dprint*(exprs: varargs[expr]): expr =
+macro dprint*(exprs: varargs[typed]): untyped =
   result = newCall("echo")
   var hadPrev = false
   for e in exprs:
@@ -76,7 +76,7 @@ proc `$`*[T: enum, V](list: array[T, V]): string =
     result &= $i & ":" & $list[i]
   result &= "]"
 
-macro addVarargs*(call, args: expr): expr =
+macro addVarargs*(call, args: untyped): untyped =
   result = call
   for arg in args:
     result.add arg

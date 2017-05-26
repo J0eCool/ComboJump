@@ -15,8 +15,8 @@ macro importAllComponents(): untyped =
 
 importAllComponents()
 
-method jsonVal*(component: Component): JSON
-method loadJson*(component: Component, json: JSON)
+method jsonVal*(component: Component): JSON {.base.}
+method loadJson*(component: Component, json: JSON) {.base.}
 macro declareToJSONMethods(): untyped =
   var data = readComponentData()
 

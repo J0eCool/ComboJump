@@ -42,10 +42,10 @@ proc getComponent_impl[T: Component](entity: Entity): T =
     if c of T:
       return T(c)
 
-template getComponent*(entity, t: expr): expr =
+template getComponent*(entity: Entity, t: untyped): untyped =
   getComponent_impl[t](entity)
 
-template withComponent*(entity, t, name: expr, body: stmt): stmt {.immediate.} =
+template withComponent*(entity: Entity, t, name, body: untyped): untyped =
   let name = entity.getComponent(t)
   if name != nil:
     body
@@ -61,7 +61,7 @@ iterator flatten*(entities: Entities): Entity =
     if e.children.len > 0:
       toTraverse &= e.children
 
-macro forComponents*(entities, e: expr, components: seq[expr], body: stmt): stmt {.immediate.} =
+macro forComponents*(entities, e, components, body: untyped): untyped =
   assert(components.len mod 2 == 0, "Need a name and identifier for each component")
   result = newNimNode(nnkForStmt)
   result.add(e)
@@ -93,7 +93,7 @@ proc firstComponent_impl[T](entities: Entities): T =
       return c
   return nil
 
-template firstComponent*(entities: Entities, t: expr): expr =
+template firstComponent*(entities: Entities, t: untyped): untyped =
   firstComponent_impl[t](entities)
 
 proc `$`*(e: Entity): string =

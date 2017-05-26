@@ -17,7 +17,7 @@ proc makeNone*[T](): Option[T] =
 proc makeJust*[T](value: T): Option[T] =
   Option[T](kind: just, value: value)
 
-template bindAs*(opt, name: expr, body: stmt): stmt {.immediate.} =
+template bindAs*(opt: typed, name, body: untyped): untyped =
   case opt.kind
   of none:
     discard

@@ -16,7 +16,7 @@ proc vecX*(v: Vec): Vec =
 proc vecY*(v: Vec): Vec =
   vec(0.0, v.y)
 
-template vecf(op, assignOp: expr): expr =
+template vecf(op, assignOp: untyped): untyped =
   proc op*(a, b: Vec): Vec =
     vec(op(a.x, b.x),
         op(a.y, b.y))

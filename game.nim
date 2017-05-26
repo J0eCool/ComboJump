@@ -35,10 +35,10 @@ method init*(game: Game) =
   game.resources = newResourceManager()
   game.loadEntities()
 
-method loadEntities*(game: Game) =
+method loadEntities*(game: Game) {.base.} =
   discard
 
-method onRemove*(game: Game, entity: Entity) =
+method onRemove*(game: Game, entity: Entity) {.base.} =
   discard
 
 proc process*(game: Game, events: Events) =
