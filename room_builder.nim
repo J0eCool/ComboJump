@@ -225,7 +225,7 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
 
   # Draw subtiles
   if editor.drawSubtiles:
-    let sprite = resources.loadSprite("tilemaps/DirtTiles.png", renderer)
+    let sprite = resources.loadSprite("tilemaps/Bricks.png", renderer)
     for x in 0..<2*grid.w:
       for y in 0..<2*grid.h:
         let tile = grid.subtiles[x][y]
