@@ -228,7 +228,12 @@ proc posToCoord(editor: GridEditor, pos: Vec): Coord =
   let
     local = pos - editor.globalPos + editor.tileSize / 2
     scaled = local / editor.tileSize
-  (scaled.x.int, scaled.y.int)
+  if scaled.x < 0 or scaled.y < 0:
+    # Float to int conversion rounds toward zero, so e.g. -0.8 becomes 0, which lets
+    # positions that are just off the grid still count as being in grid.
+    (-1, -1)
+  else:
+    (scaled.x.int, scaled.y.int)
 
 proc isCoordInRange(editor: GridEditor, coord: Coord): bool =
   let grid = editor.grid[]
