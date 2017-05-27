@@ -26,6 +26,7 @@ type
   TileGrid = object
     w, h: int
     data: seq[seq[bool]]
+    textureName: string
     subtiles: seq[seq[SubTile]]
   Coord = tuple[x, y: int]
   SubTile = enum
@@ -43,6 +44,33 @@ type
     tileCorUR
     tileCorDL
     tileCorDR
+
+proc walkTilemapTextures(): seq[string] =
+  # TODO: read this from files
+  result = @[
+    "white-border",
+    "white-border-textured",
+    "Bricks",
+    "DirtTiles",
+    "TestBox",
+    "TestBox2",
+  ]
+  assert result.len > 0, "Need to have at least one tilemap texture"
+
+proc updateTilemapTextureIndex(current: string, deltaIndex: int): string =
+  let
+    textures = walkTilemapTextures()
+    index = textures.find(current)
+  if index < 0:
+    return textures[0]
+  let newIndex = (index + deltaIndex) mod textures.len
+  if newIndex < 0:
+    textures[textures.len - 1]
+  else:
+    textures[newIndex]
+
+proc updateTextureIndex(grid: var TileGrid, deltaIndex: int) =
+  grid.textureName = updateTilemapTextureIndex(grid.textureName, deltaIndex)
 
 proc recalculateSubtiles(grid: var TileGrid) =
   grid.subtiles = @[]
@@ -102,6 +130,7 @@ proc newGrid(w, h: int): TileGrid =
     w: w,
     h: h,
     data: @[],
+    textureName: walkTilemapTextures()[0],
   )
   for x in 0..<w:
     var line: seq[bool] = @[]
@@ -131,6 +160,10 @@ proc clipRect(subtile: SubTile, sprite: SpriteData): Rect =
       else:         vec()
   rect(tileSize * tilePos, tileSize)
 
+proc loadSprite(grid: TileGrid, resources: var ResourceManager, renderer: RendererPtr): SpriteData =
+  let tilemapName = "tilemaps/" & grid.textureName & ".png"
+  resources.loadSprite(tilemapName, renderer)
+
 proc toBoolString(grid: seq[seq[bool]]): string =
   result = ""
   for line in grid:
@@ -151,11 +184,13 @@ proc toJSON(grid: TileGrid): JSON =
   obj["w"] = grid.w.toJSON
   obj["h"] = grid.h.toJSON
   obj["dataStr"] = grid.data.toBoolString.toJSON
+  obj["textureName"] = grid.textureName.toJSON
   JSON(kind: jsObject, obj: obj)
 proc fromJSON(grid: var TileGrid, json: JSON) =
   assert json.kind == jsObject
   grid.w.fromJSON(json.obj["w"])
   grid.h.fromJSON(json.obj["h"])
+  grid.textureName.fromJSON(json.obj["textureName"])
   var dataStr: string
   dataStr.fromJSON(json.obj["dataStr"])
   grid.data = dataStr.fromBoolString(grid.w, grid.h)
@@ -228,7 +263,7 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
 
   # Draw subtiles
   if editor.drawSubtiles:
-    let sprite = resources.loadSprite("tilemaps/TestBox2.png", renderer)
+    let sprite = grid.loadSprite(resources, renderer)
     for x in 0..<2*grid.w:
       for y in 0..<2*grid.h:
         let tile = grid.subtiles[x][y]
@@ -283,6 +318,10 @@ method updateSelf(editor: GridEditor, input: InputManager) =
     editor.drawSubtiles = not editor.drawSubtiles
   if input.isPressed(keyG):
     editor.drawGridLines = not editor.drawGridLines
+  if input.isPressed(arrowDown):
+    editor.grid[].updateTextureIndex(1)
+  if input.isPressed(arrowUp):
+    editor.grid[].updateTextureIndex(-1)
 
 type
   RoomBuilder = ref object of Program
