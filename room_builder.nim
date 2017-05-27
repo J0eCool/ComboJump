@@ -2,6 +2,7 @@ import hashes, sequtils, sets, tables
 from sdl2 import RendererPtr
 
 import
+  component/sprite,
   camera,
   color,
   drawing,
@@ -109,24 +110,26 @@ proc newGrid(w, h: int): TileGrid =
     result.data.add line
   result.recalculateSubtiles()
 
-proc clipRect(subtile: SubTile, tileSize = 16.0): Rect =
-  let tilePos =
-    case subtile
-    of tileUL:    vec(0, 0)
-    of tileUC:    vec(1, 0)
-    of tileUR:    vec(2, 0)
-    of tileCL:    vec(0, 1)
-    of tileCC:    vec(1, 1)
-    of tileCR:    vec(2, 1)
-    of tileDL:    vec(0, 2)
-    of tileDC:    vec(1, 2)
-    of tileDR:    vec(2, 2)
-    of tileCorDR: vec(3, 0)
-    of tileCorDL: vec(4, 0)
-    of tileCorUR: vec(3, 1)
-    of tileCorUL: vec(4, 1)
-    else:         vec()
-  rect(tileSize * tilePos, vec(tileSize))
+proc clipRect(subtile: SubTile, sprite: SpriteData): Rect =
+  let
+    tileSize = sprite.size.size / vec(5, 3)
+    tilePos =
+      case subtile
+      of tileUL:    vec(0, 0)
+      of tileUC:    vec(1, 0)
+      of tileUR:    vec(2, 0)
+      of tileCL:    vec(0, 1)
+      of tileCC:    vec(1, 1)
+      of tileCR:    vec(2, 1)
+      of tileDL:    vec(0, 2)
+      of tileDC:    vec(1, 2)
+      of tileDR:    vec(2, 2)
+      of tileCorDR: vec(3, 0)
+      of tileCorDL: vec(4, 0)
+      of tileCorUR: vec(3, 1)
+      of tileCorUL: vec(4, 1)
+      else:         vec()
+  rect(tileSize * tilePos, tileSize)
 
 proc toBoolString(grid: seq[seq[bool]]): string =
   result = ""
@@ -168,7 +171,7 @@ type GridEditor = ref object of Node
 
 proc newGridEditor(grid: ptr TileGrid): GridEditor =
   GridEditor(
-    pos: vec(90, 120),
+    pos: vec(290, 120),
     grid: grid,
     clickId: 0,
     tileSize: vec(64),
@@ -225,13 +228,13 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
 
   # Draw subtiles
   if editor.drawSubtiles:
-    let sprite = resources.loadSprite("tilemaps/Bricks.png", renderer)
+    let sprite = resources.loadSprite("tilemaps/TestBox2.png", renderer)
     for x in 0..<2*grid.w:
       for y in 0..<2*grid.h:
         let tile = grid.subtiles[x][y]
         if tile != tileNone:
           let r = editor.gridRect(x, y, isSubtile=true)
-          renderer.draw(sprite, r, tile.clipRect)
+          renderer.draw(sprite, r, tile.clipRect(sprite))
 
   # Draw hovered tile
   if editor.isCoordInRange(editor.hovered):
@@ -291,10 +294,9 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   result.title = "Room Builder (prototype)"
   result.resources = newResourceManager()
   let loadedJson = readJSONFile(savedTileFile)
+  result.grid = newGrid(10, 8)
   if loadedJson.kind != jsError:
     result.grid.fromJSON(loadedJson)
-  else:
-    result.grid = newGrid(16, 12)
   result.menu = newGridEditor(addr result.grid)
 
 method update*(program: RoomBuilder, dt: float) =
