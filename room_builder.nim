@@ -318,10 +318,6 @@ method updateSelf(editor: GridEditor, input: InputManager) =
     editor.drawSubtiles = not editor.drawSubtiles
   if input.isPressed(keyG):
     editor.drawGridLines = not editor.drawGridLines
-  if input.isPressed(arrowDown):
-    editor.grid[].updateTextureIndex(1)
-  if input.isPressed(arrowUp):
-    editor.grid[].updateTextureIndex(-1)
 
 proc tilemapSelectionNode(target: ptr string): Node =
   List[string](
