@@ -289,12 +289,15 @@ type
     menu: Node
     grid: TileGrid
 
+proc resetGrid(program: RoomBuilder) =
+  program.grid = newGrid(14, 10)
+
 proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   new result
   result.title = "Room Builder (prototype)"
   result.resources = newResourceManager()
   let loadedJson = readJSONFile(savedTileFile)
-  result.grid = newGrid(10, 8)
+  result.resetGrid()
   if loadedJson.kind != jsError:
     result.grid.fromJSON(loadedJson)
   result.menu = newGridEditor(addr result.grid)
@@ -306,6 +309,8 @@ method update*(program: RoomBuilder, dt: float) =
     program.shouldExit = true
 
   if program.input.isHeld(Input.ctrl):
+    if program.input.isPressed(Input.keyN):
+      program.resetGrid()
     if program.input.isPressed(Input.keyS):
       writeJSONFile(savedTileFile, program.grid.toJSON, pretty=true)
       log info, "Saved to file ", savedTileFile
