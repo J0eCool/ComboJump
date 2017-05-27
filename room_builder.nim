@@ -275,7 +275,8 @@ method updateSelf(editor: GridEditor, input: InputManager) =
 
   if editor.isCoordInRange(hovered):
     if input.isMouseHeld(mouseLeft):
-      editor.setTile(hovered, true)
+      let delete = input.isHeld(Input.ctrl)
+      editor.setTile(hovered, not delete)
     if input.isMouseHeld(mouseRight):
       editor.setTile(hovered, false)
   if input.isPressed(space):
