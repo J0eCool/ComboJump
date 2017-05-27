@@ -45,7 +45,7 @@ type
     tileCorDL
     tileCorDR
 
-proc walkTilemapTextures(): seq[string] =
+proc allTilemapTextures(): seq[string] =
   # TODO: read this from files
   result = @[
     "white-border",
@@ -59,7 +59,7 @@ proc walkTilemapTextures(): seq[string] =
 
 proc updateTilemapTextureIndex(current: string, deltaIndex: int): string =
   let
-    textures = walkTilemapTextures()
+    textures = allTilemapTextures()
     index = textures.find(current)
   if index < 0:
     return textures[0]
@@ -130,7 +130,7 @@ proc newGrid(w, h: int): TileGrid =
     w: w,
     h: h,
     data: @[],
-    textureName: walkTilemapTextures()[0],
+    textureName: allTilemapTextures()[0],
   )
   for x in 0..<w:
     var line: seq[bool] = @[]
@@ -323,6 +323,24 @@ method updateSelf(editor: GridEditor, input: InputManager) =
   if input.isPressed(arrowUp):
     editor.grid[].updateTextureIndex(-1)
 
+proc tilemapSelectionNode(target: ptr string): Node =
+  List[string](
+    pos: vec(10, 40),
+    spacing: vec(6),
+    items: allTilemapTextures,
+    listNodes: (proc(texture: string): Node =
+      Button(
+        size: vec(240, 40),
+        onClick: (proc() =
+          target[] = texture
+        ),
+        children: @[
+          BorderedTextNode(text: texture).Node,
+        ]
+      )
+    ),
+  )
+
 type
   RoomBuilder = ref object of Program
     resources: ResourceManager
@@ -340,7 +358,12 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   result.resetGrid()
   if loadedJson.kind != jsError:
     result.grid.fromJSON(loadedJson)
-  result.menu = newGridEditor(addr result.grid)
+  result.menu = Node(
+    children: @[
+      tilemapSelectionNode(addr result.grid.textureName),
+      newGridEditor(addr result.grid),
+    ]
+  )
 
 method update*(program: RoomBuilder, dt: float) =
   menu.update(program.menu, program.input)
