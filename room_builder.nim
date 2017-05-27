@@ -80,12 +80,21 @@ proc recalculateSubtiles(grid: var TileGrid) =
       line.add tileNone
     grid.subtiles.add line
 
+  # Algorithm: Pattern-match the corners where 4 tiles intersect, set the inner subtiles that
+  # meet on that corner to the expected output.
+  # Consider each tile 4 times, once for each 4 corners it neighbors. The inner subtiles are
+  # non-overlapping, and this greatly reduces the number of cases.
+  # Also consider the intersections along the border. Extrapolate the tile-settedness for the
+  # tiles along the border out.
   const numDirs = 4
   type Filter = tuple
     ins: array[numDirs, bool]
     outs: array[numDirs, SubTile]
   const
-    deltas: array[numDirs, Coord] = [(0, 0), (1, 0), (0, 1), (1, 1)]
+    deltas: array[numDirs, Coord] =
+      [(0, 0), (1, 0), (0, 1), (1, 1)]
+    # TODO: instead of iterating through patterns, convert the bools to flags
+    # and constant-lookup into an array.
     filters: seq[Filter] = @[
       ([false, false, false, false], [ tileNone,   tileNone,  tileNone,  tileNone]),
       ([false, false, false,  true], [ tileNone,   tileNone,  tileNone,    tileUL]),
