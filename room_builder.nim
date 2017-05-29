@@ -54,6 +54,7 @@ proc allTilemapTextures(): seq[string] =
     "DirtTiles",
     "TestBox",
     "TestBox2",
+    "TestColors",
   ]
   assert result.len > 0, "Need to have at least one tilemap texture"
 
