@@ -1,4 +1,4 @@
-import hashes, sequtils, sets, tables
+import algorithm, hashes, os, sequtils, sets, tables
 from sdl2 import RendererPtr
 
 import
@@ -45,17 +45,17 @@ type
     tileCorDL
     tileCorDR
 
+proc walkTilemapTextures(): seq[string] =
+  result = @[]
+  for path in os.walkDir("assets/textures/tilemaps"):
+    if path.kind == pcFile:
+      let split = os.splitFile(path.path)
+      result.add split.name
+  result.sort(cmp[string])
+
+let cachedTilemapTextures = walkTilemapTextures()
 proc allTilemapTextures(): seq[string] =
-  # TODO: read this from files
-  result = @[
-    "white-border",
-    "white-border-textured",
-    "Bricks",
-    "DirtTiles",
-    "TestBox",
-    "TestBox2",
-    "TestColors",
-  ]
+  result = cachedTilemapTextures
   assert result.len > 0, "Need to have at least one tilemap texture"
 
 proc updateTilemapTextureIndex(current: string, deltaIndex: int): string =
