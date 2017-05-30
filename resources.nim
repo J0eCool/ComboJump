@@ -1,37 +1,79 @@
 import
+  os,
   sdl2,
   sdl2.image,
   sdl2.ttf,
-  tables
+  tables,
+  times
 
 import
   component/sprite,
   component/text,
   entity,
   logging,
-  rect
+  rect,
+  util
 
-type ResourceManager* = object
-  sprites: Table[string, SpriteData]
-  fonts: Table[string, FontPtr]
+type
+  CachedResource[T] = object
+    item: T
+    filename: string
+    checkOffset: float
+    nextCheckTime: float
+    lastModified: Time
+
+const offsetRange = 1.0
+proc newCachedResource[T](filename: string): CachedResource[T] =
+  CachedResource[T](
+    filename: filename,
+    checkOffset: random(0.0, offsetRange),
+  )
+
+proc shouldUpdateCache[T](cache: var CachedResource[T]): bool =
+  let cur = epochTime()
+  if cur < cache.nextCheckTime:
+    return false
+
+  cache.nextCheckTime = cur.int.float + cache.checkOffset + offsetRange
+  let modified = getLastModificationTime(cache.filename)
+  result = cache.lastModified != modified
+  cache.lastModified = modified
+
+type
+  ResourceManager* = object
+    sprites: Table[string, CachedResource[SpriteData]]
+    fonts: Table[string, FontPtr]
+
+const textureFolder = "assets/textures/"
+proc doSpriteLoad(filename: string, renderer: RendererPtr): SpriteData =
+  let surface = load(filename)
+  if surface == nil:
+    log error, "Unable to load texture at " & filename
+    return nil
+  let
+    texture = renderer.createTextureFromSurface(surface)
+    size = rect.rect(0, 0, surface.w, surface.h)
+  SpriteData(
+    texture: texture,
+    size: size,
+  )
+
+proc updatedSpriteCache(cache: var CachedResource[SpriteData],
+                        renderer: RendererPtr
+                       ): SpriteData =
+  if shouldUpdateCache(cache):
+    log info, "Loading texture \"", cache.filename, "\""
+    cache.item = doSpriteLoad(cache.filename, renderer)
+  cache.item
 
 proc loadSprite*(resources: var ResourceManager, textureName: string, renderer: RendererPtr): SpriteData =
   if textureName == nil:
     return nil
     
-  const textureFolder = "assets/textures/"
   if not resources.sprites.hasKey(textureName):
-    log info, "Loading texture \"", textureName, "\""
-    let surface = load(textureFolder & textureName)
-    if surface == nil:
-      log error, "Unable to load texture at " & textureFolder, textureName
-      return nil
-    let
-      texture = renderer.createTextureFromSurface(surface)
-      size = rect.rect(0, 0, surface.w, surface.h)
-    let sprite = SpriteData(texture: texture, size: size)
-    resources.sprites[textureName] = sprite
-  return resources.sprites[textureName]
+    resources.sprites[textureName] = newCachedResource[SpriteData](textureFolder & textureName)
+
+  return updatedSpriteCache(resources.sprites[textureName], renderer)
 
 proc loadFont*(resources: var ResourceManager, fontName: string): FontPtr =
   const fontFolder = "assets/fonts/"
@@ -46,7 +88,7 @@ proc loadFont*(resources: var ResourceManager, fontName: string): FontPtr =
   return resources.fonts[fontName]
 
 proc newResourceManager*(): ResourceManager =
-  result.sprites = initTable[string, SpriteData](64)
+  result.sprites = initTable[string, CachedResource[SpriteData]](64)
   result.fonts = initTable[string, FontPtr](8)
 
 proc loadResources*(entities: Entities, resources: var ResourceManager, renderer: RendererPtr) =
