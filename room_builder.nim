@@ -23,10 +23,13 @@ import
 const savedTileFile = "saved_room.json"
 
 type
+  Tilemap = object
+    name: string
+    texture: string
   TileGrid = object
     w, h: int
     data: seq[seq[bool]]
-    textureName: string
+    tilemap: Tilemap
     subtiles: seq[seq[SubTile]]
   Coord = tuple[x, y: int]
   SubTile = enum
@@ -45,33 +48,46 @@ type
     tileCorDL
     tileCorDR
 
-proc walkTilemapTextures(): seq[string] =
+proc cmp(a, b: Tilemap): int =
+  cmp(a.name, b.name)
+
+proc walkTilemaps(): seq[Tilemap] =
   result = @[]
   for path in os.walkDir("assets/textures/tilemaps"):
     if path.kind == pcFile:
       let split = os.splitFile(path.path)
-      result.add split.name
-  result.sort(cmp[string])
+      if split.ext == ".png":
+        result.add Tilemap(
+          name: split.name,
+          texture: split.name & split.ext,
+        )
+  result.sort(cmp)
 
-let cachedTilemapTextures = walkTilemapTextures()
-proc allTilemapTextures(): seq[string] =
+let cachedTilemapTextures = walkTilemaps()
+proc allTilemaps(): seq[Tilemap] =
   result = cachedTilemapTextures
   assert result.len > 0, "Need to have at least one tilemap texture"
 
-proc updateTilemapTextureIndex(current: string, deltaIndex: int): string =
+proc updateTilemapIndex(current: Tilemap, deltaIndex: int): Tilemap =
   let
-    textures = allTilemapTextures()
-    index = textures.find(current)
+    tilemaps = allTilemaps()
+    index = tilemaps.find(current)
   if index < 0:
-    return textures[0]
-  let newIndex = (index + deltaIndex) mod textures.len
+    return tilemaps[0]
+  let newIndex = (index + deltaIndex) mod tilemaps.len
   if newIndex < 0:
-    textures[textures.len - 1]
+    tilemaps[tilemaps.len - 1]
   else:
-    textures[newIndex]
+    tilemaps[newIndex]
 
-proc updateTextureIndex(grid: var TileGrid, deltaIndex: int) =
-  grid.textureName = updateTilemapTextureIndex(grid.textureName, deltaIndex)
+proc updateTilemapIndex(grid: var TileGrid, deltaIndex: int) =
+  grid.tilemap = updateTilemapIndex(grid.tilemap, deltaIndex)
+
+proc tilemapFromName(name: string): Tilemap =
+  for tilemap in allTilemaps():
+    if tilemap.name == name:
+      return tilemap
+  assert false, "Unable to find tilemap: " & name
 
 proc recalculateSubtiles(grid: var TileGrid) =
   grid.subtiles = @[]
@@ -140,7 +156,7 @@ proc newGrid(w, h: int): TileGrid =
     w: w,
     h: h,
     data: @[],
-    textureName: allTilemapTextures()[0],
+    tilemap: allTilemaps()[0],
   )
   for x in 0..<w:
     var line: seq[bool] = @[]
@@ -171,7 +187,7 @@ proc clipRect(subtile: SubTile, sprite: SpriteData): Rect =
   rect(tileSize * tilePos, tileSize)
 
 proc loadSprite(grid: TileGrid, resources: var ResourceManager, renderer: RendererPtr): SpriteData =
-  let tilemapName = "tilemaps/" & grid.textureName & ".png"
+  let tilemapName = "tilemaps/" & grid.tilemap.texture
   resources.loadSprite(tilemapName, renderer)
 
 proc toBoolString(grid: seq[seq[bool]]): string =
@@ -194,13 +210,15 @@ proc toJSON(grid: TileGrid): JSON =
   obj["w"] = grid.w.toJSON
   obj["h"] = grid.h.toJSON
   obj["dataStr"] = grid.data.toBoolString.toJSON
-  obj["textureName"] = grid.textureName.toJSON
+  obj["tilemap"] = grid.tilemap.name.toJSON
   JSON(kind: jsObject, obj: obj)
 proc fromJSON(grid: var TileGrid, json: JSON) =
   assert json.kind == jsObject
   grid.w.fromJSON(json.obj["w"])
   grid.h.fromJSON(json.obj["h"])
-  grid.textureName.fromJSON(json.obj["textureName"])
+  var tilemapName: string
+  tilemapName.fromJSON(json.obj["textureName"])
+  grid.tilemap = tilemapFromName(tilemapName)
   var dataStr: string
   dataStr.fromJSON(json.obj["dataStr"])
   grid.data = dataStr.fromBoolString(grid.w, grid.h)
@@ -334,19 +352,19 @@ method updateSelf(editor: GridEditor, input: InputManager) =
   if input.isPressed(keyG):
     editor.drawGridLines = not editor.drawGridLines
 
-proc tilemapSelectionNode(target: ptr string): Node =
-  List[string](
+proc tilemapSelectionNode(target: ptr Tilemap): Node =
+  List[Tilemap](
     pos: vec(10, 40),
     spacing: vec(6),
-    items: allTilemapTextures,
-    listNodes: (proc(texture: string): Node =
+    items: allTilemaps,
+    listNodes: (proc(tilemap: Tilemap): Node =
       Button(
         size: vec(240, 40),
         onClick: (proc() =
-          target[] = texture
+          target[] = tilemap
         ),
         children: @[
-          BorderedTextNode(text: texture).Node,
+          BorderedTextNode(text: tilemap.name).Node,
         ]
       )
     ),
@@ -371,7 +389,7 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
     result.grid.fromJSON(loadedJson)
   result.menu = Node(
     children: @[
-      tilemapSelectionNode(addr result.grid.textureName),
+      tilemapSelectionNode(addr result.grid.tilemap),
       newGridEditor(addr result.grid),
     ]
   )
