@@ -1,4 +1,4 @@
-import algorithm, hashes, os, sequtils, sets, tables
+import algorithm, hashes, os, random, sequtils, sets, tables
 from sdl2 import RendererPtr
 
 import
@@ -23,16 +23,24 @@ import
 const savedTileFile = "saved_room.json"
 
 type
+  Decoration = object
+    texture: string
+    offset: Vec
   Tilemap = object
     name: string
     texture: string
+    decorations: seq[Decoration]
   TileGrid = object
     w, h: int
     data: seq[seq[bool]]
     tilemap: Tilemap
     subtiles: seq[seq[SubTile]]
+    seed: int
   Coord = tuple[x, y: int]
-  SubTile = enum
+  SubTile = object
+    kind: SubTileKind
+    decorations: seq[Decoration]
+  SubTileKind = enum
     tileNone
     tileUL
     tileUC
@@ -48,6 +56,7 @@ type
     tileCorDL
     tileCorDR
 
+autoObjectJSONProcs(Decoration)
 autoObjectJSONProcs(Tilemap)
 
 proc cmp(a, b: Tilemap): int =
@@ -91,11 +100,15 @@ proc tilemapFromName(name: string): Tilemap =
   assert false, "Unable to find tilemap: " & name
 
 proc recalculateSubtiles(grid: var TileGrid) =
+  randomize(grid.seed)
   grid.subtiles = @[]
   for x in 0..<2*grid.w:
     var line: seq[SubTile] = @[]
     for y in 0..<2*grid.h:
-      line.add tileNone
+      line.add SubTile(
+        kind: tileNone,
+        decorations: @[],
+      )
     grid.subtiles.add line
 
   # Algorithm: Pattern-match the corners where 4 tiles intersect, set the inner subtiles that
@@ -107,7 +120,7 @@ proc recalculateSubtiles(grid: var TileGrid) =
   const numDirs = 4
   type Filter = tuple
     ins: array[numDirs, bool]
-    outs: array[numDirs, SubTile]
+    outs: array[numDirs, SubTileKind]
   const
     deltas: array[numDirs, Coord] =
       [(0, 0), (1, 0), (0, 1), (1, 1)]
@@ -150,7 +163,14 @@ proc recalculateSubtiles(grid: var TileGrid) =
               d = deltas[k]
               x = (2*i + d.x + 1).clamp(0, 2*grid.w - 1)
               y = (2*j + d.y + 1).clamp(0, 2*grid.h - 1)
-            grid.subtiles[x][y] = filter.outs[k]
+            grid.subtiles[x][y].kind = filter.outs[k]
+
+  if grid.tilemap.decorations.len > 0:
+    for x in 0..<2*grid.w:
+      for y in 0..<2*grid.h:
+        let deco = random(grid.tilemap.decorations)
+        if randomBool() and grid.subtiles[x][y].kind != tileNone:
+          grid.subtiles[x][y].decorations.add deco
 
 proc newGrid(w, h: int): TileGrid =
   result = TileGrid(
@@ -158,6 +178,7 @@ proc newGrid(w, h: int): TileGrid =
     h: h,
     data: @[],
     tilemap: allTilemaps()[0],
+    seed: random(int.high),
   )
   for x in 0..<w:
     var line: seq[bool] = @[]
@@ -166,7 +187,7 @@ proc newGrid(w, h: int): TileGrid =
     result.data.add line
   result.recalculateSubtiles()
 
-proc clipRect(subtile: SubTile, sprite: SpriteData): Rect =
+proc clipRect(subtile: SubTileKind, sprite: SpriteData): Rect =
   let
     tileSize = sprite.size.size / vec(5, 3)
     tilePos =
@@ -210,6 +231,7 @@ proc toJSON(grid: TileGrid): JSON =
   var obj = initTable[string, JSON]()
   obj["w"] = grid.w.toJSON
   obj["h"] = grid.h.toJSON
+  obj["seed"] = grid.seed.toJSON
   obj["dataStr"] = grid.data.toBoolString.toJSON
   obj["tilemap"] = grid.tilemap.name.toJSON
   JSON(kind: jsObject, obj: obj)
@@ -217,6 +239,7 @@ proc fromJSON(grid: var TileGrid, json: JSON) =
   assert json.kind == jsObject
   grid.w.fromJSON(json.obj["w"])
   grid.h.fromJSON(json.obj["h"])
+  grid.seed.fromJSON(json.obj["seed"])
 
   var tilemapName: string
   tilemapName.fromJSON(json.obj["tilemap"])
@@ -304,9 +327,16 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
     for x in 0..<2*grid.w:
       for y in 0..<2*grid.h:
         let tile = grid.subtiles[x][y]
-        if tile != tileNone:
+        if tile.kind != tileNone:
           let r = editor.gridRect(x, y, isSubtile=true)
-          renderer.draw(sprite, r, tile.clipRect(sprite))
+          renderer.draw(sprite, r, tile.kind.clipRect(sprite))
+          for deco in tile.decorations:
+            const scale = 4
+            let
+              decoSprite = resources.loadSprite("tilemaps/" & deco.texture, renderer)
+              decoRect = rect(r.pos + scale * deco.offset,
+                              scale * decoSprite.size.size)
+            renderer.draw(decoSprite, decoRect)
 
   # Draw hovered tile
   if editor.isCoordInRange(editor.hovered):
