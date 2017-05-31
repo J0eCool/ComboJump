@@ -48,19 +48,20 @@ type
     tileCorDL
     tileCorDR
 
+autoObjectJSONProcs(Tilemap)
+
 proc cmp(a, b: Tilemap): int =
   cmp(a.name, b.name)
 
 proc walkTilemaps(): seq[Tilemap] =
   result = @[]
-  for path in os.walkDir("assets/textures/tilemaps"):
+  for path in os.walkDir("assets/tilemaps"):
     if path.kind == pcFile:
       let split = os.splitFile(path.path)
-      if split.ext == ".png":
-        result.add Tilemap(
-          name: split.name,
-          texture: split.name & split.ext,
-        )
+      if split.ext == ".tilemap":
+        var tilemap: Tilemap
+        tilemap.fromJSON(readJSONFile(path.path))
+        result.add tilemap
   result.sort(cmp)
 
 let cachedTilemapTextures = walkTilemaps()
@@ -216,12 +217,15 @@ proc fromJSON(grid: var TileGrid, json: JSON) =
   assert json.kind == jsObject
   grid.w.fromJSON(json.obj["w"])
   grid.h.fromJSON(json.obj["h"])
+
   var tilemapName: string
-  tilemapName.fromJSON(json.obj["textureName"])
+  tilemapName.fromJSON(json.obj["tilemap"])
   grid.tilemap = tilemapFromName(tilemapName)
+
   var dataStr: string
   dataStr.fromJSON(json.obj["dataStr"])
   grid.data = dataStr.fromBoolString(grid.w, grid.h)
+
   grid.recalculateSubtiles()
 
 type GridEditor = ref object of Node
