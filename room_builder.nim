@@ -26,6 +26,7 @@ type
   Decoration = object
     texture: string
     offset: Vec
+    blacklist: seq[SubTileKind]
   Tilemap = object
     name: string
     texture: string
@@ -165,12 +166,30 @@ proc recalculateSubtiles(grid: var TileGrid) =
               y = (2*j + d.y + 1).clamp(0, 2*grid.h - 1)
             grid.subtiles[x][y].kind = filter.outs[k]
 
+  proc allowedPredicate(kind: SubTileKind): (proc(deco: Decoration): bool) =
+    result = proc(deco: Decoration): bool =
+      if kind == tileNone:
+        return false
+      if deco.blacklist != nil and kind in deco.blacklist:
+        return false
+      return true
   if grid.tilemap.decorations.len > 0:
     for x in 0..<2*grid.w:
       for y in 0..<2*grid.h:
-        let deco = random(grid.tilemap.decorations)
-        if randomBool() and grid.subtiles[x][y].kind != tileNone:
-          grid.subtiles[x][y].decorations.add deco
+        let
+          kind = grid.subtiles[x][y].kind
+          allowed = grid.tilemap.decorations.filter(allowedPredicate(kind))
+        if allowed.len == 0:
+          # Maintain rand() call parity
+          discard randomBool()
+          discard randomBool()
+        else:
+          let deco = random(allowed)
+          if randomBool():
+            grid.subtiles[x][y].decorations.add deco
+
+proc randomSeed(): int =
+  random(int.high)
 
 proc newGrid(w, h: int): TileGrid =
   result = TileGrid(
@@ -178,7 +197,7 @@ proc newGrid(w, h: int): TileGrid =
     h: h,
     data: @[],
     tilemap: allTilemaps()[0],
-    seed: random(int.high),
+    seed: randomSeed(),
   )
   for x in 0..<w:
     var line: seq[bool] = @[]
@@ -385,6 +404,9 @@ method updateSelf(editor: GridEditor, input: InputManager) =
     editor.drawSubtiles = not editor.drawSubtiles
   if input.isPressed(keyG):
     editor.drawGridLines = not editor.drawGridLines
+  if input.isPressed(keyR):
+    editor.grid.seed = randomSeed()
+    editor.grid[].recalculateSubtiles()
 
 proc tilemapSelectionNode(target: ptr Tilemap): Node =
   List[Tilemap](

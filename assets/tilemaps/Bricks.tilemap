@@ -11,9 +11,14 @@
         }, {
             "texture": "RedBricks-Purple.png",
             "offset": {
-                "x": "3.5",
+                "x": "-4.5",
                 "y": "1.5",
-            }
+            },
+            "blacklist": [
+                "tileUL",
+                "tileCL",
+                "tileDL"
+            ]
         }
     ]
 }
