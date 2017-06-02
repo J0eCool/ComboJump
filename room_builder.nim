@@ -26,11 +26,14 @@ type
   Decoration = object
     texture: string
     offset: Vec
+  DecorationGroup = object
+    textures: seq[string]
+    offset: Vec
     blacklist: seq[SubTileKind]
   Tilemap = object
     name: string
     texture: string
-    decorations: seq[Decoration]
+    decorationGroups: seq[DecorationGroup]
   TileGrid = object
     w, h: int
     data: seq[seq[bool]]
@@ -57,7 +60,7 @@ type
     tileCorDL
     tileCorDR
 
-autoObjectJSONProcs(Decoration)
+autoObjectJSONProcs(DecorationGroup)
 autoObjectJSONProcs(Tilemap)
 
 proc cmp(a, b: Tilemap): int =
@@ -99,6 +102,13 @@ proc tilemapFromName(name: string): Tilemap =
     if tilemap.name == name:
       return tilemap
   assert false, "Unable to find tilemap: " & name
+
+proc isKindAllowed(group: DecorationGroup, kind: SubTileKind): bool =
+  if kind == tileNone:
+    return false
+  if group.blacklist != nil and kind in group.blacklist:
+    return false
+  return true
 
 proc recalculateSubtiles(grid: var TileGrid) =
   randomize(grid.seed)
@@ -166,27 +176,23 @@ proc recalculateSubtiles(grid: var TileGrid) =
               y = (2*j + d.y + 1).clamp(0, 2*grid.h - 1)
             grid.subtiles[x][y].kind = filter.outs[k]
 
-  proc allowedPredicate(kind: SubTileKind): (proc(deco: Decoration): bool) =
-    result = proc(deco: Decoration): bool =
-      if kind == tileNone:
-        return false
-      if deco.blacklist != nil and kind in deco.blacklist:
-        return false
-      return true
-  if grid.tilemap.decorations.len > 0:
+  for group in grid.tilemap.decorationGroups:
+    let possibleTextures = group.textures & newSeqOf[string](nil)
     for x in 0..<2*grid.w:
       for y in 0..<2*grid.h:
         let
           kind = grid.subtiles[x][y].kind
-          allowed = grid.tilemap.decorations.filter(allowedPredicate(kind))
-        if allowed.len == 0:
+          allowed = group.isKindAllowed(kind)
+        if not allowed:
           # Maintain rand() call parity
           discard randomBool()
-          discard randomBool()
         else:
-          let deco = random(allowed)
-          if randomBool():
-            grid.subtiles[x][y].decorations.add deco
+          let texture = random(possibleTextures)
+          if texture != nil:
+            grid.subtiles[x][y].decorations.add Decoration(
+              texture: texture,
+              offset: group.offset,
+            )
 
 proc randomSeed(): int =
   random(int.high)
