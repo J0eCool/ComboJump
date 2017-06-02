@@ -1,6 +1,8 @@
 {
     "name": "Bricks",
-    "texture": "RedBricks.png",
+    "textures": [
+        "RedBricks.png"
+    ],
     "decorationGroups": [
         {
             "textures": [

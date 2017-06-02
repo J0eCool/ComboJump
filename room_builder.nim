@@ -32,7 +32,7 @@ type
     blacklist: seq[SubTileKind]
   Tilemap = object
     name: string
-    texture: string
+    textures: seq[string]
     decorationGroups: seq[DecorationGroup]
   TileGrid = object
     w, h: int
@@ -43,6 +43,7 @@ type
   Coord = tuple[x, y: int]
   SubTile = object
     kind: SubTileKind
+    texture: string
     decorations: seq[Decoration]
   SubTileKind = enum
     tileNone
@@ -118,6 +119,7 @@ proc recalculateSubtiles(grid: var TileGrid) =
     for y in 0..<2*grid.h:
       line.add SubTile(
         kind: tileNone,
+        texture: random(grid.tilemap.textures),
         decorations: @[],
       )
     grid.subtiles.add line
@@ -233,8 +235,8 @@ proc clipRect(subtile: SubTileKind, sprite: SpriteData): Rect =
       else:         vec()
   rect(tileSize * tilePos, tileSize)
 
-proc loadSprite(grid: TileGrid, resources: var ResourceManager, renderer: RendererPtr): SpriteData =
-  let tilemapName = "tilemaps/" & grid.tilemap.texture
+proc loadSprite(subtile: SubTile, resources: var ResourceManager, renderer: RendererPtr): SpriteData =
+  let tilemapName = "tilemaps/" & subtile.texture
   resources.loadSprite(tilemapName, renderer)
 
 proc toBoolString(grid: seq[seq[bool]]): string =
@@ -348,12 +350,13 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
 
   # Draw subtiles
   if editor.drawSubtiles:
-    let sprite = grid.loadSprite(resources, renderer)
     for x in 0..<2*grid.w:
       for y in 0..<2*grid.h:
         let tile = grid.subtiles[x][y]
         if tile.kind != tileNone:
-          let r = editor.gridRect(x, y, isSubtile=true)
+          let
+            sprite = tile.loadSprite(resources, renderer)
+            r = editor.gridRect(x, y, isSubtile=true)
           renderer.draw(sprite, r, tile.kind.clipRect(sprite))
           for deco in tile.decorations:
             const scale = 4
@@ -414,7 +417,7 @@ method updateSelf(editor: GridEditor, input: InputManager) =
     editor.grid.seed = randomSeed()
     editor.grid[].recalculateSubtiles()
 
-proc tilemapSelectionNode(target: ptr Tilemap): Node =
+proc tilemapSelectionNode(grid: ptr TileGrid): Node =
   List[Tilemap](
     pos: vec(10, 40),
     spacing: vec(6),
@@ -423,7 +426,8 @@ proc tilemapSelectionNode(target: ptr Tilemap): Node =
       Button(
         size: vec(240, 40),
         onClick: (proc() =
-          target[] = tilemap
+          grid.tilemap = tilemap
+          grid[].recalculateSubtiles()
         ),
         children: @[
           BorderedTextNode(text: tilemap.name).Node,
@@ -451,7 +455,7 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
     result.grid.fromJSON(loadedJson)
   result.menu = Node(
     children: @[
-      tilemapSelectionNode(addr result.grid.tilemap),
+      tilemapSelectionNode(addr result.grid),
       newGridEditor(addr result.grid),
     ]
   )
