@@ -34,12 +34,15 @@ type
     name: string
     textures: seq[string]
     decorationGroups: seq[DecorationGroup]
-  TileGrid = object
+  RoomGrid = object
     w, h: int
     data: seq[seq[bool]]
     tilemap: Tilemap
-    subtiles: seq[seq[SubTile]]
     seed: int
+  Room = object
+    w, h: int
+    tilemap: Tilemap
+    tiles: seq[seq[SubTile]]
   Coord = tuple[x, y: int]
   SubTile = object
     kind: SubTileKind
@@ -83,21 +86,6 @@ proc allTilemaps(): seq[Tilemap] =
   result = cachedTilemapTextures
   assert result.len > 0, "Need to have at least one tilemap texture"
 
-proc updateTilemapIndex(current: Tilemap, deltaIndex: int): Tilemap =
-  let
-    tilemaps = allTilemaps()
-    index = tilemaps.find(current)
-  if index < 0:
-    return tilemaps[0]
-  let newIndex = (index + deltaIndex) mod tilemaps.len
-  if newIndex < 0:
-    tilemaps[tilemaps.len - 1]
-  else:
-    tilemaps[newIndex]
-
-proc updateTilemapIndex(grid: var TileGrid, deltaIndex: int) =
-  grid.tilemap = updateTilemapIndex(grid.tilemap, deltaIndex)
-
 proc tilemapFromName(name: string): Tilemap =
   for tilemap in allTilemaps():
     if tilemap.name == name:
@@ -111,9 +99,15 @@ proc isKindAllowed(group: DecorationGroup, kind: SubTileKind): bool =
     return false
   return true
 
-proc recalculateSubtiles(grid: var TileGrid) =
+proc buildRoom(grid: RoomGrid): Room =
   randomize(grid.seed)
-  grid.subtiles = @[]
+  result = Room(
+    w: 2 * grid.w,
+    h: 2 * grid.h,
+    tilemap: grid.tilemap,
+    tiles: @[],
+  )
+  result.tiles = @[]
   for x in 0..<2*grid.w:
     var line: seq[SubTile] = @[]
     for y in 0..<2*grid.h:
@@ -122,7 +116,7 @@ proc recalculateSubtiles(grid: var TileGrid) =
         texture: random(grid.tilemap.textures),
         decorations: @[],
       )
-    grid.subtiles.add line
+    result.tiles.add line
 
   # Algorithm: Pattern-match the corners where 4 tiles intersect, set the inner subtiles that
   # meet on that corner to the expected output.
@@ -174,16 +168,16 @@ proc recalculateSubtiles(grid: var TileGrid) =
           for k in 0..<numDirs:
             let
               d = deltas[k]
-              x = (2*i + d.x + 1).clamp(0, 2*grid.w - 1)
-              y = (2*j + d.y + 1).clamp(0, 2*grid.h - 1)
-            grid.subtiles[x][y].kind = filter.outs[k]
+              x = (2*i + d.x + 1).clamp(0, result.w - 1)
+              y = (2*j + d.y + 1).clamp(0, result.h - 1)
+            result.tiles[x][y].kind = filter.outs[k]
 
   for group in grid.tilemap.decorationGroups:
     let possibleTextures = group.textures & newSeqOf[string](nil)
-    for x in 0..<2*grid.w:
-      for y in 0..<2*grid.h:
+    for x in 0..<result.w:
+      for y in 0..<result.h:
         let
-          kind = grid.subtiles[x][y].kind
+          kind = result.tiles[x][y].kind
           allowed = group.isKindAllowed(kind)
         if not allowed:
           # Maintain rand() call parity
@@ -191,7 +185,7 @@ proc recalculateSubtiles(grid: var TileGrid) =
         else:
           let texture = random(possibleTextures)
           if texture != nil:
-            grid.subtiles[x][y].decorations.add Decoration(
+            result.tiles[x][y].decorations.add Decoration(
               texture: texture,
               offset: group.offset,
             )
@@ -199,8 +193,8 @@ proc recalculateSubtiles(grid: var TileGrid) =
 proc randomSeed(): int =
   random(int.high)
 
-proc newGrid(w, h: int): TileGrid =
-  result = TileGrid(
+proc newGrid(w, h: int): RoomGrid =
+  result = RoomGrid(
     w: w,
     h: h,
     data: @[],
@@ -212,7 +206,6 @@ proc newGrid(w, h: int): TileGrid =
     for y in 0..<h:
       line.add false
     result.data.add line
-  result.recalculateSubtiles()
 
 proc clipRect(subtile: SubTileKind, sprite: SpriteData): Rect =
   let
@@ -254,7 +247,7 @@ proc fromBoolString(input: string, w, h: int): seq[seq[bool]] =
       result.add line
       line = @[]
 
-proc toJSON(grid: TileGrid): JSON =
+proc toJSON(grid: RoomGrid): JSON =
   var obj = initTable[string, JSON]()
   obj["w"] = grid.w.toJSON
   obj["h"] = grid.h.toJSON
@@ -262,7 +255,7 @@ proc toJSON(grid: TileGrid): JSON =
   obj["dataStr"] = grid.data.toBoolString.toJSON
   obj["tilemap"] = grid.tilemap.name.toJSON
   JSON(kind: jsObject, obj: obj)
-proc fromJSON(grid: var TileGrid, json: JSON) =
+proc fromJSON(grid: var RoomGrid, json: JSON) =
   assert json.kind == jsObject
   grid.w.fromJSON(json.obj["w"])
   grid.h.fromJSON(json.obj["h"])
@@ -276,26 +269,29 @@ proc fromJSON(grid: var TileGrid, json: JSON) =
   dataStr.fromJSON(json.obj["dataStr"])
   grid.data = dataStr.fromBoolString(grid.w, grid.h)
 
-  grid.recalculateSubtiles()
-
 type GridEditor = ref object of Node
-  grid: ptr TileGrid
+  grid: ptr RoomGrid
+  room: Room
   clickId: int
   tileSize: Vec
   hovered: Coord
   drawGridLines: bool
-  drawSubtiles: bool
+  drawRoom: bool
 
-proc newGridEditor(grid: ptr TileGrid): GridEditor =
-  GridEditor(
+proc updateRoom(editor: GridEditor) =
+  editor.room = editor.grid[].buildRoom()
+
+proc newGridEditor(grid: ptr RoomGrid): GridEditor =
+  result = GridEditor(
     pos: vec(290, 120),
     grid: grid,
     clickId: 0,
     tileSize: vec(64),
     hovered: (-1, -1),
     drawGridLines: true,
-    drawSubtiles: true,
+    drawRoom: true,
   )
+  result.updateRoom()
 
 proc gridRect(editor: GridEditor, x, y: int, isSubtile = false): Rect =
   let
@@ -322,16 +318,9 @@ proc isCoordInRange(editor: GridEditor, coord: Coord): bool =
   ( coord.x >= 0 and coord.x < grid.w and
     coord.y >= 0 and coord.y < grid.h )
 
-proc getTile(editor: GridEditor, coord: Coord): bool =
-  if editor.isCoordInRange(coord):
-    editor.grid.data[coord.x][coord.y]
-  else:
-    false
-
 proc setTile(editor: GridEditor, coord: Coord, val: bool) =
   if editor.isCoordInRange(coord):
     editor.grid.data[coord.x][coord.y] = val
-    editor.grid[].recalculateSubtiles()
 
 method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var ResourceManager) =
   const
@@ -340,7 +329,7 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
   let grid = editor.grid[]
 
   # Draw tiles
-  if not editor.drawSubtiles:
+  if not editor.drawRoom:
     for x in 0..<grid.w:
       for y in 0..<grid.h:
         let isFull = grid.data[x][y]
@@ -349,10 +338,11 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
           renderer.fillRect r, tileColor
 
   # Draw subtiles
-  if editor.drawSubtiles:
-    for x in 0..<2*grid.w:
-      for y in 0..<2*grid.h:
-        let tile = grid.subtiles[x][y]
+  if editor.drawRoom:
+    let room = editor.room
+    for x in 0..<room.w:
+      for y in 0..<room.h:
+        let tile = room.tiles[x][y]
         if tile.kind != tileNone:
           let
             sprite = tile.loadSprite(resources, renderer)
@@ -407,17 +397,21 @@ method updateSelf(editor: GridEditor, input: InputManager) =
     if input.isMouseHeld(mouseLeft):
       let delete = input.isHeld(Input.ctrl)
       editor.setTile(hovered, not delete)
+      editor.updateRoom()
     if input.isMouseHeld(mouseRight):
       editor.setTile(hovered, false)
+      editor.updateRoom()
   if input.isPressed(space):
-    editor.drawSubtiles = not editor.drawSubtiles
+    editor.drawRoom = not editor.drawRoom
+    if editor.drawRoom:
+      editor.updateRoom()
   if input.isPressed(keyG):
     editor.drawGridLines = not editor.drawGridLines
   if input.isPressed(keyR):
     editor.grid.seed = randomSeed()
-    editor.grid[].recalculateSubtiles()
+    editor.updateRoom()
 
-proc tilemapSelectionNode(grid: ptr TileGrid): Node =
+proc tilemapSelectionNode(editor: GridEditor): Node =
   List[Tilemap](
     pos: vec(10, 40),
     spacing: vec(6),
@@ -426,8 +420,8 @@ proc tilemapSelectionNode(grid: ptr TileGrid): Node =
       Button(
         size: vec(240, 40),
         onClick: (proc() =
-          grid.tilemap = tilemap
-          grid[].recalculateSubtiles()
+          editor.grid.tilemap = tilemap
+          editor.updateRoom()
         ),
         children: @[
           BorderedTextNode(text: tilemap.name).Node,
@@ -440,7 +434,7 @@ type
   RoomBuilder = ref object of Program
     resources: ResourceManager
     menu: Node
-    grid: TileGrid
+    grid: RoomGrid
 
 proc resetGrid(program: RoomBuilder) =
   program.grid = newGrid(14, 10)
@@ -453,10 +447,11 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   result.resetGrid()
   if loadedJson.kind != jsError:
     result.grid.fromJSON(loadedJson)
+  let editor = newGridEditor(addr result.grid)
   result.menu = Node(
     children: @[
-      tilemapSelectionNode(addr result.grid),
-      newGridEditor(addr result.grid),
+      tilemapSelectionNode(editor),
+      editor,
     ]
   )
 
