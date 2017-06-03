@@ -27,9 +27,9 @@ type
     texture: string
     offset: Vec
   DecorationGroup = object
-    textures: seq[string]
-    offset: Vec
     blacklist: seq[SubTileKind]
+    textures: seq[string]
+    offsets: seq[Vec]
   Tilemap = object
     name: string
     textures: seq[string]
@@ -98,6 +98,26 @@ proc isKindAllowed(group: DecorationGroup, kind: SubTileKind): bool =
   if group.blacklist != nil and kind in group.blacklist:
     return false
   return true
+
+proc decorate(room: var Room, groups: seq[DecorationGroup]) =
+  for group in groups:
+    let possibleTextures = group.textures & newSeqOf[string](nil)
+    for x in 0..<room.w:
+      for y in 0..<room.h:
+        let
+          kind = room.tiles[x][y].kind
+          allowed = group.isKindAllowed(kind)
+          offset = random(group.offsets)
+        if not allowed:
+          # Maintain rand() call parity
+          discard randomBool()
+        else:
+          let texture = random(possibleTextures)
+          if texture != nil:
+            room.tiles[x][y].decorations.add Decoration(
+              texture: texture,
+              offset: offset,
+            )
 
 proc buildRoom(grid: RoomGrid): Room =
   randomize(grid.seed)
@@ -172,23 +192,7 @@ proc buildRoom(grid: RoomGrid): Room =
               y = (2*j + d.y + 1).clamp(0, result.h - 1)
             result.tiles[x][y].kind = filter.outs[k]
 
-  for group in grid.tilemap.decorationGroups:
-    let possibleTextures = group.textures & newSeqOf[string](nil)
-    for x in 0..<result.w:
-      for y in 0..<result.h:
-        let
-          kind = result.tiles[x][y].kind
-          allowed = group.isKindAllowed(kind)
-        if not allowed:
-          # Maintain rand() call parity
-          discard randomBool()
-        else:
-          let texture = random(possibleTextures)
-          if texture != nil:
-            result.tiles[x][y].decorations.add Decoration(
-              texture: texture,
-              offset: group.offset,
-            )
+  result.decorate(grid.tilemap.decorationGroups)
 
 proc randomSeed(): int =
   random(int.high)
@@ -288,7 +292,7 @@ proc newGridEditor(grid: ptr RoomGrid): GridEditor =
     clickId: 0,
     tileSize: vec(64),
     hovered: (-1, -1),
-    drawGridLines: true,
+    drawGridLines: false,
     drawRoom: true,
   )
   result.updateRoom()
@@ -347,9 +351,9 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
           let
             sprite = tile.loadSprite(resources, renderer)
             r = editor.gridRect(x, y, isSubtile=true)
+            scale = editor.tileSize.x * 5 / sprite.size.size.x / 2
           renderer.draw(sprite, r, tile.kind.clipRect(sprite))
           for deco in tile.decorations:
-            const scale = 4
             let
               decoSprite = resources.loadSprite("tilemaps/" & deco.texture, renderer)
               decoRect = rect(r.pos + scale * deco.offset,

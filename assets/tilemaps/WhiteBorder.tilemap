@@ -1,7 +1,24 @@
 {
     "name": "White Border",
     "textures": [
-        "WhiteBorder/white-border.png",
-        "WhiteBorder/white-border-textured.png"
-    ]
+        "WhiteBorder/white-border.png"
+    ],
+    "decorationGroups": [{
+        "textures": [
+            "WhiteBorder/zag-left.png",
+            "WhiteBorder/zag-left-long.png",
+            "WhiteBorder/zag-right.png",
+            "WhiteBorder/zag-right-long.png",
+        ],
+        "offsets": [{
+            "x": "0.0",
+            "y": "0.0",
+        }, {
+            "x": "4.0",
+            "y": "0.0",
+        }, {
+            "x": "0.0",
+            "y": "4.0",
+        }],
+    }],
 }

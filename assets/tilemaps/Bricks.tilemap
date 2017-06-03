@@ -1,32 +1,30 @@
 {
     "name": "Bricks",
     "textures": [
-        "RedBricks/RedBricks.png"
+        "RedBricks/RedBricks.png",
     ],
-    "decorationGroups": [
-        {
-            "textures": [
-                "RedBricks/Purple.png",
-                "RedBricks/Blue.png"
-            ],
-            "offset": {
-                "x": "-0.5",
-                "y": "-2.5",
-            }
-        }, {
-            "textures": [
-                "RedBricks/Purple.png",
-                "RedBricks/Blue.png"
-            ],
-            "offset": {
-                "x": "-4.5",
-                "y": "1.5",
-            },
-            "blacklist": [
-                "tileUL",
-                "tileCL",
-                "tileDL"
-            ]
-        }
-    ]
+    "decorationGroups": [{
+        "textures": [
+            "RedBricks/Purple.png",
+            "RedBricks/Blue.png"
+        ],
+        "offsets": [{
+            "x": "-0.5",
+            "y": "-2.5",
+        }],
+    }, {
+        "textures": [
+            "RedBricks/Purple.png",
+            "RedBricks/Blue.png"
+        ],
+        "offsets": [{
+            "x": "-4.5",
+            "y": "1.5",
+        }],
+        "blacklist": [
+            "tileUL",
+            "tileCL",
+            "tileDL"
+        ],
+    }]
 }
