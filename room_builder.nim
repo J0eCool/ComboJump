@@ -30,6 +30,7 @@ type
     blacklist: seq[SubTileKind]
     textures: seq[string]
     offsets: seq[Vec]
+    maxCount: int
   Tilemap = object
     name: string
     textures: seq[string]
@@ -99,6 +100,16 @@ proc isKindAllowed(group: DecorationGroup, kind: SubTileKind): bool =
     return false
   return true
 
+proc randomSubset[T](list: seq[T], count: int): seq[T] =
+  let clampedCount = min(list.len, count)
+  var copied: seq[T]
+  copied.deepCopy(list)
+  result = @[]
+  for i in 0..<clampedCount:
+    let item = random(copied)
+    result.add item
+    copied.remove(item)
+
 proc decorate(room: var Room, groups: seq[DecorationGroup]) =
   for group in groups:
     let possibleTextures = group.textures & newSeqOf[string](nil)
@@ -107,17 +118,20 @@ proc decorate(room: var Room, groups: seq[DecorationGroup]) =
         let
           kind = room.tiles[x][y].kind
           allowed = group.isKindAllowed(kind)
-          offset = random(group.offsets)
-        if not allowed:
-          # Maintain rand() call parity
-          discard randomBool()
-        else:
-          let texture = random(possibleTextures)
-          if texture != nil:
-            room.tiles[x][y].decorations.add Decoration(
-              texture: texture,
-              offset: offset,
-            )
+          maxCount = max(group.maxCount, 1)
+          count = random(maxCount div 2, maxCount + 1)
+          offsets = randomSubset(group.offsets, count)
+        for offset in offsets:
+          if not allowed:
+            # Maintain rand() call parity
+            discard randomBool()
+          else:
+            let texture = random(possibleTextures)
+            if texture != nil:
+              room.tiles[x][y].decorations.add Decoration(
+                texture: texture,
+                offset: offset,
+              )
 
 proc buildRoom(grid: RoomGrid): Room =
   randomize(grid.seed)
