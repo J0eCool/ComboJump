@@ -1,13 +1,13 @@
 {
     "name": "Bricks",
     "textures": [
-        "RedBricks.png"
+        "RedBricks/RedBricks.png"
     ],
     "decorationGroups": [
         {
             "textures": [
-                "RedBricks-Purple.png",
-                "RedBricks-Blue.png"
+                "RedBricks/Purple.png",
+                "RedBricks/Blue.png"
             ],
             "offset": {
                 "x": "-0.5",
@@ -15,8 +15,8 @@
             }
         }, {
             "textures": [
-                "RedBricks-Purple.png",
-                "RedBricks-Blue.png"
+                "RedBricks/Purple.png",
+                "RedBricks/Blue.png"
             ],
             "offset": {
                 "x": "-4.5",

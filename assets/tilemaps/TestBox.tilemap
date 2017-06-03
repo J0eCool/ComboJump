@@ -1,7 +1,7 @@
 {
     "name": "TestBox",
     "textures": [
-        "TestBox.png",
-        "TestBox2.png"
+        "TestBox/TestBox.png",
+        "TestBox/TestBox2.png"
     ]
 }

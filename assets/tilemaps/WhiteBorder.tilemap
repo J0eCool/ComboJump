@@ -1,7 +1,7 @@
 {
     "name": "White Border",
     "textures": [
-        "white-border.png",
-        "white-border-textured.png"
+        "WhiteBorder/white-border.png",
+        "WhiteBorder/white-border-textured.png"
     ]
 }
