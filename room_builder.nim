@@ -1,4 +1,12 @@
-import algorithm, hashes, os, random, sequtils, sets, tables
+import
+  algorithm,
+  hashes,
+  os,
+  random,
+  sequtils,
+  sets,
+  strutils,
+  tables
 from sdl2 import RendererPtr
 
 import
@@ -35,9 +43,13 @@ type
     name: string
     textures: seq[string]
     decorationGroups: seq[DecorationGroup]
+  TileState = enum
+    tileFilled
+    tileRandom
+  Tile = set[TileState]
   RoomGrid = object
     w, h: int
-    data: seq[seq[bool]]
+    data: seq[seq[Tile]]
     tilemap: Tilemap
     seed: int
   Room = object
@@ -133,6 +145,17 @@ proc decorate(room: var Room, groups: seq[DecorationGroup]) =
                 offset: offset,
               )
 
+proc selectRandomTiles(grid: seq[seq[Tile]]): seq[seq[bool]] =
+  result = @[]
+  for line in grid:
+    var toAdd = newSeq[bool]()
+    for tile in line:
+      var shouldFill = tileFilled in tile
+      if tileRandom in tile and randomBool():
+        shouldFill = true
+      toAdd.add(shouldFill)
+    result.add toAdd
+
 proc buildRoom(grid: RoomGrid): Room =
   randomize(grid.seed)
   result = Room(
@@ -186,6 +209,7 @@ proc buildRoom(grid: RoomGrid): Room =
       ([ true,  true,  true,  true], [   tileCC,     tileCC,    tileCC,    tileCC]),
     ]
 
+  let data = grid.data.selectRandomTiles()
   for i in -1..grid.w:
     for j in -1..grid.h:
       for filter in filters:
@@ -195,7 +219,7 @@ proc buildRoom(grid: RoomGrid): Room =
             d = deltas[k]
             x = (i + d.x).clamp(0, grid.w - 1)
             y = (j + d.y).clamp(0, grid.h - 1)
-          if grid.data[x][y] != filter.ins[k]:
+          if data[x][y] != filter.ins[k]:
             found = false
             break
         if found:
@@ -220,9 +244,9 @@ proc newGrid(w, h: int): RoomGrid =
     seed: randomSeed(),
   )
   for x in 0..<w:
-    var line: seq[bool] = @[]
+    var line: seq[Tile] = @[]
     for y in 0..<h:
-      line.add false
+      line.add({})
     result.data.add line
 
 proc clipRect(subtile: SubTileKind, sprite: SpriteData): Rect =
@@ -250,17 +274,29 @@ proc loadSprite(subtile: SubTile, resources: var ResourceManager, renderer: Rend
   let tilemapName = "tilemaps/" & subtile.texture
   resources.loadSprite(tilemapName, renderer)
 
-proc toBoolString(grid: seq[seq[bool]]): string =
+proc toInt(tile: Tile): int =
+  for state in TileState:
+    if state in tile:
+      result += 1 shl state.int
+
+proc fromInt(num: int): Tile =
+  var x = num
+  for state in TileState:
+    if (x and 1) != 0:
+      result = result + {state}
+    x = x shr 1
+
+proc toTileString(grid: seq[seq[Tile]]): string =
   result = ""
   for line in grid:
     for item in line:
-      result &= (if item: "1" else: "0")
+      result &= item.toInt.toHex(1)
 
-proc fromBoolString(input: string, w, h: int): seq[seq[bool]] =
+proc fromTileString(input: string, w, h: int): seq[seq[Tile]] =
   result = @[]
-  var line = newSeq[bool]();
+  var line = newSeq[Tile]();
   for c in input:
-    line.add(c == '1')
+    line.add(($c).parseHexInt.fromInt)
     if line.len >= h:
       result.add line
       line = @[]
@@ -270,7 +306,7 @@ proc toJSON(grid: RoomGrid): JSON =
   obj["w"] = grid.w.toJSON
   obj["h"] = grid.h.toJSON
   obj["seed"] = grid.seed.toJSON
-  obj["dataStr"] = grid.data.toBoolString.toJSON
+  obj["dataStr"] = grid.data.toTileString.toJSON
   obj["tilemap"] = grid.tilemap.name.toJSON
   JSON(kind: jsObject, obj: obj)
 proc fromJSON(grid: var RoomGrid, json: JSON) =
@@ -285,7 +321,7 @@ proc fromJSON(grid: var RoomGrid, json: JSON) =
 
   var dataStr: string
   dataStr.fromJSON(json.obj["dataStr"])
-  grid.data = dataStr.fromBoolString(grid.w, grid.h)
+  grid.data = dataStr.fromTileString(grid.w, grid.h)
 
 type GridEditor = ref object of Node
   grid: ptr RoomGrid
@@ -336,9 +372,12 @@ proc isCoordInRange(editor: GridEditor, coord: Coord): bool =
   ( coord.x >= 0 and coord.x < grid.w and
     coord.y >= 0 and coord.y < grid.h )
 
-proc setTile(editor: GridEditor, coord: Coord, val: bool) =
+proc setTile(editor: GridEditor, coord: Coord, state: TileState, val: bool) =
   if editor.isCoordInRange(coord):
-    editor.grid.data[coord.x][coord.y] = val
+    if val:
+      editor.grid.data[coord.x][coord.y].incl(state)
+    else:
+      editor.grid.data[coord.x][coord.y].excl(state)
 
 method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var ResourceManager) =
   const
@@ -350,10 +389,21 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
   if not editor.drawRoom:
     for x in 0..<grid.w:
       for y in 0..<grid.h:
-        let isFull = grid.data[x][y]
-        if isFull:
+        let tile = grid.data[x][y]
+        if tileFilled in tile:
           let r = editor.gridRect(x, y)
           renderer.fillRect r, tileColor
+        if tileRandom in tile:
+          const numLines = 4
+          var r = editor.gridRect(x, y)
+          renderer.fillRect r, color.gray
+          let
+            base = r.x
+            offset = 2.0
+          r.w = 2.0
+          for i in 0..<numLines:
+            r.x = base + editor.tileSize.x * (i / numLines - 0.5) + offset
+            renderer.fillRect r, color.red
 
   # Draw subtiles
   if editor.drawRoom:
@@ -380,10 +430,10 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
       x = editor.hovered.x
       y = editor.hovered.y
     let
-      isFull = grid.data[x][y]
+      tile = grid.data[x][y]
       r = editor.gridRect(x, y)
       color =
-        if isFull:
+        if tileFilled in tile:
           average(tileColor, hoverColor)
         else:
           hoverColor
@@ -412,12 +462,15 @@ method updateSelf(editor: GridEditor, input: InputManager) =
   editor.hovered = hovered
 
   if editor.isCoordInRange(hovered):
+    let delete = input.isHeld(Input.ctrl)
     if input.isMouseHeld(mouseLeft):
-      let delete = input.isHeld(Input.ctrl)
-      editor.setTile(hovered, not delete)
+      editor.setTile(hovered, tileFilled, not delete)
       editor.updateRoom()
     if input.isMouseHeld(mouseRight):
-      editor.setTile(hovered, false)
+      editor.setTile(hovered, tileFilled, false)
+      editor.updateRoom()
+    if input.isHeld(n1):
+      editor.setTile(hovered, tileRandom, not delete)
       editor.updateRoom()
   if input.isPressed(space):
     editor.drawRoom = not editor.drawRoom
