@@ -15,7 +15,7 @@ import
   util
 
 type
-  CachedResource[T] = object
+  CachedResource*[T] = object
     item: T
     filename: string
     checkOffset: float
@@ -23,13 +23,13 @@ type
     lastModified: Time
 
 const offsetRange = 1.0
-proc newCachedResource[T](filename: string): CachedResource[T] =
+proc newCachedResource*[T](filename: string): CachedResource[T] =
   CachedResource[T](
     filename: filename,
     checkOffset: random(0.0, offsetRange),
   )
 
-proc shouldUpdateCache[T](cache: var CachedResource[T]): bool =
+proc shouldUpdateCache*[T](cache: var CachedResource[T]): bool =
   let cur = epochTime()
   if cur < cache.nextCheckTime:
     return false

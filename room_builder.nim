@@ -6,7 +6,8 @@ import
   sequtils,
   sets,
   strutils,
-  tables
+  tables,
+  times
 from sdl2 import RendererPtr
 
 import
@@ -83,21 +84,32 @@ autoObjectJSONProcs(Tilemap)
 proc cmp(a, b: Tilemap): int =
   cmp(a.name, b.name)
 
-proc walkTilemaps(): seq[Tilemap] =
+proc walkTilemaps(): seq[string] =
   result = @[]
   for path in os.walkDir("assets/tilemaps"):
     if path.kind == pcFile:
       let split = os.splitFile(path.path)
       if split.ext == ".tilemap":
-        var tilemap: Tilemap
-        tilemap.fromJSON(readJSONFile(path.path))
-        result.add tilemap
-  result.sort(cmp)
+        result.add path.path
 
-let cachedTilemapTextures = walkTilemaps()
+var
+  nextWalkTilemapTime: float
+  cachedTilemapTextures = newSeq[Tilemap]()
 proc allTilemaps(): seq[Tilemap] =
-  result = cachedTilemapTextures
+  let curTime = epochTime()
+  if curTime < nextWalkTilemapTime:
+    return cachedTilemapTextures
+  nextWalkTilemapTime = curTime + 1.0
+
+  let paths = walkTilemaps()
+  result = @[]
+  for path in paths:
+    var tilemap: Tilemap
+    tilemap.fromJSON(readJSONFile(path))
+    result.add tilemap
   assert result.len > 0, "Need to have at least one tilemap texture"
+  result.sort(cmp)
+  cachedTilemapTextures = result
 
 proc tilemapFromName(name: string): Tilemap =
   for tilemap in allTilemaps():

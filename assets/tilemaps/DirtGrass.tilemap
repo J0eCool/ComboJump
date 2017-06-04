@@ -2,5 +2,31 @@
     "name": "DirtGrass",
     "textures": [
         "DirtGrass/DirtGrass.png",
-    ]
+        "DirtGrass/DirtGrass.png",
+        "DirtGrass/DirtGrass.png",
+        "DirtGrass/DirtGrass-Orange.png",
+        "DirtGrass/DirtGrass-Brown.png",
+        "DirtGrass/DirtGrass-Light.png",
+    ],
+    "decorationGroups": [{
+        "textures": [
+            "DirtGrass/Flower.png",
+            "DirtGrass/Vine.png",
+            "DirtGrass/SmallVine.png",
+            "DirtGrass/TwistyVine.png",
+        ],
+        "offsets": [{
+            "x": "0.0",
+            "y": "0.0",
+        }, {
+            "x": "2.0",
+            "y": "-1.0",
+        }, {
+            "x": "-2.0",
+            "y": "1.0",
+        }, {
+            "x": "1.0",
+            "y": "-3.0",
+        }],
+    }],
 }
