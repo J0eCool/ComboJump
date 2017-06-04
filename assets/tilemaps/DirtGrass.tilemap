@@ -1,0 +1,6 @@
+{
+    "name": "DirtGrass",
+    "textures": [
+        "DirtGrass/DirtGrass.png",
+    ]
+}
