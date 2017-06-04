@@ -95,7 +95,7 @@ proc getNextId(data: Data): int =
     result += 1
 
 proc toLowerFirst(str: string): string =
-  str[0..1].toLower & str[2..^0]
+  str[0..1].toLowerAscii & str[2..^0]
 
 proc getBaseType(t: NimNode): NimNode =
   result = t

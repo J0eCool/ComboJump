@@ -26,7 +26,7 @@ proc log*(category: string, level: LogLevel, message: varargs[string, `$`]) =
   var str = currentTimeString() & " - "
   if category != "":
     str &= category & " - "
-  str &= ($level).toUpper & ": "
+  str &= ($level).toUpperAscii & ": "
   for x in message:
     str &= x
   echo str
