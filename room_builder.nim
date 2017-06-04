@@ -337,10 +337,10 @@ proc updateRoom(editor: GridEditor) =
 
 proc newGridEditor(grid: ptr RoomGrid): GridEditor =
   result = GridEditor(
-    pos: vec(290, 120),
+    pos: vec(310, 60),
     grid: grid,
     clickId: 0,
-    tileSize: vec(64),
+    tileSize: vec(32),
     hovered: (-1, -1),
     drawGridLines: false,
     drawRoom: true,
@@ -396,7 +396,8 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
         if tileRandom in tile:
           const numLines = 4
           var r = editor.gridRect(x, y)
-          renderer.fillRect r, color.gray
+          if tileFilled notin tile:
+            renderer.fillRect r, color.gray
           let
             base = r.x
             offset = 2.0
@@ -508,7 +509,7 @@ type
     grid: RoomGrid
 
 proc resetGrid(program: RoomBuilder) =
-  program.grid = newGrid(14, 10)
+  program.grid = newGrid(19, 16)
 
 proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   new result
