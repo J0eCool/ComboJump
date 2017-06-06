@@ -13,6 +13,17 @@
         "Camera"
       ]
     },
+    "drawColliders": {
+      "args": [
+        "camera"
+      ],
+      "filename": "system/collisions.nim",
+      "id": "51",
+      "priority": "0",
+      "types": [
+        "Camera"
+      ]
+    },
     "drawHealthBarNodes": {
       "args": [
         "resources",

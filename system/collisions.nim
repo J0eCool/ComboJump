@@ -1,11 +1,27 @@
 import
-  component/collider,
-  component/movement,
-  component/transform,
+  component/[
+    collider,
+    movement,
+    transform,
+  ],
+  camera,
+  color,
+  drawing,
   entity,
   event,
   game_system,
   rect
+from sdl2 import RendererPtr
+
+var debugDrawColliders* = true
+defineDrawSystem:
+  components = [Transform, Collider]
+  proc drawColliders*(camera: Camera) =
+    if not debugDrawColliders:
+      return
+
+    let r = transform.globalRect + camera.offset
+    renderer.drawRect(r, color.red)
 
 defineSystem:
   components = [Transform, Collider]

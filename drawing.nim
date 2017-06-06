@@ -33,6 +33,10 @@ proc drawRect*(renderer: RendererPtr, r: rect.Rect) =
   var sdlRect = (r - r.size / 2).sdlRect
   renderer.drawRect sdlRect
 
+proc drawRect*(renderer: RendererPtr, r: rect.Rect, color: color.Color) =
+  renderer.setDrawColor color.sdlColor
+  renderer.drawRect(r)
+
 proc renderText*(renderer: RendererPtr, text: string, font: FontPtr, color: color.Color): RenderedText =
   let
     surface = font.renderTextBlended(text, color.sdlColor)

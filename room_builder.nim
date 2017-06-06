@@ -11,7 +11,12 @@ import
 from sdl2 import RendererPtr
 
 import
-  component/sprite,
+  component/[
+    collider,
+    sprite,
+    transform,
+  ],
+  system/collisions,
   camera,
   color,
   drawing,
@@ -57,6 +62,7 @@ type
     w, h: int
     tilemap: Tilemap
     tiles: seq[seq[SubTile]]
+    colliders: seq[Entity]
   Coord = tuple[x, y: int]
   SubTile = object
     kind: SubTileKind
@@ -243,6 +249,18 @@ proc buildRoom(grid: RoomGrid): Room =
             result.tiles[x][y].kind = filter.outs[k]
 
   result.decorate(grid.tilemap.decorationGroups)
+
+  result.colliders = @[]
+  for x in 0..<grid.w:
+    for y in 0..<grid.h:
+      if data[x][y]:
+        result.colliders.add newEntity("Collider", [
+          Transform(
+            pos: 32 * vec(x, y),
+            size: vec(32),
+          ),
+          Collider(layer: floor),
+        ])
 
 proc randomSeed(): int =
   random(int.high)
@@ -436,6 +454,7 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
               decoRect = rect(r.pos + scale * deco.offset,
                               scale * decoSprite.size.size)
             renderer.draw(decoSprite, decoRect)
+    renderer.drawColliders(room.colliders, Camera())
 
   # Draw hovered tile
   if editor.isCoordInRange(editor.hovered):
@@ -521,7 +540,7 @@ type
     grid: RoomGrid
 
 proc resetGrid(program: RoomBuilder) =
-  program.grid = newGrid(19, 16)
+  program.grid = newGrid(19, 15)
 
 proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   new result
@@ -545,6 +564,8 @@ method update*(program: RoomBuilder, dt: float) =
   if program.input.isPressed(Input.menu):
     program.shouldExit = true
 
+  if program.input.isPressed(Input.keyC):
+    debugDrawColliders = not debugDrawColliders
   if program.input.isHeld(Input.ctrl):
     if program.input.isPressed(Input.keyN):
       program.resetGrid()
