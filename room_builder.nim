@@ -407,10 +407,15 @@ type GridEditor = ref object of Node
   hovered: Coord
   drawGridLines: bool
   drawRoom: bool
-  entity: Entity
+  entities: seq[Entity]
 
 proc updateRoom(editor: GridEditor) =
-  editor.entity = buildRoomEntity(editor.grid[], editor.pos, editor.tileSize)
+  editor.entities = @[buildRoomEntity(editor.grid[], editor.pos, editor.tileSize)]
+  for i in 0..<3:
+    var grid = editor.grid[]
+    grid.seed = randomSeed()
+    let pos = vec(50.0 + 360.0 * i.float, 600.0)
+    editor.entities.add buildRoomEntity(grid, pos, vec(16))
 
 proc newGridEditor(grid: ptr RoomGrid): GridEditor =
   result = GridEditor(
@@ -607,7 +612,7 @@ method draw*(renderer: RendererPtr, program: RoomBuilder) =
   if program.editor.drawRoom:
     let
       camera = Camera()
-      entities = @[program.editor.entity]
+      entities = program.editor.entities
     renderer.drawRoomViewers(entities, program.resources, camera)
     renderer.drawColliders(entities, camera)
 
