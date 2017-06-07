@@ -33,7 +33,7 @@ defineSystem:
       if m.usesGravity:
         m.vel.y += gravity * dt
       let
-        oldRect = t.rect
+        oldRect = t.globalRect
         toMove = m.vel * dt
       t.pos += toMove
 
@@ -42,12 +42,12 @@ defineSystem:
         if c.layer.canCollideWith Layer.floor:
           for fs in floorTransforms:
             let f = fs.t
-            if t != f and t.rect.intersects f.rect:
+            if t != f and t.globalRect.intersects f.globalRect:
               let
-                fr = f.rect
+                fr = f.globalRect
                 s = t.size
               var
-                r = t.rect
+                r = t.globalRect
               if intersects(oldRect.centerBottom, r.centerBottom,
                             fr.topLeft - s.vecX, fr.topRight + s.vecX):
                 r.bottom = fr.top
@@ -63,7 +63,7 @@ defineSystem:
               elif intersects(oldRect.centerRight, r.centerRight,
                               fr.topLeft - s.vecY, fr.bottomLeft + s.vecY):
                 r.right = fr.left
-              t.rect = r
+              t.globalPos = r.pos
 
               c.bufferedAdd f.entity
               fs.c.bufferedAdd e
@@ -75,16 +75,16 @@ defineSystem:
                 feetHeight = 2.0
                 feet = rect(t.pos + vec(0.0, (t.size.x - feetHeight) / 2),
                             vec(t.size.x, feetHeight))
-              if t != f and feet.intersects f.rect:
+              if t != f and feet.intersects f.globalRect:
                 let
-                  fr = f.rect
+                  fr = f.globalRect
                   s = t.size
                 var
-                  r = t.rect
+                  r = t.globalRect
                 r.bottom = fr.top
                 m.onGround = true
                 m.vel.y = 0
-                t.rect = r
+                t.globalPos = r.pos
 
                 c.bufferedAdd f.entity
                 fs.c.bufferedAdd e

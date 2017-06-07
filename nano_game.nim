@@ -22,6 +22,7 @@ import
   program,
   quests,
   resources,
+  room_builder, #TODO: move RoomViewer component to components folder
   save,
   scrolling_background,
   single_sym_dylib,

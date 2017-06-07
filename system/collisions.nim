@@ -13,7 +13,7 @@ import
   rect
 from sdl2 import RendererPtr
 
-var debugDrawColliders* = true
+var debugDrawColliders* = false
 defineDrawSystem:
   components = [Transform, Collider]
   proc drawColliders*(camera: Camera) =
@@ -42,6 +42,6 @@ defineSystem:
         continue
       if collider.isBlacklisted(b):
         continue
-      if not transform.rect.intersects(b_t.rect):
+      if not transform.globalRect.intersects(b_t.globalRect):
         continue
       collider.collisions.add(b)

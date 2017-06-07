@@ -54,11 +54,11 @@ type
     tileFilled
     tileRandom
   Tile = set[TileState]
-  RoomGrid = object
+  RoomGrid* = object
     w, h: int
     data: seq[seq[Tile]]
     tilemap: Tilemap
-    seed: int
+    seed*: int
   Room = object
     w, h: int
     tilemap: Tilemap
@@ -88,10 +88,10 @@ autoObjectJSONProcs(DecorationGroup)
 autoObjectJSONProcs(Tilemap)
 
 type
-  RoomViewerObj = object of ComponentObj
+  RoomViewerObj* = object of ComponentObj
     room: Room
     tileSize: Vec
-  RoomViewer = ref object of RoomViewerObj
+  RoomViewer* = ref object of RoomViewerObj
 
 defineComponent(RoomViewer)
 
@@ -256,7 +256,7 @@ proc buildRoom(grid: RoomGrid, data: seq[seq[bool]]): Room =
 
   result.decorate(grid.tilemap.decorationGroups)
 
-proc buildRoomEntity(grid: RoomGrid, pos, tileSize: Vec): Entity =
+proc buildRoomEntity*(grid: RoomGrid, pos, tileSize: Vec): Entity =
   randomize(grid.seed)
   let
     data = grid.data.selectRandomTiles()
@@ -361,7 +361,7 @@ proc fromTileString(input: string, w, h: int): seq[seq[Tile]] =
       result.add line
       line = @[]
 
-proc toJSON(grid: RoomGrid): JSON =
+proc toJSON*(grid: RoomGrid): JSON =
   var obj = initTable[string, JSON]()
   obj["w"] = grid.w.toJSON
   obj["h"] = grid.h.toJSON
@@ -369,7 +369,7 @@ proc toJSON(grid: RoomGrid): JSON =
   obj["dataStr"] = grid.data.toTileString.toJSON
   obj["tilemap"] = grid.tilemap.name.toJSON
   JSON(kind: jsObject, obj: obj)
-proc fromJSON(grid: var RoomGrid, json: JSON) =
+proc fromJSON*(grid: var RoomGrid, json: JSON) =
   assert json.kind == jsObject
   grid.w.fromJSON(json.obj["w"])
   grid.h.fromJSON(json.obj["h"])
@@ -580,7 +580,11 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
 defineDrawSystem:
   components = [RoomViewer, Transform]
   proc drawRoomViewers*(resources: var ResourceManager, camera: Camera) =
-    renderer.drawRoom(resources, roomViewer.room, transform.pos, roomViewer.tileSize)
+    renderer.drawRoom(
+      resources,
+      roomViewer.room,
+      transform.globalPos + camera.offset,
+      roomViewer.tileSize)
 
 method update*(program: RoomBuilder, dt: float) =
   menu.update(program.menu, program.input)
@@ -593,6 +597,7 @@ method update*(program: RoomBuilder, dt: float) =
   if program.input.isHeld(Input.ctrl):
     if program.input.isPressed(Input.keyN):
       program.resetGrid()
+      program.editor.updateRoom()
     if program.input.isPressed(Input.keyS):
       writeJSONFile(savedTileFile, program.grid.toJSON, pretty=true)
       log info, "Saved to file ", savedTileFile

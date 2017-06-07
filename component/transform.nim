@@ -37,6 +37,13 @@ proc globalPos*(transform: Transform): Vec =
     return transform.pos
   let parent = transform.parent()
   return parent.globalPos + parent.globalScale * transform.pos
+proc `globalPos=`*(transform: Transform, pos: Vec) =
+  if transform.parent == nil:
+    transform.pos = pos
+    return
+  let parentPos = transform.parent().globalPos
+  # TODO: incorporate parent.globalScale
+  transform.pos = pos - parentPos
 
 proc globalSize*(transform: Transform): Vec =
   transform.size * transform.globalScale

@@ -1,5 +1,6 @@
 import
-  math
+  math,
+  random
 
 import
   nano_mapgen/[
@@ -21,7 +22,9 @@ import
   color,
   areas,
   entity,
+  jsonparse,
   prefabs,
+  room_builder,
   stages,
   vec,
   util
@@ -109,6 +112,9 @@ proc wall(door = doorWall, pos = vec(), size = vec()): Entities =
 
 
 proc entities(room: Room, screenSize, pos: Vec): Entities =
+  var grid: RoomGrid
+  grid.fromJSON(readJSONFile("saved_room.json"))
+  grid.seed = random(int.high)
   result = @[
     newEntity("Room", [
       RoomCameraTarget(),
@@ -118,42 +124,8 @@ proc entities(room: Room, screenSize, pos: Vec): Entities =
         size: screenSize - vec(2 * wallWidth),
       ),
     ]),
-    newEntity("Platform", [
-      Transform(
-        pos: pos + screenSize / 2 + vec(0, 150),
-        size: vec(500, 20),
-      ),
-      Collider(layer: Layer.oneWayPlatform),
-      Sprite(color: rgb(200, 128, 16)),
-    ]),
+    grid.buildRoomEntity(pos, vec(64)),
   ]
-  result &= wall(
-    door = room.left,
-    pos = pos + vec(wallWidth / 2, screenSize.y / 2),
-    size = vec(wallWidth, screenSize.y - 2 * wallWidth),
-  )
-  result &= wall( # right
-    door = room.right,
-    pos = pos + vec(screenSize.x - wallWidth / 2, screenSize.y / 2),
-    size = vec(wallWidth, screenSize.y - 2 * wallWidth),
-  )
-  result &= wall( # top
-    door = room.up,
-    pos = pos + vec(screenSize.x / 2, wallWidth / 2),
-    size = vec(screenSize.x, wallWidth),
-  )
-  result &= wall( # bottom
-    door = room.down,
-    pos = pos + vec(screenSize.x / 2, screenSize.y - wallWidth / 2),
-    size = vec(screenSize.x, wallWidth),
-  )
-  if room.kind == roomKey:
-    result.add newEntity("Key", [
-      Transform(pos: pos + screenSize / 2, size: vec(56, 28)),
-      Sprite(textureName: "Key.png"),
-      Collider(layer: Layer.playerTrigger),
-      Key(),
-    ])
 
 proc entitiesForStage*(area: AreaInfo, stageIdx: int, player: Entity): Entities =
   let
