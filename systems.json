@@ -85,6 +85,19 @@
         "var ResourceManager"
       ]
     },
+    "drawRoomViewers": {
+      "args": [
+        "resources",
+        "camera"
+      ],
+      "filename": "room_builder.nim",
+      "id": "52",
+      "priority": "0",
+      "types": [
+        "var ResourceManager",
+        "Camera"
+      ]
+    },
     "drawRuneMenu": {
       "args": [
         "resources"

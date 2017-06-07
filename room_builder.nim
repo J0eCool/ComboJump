@@ -22,6 +22,7 @@ import
   drawing,
   entity,
   event,
+  game_system,
   input,
   jsonparse,
   menu,
@@ -62,7 +63,6 @@ type
     w, h: int
     tilemap: Tilemap
     tiles: seq[seq[SubTile]]
-    colliders: seq[Entity]
   Coord = tuple[x, y: int]
   SubTile = object
     kind: SubTileKind
@@ -86,6 +86,14 @@ type
 
 autoObjectJSONProcs(DecorationGroup)
 autoObjectJSONProcs(Tilemap)
+
+type
+  RoomViewerObj = object of ComponentObj
+    room: Room
+    tileSize: Vec
+  RoomViewer = ref object of RoomViewerObj
+
+defineComponent(RoomViewer)
 
 proc cmp(a, b: Tilemap): int =
   cmp(a.name, b.name)
@@ -174,8 +182,7 @@ proc selectRandomTiles(grid: seq[seq[Tile]]): seq[seq[bool]] =
       toAdd.add(shouldFill)
     result.add toAdd
 
-proc buildRoom(grid: RoomGrid): Room =
-  randomize(grid.seed)
+proc buildRoom(grid: RoomGrid, data: seq[seq[bool]]): Room =
   result = Room(
     w: 2 * grid.w,
     h: 2 * grid.h,
@@ -227,7 +234,6 @@ proc buildRoom(grid: RoomGrid): Room =
       ([ true,  true,  true,  true], [   tileCC,     tileCC,    tileCC,    tileCC]),
     ]
 
-  let data = grid.data.selectRandomTiles()
   for i in -1..grid.w:
     for j in -1..grid.h:
       for filter in filters:
@@ -250,17 +256,41 @@ proc buildRoom(grid: RoomGrid): Room =
 
   result.decorate(grid.tilemap.decorationGroups)
 
-  result.colliders = @[]
+proc buildRoomEntity(grid: RoomGrid, pos, tileSize: Vec): Entity =
+  randomize(grid.seed)
+  let
+    data = grid.data.selectRandomTiles()
+    room = grid.buildRoom(data)
+
+  var colliders = newSeq[Entity]()
   for x in 0..<grid.w:
     for y in 0..<grid.h:
       if data[x][y]:
-        result.colliders.add newEntity("Collider", [
+        colliders.add newEntity("Collider", [
           Transform(
-            pos: 32 * vec(x, y),
-            size: vec(32),
+            pos: tileSize * vec(x, y),
+            size: tileSize,
           ),
           Collider(layer: floor),
         ])
+
+  newEntity("Room", [
+    Transform(pos: pos),
+    RoomViewer(
+      room: room,
+      tileSize: tileSize,
+    ),
+  ],
+  children=colliders)
+
+proc gridRect(tileSize: Vec, x, y: int, isSubtile = false): Rect =
+  let
+    base = vec(x, y)
+    scale = if isSubtile: 0.5 else: 1.0
+    size = tileSize * scale
+    offset = if isSubtile: -0.5 * size else: vec()
+    pos = base * size + offset
+  rect(pos, size)
 
 proc randomSeed(): int =
   random(int.high)
@@ -353,17 +383,34 @@ proc fromJSON(grid: var RoomGrid, json: JSON) =
   dataStr.fromJSON(json.obj["dataStr"])
   grid.data = dataStr.fromTileString(grid.w, grid.h)
 
+proc drawRoom(renderer: RendererPtr, resources: var ResourceManager, room: Room, pos, tileSize: Vec) =
+  for x in 0..<room.w:
+    for y in 0..<room.h:
+      let tile = room.tiles[x][y]
+      if tile.kind != tileNone:
+        let
+          sprite = tile.loadSprite(resources, renderer)
+          r = tileSize.gridRect(x, y, isSubtile=true) + pos
+          scale = tileSize.x * 5 / sprite.size.size.x / 2
+        renderer.draw(sprite, r, tile.kind.clipRect(sprite))
+        for deco in tile.decorations:
+          let
+            decoSprite = resources.loadSprite("tilemaps/" & deco.texture, renderer)
+            decoRect = rect(r.pos + scale * deco.offset,
+                            scale * decoSprite.size.size)
+          renderer.draw(decoSprite, decoRect)
+
 type GridEditor = ref object of Node
   grid: ptr RoomGrid
-  room: Room
   clickId: int
   tileSize: Vec
   hovered: Coord
   drawGridLines: bool
   drawRoom: bool
+  entity: Entity
 
 proc updateRoom(editor: GridEditor) =
-  editor.room = editor.grid[].buildRoom()
+  editor.entity = buildRoomEntity(editor.grid[], editor.pos, editor.tileSize)
 
 proc newGridEditor(grid: ptr RoomGrid): GridEditor =
   result = GridEditor(
@@ -376,15 +423,6 @@ proc newGridEditor(grid: ptr RoomGrid): GridEditor =
     drawRoom: true,
   )
   result.updateRoom()
-
-proc gridRect(editor: GridEditor, x, y: int, isSubtile = false): Rect =
-  let
-    base = vec(x, y)
-    scale = if isSubtile: 0.5 else: 1.0
-    size = editor.tileSize * scale
-    offset = if isSubtile: -0.5 * size else: vec()
-    pos = base * size + offset + editor.globalPos
-  rect(pos, size)
 
 proc posToCoord(editor: GridEditor, pos: Vec): Coord =
   let
@@ -421,11 +459,11 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
       for y in 0..<grid.h:
         let tile = grid.data[x][y]
         if tileFilled in tile:
-          let r = editor.gridRect(x, y)
+          let r = editor.tileSize.gridRect(x, y) + editor.globalPos
           renderer.fillRect r, tileColor
         if tileRandom in tile:
           const numLines = 4
-          var r = editor.gridRect(x, y)
+          var r = editor.tileSize.gridRect(x, y) + editor.globalPos
           if tileFilled notin tile:
             renderer.fillRect r, color.gray
           let
@@ -436,26 +474,6 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
             r.x = base + editor.tileSize.x * (i / numLines - 0.5) + offset
             renderer.fillRect r, color.red
 
-  # Draw subtiles
-  if editor.drawRoom:
-    let room = editor.room
-    for x in 0..<room.w:
-      for y in 0..<room.h:
-        let tile = room.tiles[x][y]
-        if tile.kind != tileNone:
-          let
-            sprite = tile.loadSprite(resources, renderer)
-            r = editor.gridRect(x, y, isSubtile=true)
-            scale = editor.tileSize.x * 5 / sprite.size.size.x / 2
-          renderer.draw(sprite, r, tile.kind.clipRect(sprite))
-          for deco in tile.decorations:
-            let
-              decoSprite = resources.loadSprite("tilemaps/" & deco.texture, renderer)
-              decoRect = rect(r.pos + scale * deco.offset,
-                              scale * decoSprite.size.size)
-            renderer.draw(decoSprite, decoRect)
-    renderer.drawColliders(room.colliders, Camera())
-
   # Draw hovered tile
   if editor.isCoordInRange(editor.hovered):
     let
@@ -463,7 +481,7 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
       y = editor.hovered.y
     let
       tile = grid.data[x][y]
-      r = editor.gridRect(x, y)
+      r = editor.tileSize.gridRect(x, y) + editor.globalPos
       color =
         if tileFilled in tile:
           average(tileColor, hoverColor)
@@ -536,6 +554,7 @@ proc tilemapSelectionNode(editor: GridEditor): Node =
 type
   RoomBuilder = ref object of Program
     resources: ResourceManager
+    editor: GridEditor
     menu: Node
     grid: RoomGrid
 
@@ -550,13 +569,18 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   result.resetGrid()
   if loadedJson.kind != jsError:
     result.grid.fromJSON(loadedJson)
-  let editor = newGridEditor(addr result.grid)
+  result.editor = newGridEditor(addr result.grid)
   result.menu = Node(
     children: @[
-      tilemapSelectionNode(editor),
-      editor,
+      tilemapSelectionNode(result.editor),
+      result.editor,
     ]
   )
+
+defineDrawSystem:
+  components = [RoomViewer, Transform]
+  proc drawRoomViewers*(resources: var ResourceManager, camera: Camera) =
+    renderer.drawRoom(resources, roomViewer.room, transform.pos, roomViewer.tileSize)
 
 method update*(program: RoomBuilder, dt: float) =
   menu.update(program.menu, program.input)
@@ -575,6 +599,12 @@ method update*(program: RoomBuilder, dt: float) =
 
 method draw*(renderer: RendererPtr, program: RoomBuilder) =
   renderer.draw(program.menu, program.resources)
+  if program.editor.drawRoom:
+    let
+      camera = Camera()
+      entities = @[program.editor.entity]
+    renderer.drawRoomViewers(entities, program.resources, camera)
+    renderer.drawColliders(entities, camera)
 
 when isMainModule:
   let screenSize = vec(1200, 900)
