@@ -23,24 +23,40 @@ defineDrawSystem:
     renderer.drawRect(r, color.red)
 
 defineSystem:
-  components = [Transform, Collider]
   proc checkCollisions*() =
-    collider.collisions =
-      if collider.bufferedCollisions != nil:
-        collider.bufferedCollisions
-      else:
-        @[]
-    collider.bufferedCollisions = @[]
-    forComponents(entities, b, [
-      Transform, b_t,
-      Collider, b_c,
+    var byLayer: array[Layer, seq[Entity]]
+    for layer in Layer:
+      byLayer[layer] = @[]
+    forComponents(entities, entity, [
+      Transform, transform,
+      Collider, collider,
     ]):
-      if entity == b:
-        continue
-      if not collider.layer.canCollideWith(b_c.layer):
-        continue
-      if collider.isBlacklisted(b):
-        continue
-      if not transform.globalRect.intersects(b_t.globalRect):
-        continue
-      collider.collisions.add(b)
+      byLayer[collider.layer].add entity
+
+    forComponents(entities, entity, [
+      Transform, transform,
+      Collider, collider,
+    ]):
+      collider.collisions =
+        if collider.bufferedCollisions != nil:
+          collider.bufferedCollisions
+        else:
+          @[]
+      collider.bufferedCollisions = @[]
+      for layer in Layer:
+        if not collider.layer.canCollideWith(layer):
+          continue
+        let inLayer = byLayer[layer]
+        forComponents(inLayer, b, [
+          Transform, b_t,
+          Collider, b_c,
+        ]):
+          if entity == b:
+            continue
+          if not collider.layer.canCollideWith(b_c.layer):
+            continue
+          if collider.isBlacklisted(b):
+            continue
+          if not transform.globalRect.intersects(b_t.globalRect):
+            continue
+          collider.collisions.add(b)
