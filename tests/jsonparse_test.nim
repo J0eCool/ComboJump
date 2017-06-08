@@ -15,16 +15,16 @@ type TestObject = object
   enumVal: TestEnum
   arrayVal: seq[int]
 
-autoObjectJSONProcs(TestObject)
+autoObjectJsonProcs(TestObject)
 
 template testRoundtrip(name: string, ty, value, jsonString: untyped): untyped =
-  test($name & " toJSON"):
-    check $toJSON(value) == jsonString
+  test($name & " toJson"):
+    check $toJson(value) == jsonString
 
-  test($name & " fromJSON"):
-    check fromJSON[ty](deserializeJSON(jsonString)) == value
+  test($name & " fromJson"):
+    check fromJson[ty](deserializeJson(jsonString)) == value
 
-suite "JSON parsing":
+suite "Json parsing":
   testRoundtrip(
     "Int", int,
     127,
@@ -81,8 +81,8 @@ suite "JSON parsing":
     """{"arrayVal":["6","0","2"],"enumVal":"two","intVal":"37","strVal":"test string"}"""
   )
 
-  test "Whitespace is ignored when reading JSON":
-    check fromJSON[seq[int]](deserializeJSON(" [\"1\", \"2\",\n \"3\" ] ")) == @[1, 2, 3]
+  test "Whitespace is ignored when reading Json":
+    check fromJson[seq[int]](deserializeJson(" [\"1\", \"2\",\n \"3\" ] ")) == @[1, 2, 3]
 
-# TODO: have non-aborting fromJSON failures
-  # echo "fails: ", fromJSON[TestEnum](JSON(kind: jsString, str: "three"))
+# TODO: have non-aborting fromJson failures
+  # echo "fails: ", fromJson[TestEnum](Json(kind: jsString, str: "three"))

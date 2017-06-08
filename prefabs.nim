@@ -29,8 +29,8 @@ import
 proc loadPrefab*(name: string): Entity =
   let
     path = "assets/prefabs/" & name & ".json"
-    json = readJSONFile(path)
-  fromJSON(result, json)
+    json = readJsonFile(path)
+  fromJson(result, json)
 
 proc newPlayer*(pos: Vec): Entity =
   result = loadPrefab("Player")

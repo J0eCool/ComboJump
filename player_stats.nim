@@ -8,14 +8,14 @@ type PlayerStats* = object
   xp*: int
   shouldSave*: bool
 
-proc fromJSON*(stats: var PlayerStats, json: JSON) =
+proc fromJson*(stats: var PlayerStats, json: Json) =
   assert json.kind == jsObject
-  stats.level.fromJSON(json.obj["level"])
-  stats.xp.fromJSON(json.obj["xp"])
-proc toJSON*(stats: PlayerStats): JSON =
-  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
-  result.obj["level"] = stats.level.toJSON()
-  result.obj["xp"] = stats.xp.toJSON()
+  stats.level.fromJson(json.obj["level"])
+  stats.xp.fromJson(json.obj["xp"])
+proc toJson*(stats: PlayerStats): Json =
+  result = Json(kind: jsObject, obj: initTable[string, Json]())
+  result.obj["level"] = stats.level.toJson()
+  result.obj["xp"] = stats.xp.toJson()
 
 proc newPlayerStats*(): PlayerStats =
   PlayerStats(

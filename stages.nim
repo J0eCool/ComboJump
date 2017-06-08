@@ -54,12 +54,12 @@ proc newTestStageData*(): StageData =
     state: inStage,
   )
 
-proc fromJSON*(stageData: var StageData, json: JSON) =
+proc fromJson*(stageData: var StageData, json: Json) =
   assert json.kind == jsObject
-  stageData.highestStageBeaten.fromJSON(json.obj["highestStageBeaten"])
-proc toJSON*(stageData: StageData): JSON =
-  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
-  result.obj["highestStageBeaten"] = stageData.highestStageBeaten.toJSON()
+  stageData.highestStageBeaten.fromJson(json.obj["highestStageBeaten"])
+proc toJson*(stageData: StageData): Json =
+  result = Json(kind: jsObject, obj: initTable[string, Json]())
+  result.obj["highestStageBeaten"] = stageData.highestStageBeaten.toJson()
 
 proc stage(area: AreaInfo, idx: int): Stage =
   let desc = area.stageDesc(idx)

@@ -56,16 +56,16 @@ proc reparseAllSpells(spellData: var SpellData) =
   for i in 0..<spellData.spellDescs.len:
     spellData.spells[i] = spellData.spellDescs[i].parse()
 
-proc fromJSON*(spellData: var SpellData, json: JSON) =
+proc fromJson*(spellData: var SpellData, json: Json) =
   assert json.kind == jsObject
-  spellData.spellDescs.fromJSON(json.obj["spellDescs"])
-  spellData.capacity.fromJSON(json.obj["capacity"])
+  spellData.spellDescs.fromJson(json.obj["spellDescs"])
+  spellData.capacity.fromJson(json.obj["capacity"])
   spellData.reparseAllSpells()
   spellData.varSpellIdx = spellData.spellDescs[spellData.varSpell].len
-proc toJSON*(spellData: SpellData): JSON =
-  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
-  result.obj["spellDescs"] = spellData.spellDescs.toJSON()
-  result.obj["capacity"] = spellData.capacity.toJSON()
+proc toJson*(spellData: SpellData): Json =
+  result = Json(kind: jsObject, obj: initTable[string, Json]())
+  result.obj["spellDescs"] = spellData.spellDescs.toJson()
+  result.obj["capacity"] = spellData.capacity.toJson()
 
 proc runeCount(spellDesc: SpellDesc, rune: Rune): int =
   for r in spellDesc:

@@ -28,56 +28,56 @@ const
   sysFile = "systems.json"
   useDylibs = false
 
-proc tryKey(json: JSON, key: string): Option[JSON] =
+proc tryKey(json: Json, key: string): Option[Json] =
   assert json.kind == jsObject
   if json.obj.hasKey(key):
     makeJust(json.obj[key])
   else:
-    makeNone[JSON]()
+    makeNone[Json]()
 
-proc fromJSON(system: var System, json: JSON) =
+proc fromJson(system: var System, json: Json) =
   assert json.kind == jsObject
-  system.id = fromJSON[int](json.obj["id"])
-  system.args = fromJSON[seq[string]](json.obj["args"])
-  system.types = fromJSON[seq[string]](json.obj["types"])
-  system.filename = fromJSON[string](json.obj.getOrDefault("filename"))
-  system.priority = fromJSON[int](json.obj["priority"])
-proc toJSON(system: System): JSON =
-  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
-  result.obj["id"] = system.id.toJSON()
-  result.obj["args"] = system.args.toJSON()
-  result.obj["types"] = system.types.toJSON()
-  result.obj["filename"] = system.filename.toJSON()
-  result.obj["priority"] = system.priority.toJSON()
+  system.id = fromJson[int](json.obj["id"])
+  system.args = fromJson[seq[string]](json.obj["args"])
+  system.types = fromJson[seq[string]](json.obj["types"])
+  system.filename = fromJson[string](json.obj.getOrDefault("filename"))
+  system.priority = fromJson[int](json.obj["priority"])
+proc toJson(system: System): Json =
+  result = Json(kind: jsObject, obj: initTable[string, Json]())
+  result.obj["id"] = system.id.toJson()
+  result.obj["args"] = system.args.toJson()
+  result.obj["types"] = system.types.toJson()
+  result.obj["filename"] = system.filename.toJson()
+  result.obj["priority"] = system.priority.toJson()
 
-proc fromJSON(systems: var SysTable, json: JSON) =
+proc fromJson(systems: var SysTable, json: Json) =
   assert json.kind == jsObject
   systems = initTable[string, System](64)
   for k, v in json.obj:
-    systems[k] = fromJSON[System](v)
-proc fromJSON(system: var SysTable, json: Option[JSON]) =
+    systems[k] = fromJson[System](v)
+proc fromJson(system: var SysTable, json: Option[Json]) =
   case json.kind
   of just:
-    fromJSON(system, json.value)
+    fromJson(system, json.value)
   of none:
     system = initTable[string, System](64)
-proc toJSON(systems: SysTable): JSON =
-  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
+proc toJson(systems: SysTable): Json =
+  result = Json(kind: jsObject, obj: initTable[string, Json]())
   for k, v in systems:
-    result.obj[k] = toJSON(v)
+    result.obj[k] = toJson(v)
 
-proc fromJSON(data: var Data, json: JSON) =
+proc fromJson(data: var Data, json: Json) =
   assert json.kind == jsObject
-  fromJSON(data.update, json.tryKey("update"))
-  fromJSON(data.draw, json.tryKey("draw"))
-proc toJSON(data: Data): JSON =
-  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
-  result.obj["update"] = data.update.toJSON()
-  result.obj["draw"] = data.draw.toJSON()
+  fromJson(data.update, json.tryKey("update"))
+  fromJson(data.draw, json.tryKey("draw"))
+proc toJson(data: Data): Json =
+  result = Json(kind: jsObject, obj: initTable[string, Json]())
+  result.obj["update"] = data.update.toJson()
+  result.obj["draw"] = data.draw.toJson()
 
 proc readData(): Data =
-  let json = readJSONFile(sysFile)
-  return fromJSON[Data](json)
+  let json = readJsonFile(sysFile)
+  return fromJson[Data](json)
 
 proc writeData(data: Data) =
   writeFile(sysFile, data.toJson.toPrettyString)

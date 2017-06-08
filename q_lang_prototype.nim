@@ -58,25 +58,25 @@ type
 var selected: ASTNode = nil # TODO: Not global!
 
 var astKindConstructors = initTable[string, (proc(): ASTNode)]()
-method fromJSON_impl(node: ASTNode, json: JSON)
+method fromJson_impl(node: ASTNode, json: Json)
 
 template astJson(t, p: untyped) =
-  autoObjectJSONProcs(t, @["dirty"])
+  autoObjectJsonProcs(t, @["dirty"])
   astKindConstructors[p.type.name] = (proc(): ASTNode = new p)
-  method toJSON(node: p): JSON =
-    result = toJSON(node[])
+  method toJson(node: p): Json =
+    result = toJson(node[])
     assert result.kind == jsObject
-    result.obj["_kind"] = JSON(kind: jsString, str: p.type.name)
-  method fromJSON_impl(node: p, json: JSON) =
-    fromJSON(node[], json)
+    result.obj["_kind"] = Json(kind: jsString, str: p.type.name)
+  method fromJson_impl(node: p, json: Json) =
+    fromJson(node[], json)
 
-proc fromJSON[T: ASTNode](node: var T, json: JSON) =
+proc fromJson[T: ASTNode](node: var T, json: Json) =
   assert json.kind == jsObject
   let kindJson = json.obj["_kind"]
   assert kindJson.kind == jsString
   let constructor = astKindConstructors[kindJson.str]
   node = cast[T](constructor())
-  fromJSON_impl(node, json)
+  fromJson_impl(node, json)
 
 astJson(ASTNodeObj, ASTNode)
 astJson(ExprNodeObj, ExprNode)
@@ -427,9 +427,9 @@ proc newQLangPrototype(screenSize: Vec): QLangPrototype =
   new result
   result.title = "QLang (prototype)"
   result.resources = newResourceManager()
-  let loadedJson = readJSONFile(savedCodeFile)
+  let loadedJson = readJsonFile(savedCodeFile)
   if loadedJson.kind != jsError:
-    result.ast.fromJSON(loadedJson)
+    result.ast.fromJson(loadedJson)
   else:
     result.ast = StmtList(
       statements: @[
@@ -543,7 +543,7 @@ method update*(program: QLangPrototype, dt: float) =
     program.cachedOutput = nil
   if program.input.isHeld(Input.ctrl):
     if program.input.isPressed(Input.keyS):
-      writeJSONFile(savedCodeFile, program.ast.toJSON, pretty=true)
+      writeJsonFile(savedCodeFile, program.ast.toJson, pretty=true)
       log info, "Saved to file ", savedCodeFile
     if program.input.isPressed(Input.delete):
       program.deleteSelected()

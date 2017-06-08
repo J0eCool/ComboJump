@@ -10,7 +10,7 @@ import
 import util
 
 type
-  JSONTokenKind = enum
+  JsonTokenKind = enum
     literal
     comma
     colon
@@ -20,25 +20,25 @@ type
     objectEnd
     null
     error
-  JSONToken = object
-    case kind: JSONTokenKind
+  JsonToken = object
+    case kind: JsonTokenKind
     of literal, error:
       value: string
     of comma, colon, arrayStart, arrayEnd, objectStart, objectEnd, null:
       discard
 
-  JSONKind* = enum
+  JsonKind* = enum
     jsObject
     jsArray
     jsString
     jsNull
     jsError
-  JSON* = object
-    case kind*: JSONKind
+  Json* = object
+    case kind*: JsonKind
     of jsObject:
-      obj*: Table[string, JSON]
+      obj*: Table[string, Json]
     of jsArray:
-      arr*: seq[JSON]
+      arr*: seq[Json]
     of jsString:
       str*: string
     of jsNull:
@@ -46,7 +46,7 @@ type
     of jsError:
       msg*: string
 
-proc `$`(token: JSONToken): string =
+proc `$`(token: JsonToken): string =
   case token.kind:
   of literal:
     '"' & token.value & '"'
@@ -55,14 +55,14 @@ proc `$`(token: JSONToken): string =
   else:
     $token.kind
 
-proc tokenizeJSON(str: string): seq[JSONToken] =
+proc tokenizeJson(str: string): seq[JsonToken] =
   var
     curr = ""
     i = 0
     readingString = false
   result = @[]
-  proc t(kind: JSONTokenKind): JSONToken =
-    JSONToken(kind: kind)
+  proc t(kind: JsonTokenKind): JsonToken =
+    JsonToken(kind: kind)
   while i < str.len:
     let c = str[i]
     i += 1
@@ -70,7 +70,7 @@ proc tokenizeJSON(str: string): seq[JSONToken] =
       if c != '"':
         curr &= c
       else:
-        result.add JSONToken(kind: literal, value: curr)
+        result.add JsonToken(kind: literal, value: curr)
         curr = ""
         readingString = false
       continue
@@ -91,70 +91,70 @@ proc tokenizeJSON(str: string): seq[JSONToken] =
         result.add t(null)
         i += 3
       else:
-        result.add JSONToken(kind: error, value: "Expected 'null', got '" & str[i-1..i+2] & "'")
+        result.add JsonToken(kind: error, value: "Expected 'null', got '" & str[i-1..i+2] & "'")
         return
     else:
-      result.add JSONToken(kind: error, value: "Unexpected character '" & c & "'")
+      result.add JsonToken(kind: error, value: "Unexpected character '" & c & "'")
       return
 
-proc parseJSONTokensFrom(idx: var int, tokens: seq[JSONToken]): JSON =
+proc parseJsonTokensFrom(idx: var int, tokens: seq[JsonToken]): Json =
   var t = tokens[idx]
   idx += 1
   case t.kind:
   of null:
-    return JSON(kind: jsNull)
+    return Json(kind: jsNull)
   of literal:
-    return JSON(kind: jsString, str: t.value)
+    return Json(kind: jsString, str: t.value)
   of arrayStart:
-    var arr: seq[JSON] = @[]
+    var arr: seq[Json] = @[]
     while tokens[idx].kind != arrayEnd:
-      arr.add parseJSONTokensFrom(idx, tokens)
+      arr.add parseJsonTokensFrom(idx, tokens)
       let k = tokens[idx].kind
       if k == comma:
         idx += 1
       elif k != arrayEnd:
-        return JSON(kind: jsError,
+        return Json(kind: jsError,
                     msg: "Expected arrayEnd, got " & $k & " at token idx=" & $idx)
     idx += 1
-    return JSON(kind: jsArray, arr: arr)
+    return Json(kind: jsArray, arr: arr)
   of objectStart:
-    var dict = initTable[string, JSON](8)
+    var dict = initTable[string, Json](8)
     while tokens[idx].kind != objectEnd:
       let key = tokens[idx]
       if key.kind != literal:
-        return JSON(kind: jsError,
+        return Json(kind: jsError,
                     msg: "Expected object key to be a string, got " & $key.kind & " at token idx=" & $idx)
       let keyStr = key.value
 
       let sep = tokens[idx+1].kind
       if sep != colon:
-        return JSON(kind: jsError,
+        return Json(kind: jsError,
                     msg: "Expected colon after object key, got " & $sep & " at token idx=" & $idx)
       idx += 2
 
-      let value = parseJSONTokensFrom(idx, tokens)
+      let value = parseJsonTokensFrom(idx, tokens)
       dict[keyStr] = value
 
       let next = tokens[idx].kind
       if next == comma:
         idx += 1
       elif next != objectEnd:
-        return JSON(kind: jsError,
+        return Json(kind: jsError,
                     msg: "Expected objectEnd, got " & $next & " at token idx=" & $idx)
     idx += 1
-    return JSON(kind: jsObject, obj: dict)
+    return Json(kind: jsObject, obj: dict)
   else:
-    return JSON(kind: jsError,
+    return Json(kind: jsError,
                 msg: "Unexpected token, got " & $t.kind & " at token idx=" & $idx)
   
-proc parseJSONTokens(tokens: seq[JSONToken]): JSON =
+proc parseJsonTokens(tokens: seq[JsonToken]): Json =
   var idx = 0
-  parseJSONTokensFrom(idx, tokens)
+  parseJsonTokensFrom(idx, tokens)
 
-proc deserializeJSON*(str: string): JSON =
-  parseJSONTokens(tokenizeJSON(str))
+proc deserializeJson*(str: string): Json =
+  parseJsonTokens(tokenizeJson(str))
 
-iterator sortedPairs(dict: Table[string, JSON]): tuple[key: string, value: JSON] =
+iterator sortedPairs(dict: Table[string, Json]): tuple[key: string, value: Json] =
   var sortedKeys = newSeq[string]()
   for k in dict.keys:
     sortedKeys.add k
@@ -165,7 +165,7 @@ iterator sortedPairs(dict: Table[string, JSON]): tuple[key: string, value: JSON]
   for k in sortedKeys:
     yield (k, dict[k])
 
-proc serializeJSON*(json: JSON, pretty=false, indents=0): string =
+proc serializeJson*(json: Json, pretty=false, indents=0): string =
   let
     tab = if not pretty: "" else: "  "
     indentation = if not pretty: "" else: tab.repeat(indents)
@@ -182,7 +182,7 @@ proc serializeJSON*(json: JSON, pretty=false, indents=0): string =
     for x in json.arr:
       if not first:
         result &= ","
-      result &= newline & indentation & tab & serializeJSON(x, pretty, indents+1)
+      result &= newline & indentation & tab & serializeJson(x, pretty, indents+1)
       first = false
     result &= newline & indentation & "]"
   of jsObject:
@@ -193,35 +193,35 @@ proc serializeJSON*(json: JSON, pretty=false, indents=0): string =
         result &= ","
       result &= newline & indentation & tab &
           "\"" & k & "\":" & space &
-          serializeJSON(v, pretty, indents+1)
+          serializeJson(v, pretty, indents+1)
       first = false
     result &= newline & indentation & "}"
   of jsError:
     result = "<|" & json.msg & "|>" & newline
 
-proc `$`*(json: JSON): string =
-  serializeJSON(json)
+proc `$`*(json: Json): string =
+  serializeJson(json)
 
-proc toPrettyString*(json: JSON): string =
-  serializeJSON(json, pretty=true)
+proc toPrettyString*(json: Json): string =
+  serializeJson(json, pretty=true)
 
-proc readJSONFile*(filename: string): JSON =
+proc readJsonFile*(filename: string): Json =
   try:
-    deserializeJSON(readFile(filename).string)
+    deserializeJson(readFile(filename).string)
   except:
-    JSON(kind: jsError, msg: "File " & filename & " doesn't exist")
+    Json(kind: jsError, msg: "File " & filename & " doesn't exist")
 
-proc writeJSONFile*(filename: string, json: JSON, pretty = false) =
-  writeFile(filename, json.serializeJSON(pretty))
+proc writeJsonFile*(filename: string, json: Json, pretty = false) =
+  writeFile(filename, json.serializeJson(pretty))
 
-proc fromJSON*[T](json: JSON): T
-proc fromJSON*[T: int | uint8](x: var T, json: JSON) =
+proc fromJson*[T](json: Json): T
+proc fromJson*[T: int | uint8](x: var T, json: Json) =
   assert json.kind == jsString
   x = T(parseInt(json.str))
-proc fromJSON*(x: var float, json: JSON) =
+proc fromJson*(x: var float, json: Json) =
   assert json.kind == jsString
   x = parseFloat(json.str)
-proc fromJSON*(x: var bool, json: JSON) =
+proc fromJson*(x: var bool, json: Json) =
   assert json.kind == jsString
   case json.str
   of "true":
@@ -230,7 +230,7 @@ proc fromJSON*(x: var bool, json: JSON) =
     x = false
   else:
     assert false, "Invalid bool value " & json.str
-proc fromJSON*(str: var string, json: JSON) =
+proc fromJson*(str: var string, json: Json) =
   case json.kind
   of jsString:
     str = json.str
@@ -238,87 +238,87 @@ proc fromJSON*(str: var string, json: JSON) =
     str = nil
   else:
     assert false
-proc fromJSON*[T](list: var seq[T], json: JSON) =
+proc fromJson*[T](list: var seq[T], json: Json) =
   assert json.kind == jsArray
   list = @[]
   for j in json.arr:
-    list.add fromJSON[T](j)
-proc fromJSON*[N, T](list: var array[N, T], json: JSON) =
+    list.add fromJson[T](j)
+proc fromJson*[N, T](list: var array[N, T], json: Json) =
   assert json.kind == jsArray
   for i in 0..<json.arr.len:
-    list[i] = fromJSON[T](json.arr[i])
-proc fromJSON*[T: enum](item: var T, json: JSON) =
+    list[i] = fromJson[T](json.arr[i])
+proc fromJson*[T: enum](item: var T, json: Json) =
   assert json.kind == jsString
   for e in T:
     if json.str == $e:
       item = e
       return
   assert false, "Invalid " & T.type.name & " value: " & json.str
-proc fromJSON*[K, V](table: var Table[K, V], json: JSON) =
+proc fromJson*[K, V](table: var Table[K, V], json: Json) =
   assert json.kind == jsObject
   table = initTable[K, V]()
   for rawK, rawV in json.obj:
     var
       k: K
       v: V
-    k.fromJSON(JSON(kind: jsString, str: rawK))
-    v.fromJSON(rawV)
+    k.fromJson(Json(kind: jsString, str: rawK))
+    v.fromJson(rawV)
     table[k] = v
-proc fromJSON*[T: tuple](obj: var T, json: JSON) =
+proc fromJson*[T: tuple](obj: var T, json: Json) =
   for field, val in obj.fieldPairs:
-    val.fromJSON(json.obj[field])
-proc fromJSON*[T](json: JSON): T =
+    val.fromJson(json.obj[field])
+proc fromJson*[T](json: Json): T =
   var x: T
-  x.fromJSON(json)
+  x.fromJson(json)
   return x
 
-proc toJSON*(x: int | uint8): JSON =
-  JSON(kind: jsString, str: $x)
-proc toJSON*(x: float): JSON =
-  JSON(kind: jsString, str: $x)
-proc toJSON*(x: bool): JSON =
-  JSON(kind: jsString, str: $x)
-proc toJSON*(str: string): JSON =
+proc toJson*(x: int | uint8): Json =
+  Json(kind: jsString, str: $x)
+proc toJson*(x: float): Json =
+  Json(kind: jsString, str: $x)
+proc toJson*(x: bool): Json =
+  Json(kind: jsString, str: $x)
+proc toJson*(str: string): Json =
   if str != nil:
-    JSON(kind: jsString, str: str)
+    Json(kind: jsString, str: str)
   else:
-    JSON(kind: jsNull)
-proc toJSON*[T](list: seq[T]): JSON =
-  var arr: seq[JSON] = @[]
+    Json(kind: jsNull)
+proc toJson*[T](list: seq[T]): Json =
+  var arr: seq[Json] = @[]
   for item in list:
-    arr.add item.toJSON
-  JSON(kind: jsArray, arr: arr)
-proc toJSON*[N, T](list: array[N, T]): JSON =
-  toJSON(@list)
-proc toJSON*[T: enum](item: T): JSON =
-  JSON(kind: jsString, str: $item)
-proc toJSON*[K, V](table: Table[K, V]): JSON =
-  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
+    arr.add item.toJson
+  Json(kind: jsArray, arr: arr)
+proc toJson*[N, T](list: array[N, T]): Json =
+  toJson(@list)
+proc toJson*[T: enum](item: T): Json =
+  Json(kind: jsString, str: $item)
+proc toJson*[K, V](table: Table[K, V]): Json =
+  result = Json(kind: jsObject, obj: initTable[string, Json]())
   for k, v in table:
     let
-      rawK = k.toJSON()
-      rawV = v.toJSON()
+      rawK = k.toJson()
+      rawV = v.toJson()
     assert rawK.kind == jsString
     result.obj[rawK.str] = rawV
-proc toJSON*[T: tuple](obj: T): JSON =
-  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
+proc toJson*[T: tuple](obj: T): Json =
+  result = Json(kind: jsObject, obj: initTable[string, Json]())
   for field, val in obj.fieldPairs:
-    result.obj[field] = val.toJSON()
+    result.obj[field] = val.toJson()
 
-macro autoObjectJSONProcs*(objType: untyped, blacklist: seq[string] = @[]): untyped =
+macro autoObjectJsonProcs*(objType: untyped, blacklist: seq[string] = @[]): untyped =
   let
     importTableStmt = newTree(nnkImportStmt, ident("tables"))
-    toJsonProc = newProc(postfix(ident("toJSON"), "*"),
+    toJsonProc = newProc(postfix(ident("toJson"), "*"),
       params=[
-        ident("JSON"),
+        ident("Json"),
         newIdentDefs(ident("obj"), objType),
       ])
     resAssign = newAssignment(ident("result"),
-      newTree(nnkObjConstr, ident("JSON"),
+      newTree(nnkObjConstr, ident("Json"),
         newColonExpr(ident("kind"), ident("jsObject")),
         newColonExpr(ident("obj"),
           newCall(newTree(nnkBracketExpr,
-            ident("initTable"), ident("string"), ident("JSON")
+            ident("initTable"), ident("string"), ident("Json")
           ))
         ),
       )
@@ -333,7 +333,7 @@ macro autoObjectJSONProcs*(objType: untyped, blacklist: seq[string] = @[]): unty
               newDotExpr(ident("result"), ident("obj")),
               ident("k")
             ),
-            newCall(ident("toJSON"), ident("v"))
+            newCall(ident("toJson"), ident("v"))
           )
         )
       )
@@ -342,13 +342,13 @@ macro autoObjectJSONProcs*(objType: untyped, blacklist: seq[string] = @[]): unty
   toJsonProc.body.add toForStmt
 
   let
-    fromJsonProc = newProc(postfix(ident("fromJSON"), "*"),
+    fromJsonProc = newProc(postfix(ident("fromJson"), "*"),
       params=[
         newEmptyNode(),
         newIdentDefs(ident("obj"),
           newTree(nnkVarTy, objType)
         ),
-        newIdentDefs(ident("json"), ident("JSON")),
+        newIdentDefs(ident("json"), ident("Json")),
       ])
     fromForStmt = newTree(nnkForStmt, ident("k"), ident("v"),
       newDotExpr(ident("obj"), ident("fieldPairs")),
@@ -361,7 +361,7 @@ macro autoObjectJSONProcs*(objType: untyped, blacklist: seq[string] = @[]): unty
                 newDotExpr(ident("json"), ident("obj")),
                 ident("k"),
               ),
-              newCall("fromJSON",
+              newCall("fromJson",
                 ident("v"),
                 newTree(nnkBracketExpr,
                   newDotExpr(ident("json"), ident("obj")),

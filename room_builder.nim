@@ -84,8 +84,8 @@ type
     tileCorDL
     tileCorDR
 
-autoObjectJSONProcs(DecorationGroup)
-autoObjectJSONProcs(Tilemap)
+autoObjectJsonProcs(DecorationGroup)
+autoObjectJsonProcs(Tilemap)
 
 type
   RoomViewerObj* = object of ComponentObj
@@ -119,7 +119,7 @@ proc allTilemaps(): seq[Tilemap] =
   result = @[]
   for path in paths:
     var tilemap: Tilemap
-    tilemap.fromJSON(readJSONFile(path))
+    tilemap.fromJson(readJsonFile(path))
     result.add tilemap
   assert result.len > 0, "Need to have at least one tilemap texture"
   result.sort(cmp)
@@ -361,26 +361,26 @@ proc fromTileString(input: string, w, h: int): seq[seq[Tile]] =
       result.add line
       line = @[]
 
-proc toJSON*(grid: RoomGrid): JSON =
-  var obj = initTable[string, JSON]()
-  obj["w"] = grid.w.toJSON
-  obj["h"] = grid.h.toJSON
-  obj["seed"] = grid.seed.toJSON
-  obj["dataStr"] = grid.data.toTileString.toJSON
-  obj["tilemap"] = grid.tilemap.name.toJSON
-  JSON(kind: jsObject, obj: obj)
-proc fromJSON*(grid: var RoomGrid, json: JSON) =
+proc toJson*(grid: RoomGrid): Json =
+  var obj = initTable[string, Json]()
+  obj["w"] = grid.w.toJson
+  obj["h"] = grid.h.toJson
+  obj["seed"] = grid.seed.toJson
+  obj["dataStr"] = grid.data.toTileString.toJson
+  obj["tilemap"] = grid.tilemap.name.toJson
+  Json(kind: jsObject, obj: obj)
+proc fromJson*(grid: var RoomGrid, json: Json) =
   assert json.kind == jsObject
-  grid.w.fromJSON(json.obj["w"])
-  grid.h.fromJSON(json.obj["h"])
-  grid.seed.fromJSON(json.obj["seed"])
+  grid.w.fromJson(json.obj["w"])
+  grid.h.fromJson(json.obj["h"])
+  grid.seed.fromJson(json.obj["seed"])
 
   var tilemapName: string
-  tilemapName.fromJSON(json.obj["tilemap"])
+  tilemapName.fromJson(json.obj["tilemap"])
   grid.tilemap = tilemapFromName(tilemapName)
 
   var dataStr: string
-  dataStr.fromJSON(json.obj["dataStr"])
+  dataStr.fromJson(json.obj["dataStr"])
   grid.data = dataStr.fromTileString(grid.w, grid.h)
 
 proc drawRoom(renderer: RendererPtr, resources: var ResourceManager, room: Room, pos, tileSize: Vec) =
@@ -570,10 +570,10 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   new result
   result.title = "Room Builder (prototype)"
   result.resources = newResourceManager()
-  let loadedJson = readJSONFile(savedTileFile)
+  let loadedJson = readJsonFile(savedTileFile)
   result.resetGrid()
   if loadedJson.kind != jsError:
-    result.grid.fromJSON(loadedJson)
+    result.grid.fromJson(loadedJson)
   result.editor = newGridEditor(addr result.grid)
   result.menu = Node(
     children: @[
@@ -604,7 +604,7 @@ method update*(program: RoomBuilder, dt: float) =
       program.resetGrid()
       program.editor.updateRoom()
     if program.input.isPressed(Input.keyS):
-      writeJSONFile(savedTileFile, program.grid.toJSON, pretty=true)
+      writeJsonFile(savedTileFile, program.grid.toJson, pretty=true)
       log info, "Saved to file ", savedTileFile
 
 method draw*(renderer: RendererPtr, program: RoomBuilder) =

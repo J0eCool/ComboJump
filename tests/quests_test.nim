@@ -142,7 +142,7 @@ suite "QuestInfo - serialization":
 
   test "Roundtripping initial state":
     var endQuests = beginQuests
-    endQuests.fromJSON(toJSON(beginQuests))
+    endQuests.fromJson(toJson(beginQuests))
     check endQuests == beginQuests
 
   test "Roundtripping with modified state":
@@ -151,7 +151,7 @@ suite "QuestInfo - serialization":
       notifications = newN10nManager()
       endQuests = beginQuests
     updateKillFrame(numDead=5)
-    endQuests.fromJSON(toJSON(quests))
+    endQuests.fromJson(toJson(quests))
     check endQuests == quests
 
   #TODO: test adding quest

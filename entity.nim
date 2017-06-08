@@ -110,10 +110,10 @@ type ComponentData* = Table[string, int]
 const componentFile = "components.json"
 proc readComponentData*(): ComponentData =
   result = initTable[string, int]()
-  let json = readJSONFile(componentFile)
+  let json = readJsonFile(componentFile)
   if json.kind == jsError:
     return
-  result.fromJSON(json)
+  result.fromJson(json)
 proc writeComponentData(data: ComponentData) =
   writeFile(componentFile, data.toJson.toPrettyString)
 
@@ -153,6 +153,6 @@ macro defineComponent*(component: untyped, jsonBlacklist: untyped = nil): untype
   result.add importJsonStmt
 
   jsonBlacklist[1].add newStrLitNode("entity")
-  result.add newCall("autoObjectJSONProcs", ident(name & "Obj"), jsonBlacklist)
+  result.add newCall("autoObjectJsonProcs", ident(name & "Obj"), jsonBlacklist)
 
 defineComponent(Component, @[])

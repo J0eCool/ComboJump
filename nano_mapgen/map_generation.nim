@@ -113,7 +113,7 @@ proc wall(door = doorWall, pos = vec(), size = vec()): Entities =
 
 proc entities(room: Room, screenSize, pos: Vec): Entities =
   var grid: RoomGrid
-  grid.fromJSON(readJSONFile("saved_room.json"))
+  grid.fromJson(readJsonFile("saved_room.json"))
   grid.seed = random(int.high)
   result = @[
     newEntity("Room", [

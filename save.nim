@@ -12,20 +12,20 @@ import
 const saveFile = "out/save.json"
 
 proc save(spellData: SpellData, stageData: StageData, stats: PlayerStats) =
-  var json = JSON(kind: jsObject, obj: initTable[string, JSON]())
-  json.obj["spellData"] = spellData.toJSON()
-  json.obj["stageData"] = stageData.toJSON()
-  json.obj["stats"] = stats.toJSON()
-  writeJSONFile(saveFile, json, pretty=true)
+  var json = Json(kind: jsObject, obj: initTable[string, Json]())
+  json.obj["spellData"] = spellData.toJson()
+  json.obj["stageData"] = stageData.toJson()
+  json.obj["stats"] = stats.toJson()
+  writeJsonFile(saveFile, json, pretty=true)
 
 proc load*(spellData: var SpellData, stageData: var StageData, stats: var PlayerStats) =
-  let json = readJSONFile(saveFile)
+  let json = readJsonFile(saveFile)
   if json.kind == jsError:
     return
   assert json.kind == jsObject
-  spellData.fromJSON(json.obj["spellData"])
-  stageData.fromJSON(json.obj["stageData"])
-  stats.fromJSON(json.obj["stats"])
+  spellData.fromJson(json.obj["spellData"])
+  stageData.fromJson(json.obj["stageData"])
+  stats.fromJson(json.obj["stats"])
 
 defineSystem:
   proc updateSaveSystem*(spellData: var SpellData, stageData: var StageData, stats: var PlayerStats) =

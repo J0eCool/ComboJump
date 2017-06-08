@@ -15,9 +15,9 @@ macro importAllComponents(): untyped =
 
 importAllComponents()
 
-method jsonVal*(component: Component): JSON {.base.}
-method loadJson*(component: Component, json: JSON) {.base.}
-macro declareToJSONMethods(): untyped =
+method jsonVal*(component: Component): Json {.base.}
+method loadJson*(component: Component, json: Json) {.base.}
+macro declareToJsonMethods(): untyped =
   var data = readComponentData()
 
   const implementedNames = [
@@ -46,12 +46,12 @@ macro declareToJSONMethods(): untyped =
       continue
     let toJsonMethod = newProc(postfix(ident("jsonVal"), "*"),
       params=[
-        ident("JSON"),
+        ident("Json"),
         newIdentDefs(ident("component"), ident(name)),
       ],
       procType=nnkMethodDef)
     toJsonMethod.body.add newCall(
-      ident("toJSON"),
+      ident("toJson"),
       newTree(nnkBracketExpr, ident("component")),
     )
     result.add toJsonMethod
@@ -60,11 +60,11 @@ macro declareToJSONMethods(): untyped =
       params=[
         newEmptyNode(),
         newIdentDefs(ident("component"), ident(name)),
-        newIdentDefs(ident("json"), ident("JSON")),
+        newIdentDefs(ident("json"), ident("Json")),
       ],
       procType=nnkMethodDef)
     loadJsonMethod.body.add newCall(
-      ident("fromJSON"),
+      ident("fromJson"),
       newTree(nnkBracketExpr, ident("component")),
       ident("json"),
     )
@@ -89,16 +89,16 @@ macro declareToJSONMethods(): untyped =
   toComponentProc.body.add caseStmt
   result.add toComponentProc
 
-declareToJSONMethods()
+declareToJsonMethods()
 
-proc toJSON*(entity: Entity): JSON =
-  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
-  var componentJson = JSON(kind: jsObject, obj: initTable[string, JSON]())
+proc toJson*(entity: Entity): Json =
+  result = Json(kind: jsObject, obj: initTable[string, Json]())
+  var componentJson = Json(kind: jsObject, obj: initTable[string, Json]())
   for c in entity.components:
     componentJson.obj[typeId(c)] = jsonVal(c)
   result.obj["components"] = componentJson
-  result.obj["name"] = entity.name.toJSON()
-proc fromJSON*(entity: var Entity, json: JSON) =
+  result.obj["name"] = entity.name.toJson()
+proc fromJson*(entity: var Entity, json: Json) =
   assert json.kind == jsObject
   var components = newSeq[Component]()
   for k, v in json.obj["components"].obj:

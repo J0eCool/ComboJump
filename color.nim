@@ -6,7 +6,7 @@ type Color* = object
   b*: int
   a*: int
 
-autoObjectJSONProcs(Color)
+autoObjectJsonProcs(Color)
 
 proc rgb*(r, g, b: int): Color =
   Color(r: r, g: g, b: b, a: 255)

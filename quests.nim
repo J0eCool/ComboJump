@@ -41,38 +41,38 @@ type
   QuestData* = object
     quests: seq[Quest]
 
-proc fromJSON*(step: var QuestStep, json: JSON) =
+proc fromJson*(step: var QuestStep, json: Json) =
   assert json.kind == jsObject
-  step.progress.fromJSON(json.obj["progress"])
-proc toJSON*(step: QuestStep): JSON =
-  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
-  result.obj["progress"] = step.progress.toJSON()
+  step.progress.fromJson(json.obj["progress"])
+proc toJson*(step: QuestStep): Json =
+  result = Json(kind: jsObject, obj: initTable[string, Json]())
+  result.obj["progress"] = step.progress.toJson()
 
-proc fromJSON*(quest: var Quest, json: JSON) =
+proc fromJson*(quest: var Quest, json: Json) =
   assert json.kind == jsObject
-  quest.isComplete.fromJSON(json.obj["isComplete"])
+  quest.isComplete.fromJson(json.obj["isComplete"])
   let steps = json.obj["steps"]
   assert steps.kind == jsArray
   assert steps.arr.len == quest.steps.len
   for i in 0..<quest.steps.len:
-    quest.steps[i].fromJSON(steps.arr[i])
-proc toJSON*(quest: Quest): JSON =
-  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
-  result.obj["isComplete"] = quest.isComplete.toJSON()
-  result.obj["steps"] = quest.steps.toJSON()
+    quest.steps[i].fromJson(steps.arr[i])
+proc toJson*(quest: Quest): Json =
+  result = Json(kind: jsObject, obj: initTable[string, Json]())
+  result.obj["isComplete"] = quest.isComplete.toJson()
+  result.obj["steps"] = quest.steps.toJson()
 
-proc fromJSON*(questData: var QuestData, json: JSON) =
+proc fromJson*(questData: var QuestData, json: Json) =
   assert json.kind == jsObject
   let questList = json.obj["quests"]
   assert questList.kind == jsObject
   for quest in questData.quests.mitems:
-    quest.fromJSON(questList.obj[quest.info.id])
-proc toJSON*(questData: QuestData): JSON =
-  result = JSON(kind: jsObject, obj: initTable[string, JSON]())
-  var questTable = initTable[string, JSON]()
+    quest.fromJson(questList.obj[quest.info.id])
+proc toJson*(questData: QuestData): Json =
+  result = Json(kind: jsObject, obj: initTable[string, Json]())
+  var questTable = initTable[string, Json]()
   for quest in questData.quests:
-    questTable[quest.info.id] = quest.toJSON()
-  result.obj["quests"] = JSON(kind: jsObject, obj: questTable)
+    questTable[quest.info.id] = quest.toJson()
+  result.obj["quests"] = Json(kind: jsObject, obj: questTable)
 
 proc questDataWithQuests(infos: seq[QuestInfo]): QuestData =
   var quests = newSeq[Quest]()
