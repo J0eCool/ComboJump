@@ -166,7 +166,7 @@
     }
   },
   "update": {
-    "checkCollisisons": {
+    "checkCollisions": {
       "args": [
       ],
       "filename": "system/collisions.nim",

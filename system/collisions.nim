@@ -1,7 +1,6 @@
 import
   component/[
     collider,
-    movement,
     transform,
   ],
   camera,
@@ -25,7 +24,7 @@ defineDrawSystem:
 
 defineSystem:
   components = [Transform, Collider]
-  proc checkCollisisons*() =
+  proc checkCollisions*() =
     collider.collisions =
       if collider.bufferedCollisions != nil:
         collider.bufferedCollisions
