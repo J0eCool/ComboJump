@@ -53,17 +53,17 @@ proc centerBottom*(rect: Rect): Vec =
 
 proc contains*(rect: Rect, point: Vec): bool =
   (
-    point.x >= rect.left and
+    point.x >= rect.left  and
     point.x <= rect.right and
-    point.y >= rect.top and
+    point.y >= rect.top   and
     point.y <= rect.bottom
   )
 
 proc intersects*(a, b: Rect): bool =
   return
-    a.left <= b.right and
-    a.right >= b.left and
-    a.top <= b.bottom and
+    a.left   <= b.right  and
+    a.right  >= b.left   and
+    a.top    <= b.bottom and
     a.bottom >= b.top
 
 proc pos*(rect: Rect): Vec =
