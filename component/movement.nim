@@ -16,9 +16,11 @@ type
 
 defineComponent(Movement, @[])
 
-const gravity* = 2_100.0
+const
+  gravity* = 2_100.0
+  gravitySign* = gravity.sign.float
 proc jumpSpeed*(height: float): float =
-  -sign(gravity).float * sqrt(2 * height * abs(gravity))
+  -gravitySign * sqrt(2 * height * abs(gravity))
 
 proc isFalling*(movement: Movement): bool =
   movement.vel.y * gravity > 0
