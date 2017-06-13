@@ -43,7 +43,17 @@ proc randomBool*(probability = 0.5): bool =
 
 proc random*[T](list: seq[T]): T =
   list[random(0, list.len - 1)]
-  
+
+proc randomSubset*[T](list: seq[T], count: int): seq[T] =
+  let clampedCount = min(list.len, count)
+  var copied: seq[T]
+  copied.deepCopy(list)
+  result = @[]
+  for i in 0..<clampedCount:
+    let item = random(copied)
+    result.add item
+    copied.remove(item)
+
 proc shuffle*[T](list: var seq[T]) =
   for i in 0..<list.len:
     let j = random(i, list.len - 1)

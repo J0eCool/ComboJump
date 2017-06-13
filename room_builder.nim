@@ -1,20 +1,18 @@
 import
-  algorithm,
   hashes,
-  os,
   random,
   sequtils,
   sets,
-  strutils,
-  tables,
-  times
+  strutils
 from sdl2 import RendererPtr
 
 import
-  component/[
-    collider,
-    sprite,
-    transform,
+  component/room_viewer,
+  mapgen/[
+    room_drawing,
+    tile,
+    tile_room,
+    tilemap,
   ],
   system/collisions,
   camera,
@@ -37,261 +35,6 @@ import
 
 const savedTileFile = "saved_room.json"
 
-type
-  Decoration = object
-    texture: string
-    offset: Vec
-  DecorationGroup = object
-    blacklist: seq[SubTileKind]
-    textures: seq[string]
-    offsets: seq[Vec]
-    maxCount: int
-  Tilemap = object
-    name: string
-    textures: seq[string]
-    decorationGroups: seq[DecorationGroup]
-  TileState = enum
-    tileFilled
-    tileRandom
-  Tile = set[TileState]
-  RoomGrid* = object
-    w, h: int
-    data: seq[seq[Tile]]
-    tilemap: Tilemap
-    seed*: int
-  Room = object
-    w, h: int
-    tilemap: Tilemap
-    tiles: seq[seq[SubTile]]
-  Coord = tuple[x, y: int]
-  SubTile = object
-    kind: SubTileKind
-    texture: string
-    decorations: seq[Decoration]
-  SubTileKind = enum
-    tileNone
-    tileUL
-    tileUC
-    tileUR
-    tileCL
-    tileCC
-    tileCR
-    tileDL
-    tileDC
-    tileDR
-    tileCorUL
-    tileCorUR
-    tileCorDL
-    tileCorDR
-
-autoObjectJsonProcs(DecorationGroup)
-autoObjectJsonProcs(Tilemap)
-
-type
-  RoomViewerObj* = object of ComponentObj
-    room: Room
-    tileSize: Vec
-  RoomViewer* = ref object of RoomViewerObj
-
-defineComponent(RoomViewer)
-
-proc cmp(a, b: Tilemap): int =
-  cmp(a.name, b.name)
-
-proc walkTilemaps(): seq[string] =
-  result = @[]
-  for path in os.walkDir("assets/tilemaps"):
-    if path.kind == pcFile:
-      let split = os.splitFile(path.path)
-      if split.ext == ".tilemap":
-        result.add path.path
-
-var
-  nextWalkTilemapTime: float
-  cachedTilemapTextures = newSeq[Tilemap]()
-proc allTilemaps(): seq[Tilemap] =
-  let curTime = epochTime()
-  if curTime < nextWalkTilemapTime:
-    return cachedTilemapTextures
-  nextWalkTilemapTime = curTime + 1.0
-
-  let paths = walkTilemaps()
-  result = @[]
-  for path in paths:
-    var tilemap: Tilemap
-    tilemap.fromJson(readJsonFile(path))
-    result.add tilemap
-  assert result.len > 0, "Need to have at least one tilemap texture"
-  result.sort(cmp)
-  cachedTilemapTextures = result
-
-proc tilemapFromName(name: string): Tilemap =
-  for tilemap in allTilemaps():
-    if tilemap.name == name:
-      return tilemap
-  assert false, "Unable to find tilemap: " & name
-
-proc isKindAllowed(group: DecorationGroup, kind: SubTileKind): bool =
-  if kind == tileNone:
-    return false
-  if group.blacklist != nil and kind in group.blacklist:
-    return false
-  return true
-
-proc randomSubset[T](list: seq[T], count: int): seq[T] =
-  let clampedCount = min(list.len, count)
-  var copied: seq[T]
-  copied.deepCopy(list)
-  result = @[]
-  for i in 0..<clampedCount:
-    let item = random(copied)
-    result.add item
-    copied.remove(item)
-
-proc decorate(room: var Room, groups: seq[DecorationGroup]) =
-  for group in groups:
-    let possibleTextures = group.textures & newSeqOf[string](nil)
-    for x in 0..<room.w:
-      for y in 0..<room.h:
-        let
-          kind = room.tiles[x][y].kind
-          allowed = group.isKindAllowed(kind)
-          maxCount = max(group.maxCount, 1)
-          count = random(maxCount div 2, maxCount + 1)
-          offsets = randomSubset(group.offsets, count)
-        for offset in offsets:
-          if not allowed:
-            # Maintain rand() call parity
-            discard randomBool()
-          else:
-            let texture = random(possibleTextures)
-            if texture != nil:
-              room.tiles[x][y].decorations.add Decoration(
-                texture: texture,
-                offset: offset,
-              )
-
-proc selectRandomTiles(grid: seq[seq[Tile]]): seq[seq[bool]] =
-  result = @[]
-  for line in grid:
-    var toAdd = newSeq[bool]()
-    for tile in line:
-      var shouldFill = tileFilled in tile
-      if tileRandom in tile and randomBool():
-        shouldFill = true
-      toAdd.add(shouldFill)
-    result.add toAdd
-
-proc buildRoom(grid: RoomGrid, data: seq[seq[bool]]): Room =
-  result = Room(
-    w: 2 * grid.w,
-    h: 2 * grid.h,
-    tilemap: grid.tilemap,
-    tiles: @[],
-  )
-  result.tiles = @[]
-  for x in 0..<2*grid.w:
-    var line: seq[SubTile] = @[]
-    for y in 0..<2*grid.h:
-      line.add SubTile(
-        kind: tileNone,
-        texture: random(grid.tilemap.textures),
-        decorations: @[],
-      )
-    result.tiles.add line
-
-  # Algorithm: Pattern-match the corners where 4 tiles intersect, set the inner subtiles that
-  # meet on that corner to the expected output.
-  # Consider each tile 4 times, once for each 4 corners it neighbors. The inner subtiles are
-  # non-overlapping, and this greatly reduces the number of cases.
-  # Also consider the intersections along the border. Extrapolate the tile-settedness for the
-  # tiles along the border out.
-  const numDirs = 4
-  type Filter = tuple
-    ins: array[numDirs, bool]
-    outs: array[numDirs, SubTileKind]
-  const
-    deltas: array[numDirs, Coord] =
-      [(0, 0), (1, 0), (0, 1), (1, 1)]
-    # TODO: instead of iterating through patterns, convert the bools to flags
-    # and constant-lookup into an array.
-    filters: seq[Filter] = @[
-      ([false, false, false, false], [ tileNone,   tileNone,  tileNone,  tileNone]),
-      ([false, false, false,  true], [ tileNone,   tileNone,  tileNone,    tileUL]),
-      ([false, false,  true, false], [ tileNone,   tileNone,    tileUR,  tileNone]),
-      ([false, false,  true,  true], [ tileNone,   tileNone,    tileUC,    tileUC]),
-      ([false,  true, false, false], [ tileNone,     tileDL,  tileNone,  tileNone]),
-      ([false,  true, false,  true], [ tileNone,     tileCL,  tileNone,    tileCL]),
-      ([false,  true,  true, false], [ tileNone,     tileDL,    tileUR,  tileNone]),
-      ([false,  true,  true,  true], [ tileNone,     tileCL,    tileUC, tileCorUL]),
-      ([ true, false, false, false], [   tileDR,   tileNone,  tileNone,  tileNone]),
-      ([ true, false, false,  true], [   tileDR,   tileNone,  tileNone,    tileUL]),
-      ([ true, false,  true, false], [   tileCR,   tileNone,    tileCR,  tileNone]),
-      ([ true, false,  true,  true], [   tileCR,   tileNone, tileCorUR,    tileUC]),
-      ([ true,  true, false, false], [   tileDC,     tileDC,  tileNone,  tileNone]),
-      ([ true,  true, false,  true], [   tileDC,  tileCorDL,  tileNone,    tileCL]),
-      ([ true,  true,  true, false], [tileCorDR,     tileDC,    tileCR,  tileNone]),
-      ([ true,  true,  true,  true], [   tileCC,     tileCC,    tileCC,    tileCC]),
-    ]
-
-  for i in -1..grid.w:
-    for j in -1..grid.h:
-      for filter in filters:
-        var found = true
-        for k in 0..<numDirs:
-          let
-            d = deltas[k]
-            x = (i + d.x).clamp(0, grid.w - 1)
-            y = (j + d.y).clamp(0, grid.h - 1)
-          if data[x][y] != filter.ins[k]:
-            found = false
-            break
-        if found:
-          for k in 0..<numDirs:
-            let
-              d = deltas[k]
-              x = (2*i + d.x + 1).clamp(0, result.w - 1)
-              y = (2*j + d.y + 1).clamp(0, result.h - 1)
-            result.tiles[x][y].kind = filter.outs[k]
-
-  result.decorate(grid.tilemap.decorationGroups)
-
-proc buildRoomEntity*(grid: RoomGrid, pos, tileSize: Vec): Entity =
-  randomize(grid.seed)
-  let
-    data = grid.data.selectRandomTiles()
-    room = grid.buildRoom(data)
-
-  var colliders = newSeq[Entity]()
-  for x in 0..<grid.w:
-    for y in 0..<grid.h:
-      if data[x][y]:
-        colliders.add newEntity("Collider", [
-          Transform(
-            pos: tileSize * vec(x, y),
-            size: tileSize,
-          ),
-          Collider(layer: floor),
-        ])
-
-  newEntity("Room", [
-    Transform(pos: pos),
-    RoomViewer(
-      room: room,
-      tileSize: tileSize,
-    ),
-  ],
-  children=colliders)
-
-proc gridRect(tileSize: Vec, x, y: int, isSubtile = false): Rect =
-  let
-    base = vec(x, y)
-    scale = if isSubtile: 0.5 else: 1.0
-    size = tileSize * scale
-    offset = if isSubtile: -0.5 * size else: vec()
-    pos = base * size + offset
-  rect(pos, size)
-
 proc randomSeed(): int =
   random(int.high)
 
@@ -304,101 +47,10 @@ proc newGrid(w, h: int): RoomGrid =
     seed: randomSeed(),
   )
   for x in 0..<w:
-    var line: seq[Tile] = @[]
+    var line: seq[GridTile] = @[]
     for y in 0..<h:
       line.add({})
     result.data.add line
-
-proc clipRect(subtile: SubTileKind, sprite: SpriteData): Rect =
-  let
-    tileSize = sprite.size.size / vec(5, 3)
-    tilePos =
-      case subtile
-      of tileUL:    vec(0, 0)
-      of tileUC:    vec(1, 0)
-      of tileUR:    vec(2, 0)
-      of tileCL:    vec(0, 1)
-      of tileCC:    vec(1, 1)
-      of tileCR:    vec(2, 1)
-      of tileDL:    vec(0, 2)
-      of tileDC:    vec(1, 2)
-      of tileDR:    vec(2, 2)
-      of tileCorDR: vec(3, 0)
-      of tileCorDL: vec(4, 0)
-      of tileCorUR: vec(3, 1)
-      of tileCorUL: vec(4, 1)
-      else:         vec()
-  rect(tileSize * tilePos, tileSize)
-
-proc loadSprite(subtile: SubTile, resources: var ResourceManager, renderer: RendererPtr): SpriteData =
-  let tilemapName = "tilemaps/" & subtile.texture
-  resources.loadSprite(tilemapName, renderer)
-
-proc toInt(tile: Tile): int =
-  for state in TileState:
-    if state in tile:
-      result += 1 shl state.int
-
-proc fromInt(num: int): Tile =
-  var x = num
-  for state in TileState:
-    if (x and 1) != 0:
-      result = result + {state}
-    x = x shr 1
-
-proc toTileString(grid: seq[seq[Tile]]): string =
-  result = ""
-  for line in grid:
-    for item in line:
-      result &= item.toInt.toHex(1)
-
-proc fromTileString(input: string, w, h: int): seq[seq[Tile]] =
-  result = @[]
-  var line = newSeq[Tile]();
-  for c in input:
-    line.add(($c).parseHexInt.fromInt)
-    if line.len >= h:
-      result.add line
-      line = @[]
-
-proc toJson*(grid: RoomGrid): Json =
-  var obj = initTable[string, Json]()
-  obj["w"] = grid.w.toJson
-  obj["h"] = grid.h.toJson
-  obj["seed"] = grid.seed.toJson
-  obj["dataStr"] = grid.data.toTileString.toJson
-  obj["tilemap"] = grid.tilemap.name.toJson
-  Json(kind: jsObject, obj: obj)
-proc fromJson*(grid: var RoomGrid, json: Json) =
-  assert json.kind == jsObject
-  grid.w.fromJson(json.obj["w"])
-  grid.h.fromJson(json.obj["h"])
-  grid.seed.fromJson(json.obj["seed"])
-
-  var tilemapName: string
-  tilemapName.fromJson(json.obj["tilemap"])
-  grid.tilemap = tilemapFromName(tilemapName)
-
-  var dataStr: string
-  dataStr.fromJson(json.obj["dataStr"])
-  grid.data = dataStr.fromTileString(grid.w, grid.h)
-
-proc drawRoom(renderer: RendererPtr, resources: var ResourceManager, room: Room, pos, tileSize: Vec) =
-  for x in 0..<room.w:
-    for y in 0..<room.h:
-      let tile = room.tiles[x][y]
-      if tile.kind != tileNone:
-        let
-          sprite = tile.loadSprite(resources, renderer)
-          r = tileSize.gridRect(x, y, isSubtile=true) + pos
-          scale = tileSize.x * 5 / sprite.size.size.x / 2
-        renderer.draw(sprite, r, tile.kind.clipRect(sprite))
-        for deco in tile.decorations:
-          let
-            decoSprite = resources.loadSprite("tilemaps/" & deco.texture, renderer)
-            decoRect = rect(r.pos + scale * deco.offset,
-                            scale * decoSprite.size.size)
-          renderer.draw(decoSprite, decoRect)
 
 type GridEditor = ref object of Node
   grid: ptr RoomGrid
@@ -568,7 +220,7 @@ proc resetGrid(program: RoomBuilder) =
 
 proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   new result
-  result.title = "Room Builder (prototype)"
+  result.title = "TileRoom Builder (prototype)"
   result.resources = newResourceManager()
   let loadedJson = readJsonFile(savedTileFile)
   result.resetGrid()
@@ -581,15 +233,6 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
       result.editor,
     ]
   )
-
-defineDrawSystem:
-  components = [RoomViewer, Transform]
-  proc drawRoomViewers*(resources: var ResourceManager, camera: Camera) =
-    renderer.drawRoom(
-      resources,
-      roomViewer.room,
-      transform.globalPos + camera.offset,
-      roomViewer.tileSize)
 
 method update*(program: RoomBuilder, dt: float) =
   menu.update(program.menu, program.input)
