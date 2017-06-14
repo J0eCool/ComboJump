@@ -11,20 +11,23 @@ import
   util,
   vec
 
+type ColliderData = tuple[entity: Entity, rect: Rect, collider: Collider]
+
 defineSystem:
   priority = -1
   proc physics*(dt: float) =
     var
-      floorTransforms: seq[tuple[t: Transform, c: Collider]] = @[]
-      platformTransforms: seq[tuple[t: Transform, c: Collider]] = @[]
-    entities.forComponents e, [
-      Collider, c,
-      Transform, t,
+      floorTransforms: seq[ColliderData] = @[]
+      platformTransforms: seq[ColliderData] = @[]
+    entities.forComponents entity, [
+      Collider, collider,
+      Transform, transform,
     ]:
-      if c.layer == Layer.floor:
-        floorTransforms.add((t, c))
-      elif c.layer == Layer.oneWayPlatform:
-        platformTransforms.add((t, c))
+      let data = (entity, transform.globalRect, collider)
+      if collider.layer == Layer.floor:
+        floorTransforms.add(data)
+      elif collider.layer == Layer.oneWayPlatform:
+        platformTransforms.add(data)
 
     entities.forComponents e, [
       Movement, m,
@@ -41,10 +44,9 @@ defineSystem:
       e.withComponent Collider, c:
         if c.layer.canCollideWith Layer.floor:
           for fs in floorTransforms:
-            let f = fs.t
-            if t != f and t.globalRect.intersects f.globalRect:
+            if e != fs.entity and t.globalRect.intersects fs.rect:
               let
-                fr = f.globalRect
+                fr = fs.rect
                 s = t.size
               var
                 r = t.globalRect
@@ -65,19 +67,18 @@ defineSystem:
                 r.right = fr.left
               t.globalPos = r.pos
 
-              c.bufferedAdd f.entity
-              fs.c.bufferedAdd e
+              c.bufferedAdd fs.entity
+              fs.collider.bufferedAdd e
 
           if m.isFalling and (not m.canDropDown):
             for fs in platformTransforms:
               let
-                f = fs.t
                 feetHeight = 2.0
                 feet = rect(t.pos + vec(0.0, (t.size.x - feetHeight) / 2),
                             vec(t.size.x, feetHeight))
-              if t != f and feet.intersects f.globalRect:
+              if e != fs.entity and feet.intersects fs.rect:
                 let
-                  fr = f.globalRect
+                  fr = fs.rect
                   s = t.size
                 var
                   r = t.globalRect
@@ -86,5 +87,5 @@ defineSystem:
                 m.vel.y = 0
                 t.globalPos = r.pos
 
-                c.bufferedAdd f.entity
-                fs.c.bufferedAdd e
+                c.bufferedAdd fs.entity
+                fs.collider.bufferedAdd e
