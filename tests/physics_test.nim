@@ -87,30 +87,47 @@ suite "Collisions":
 # Transpose test grids because Rooms are indexed [x][y], but literal
 # arrays are written visually [y][x]
 proc transpose[T](matrix: seq[seq[T]]): seq[seq[T]] =
-  # TODO: actually transpose - for now test data is the same either way
-  matrix
+  result = @[]
+  for y in 0..<matrix[0].len:
+    result.add @[]
 
-suite "Collisions - TileRoom":
+  for x in 0..<matrix.len:
+    for y in 0..<matrix[x].len:
+      result[y].add matrix[x][y]
+
+proc toGridTiles(data: seq[seq[bool]]): seq[seq[GridTile]] =
+  result = @[]
+  for line in data:
+    var resultLine = newSeq[GridTile]()
+    for item in line:
+      resultLine.add(if item: {tileFilled} else: {})
+    result.add resultLine
+
+proc tileGridEntity(pos, tileSize: Vec, rawData: seq[seq[bool]]): Entity =
   let
-    oo: GridTile = {}
-    xX: GridTile = {tileFilled}
+    data = rawData.transpose.toGridTiles
     emptyTilemap = Tilemap(
       name: "",
       textures: @[""],
       decorationGroups: @[],
     )
-    singleBlockGrid = RoomGrid(
-      w: 3,
-      h: 3,
-      data: transpose(@[
-        @[oo,oo,oo],
-        @[oo,xX,oo],
-        @[oo,oo,oo],
-      ]),
+    grid = RoomGrid(
+      w: data.len,
+      h: data[0].len,
+      data: data,
       tilemap: emptyTilemap,
-      seed: 0,
     )
-    singleBlock = buildRoomEntity(singleBlockGrid, vec(-40, -40), vec(40))
+  buildRoomEntity(grid, pos, tileSize)
+
+suite "Collisions - TileRoom":
+  let
+    oo = false
+    xX = true
+    singleBlock = tileGridEntity(vec(-40), vec(40), @[
+      @[oo,oo,oo],
+      @[oo,xX,oo],
+      @[oo,oo,oo],
+    ])
     dt = 1.0
 
   test "No movement with no velocity":
