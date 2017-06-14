@@ -22,8 +22,9 @@ import
 
 type
   RoomViewerObj* = object of ComponentObj
-    room: TileRoom
-    tileSize: Vec
+    room*: TileRoom
+    data*: seq[seq[bool]]
+    tileSize*: Vec
   RoomViewer* = ref object of RoomViewerObj
 
 defineComponent(RoomViewer)
@@ -43,23 +44,12 @@ proc buildRoomEntity*(grid: RoomGrid, pos, tileSize: Vec): Entity =
     data = grid.data.selectRandomTiles()
     room = grid.buildRoom(data)
 
-  var colliders = newSeq[Entity]()
-  for x in 0..<grid.w:
-    for y in 0..<grid.h:
-      if data[x][y]:
-        colliders.add newEntity("Collider", [
-          Transform(
-            pos: tileSize * vec(x, y),
-            size: tileSize,
-          ),
-          Collider(layer: floor),
-        ])
-
   newEntity("TileRoom", [
     Transform(pos: pos),
+    Collider(layer: Layer.floor),
     RoomViewer(
       room: room,
+      data: data,
       tileSize: tileSize,
     ),
-  ],
-  children=colliders)
+  ])

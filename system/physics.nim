@@ -2,8 +2,10 @@ import
   component/[
     collider,
     movement,
+    room_viewer,
     transform,
   ],
+  mapgen/tile_room,
   entity,
   event,
   game_system,
@@ -23,11 +25,25 @@ defineSystem:
       Collider, collider,
       Transform, transform,
     ]:
-      let data = (entity, transform.globalRect, collider)
-      if collider.layer == Layer.floor:
-        floorTransforms.add(data)
-      elif collider.layer == Layer.oneWayPlatform:
-        platformTransforms.add(data)
+      proc add(rect: Rect) =
+        let data = (entity, rect, collider)
+        if collider.layer == Layer.floor:
+          floorTransforms.add(data)
+        elif collider.layer == Layer.oneWayPlatform:
+          platformTransforms.add(data)
+      let roomViewer = entity.getComponent(RoomViewer)
+      if roomViewer == nil:
+        add(transform.globalRect)
+        continue
+
+      let
+        data = roomViewer.data
+        size = roomViewer.tileSize
+      for x in 0..<data.len:
+        for y in 0..<data[x].len:
+          if data[x][y]:
+            let pos = transform.globalPos + vec(x, y) * size
+            add(rect(pos, size))
 
     entities.forComponents e, [
       Movement, m,
