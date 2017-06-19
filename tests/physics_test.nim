@@ -14,6 +14,8 @@ import
   ],
   system/physics,
   entity,
+  option,
+  rect,
   util,
   vec
 
@@ -42,7 +44,7 @@ proc pos(entity: Entity): Vec =
 proc onGround(entity: Entity): bool =
   entity.getComponent(Movement).onGround
 
-suite "Collisions":
+suite "Physics - Movement":
   let
     singleBlock = testBlock(vec(0), vec(40))
     dt = 1.0
@@ -80,7 +82,7 @@ suite "Collisions":
   test "onGround false when not on ground":
     let player = testPlayer(vec(50, 0), vec(0))
     discard physics(@[player, singleBlock], dt)
-    check (not player.onGround)
+    check(not player.onGround)
 
   test "Falling onto platform sets onGround":
     let player = testPlayer(
@@ -124,7 +126,7 @@ proc tileGridEntity(pos, tileSize: Vec, rawData: seq[seq[bool]]): Entity =
     )
   buildRoomEntity(grid, pos, tileSize)
 
-suite "Collisions - TileRoom":
+suite "Physics - TileRoom movement":
   let
     oo = false
     xX = true
@@ -175,7 +177,7 @@ suite "Collisions - TileRoom":
   test "onGround false when not on ground":
     let player = testPlayer(vec(50, 0), vec(0))
     discard physics(@[player, singleBlock], dt)
-    check (not player.onGround)
+    check(not player.onGround)
 
   test "Falling onto platform sets onGround":
     let player = testPlayer(
@@ -197,3 +199,23 @@ suite "Collisions - TileRoom":
       playerLeft.pos.approxEq  vec(-10, -20)
       playerDown.pos.approxEq  vec( 20, -10)
       playerUp.pos.approxEq    vec(-20,  10)
+
+suite "Physics - Raycasting":
+  let
+    right = Ray(
+      pos: vec(20, 30),
+      dir: vec(1, 0),
+      dist: 100,
+    )
+  test "Non-intersecting doesn't intersect":
+    let col = right.intersects(rect(0, 80, 20, 20))
+    check col.isNone
+
+  test "Intersecting does intersect":
+    let col = right.intersects(rect(40, 30, 20, 20))
+    check col.isJust
+    col.bindAs hit:
+      check(hit == RaycastHit(
+        normal: vec(-1, 0),
+        distance: 10,
+      ))

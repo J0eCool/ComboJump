@@ -9,11 +9,53 @@ import
   entity,
   event,
   game_system,
+  option,
   rect,
   util,
   vec
 
-type ColliderData = tuple[entity: Entity, rect: Rect, collider: Collider]
+type
+  ColliderData = tuple[entity: Entity, rect: Rect, collider: Collider]
+  Ray* = object
+    pos*: Vec
+    dir*: Vec
+    dist*: float
+  RaycastHit* = object
+    normal*: Vec
+    distance*: float
+
+# New system:
+# toMove = vel*dt
+# while toMove.length > 0:
+#   Raycast from each point on the entity through
+#   Find the shortest-distance collision, move by that distance
+#   Subtract moved distance from toMove, zero vel direction normal to collision
+
+proc setShortest(toSet: var Option[RaycastHit], hit: RaycastHit) =
+  # TODO: only set toSet when toSet is None or hit distance is shorter
+  toSet = hit.makeJust
+
+proc intersects*(ray: Ray, rect: Rect): Option[RaycastHit] =
+  let d = ray.dir.unit * ray.dist
+  if d.x > 0:
+    let
+      m = d.y / d.x
+      dx = rect.left - ray.pos.x
+      y = m * dx + ray.pos.y
+    if y >= rect.top and y <= rect.bottom:
+      result.setShortest RaycastHit(
+        normal: vec(-1, 0),
+        distance: dx,
+      )
+  elif d.x < 0:
+    # TODO: that but in reverse
+    discard
+  # TODO: that but for d.y
+
+proc raycast*(ray: Ray, colliders: seq[Rect]): seq[RaycastHit] =
+  # Find all intersections between ray start and end line segment
+  # Sort result by distance
+  @[]
 
 defineSystem:
   priority = -1

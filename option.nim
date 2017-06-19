@@ -36,6 +36,8 @@ template bindOr*(opt: typed, name, orBody, body: untyped): untyped =
 
 proc isNone*[T](opt: Option[T]): bool =
   opt.kind == none
+proc isJust*[T](opt: Option[T]): bool =
+  opt.kind == just
 
 proc getOr*[T](opt: Option[T], orVal: T): T =
   case opt.kind
