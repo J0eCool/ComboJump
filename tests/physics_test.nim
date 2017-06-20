@@ -201,21 +201,50 @@ suite "Physics - TileRoom movement":
       playerUp.pos.approxEq    vec(-20,  10)
 
 suite "Physics - Raycasting":
-  let
-    right = Ray(
-      pos: vec(20, 30),
-      dir: vec(1, 0),
+  proc fromOrigin(dir: Vec): Ray =
+    Ray(
+      pos: vec(0, 0),
+      dir: dir,
       dist: 100,
     )
-  test "Non-intersecting doesn't intersect":
-    let col = right.intersects(rect(0, 80, 20, 20))
+  let
+    right     = fromOrigin(vec( 1,  0))
+    left      = fromOrigin(vec(-1,  0))
+    downRight = fromOrigin(vec( 1,  1))
+  test "Totally non-intersecting doesn't intersect":
+    let col = right.intersection(rect(80, 80, 20, 20))
     check col.isNone
 
   test "Intersecting does intersect":
-    let col = right.intersects(rect(40, 30, 20, 20))
+    let col = right.intersection(rect(60, 0, 100, 20))
     check col.isJust
     col.bindAs hit:
       check(hit == RaycastHit(
+        pos: vec(10, 0),
         normal: vec(-1, 0),
+        distance: 10,
+      ))
+
+  test "Distance limits intersection":
+    let col = right.intersection(rect(250, 0, 20, 20))
+    check col.isNone
+
+  test "Backwards doesn't intersect":
+    let col = right.intersection(rect(-50, 0, 20, 20))
+    check col.isNone
+
+  test "Dir is normalized":
+    let
+      ray = fromOrigin(vec(10, 0))
+      col = ray.intersection(rect(250, 0, 20, 20))
+    check col.isNone
+
+  test "Negative dir works properly":
+    let col = left.intersection(rect(-20, 0, 20, 20))
+    check col.isJust
+    col.bindAs hit:
+      check(hit == RaycastHit(
+        pos: vec(-10, 0),
+        normal: vec(1, 0),
         distance: 10,
       ))

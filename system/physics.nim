@@ -21,6 +21,7 @@ type
     dir*: Vec
     dist*: float
   RaycastHit* = object
+    pos*: Vec
     normal*: Vec
     distance*: float
 
@@ -35,21 +36,35 @@ proc setShortest(toSet: var Option[RaycastHit], hit: RaycastHit) =
   # TODO: only set toSet when toSet is None or hit distance is shorter
   toSet = hit.makeJust
 
-proc intersects*(ray: Ray, rect: Rect): Option[RaycastHit] =
+proc intersection*(ray: Ray, rect: Rect): Option[RaycastHit] =
   let d = ray.dir.unit * ray.dist
-  if d.x > 0:
+  proc calculateIntersection(
+      toSet: var Option[RaycastHit],
+      target = 0.0,
+      normal = vec(),
+     ) =
     let
+      isX = normal.x != 0
       m = d.y / d.x
-      dx = rect.left - ray.pos.x
+      dx = -normal.x * (target - ray.pos.x)
       y = m * dx + ray.pos.y
-    if y >= rect.top and y <= rect.bottom:
-      result.setShortest RaycastHit(
-        normal: vec(-1, 0),
+    if dx > 0.0 and dx <= ray.dist and y >= rect.top and y <= rect.bottom:
+      toSet.setShortest RaycastHit(
+        pos: vec(target, y),
+        normal: normal,
         distance: dx,
       )
+
+  if d.x > 0:
+    result.calculateIntersection(
+      target = rect.left,
+      normal = vec(-1, 0),
+    )
   elif d.x < 0:
-    # TODO: that but in reverse
-    discard
+    result.calculateIntersection(
+      target = rect.right,
+      normal = vec(1, 0),
+    )
   # TODO: that but for d.y
 
 proc raycast*(ray: Ray, colliders: seq[Rect]): seq[RaycastHit] =
