@@ -207,23 +207,58 @@ suite "Physics - Raycasting":
       dir: dir,
       dist: 100,
     )
+
+  proc approxEq(a, b: RaycastHit): bool =
+    (a.pos.approxEq(b.pos) and
+     a.normal.approxEq(b.normal) and
+     a.distance.approxEq(b.distance))
+
+  template checkHit(actual: Option[RaycastHit], expected: RaycastHit) =
+    check actual.isJust
+    actual.bindAs hit:
+      check hit.approxEq(expected)
+
   let
     right     = fromOrigin(vec( 1,  0))
     left      = fromOrigin(vec(-1,  0))
-    downRight = fromOrigin(vec( 1,  1))
+    up        = fromOrigin(vec( 0, -1))
+    down      = fromOrigin(vec( 0,  1))
+    downRight = fromOrigin(vec( 3,  4))
   test "Totally non-intersecting doesn't intersect":
     let col = right.intersection(rect(80, 80, 20, 20))
     check col.isNone
 
-  test "Intersecting does intersect":
+  test "Right collision works":
     let col = right.intersection(rect(60, 0, 100, 20))
-    check col.isJust
-    col.bindAs hit:
-      check(hit == RaycastHit(
-        pos: vec(10, 0),
-        normal: vec(-1, 0),
-        distance: 10,
-      ))
+    checkHit(col, RaycastHit(
+      pos: vec(10, 0),
+      normal: vec(-1, 0),
+      distance: 10,
+    ))
+
+  test "Left collision works":
+    let col = left.intersection(rect(-20, 0, 20, 20))
+    checkHit(col, RaycastHit(
+      pos: vec(-10, 0),
+      normal: vec(1, 0),
+      distance: 10,
+    ))
+
+  test "Up collision works":
+    let col = up.intersection(rect(0, -20, 20, 20))
+    checkHit(col, RaycastHit(
+      pos: vec(0, -10),
+      normal: vec(0, 1),
+      distance: 10,
+    ))
+
+  test "Down collision works":
+    let col = down.intersection(rect(0, 20, 20, 20))
+    checkHit(col, RaycastHit(
+      pos: vec(0, 10),
+      normal: vec(0, -1),
+      distance: 10,
+    ))
 
   test "Distance limits intersection":
     let col = right.intersection(rect(250, 0, 20, 20))
@@ -239,12 +274,23 @@ suite "Physics - Raycasting":
       col = ray.intersection(rect(250, 0, 20, 20))
     check col.isNone
 
-  test "Negative dir works properly":
-    let col = left.intersection(rect(-20, 0, 20, 20))
+  test "Diagonal collision works (x)":
+    let col = downRight.intersection(rect(32, 30, 10, 50))
+    checkHit(col, RaycastHit(
+      pos: vec(27, 36),
+      normal: vec(-1, 0),
+      distance: 45,
+    ))
+
+  test "Diagonal collision works (y)":
+    let col = downRight.intersection(rect(30, 25, 50, 10))
+    checkHit(col, RaycastHit(
+      pos: vec(15, 20),
+      normal: vec(0, -1),
+      distance: 25,
+    ))
+
+  test "Diagonal collision exact corner is handled":
+    let col = downRight.intersection(rect(40, 50, 20, 20))
+    # We don't want to specify which side catches it, only that one of them does
     check col.isJust
-    col.bindAs hit:
-      check(hit == RaycastHit(
-        pos: vec(-10, 0),
-        normal: vec(1, 0),
-        distance: 10,
-      ))

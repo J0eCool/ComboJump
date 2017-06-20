@@ -45,14 +45,20 @@ proc intersection*(ray: Ray, rect: Rect): Option[RaycastHit] =
      ) =
     let
       isX = normal.x != 0
-      m = d.y / d.x
-      dx = -normal.x * (target - ray.pos.x)
-      y = m * dx + ray.pos.y
-    if dx > 0.0 and dx <= ray.dist and y >= rect.top and y <= rect.bottom:
+      (main, sub) = if isX: (getX, getY) else: (getY, getX)
+      m = d.sub / d.main
+      dx = -normal.main * (target - ray.pos.main)
+      y = m * dx + ray.pos.sub
+    if dx > 0.0 and dx <= ray.dist and
+        ((isX and y >= rect.top and y <= rect.bottom) or
+         (not isX and y >= rect.left and y <= rect.right)):
+      let
+        pos = if isX: vec(target, y) else: vec(y, target)
+        distance = ray.pos.distance(pos)
       toSet.setShortest RaycastHit(
-        pos: vec(target, y),
+        pos: pos,
         normal: normal,
-        distance: dx,
+        distance: distance,
       )
 
   if d.x > 0:
@@ -65,7 +71,16 @@ proc intersection*(ray: Ray, rect: Rect): Option[RaycastHit] =
       target = rect.right,
       normal = vec(1, 0),
     )
-  # TODO: that but for d.y
+  if d.y > 0:
+    result.calculateIntersection(
+      target = rect.top,
+      normal = vec(0, -1),
+    )
+  elif d.y < 0:
+    result.calculateIntersection(
+      target = rect.bottom,
+      normal = vec(0, 1),
+    )
 
 proc raycast*(ray: Ray, colliders: seq[Rect]): seq[RaycastHit] =
   # Find all intersections between ray start and end line segment

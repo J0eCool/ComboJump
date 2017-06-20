@@ -11,6 +11,11 @@ proc vec*[T: SomeNumber](s: T): Vec =
 proc vec*(): Vec =
   (0.0, 0.0)
 
+proc getX*(v: Vec): float {.procvar.} =
+  v.x
+proc getY*(v: Vec): float {.procvar.} =
+  v.y
+
 proc vecX*(v: Vec): Vec =
   vec(v.x, 0.0)
 proc vecY*(v: Vec): Vec =
