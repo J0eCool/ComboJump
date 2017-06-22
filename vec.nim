@@ -21,6 +21,10 @@ proc vecX*(v: Vec): Vec =
 proc vecY*(v: Vec): Vec =
   vec(0.0, v.y)
 
+template vecUnary(op: untyped): untyped =
+  proc op*(v: Vec): Vec =
+    vec(op(v.x), op(v.y))
+
 template vecf(op, assignOp: untyped): untyped =
   proc op*(a, b: Vec): Vec =
     vec(op(a.x, b.x),
@@ -34,6 +38,9 @@ template vecf(op, assignOp: untyped): untyped =
 
   proc assignOp*(v: var Vec, delta: Vec) =
     v = op(v, delta)
+
+vecUnary sign
+vecUnary abs
 
 vecf `+`, `+=`
 vecf `-`, `-=`
@@ -50,7 +57,6 @@ proc length2*(v: Vec): float =
   v.x * v.x + v.y * v.y
 proc length*(v: Vec): float =
   v.length2().sqrt()
-
 proc distance2*(a, b: Vec): float =
   (b - a).length2()
 proc distance*(a, b: Vec): float =
@@ -62,6 +68,9 @@ proc unit*(v: Vec): Vec =
     vec(0)
   else:
     v / mag
+
+proc `length=`*(v: var Vec, m: float) =
+  v = m * v.unit()
 
 proc angle*(v: Vec): float =
   arctan2(v.y, v.x)

@@ -33,8 +33,16 @@ type
 #   Subtract moved distance from toMove, zero vel direction normal to collision
 
 proc setShortest(toSet: var Option[RaycastHit], hit: RaycastHit) =
-  # TODO: only set toSet when toSet is None or hit distance is shorter
-  toSet = hit.makeJust
+  if toSet.isNone:
+    toSet = hit.makeJust
+    return
+  toSet.bindAs cur:
+    if hit.distance < cur.distance:
+      toSet = hit.makeJust
+
+proc setShortest(toSet: var Option[RaycastHit], maybeHit: Option[RaycastHit]) =
+  maybeHit.bindAs hit:
+    toSet.setShortest(hit)
 
 proc intersection*(ray: Ray, rect: Rect): Option[RaycastHit] =
   let d = ray.dir.unit * ray.dist
@@ -49,7 +57,7 @@ proc intersection*(ray: Ray, rect: Rect): Option[RaycastHit] =
       m = d.sub / d.main
       dx = -normal.main * (target - ray.pos.main)
       y = m * dx + ray.pos.sub
-    if dx > 0.0 and dx <= ray.dist and
+    if dx >= 0.0 and dx <= ray.dist and
         ((isX and y >= rect.top and y <= rect.bottom) or
          (not isX and y >= rect.left and y <= rect.right)):
       let
@@ -82,27 +90,28 @@ proc intersection*(ray: Ray, rect: Rect): Option[RaycastHit] =
       normal = vec(0, 1),
     )
 
-proc raycast*(ray: Ray, colliders: seq[Rect]): seq[RaycastHit] =
-  # Find all intersections between ray start and end line segment
-  # Sort result by distance
-  @[]
+proc raycast*(ray: Ray, colliders: seq[Rect]): Option[RaycastHit] =
+  for collider in colliders:
+    let col = ray.intersection(collider)
+    col.bindAs hit:
+      result.setShortest hit
 
 defineSystem:
   priority = -1
   proc physics*(dt: float) =
+    # Collect colliders once
     var
-      floorTransforms: seq[ColliderData] = @[]
-      platformTransforms: seq[ColliderData] = @[]
+      floorTransforms: seq[Rect] = @[]
+      platformTransforms: seq[Rect] = @[]
     entities.forComponents entity, [
       Collider, collider,
       Transform, transform,
     ]:
       proc add(rect: Rect) =
-        let data = (entity, rect, collider)
         if collider.layer == Layer.floor:
-          floorTransforms.add(data)
+          floorTransforms.add(rect)
         elif collider.layer == Layer.oneWayPlatform:
-          platformTransforms.add(data)
+          platformTransforms.add(rect)
       let roomViewer = entity.getComponent(RoomViewer)
       if roomViewer == nil:
         add(transform.globalRect)
@@ -117,63 +126,38 @@ defineSystem:
             let pos = transform.globalPos + vec(x, y) * size
             add(rect(pos, size))
 
-    entities.forComponents e, [
-      Movement, m,
-      Transform, t,
+    # Do collisions
+    entities.forComponents entity, [
+      Movement, movement,
+      Transform, transform,
     ]:
-      if m.usesGravity:
-        m.vel.y += gravity * dt
-      let
-        oldRect = t.globalRect
-        toMove = m.vel * dt
-      t.pos += toMove
+      if movement.usesGravity:
+        movement.vel.y += gravity * dt
 
-      m.onGround = false
-      e.withComponent Collider, c:
-        if c.layer.canCollideWith Layer.floor:
-          for fs in floorTransforms:
-            if e != fs.entity and t.globalRect.intersects fs.rect:
-              let
-                fr = fs.rect
-                s = t.size
-              var
-                r = t.globalRect
-              if intersects(oldRect.centerBottom, r.centerBottom,
-                            fr.topLeft - s.vecX, fr.topRight + s.vecX):
-                r.bottom = fr.top
-                m.onGround = true
-                m.vel.y = 0
-              elif intersects(oldRect.centerTop, r.centerTop,
-                              fr.bottomLeft - s.vecX, fr.bottomRight + s.vecX):
-                r.top = fr.bottom
-                m.vel.y = 0
-              elif intersects(oldRect.centerLeft, r.centerLeft,
-                              fr.topRight - s.vecY, fr.bottomRight + s.vecY):
-                r.left = fr.right
-              elif intersects(oldRect.centerRight, r.centerRight,
-                              fr.topLeft - s.vecY, fr.bottomLeft + s.vecY):
-                r.right = fr.left
-              t.globalPos = r.pos
+      var
+        rect = transform.globalRect
+        toMove = movement.vel * dt
 
-              c.bufferedAdd fs.entity
-              fs.collider.bufferedAdd e
+      movement.onGround = false
+      entity.withComponent Collider, collider:
+        if collider.layer.canCollideWith Layer.floor:
+          while toMove.length2 > 0.001:
+            let
+              ray = Ray(
+                pos: rect.pos + toMove.sign * rect.size / 2,
+                dir: toMove,
+                dist: toMove.length,
+              )
+              col = ray.raycast(floorTransforms)
+            if col.isNone:
+              rect += toMove
+              break
+            col.bindAs hit:
+              let delta = hit.normal * hit.distance * hit.normal.dot(toMove.unit)
+              rect += delta
+              toMove += hit.normal * toMove.abs
+              if hit.normal.y < 0:
+                movement.onGround = true
+        # TODO: one way platforms
+      transform.globalPos = rect.pos
 
-          if m.isFalling and (not m.canDropDown):
-            for fs in platformTransforms:
-              let
-                feetHeight = 2.0
-                feet = rect(t.pos + vec(0.0, (t.size.x - feetHeight) / 2),
-                            vec(t.size.x, feetHeight))
-              if e != fs.entity and feet.intersects fs.rect:
-                let
-                  fr = fs.rect
-                  s = t.size
-                var
-                  r = t.globalRect
-                r.bottom = fr.top
-                m.onGround = true
-                m.vel.y = 0
-                t.globalPos = r.pos
-
-                c.bufferedAdd fs.entity
-                fs.collider.bufferedAdd e

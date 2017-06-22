@@ -197,8 +197,8 @@ suite "Physics - TileRoom movement":
     check:
       playerRight.pos.approxEq vec( 10,  20)
       playerLeft.pos.approxEq  vec(-10, -20)
-      playerDown.pos.approxEq  vec( 20, -10)
-      playerUp.pos.approxEq    vec(-20,  10)
+      playerDown.pos.approxEq  vec( 20,  10)
+      playerUp.pos.approxEq    vec(-20, -10)
 
 suite "Physics - Raycasting":
   proc fromOrigin(dir: Vec): Ray =

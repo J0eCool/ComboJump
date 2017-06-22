@@ -73,5 +73,9 @@ proc size*(rect: Rect): Vec =
 
 proc `+`*(rect: Rect, delta: Vec): Rect =
   rect(rect.pos + delta, rect.size)
+proc `+=`*(rect: var Rect, delta: Vec) =
+  rect = rect + delta
 proc `-`*(rect: Rect, delta: Vec): Rect =
   rect(rect.pos - delta, rect.size)
+proc `-=`*(rect: var Rect, delta: Vec) =
+  rect = rect - delta
