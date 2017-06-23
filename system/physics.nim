@@ -142,13 +142,28 @@ defineSystem:
       entity.withComponent Collider, collider:
         if collider.layer.canCollideWith Layer.floor:
           while toMove.length2 > 0.001:
-            let
-              ray = Ray(
-                pos: rect.pos + toMove.sign * rect.size / 2,
+            proc rayFrom(offset: Vec): Ray =
+              Ray(
+                pos: rect.pos + offset,
                 dir: toMove,
                 dist: toMove.length,
               )
-              col = ray.raycast(floorTransforms)
+            let
+              xNum = 4
+              yNum = 4
+            var col = makeNone[RaycastHit]()
+            if toMove.y != 0.0:
+              for x in 0..<xNum:
+                let
+                  t = (x.float + 0.5) / xNum.float
+                  offset = vec(t - 0.5, toMove.y.sign / 2) * rect.size
+                col.setShortest rayFrom(offset).raycast(floorTransforms)
+            if toMove.x != 0.0:
+              for y in 0..<yNum:
+                let
+                  t = (y.float + 0.5) / yNum.float
+                  offset = vec(toMove.x.sign / 2, t - 0.5) * rect.size
+                col.setShortest rayFrom(offset).raycast(floorTransforms)
             if col.isNone:
               rect += toMove
               break
@@ -158,6 +173,10 @@ defineSystem:
               toMove += hit.normal * toMove.abs
               if hit.normal.y < 0:
                 movement.onGround = true
+              if hit.normal.x == 0.0:
+                movement.vel.y = 0.0
+              else:
+                movement.vel.x = 0.0
         # TODO: one way platforms
       transform.globalPos = rect.pos
 
