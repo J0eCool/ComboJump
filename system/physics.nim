@@ -25,13 +25,6 @@ type
     normal*: Vec
     distance*: float
 
-# New system:
-# toMove = vel*dt
-# while toMove.length > 0:
-#   Raycast from each point on the entity through
-#   Find the shortest-distance collision, move by that distance
-#   Subtract moved distance from toMove, zero vel direction normal to collision
-
 proc setShortest(toSet: var Option[RaycastHit], hit: RaycastHit) =
   if toSet.isNone:
     toSet = hit.makeJust
@@ -48,6 +41,7 @@ proc intersection*(ray: Ray, rect: Rect): Option[RaycastHit] =
   let d = ray.dir.unit * ray.dist
   proc calculateIntersection(
       toSet: var Option[RaycastHit],
+      toHitEdge: var bool,
       target = 0.0,
       normal = vec(),
      ) =
@@ -63,32 +57,50 @@ proc intersection*(ray: Ray, rect: Rect): Option[RaycastHit] =
       let
         pos = if isX: vec(target, y) else: vec(y, target)
         distance = ray.pos.distance(pos)
-      toSet.setShortest RaycastHit(
+      toHitEdge = ((isX and (y == rect.top or y == rect.bottom)) or
+                 (not isX and (y == rect.left or y == rect.right)))
+
+      var hit = RaycastHit(
         pos: pos,
         normal: normal,
         distance: distance,
       )
+      if isX or toSet.isNone:
+        toSet = hit.makeJust
+      else:
+        toSet.bindAs pre:
+          hit.normal = unit(hit.normal + pre.normal)
+          toSet = hit.makeJust
 
+  var
+    hitEdgeX = false
+    hitEdgeY = false
   if d.x > 0:
     result.calculateIntersection(
+      hitEdgeX,
       target = rect.left,
       normal = vec(-1, 0),
     )
   elif d.x < 0:
     result.calculateIntersection(
+      hitEdgeX,
       target = rect.right,
       normal = vec(1, 0),
     )
   if d.y > 0:
     result.calculateIntersection(
+      hitEdgeY,
       target = rect.top,
       normal = vec(0, -1),
     )
   elif d.y < 0:
     result.calculateIntersection(
+      hitEdgeY,
       target = rect.bottom,
       normal = vec(0, 1),
     )
+  if hitEdgeX xor hitEdgeY:
+    result = makeNone[RaycastHit]()
 
 proc raycast*(ray: Ray, colliders: seq[Rect]): Option[RaycastHit] =
   for collider in colliders:
@@ -155,13 +167,13 @@ defineSystem:
             if toMove.y != 0.0:
               for x in 0..<xNum:
                 let
-                  t = (x.float + 0.5) / xNum.float
+                  t = x / (xNum - 1)
                   offset = vec(t - 0.5, toMove.y.sign / 2) * rect.size
                 col.setShortest rayFrom(offset).raycast(floorTransforms)
             if toMove.x != 0.0:
               for y in 0..<yNum:
                 let
-                  t = (y.float + 0.5) / yNum.float
+                  t = y / (yNum - 1)
                   offset = vec(toMove.x.sign / 2, t - 0.5) * rect.size
                 col.setShortest rayFrom(offset).raycast(floorTransforms)
             if col.isNone:

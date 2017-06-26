@@ -111,8 +111,15 @@ suite "Physics - Raycasting":
 
   test "Diagonal collision exact corner is handled":
     let col = downRight.intersection(rect(40, 50, 20, 20))
-    # We don't want to specify which side catches it, only that one of them does
-    check col.isJust
+    checkHit(col, RaycastHit(
+      pos: vec(30, 40),
+      normal: vec(-1).unit,
+      distance: 50,
+    ))
+
+  test "Don't intersect with an exact edge":
+    let col = right.intersection(rect(30, 10, 20, 20))
+    check col.isNone
 
 proc testPlayer(pos, vel: Vec): Entity =
   newEntity("Player", [
@@ -277,11 +284,30 @@ suite "Physics - TileRoom movement":
     discard physics(@[player, singleBlock], dt)
     check player.pos.approxEq(vec(-30, 25))
 
-  test "Can't get stuck on corners":
-    # TODO: fix
+  test "Can't get stuck on corners when moving straight":
+    let player = testPlayer(vec(-29, -50), vec(0, 50))
+    discard physics(@[player, singleBlock], dt)
+    check player.pos.approxEq(vec(-29, -30))
+
+  test "Can't get stuck on corners when moving diagonally":
     let player = testPlayer(vec(-50, -50), vec(50, 50))
     discard physics(@[player, singleBlock], dt)
+    dprint player.pos
     check player.pos.approxEq(vec(-30, -30))
+
+  test "Can't get stuck on corners when moving diagonally, offset slightly in X":
+    #TODO: ???
+    let player = testPlayer(vec(-49, -50), vec(50, 50))
+    discard physics(@[player, singleBlock], dt)
+    dprint player.pos
+    check player.pos.approxEq(vec(-30, 0))
+
+  test "Can't get stuck on corners when moving diagonally, offset slightly in Y":
+    #TODO: ???
+    let player = testPlayer(vec(-50, -49), vec(50, 50))
+    discard physics(@[player, singleBlock], dt)
+    dprint player.pos
+    check player.pos.approxEq(vec(0, -30))
 
   test "Can't skip collision with excessive velocity":
     let player = testPlayer(vec(0, -50), vec(0, 5000))
@@ -313,7 +339,13 @@ suite "Physics - TileRoom movement":
       playerLeft =  testPlayer(vec( 10, -20), vec(-20,  -5))
       playerDown =  testPlayer(vec( 20, -10), vec(  5,  20))
       playerUp =    testPlayer(vec(-20,  10), vec( -5, -20))
-      entities = @[boxRoom, playerLeft, playerRight, playerDown, playerUp]
+      entities = @[
+        boxRoom,
+        playerRight,
+        playerLeft,
+        playerDown,
+        playerUp,
+      ]
     discard physics(entities, dt)
     check:
       playerRight.pos.approxEq vec( 10,  20)
