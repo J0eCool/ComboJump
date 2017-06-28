@@ -213,47 +213,51 @@ proc tilemapSelectionNode(editor: GridEditor): Node =
   )
 
 proc sidebarNode(editor: GridEditor): Node =
-  Node(
+  BindNode[EditorMenuMode](
     pos: vec(10, 40),
-    children: @[
-      List[EditorMenuMode](
-        horizontal: true,
-        spacing: vec(6),
-        items: (proc(): seq[EditorMenuMode] =
-          result = @[]
-          for mode in EditorMenuMode:
-            result.add mode
-        ),
-        listNodes: (proc(mode: EditorMenuMode): Node =
-          let color =
-            if mode == editor.mode:
-              rgb(200, 200, 200)
-            else:
-              rgb(60, 60, 60)
-          Button(
-            size: vec(30, 30),
-            color: color,
-            onClick: (proc() =
-              editor.mode = mode
+    item: (proc(): EditorMenuMode = editor.mode),
+    node: (proc(mode: EditorMenuMode): Node =
+      Node(
+        children: @[
+          List[EditorMenuMode](
+            horizontal: true,
+            spacing: vec(6),
+            items: (proc(): seq[EditorMenuMode] =
+              result = @[]
+              for mode in EditorMenuMode:
+                result.add mode
             ),
+            listNodes: (proc(mode: EditorMenuMode): Node =
+              let color =
+                if mode == editor.mode:
+                  rgb(200, 200, 200)
+                else:
+                  rgb(60, 60, 60)
+              Button(
+                size: vec(30, 30),
+                color: color,
+                onClick: (proc() =
+                  editor.mode = mode
+                ),
+                children: @[
+                  BorderedTextNode(text: ($mode)[0..0]).Node,
+                ],
+              )
+            ),
+          ),
+          Node(
+            pos: vec(0, 40),
             children: @[
-              BorderedTextNode(text: ($mode)[0..0]).Node,
+              case mode
+              of tilesetSelectMode:
+                tilemapSelectionNode(editor)
+              of roomSelectMode:
+                Node()
             ],
-          )
-        ),
-      ),
-      BindNode[EditorMenuMode](
-        pos: vec(0, 40),
-        item: (proc(): EditorMenuMode = editor.mode),
-        node: (proc(mode: EditorMenuMode): Node =
-          case mode
-          of tilesetSelectMode:
-            tilemapSelectionNode(editor)
-          of roomSelectMode:
-            Node()
-        ),
-      ),
-    ],
+          ),
+        ],
+      )
+    )
   )
 
 type
