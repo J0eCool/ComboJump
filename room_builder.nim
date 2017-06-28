@@ -52,14 +52,19 @@ proc newGrid(w, h: int): RoomGrid =
       line.add({})
     result.data.add line
 
-type GridEditor = ref object of Node
-  grid: ptr RoomGrid
-  clickId: int
-  tileSize: Vec
-  hovered: Coord
-  drawGridLines: bool
-  drawRoom: bool
-  entities: seq[Entity]
+type
+  EditorMenuMode = enum
+    tilesetSelectMode
+    roomSelectMode
+  GridEditor = ref object of Node
+    grid: ptr RoomGrid
+    clickId: int
+    tileSize: Vec
+    hovered: Coord
+    drawGridLines: bool
+    drawRoom: bool
+    entities: seq[Entity]
+    mode: EditorMenuMode
 
 proc updateRoom(editor: GridEditor) =
   editor.entities = @[buildRoomEntity(editor.grid[], editor.pos, editor.tileSize)]
@@ -191,7 +196,6 @@ method updateSelf(editor: GridEditor, input: InputManager) =
 
 proc tilemapSelectionNode(editor: GridEditor): Node =
   List[Tilemap](
-    pos: vec(10, 40),
     spacing: vec(6),
     items: allTilemaps,
     listNodes: (proc(tilemap: Tilemap): Node =
@@ -203,9 +207,53 @@ proc tilemapSelectionNode(editor: GridEditor): Node =
         ),
         children: @[
           BorderedTextNode(text: tilemap.name).Node,
-        ]
+        ],
       )
     ),
+  )
+
+proc sidebarNode(editor: GridEditor): Node =
+  Node(
+    pos: vec(10, 40),
+    children: @[
+      List[EditorMenuMode](
+        horizontal: true,
+        spacing: vec(6),
+        items: (proc(): seq[EditorMenuMode] =
+          result = @[]
+          for mode in EditorMenuMode:
+            result.add mode
+        ),
+        listNodes: (proc(mode: EditorMenuMode): Node =
+          let color =
+            if mode == editor.mode:
+              rgb(200, 200, 200)
+            else:
+              rgb(60, 60, 60)
+          Button(
+            size: vec(30, 30),
+            color: color,
+            onClick: (proc() =
+              editor.mode = mode
+            ),
+            children: @[
+              BorderedTextNode(text: ($mode)[0..0]).Node,
+            ],
+          )
+        ),
+      ),
+      BindNode[EditorMenuMode](
+        pos: vec(0, 40),
+        item: (proc(): EditorMenuMode = editor.mode),
+        node: (proc(mode: EditorMenuMode): Node =
+          case mode
+          of tilesetSelectMode:
+            tilemapSelectionNode(editor)
+          of roomSelectMode:
+            Node()
+        ),
+      ),
+    ],
   )
 
 type
@@ -229,7 +277,7 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   result.editor = newGridEditor(addr result.grid)
   result.menu = Node(
     children: @[
-      tilemapSelectionNode(result.editor),
+      sidebarNode(result.editor),
       result.editor,
     ]
   )
