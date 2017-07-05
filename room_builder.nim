@@ -65,6 +65,7 @@ type
     drawRoom: bool
     entities: seq[Entity]
     mode: EditorMenuMode
+    filename: string
 
 proc updateRoom(editor: GridEditor) =
   editor.entities = @[buildRoomEntity(editor.grid[], editor.pos, editor.tileSize)]
@@ -83,6 +84,7 @@ proc newGridEditor(grid: ptr RoomGrid): GridEditor =
     hovered: (-1, -1),
     drawGridLines: false,
     drawRoom: true,
+    filename: "voof",
   )
   result.updateRoom()
 
@@ -169,7 +171,7 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
         r = rect(pos, vec(totalSize.x, lineWidth))
       renderer.fillRect r, lineColor
 
-method updateSelf(editor: GridEditor, input: InputManager) =
+method updateSelf(editor: GridEditor, manager: var MenuManager, input: InputManager) =
   let hovered = editor.posToCoord(input.mousePos)
   editor.hovered = hovered
 
@@ -252,7 +254,11 @@ proc sidebarNode(editor: GridEditor): Node =
               of tilesetSelectMode:
                 tilemapSelectionNode(editor)
               of roomSelectMode:
-                Node()
+                InputTextNode(
+                  pos: vec(120, 20),
+                  size: vec(240, 40),
+                  text: addr editor.filename,
+                )
             ],
           ),
         ],
@@ -266,6 +272,7 @@ type
     editor: GridEditor
     menu: Node
     grid: RoomGrid
+    menuManager: MenuManager
 
 proc resetGrid(program: RoomBuilder) =
   program.grid = newGrid(19, 15)
@@ -274,6 +281,7 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   new result
   result.title = "TileRoom Builder (prototype)"
   result.resources = newResourceManager()
+  result.menuManager = MenuManager()
   let loadedJson = readJsonFile(savedTileFile)
   result.resetGrid()
   if loadedJson.kind != jsError:
@@ -287,7 +295,7 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   )
 
 method update*(program: RoomBuilder, dt: float) =
-  menu.update(program.menu, program.input)
+  menu.update(program.menu, program.menuManager, program.input)
 
   if program.input.isPressed(Input.menu):
     program.shouldExit = true

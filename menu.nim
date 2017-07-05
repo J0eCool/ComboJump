@@ -12,16 +12,20 @@ import
   vec,
   util
 
-type Node* = ref object of RootObj
-  pos*: Vec
-  size*: Vec
-  parent: Node
-  children*: seq[Node]
+type
+  Node* = ref object of RootObj
+    pos*: Vec
+    size*: Vec
+    parent: Node
+    children*: seq[Node]
+
+  MenuManager* = object
+    focusedNode*: Node
 
 method drawSelf(node: Node, renderer: RendererPtr, resources: var ResourceManager) {.base.} =
   discard
 
-method updateSelf(node: Node, input: InputManager) {.base.} =
+method updateSelf(node: Node, manager: var MenuManager, input: InputManager) {.base.} =
   discard
 
 proc updateParents(node: Node) =
@@ -42,11 +46,11 @@ proc draw*(renderer: RendererPtr, node: Node, resources: var ResourceManager) =
   for c in node.children:
     renderer.draw(c, resources)
 
-proc update*(node: Node, input: InputManager) =
+proc update*(node: Node, manager: var MenuManager, input: InputManager) =
   node.updateParents()
-  node.updateSelf(input)
+  node.updateSelf(manager, input)
   for c in node.children:
-    c.update(input)
+    c.update(manager, input)
 
 proc rect*(node: Node): Rect =
   rect.rect(node.globalPos, node.size)
@@ -76,9 +80,9 @@ method drawSelf[T](node: BindNode[T], renderer: RendererPtr, resources: var Reso
   node.generateChild()
   renderer.draw(node.generated, resources)
 
-method updateSelf[T](node: BindNode[T], input: InputManager) =
+method updateSelf[T](node: BindNode[T], manager: var MenuManager, input: InputManager) =
   node.generateChild()
-  node.generated.update(input)
+  node.generated.update(manager, input)
 
 
 # ------
@@ -147,7 +151,7 @@ method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceMa
         baseColor
   renderer.fillRect(button.rect, c)
 
-method updateSelf(button: Button, input: InputManager) =
+method updateSelf(button: Button, manager: var MenuManager, input: InputManager) =
   if button.onClick == nil:
     return
 
@@ -231,10 +235,47 @@ method drawSelf[T](list: List[T], renderer: RendererPtr, resources: var Resource
   for c in list.generatedChildren:
     renderer.draw(c, resources)
 
-method updateSelf[T](list: List[T], input: InputManager) =
+method updateSelf[T](list: List[T], manager: var MenuManager, input: InputManager) =
   list.generateChildren()
   for c in list.generatedChildren:
-    c.update(input)
+    c.update(manager, input)
+
+
+# ------
+
+type InputTextNode* = ref object of Node
+  text*: ptr string
+  isFocused: bool
+
+method updateSelf(text: InputTextNode, manager: var MenuManager, input: InputManager) =
+  let r = text.rect
+  input.clickPressedPos.bindAs click:
+    if r.contains click:
+      manager.focusedNode = text
+
+  text.isFocused = (manager.focusedNode == text)
+  if text.isFocused:
+    discard handleTextInput(text.text[], input)
+
+method drawSelf(text: InputTextNode, renderer: RendererPtr, resources: var ResourceManager) =
+  var baseRect = text.rect
+  let
+    font = resources.loadFont("nevis.ttf")
+    str =
+      if text.isFocused:
+        text.text[] & "|"
+      else:
+        text.text[]
+    borderWidth = 2.0
+    inBorderRect = rect(baseRect.pos, baseRect.size - vec(borderWidth * 2.0))
+    borderColor =
+      if text.isFocused:
+        color.yellow
+      else:
+        color.black
+  renderer.fillRect(baseRect, borderColor)
+  renderer.fillRect(inBorderRect, rgb(160, 160, 160))
+  renderer.drawBorderedText(str, text.globalPos, font, color.white)
 
 
 # ------
