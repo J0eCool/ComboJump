@@ -1,9 +1,11 @@
 import
+  algorithm,
   hashes,
   random,
   sequtils,
   sets,
-  strutils
+  strutils,
+  times
 from sdl2 import RendererPtr
 
 import
@@ -20,6 +22,7 @@ import
   drawing,
   entity,
   event,
+  file_util,
   game_system,
   input,
   jsonparse,
@@ -214,6 +217,72 @@ proc tilemapSelectionNode(editor: GridEditor): Node =
     ),
   )
 
+type RoomPair = tuple[name: string, room: RoomGrid]
+
+proc cmp(a, b: RoomPair): int =
+  cmp(a.name, b.name)
+
+var
+  nextWalkRoomTime: float
+  cachedRoomPairs = newSeq[RoomPair]()
+proc allRoomPairs(): seq[RoomPair] =
+  let curTime = epochTime()
+  if curTime < nextWalkRoomTime:
+    return cachedRoomPairs
+  nextWalkRoomTime = curTime + 1.0
+
+  let paths = filesInDirWithExtension("assets/rooms", ".room")
+  result = @[]
+  for path in paths:
+    var room: RoomGrid
+    room.fromJson(readJsonFile(path))
+    result.add((path, room))
+  result.sort(cmp)
+  cachedRoomPairs = result
+
+proc roomSelectionNode(editor: GridEditor): Node =
+  Node(
+    children: @[
+      InputTextNode(
+        pos: vec(120, 20),
+        size: vec(240, 40),
+        text: addr editor.filename,
+      ),
+      Button(
+        pos: vec(60, 70),
+        size: vec(110, 40),
+        onClick: (proc() =
+          echo "Saving?"
+        ),
+        children: @[BorderedTextNode(text: "Save").Node],
+      ),
+      Button(
+        pos: vec(190, 70),
+        size: vec(120, 40),
+        onClick: (proc() =
+          echo "Loading?"
+        ),
+        children: @[BorderedTextNode(text: "Load").Node],
+      ),
+      SpriteNode(
+        pos: vec(120, 102),
+        size: vec(160, 4),
+        color: color.darkGray,
+      ),
+      List[RoomPair](
+        pos: vec(0, 110),
+        spacing: vec(6),
+        items: allRoomPairs,
+        listNodes: (proc(pair: RoomPair): Node =
+          Button(
+            size: vec(240, 40),
+            children: @[TextNode(text: pair.name).Node],
+          )
+        ),
+      ),
+    ],
+  )
+
 proc sidebarNode(editor: GridEditor): Node =
   BindNode[EditorMenuMode](
     pos: vec(10, 40),
@@ -254,11 +323,7 @@ proc sidebarNode(editor: GridEditor): Node =
               of tilesetSelectMode:
                 tilemapSelectionNode(editor)
               of roomSelectMode:
-                InputTextNode(
-                  pos: vec(120, 20),
-                  size: vec(240, 40),
-                  text: addr editor.filename,
-                )
+                roomSelectionNode(editor)
             ],
           ),
         ],

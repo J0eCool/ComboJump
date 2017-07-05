@@ -1,13 +1,13 @@
 import
   algorithm,
-  os,
   times
 
 import
+  file_util,
+  jsonparse,
   mapgen/[
     tile,
   ],
-  jsonparse,
   vec
 
 type
@@ -27,14 +27,6 @@ autoObjectJsonProcs(Tilemap)
 proc cmp(a, b: Tilemap): int =
   cmp(a.name, b.name)
 
-proc walkTilemaps*(): seq[string] =
-  result = @[]
-  for path in os.walkDir("assets/tilemaps"):
-    if path.kind == pcFile:
-      let split = os.splitFile(path.path)
-      if split.ext == ".tilemap":
-        result.add path.path
-
 var
   nextWalkTilemapTime: float
   cachedTilemapTextures = newSeq[Tilemap]()
@@ -44,7 +36,7 @@ proc allTilemaps*(): seq[Tilemap] =
     return cachedTilemapTextures
   nextWalkTilemapTime = curTime + 1.0
 
-  let paths = walkTilemaps()
+  let paths = filesInDirWithExtension("assets/tilemaps", ".tilemap")
   result = @[]
   for path in paths:
     var tilemap: Tilemap
