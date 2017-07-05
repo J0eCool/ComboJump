@@ -88,10 +88,10 @@ defineDrawSystem:
       renderer.draw(levelMenu.menu, resources)
 
 defineSystem:
-  proc updateStageSelectMenu*(input: InputManager, stageData: var StageData) =
+  proc updateStageSelectMenu*(menus: var MenuManager, input: InputManager, stageData: var StageData) =
     entities.forComponents entity, [
       LevelMenu, levelMenu,
     ]:
       if levelMenu.menu == nil:
         levelMenu.menu = levelMenuNode(addr stageData)
-      levelMenu.menu.update(input)
+      levelMenu.menu.update(menus, input)

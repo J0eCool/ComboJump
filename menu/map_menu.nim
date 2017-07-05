@@ -95,7 +95,7 @@ defineDrawSystem:
 
 defineSystem:
   components = [MapMenu]
-  proc updateMapMenu*(input: InputManager, player: Entity) =
+  proc updateMapMenu*(menus: var MenuManager, input: InputManager, player: Entity) =
     if mapMenu.menu == nil and player != nil:
       entities.forComponents e2, [
         MapContainer, mapContainer,
@@ -104,4 +104,4 @@ defineSystem:
         break
 
     if mapMenu.menu != nil:
-      mapMenu.menu.update(input)
+      mapMenu.menu.update(menus, input)

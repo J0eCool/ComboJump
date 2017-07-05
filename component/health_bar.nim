@@ -94,7 +94,7 @@ defineDrawSystem:
 
 defineSystem:
   components = [HealthBar, Health, EnemyStats]
-  proc updateHealthBarNodes*(input: InputManager) =
+  proc updateHealthBarNodes*(menus: var MenuManager, input: InputManager) =
     if healthBar.menu == nil:
       healthBar.menu = healthBarNode(health, enemyStats)
-    healthBar.menu.update(input)
+    healthBar.menu.update(menus, input)

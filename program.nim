@@ -7,17 +7,20 @@ import
 
 import
   input,
+  menu,
   util,
   vec
 
 type Program* = ref object of RootObj
   input*: InputManager
+  menus*: MenuManager
   title*: string
   shouldExit*: bool
   frameTime*: float
 
 proc initProgram*(program: Program) =
   program.input = newInputManager()
+  program.menus = MenuManager()
 
 method init*(program: Program) {.base.} =
   discard

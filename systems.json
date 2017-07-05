@@ -361,17 +361,20 @@
     },
     "updateHealthBarNodes": {
       "args": [
+        "menus",
         "input"
       ],
       "filename": "component/health_bar.nim",
       "id": "17",
       "priority": "0",
       "types": [
+        "var MenuManager",
         "InputManager"
       ]
     },
     "updateHudMenu": {
       "args": [
+        "menus",
         "input",
         "stats",
         "stageData",
@@ -381,6 +384,7 @@
       "id": "21",
       "priority": "0",
       "types": [
+        "var MenuManager",
         "InputManager",
         "var PlayerStats",
         "var StageData",
@@ -411,6 +415,7 @@
     },
     "updateMapMenu": {
       "args": [
+        "menus",
         "input",
         "player"
       ],
@@ -418,6 +423,7 @@
       "id": "35",
       "priority": "0",
       "types": [
+        "var MenuManager",
         "InputManager",
         "Entity"
       ]
@@ -470,6 +476,7 @@
     },
     "updateQuestMenu": {
       "args": [
+        "menus",
         "input",
         "questData",
         "notifications"
@@ -478,6 +485,7 @@
       "id": "37",
       "priority": "0",
       "types": [
+        "var MenuManager",
         "InputManager",
         "var QuestData",
         "var N10nManager"
@@ -537,6 +545,7 @@
     },
     "updateRuneMenu": {
       "args": [
+        "menus",
         "input",
         "spellData"
       ],
@@ -544,6 +553,7 @@
       "id": "39",
       "priority": "0",
       "types": [
+        "var MenuManager",
         "InputManager",
         "var SpellData"
       ]
@@ -578,6 +588,7 @@
     },
     "updateSpellHudMenu": {
       "args": [
+        "menus",
         "input",
         "spellData",
         "stats"
@@ -586,6 +597,7 @@
       "id": "41",
       "priority": "0",
       "types": [
+        "var MenuManager",
         "InputManager",
         "var SpellData",
         "var PlayerStats"
@@ -610,6 +622,7 @@
     },
     "updateStageSelectMenu": {
       "args": [
+        "menus",
         "input",
         "stageData"
       ],
@@ -617,12 +630,14 @@
       "id": "33",
       "priority": "0",
       "types": [
+        "var MenuManager",
         "InputManager",
         "var StageData"
       ]
     },
     "updateStatsMenu": {
       "args": [
+        "menus",
         "input",
         "stats"
       ],
@@ -630,6 +645,7 @@
       "id": "43",
       "priority": "0",
       "types": [
+        "var MenuManager",
         "InputManager",
         "var PlayerStats"
       ]

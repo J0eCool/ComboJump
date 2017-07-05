@@ -45,10 +45,10 @@ defineDrawSystem:
       renderer.draw(statsMenu.menu, resources)
 
 defineSystem:
-  proc updateStatsMenu*(input: InputManager, stats: var PlayerStats) =
+  proc updateStatsMenu*(menus: var MenuManager, input: InputManager, stats: var PlayerStats) =
     entities.forComponents entity, [
       StatsMenu, statsMenu,
     ]:
       if statsMenu.menu == nil:
         statsMenu.menu = statsMenuNode(addr stats)
-      statsMenu.menu.update(input)
+      statsMenu.menu.update(menus, input)

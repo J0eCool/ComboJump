@@ -164,7 +164,7 @@ defineDrawSystem:
       renderer.draw(spellHudMenu.menu, resources)
 
 defineSystem:
-  proc updateSpellHudMenu*(input: InputManager, spellData: var SpellData, stats: var PlayerStats) =
+  proc updateSpellHudMenu*(menus: var MenuManager, input: InputManager, spellData: var SpellData, stats: var PlayerStats) =
     entities.forComponents entity, [
       SpellHudMenu, spellHudMenu,
     ]:
@@ -174,4 +174,4 @@ defineSystem:
         ]:
           spellHudMenu.menu = spellHudMenuNode(addr spellData, addr stats, spellShooter)
           break
-      spellHudMenu.menu.update(input)
+      spellHudMenu.menu.update(menus, input)

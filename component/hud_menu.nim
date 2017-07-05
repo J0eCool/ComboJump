@@ -116,8 +116,8 @@ defineDrawSystem:
 
 defineSystem:
   components = [HudMenu]
-  proc updateHudMenu*(input: InputManager, stats: var PlayerStats, stageData: var StageData, player: Entity) =
+  proc updateHudMenu*(menus: var MenuManager, input: InputManager, stats: var PlayerStats, stageData: var StageData, player: Entity) =
     if hudMenu.menu == nil and player != nil:
         hudMenu.menu = hudMenuNode(player, addr stats, addr stageData)
     if hudMenu.menu != nil:
-      hudMenu.menu.update(input)
+      hudMenu.menu.update(menus, input)

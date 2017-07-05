@@ -529,7 +529,7 @@ method update*(program: QLangPrototype, dt: float) =
   if program.input.isPressed(Input.menu):
     program.shouldExit = true
 
-  program.menu.update(program.input)
+  program.menu.update(program.menus, program.input)
 
   if program.input.isPressed(Input.arrowRight):
     moveSelected(program.ast, 1)

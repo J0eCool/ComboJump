@@ -74,10 +74,10 @@ defineDrawSystem:
       renderer.draw(questMenu.menu, resources)
 
 defineSystem:
-  proc updateQuestMenu*(input: InputManager, questData: var QuestData, notifications: var N10nManager) =
+  proc updateQuestMenu*(menus: var MenuManager, input: InputManager, questData: var QuestData, notifications: var N10nManager) =
     entities.forComponents entity, [
       QuestMenu, questMenu,
     ]:
       if questMenu.menu == nil:
         questMenu.menu = questMenuNode(addr questData, addr notifications)
-      questMenu.menu.update(input)
+      questMenu.menu.update(menus, input)

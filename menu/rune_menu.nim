@@ -144,10 +144,10 @@ defineDrawSystem:
       renderer.draw(runeMenu.menu, resources)
 
 defineSystem:
-  proc updateRuneMenu*(input: InputManager, spellData: var SpellData) =
+  proc updateRuneMenu*(menus: var MenuManager, input: InputManager, spellData: var SpellData) =
     entities.forComponents entity, [
       RuneMenu, runeMenu,
     ]:
       if runeMenu.menu == nil:
         runeMenu.menu = runeMenuNode(addr spellData)
-      menu.update(runeMenu.menu, input)
+      menu.update(runeMenu.menu, menus, input)

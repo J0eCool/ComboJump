@@ -339,7 +339,7 @@ method loadEntities(spellCreator: SpellCreatorPrototype) =
   spellCreator.menu = runeGridNode(addr spellCreator.grid)
 
 method update*(spellCreator: SpellCreatorPrototype, dt: float) =
-  menu.update(spellCreator.menu, spellCreator.input)
+  menu.update(spellCreator.menu, spellCreator.menus, spellCreator.input)
 
   if spellCreator.input.isPressed(Input.menu):
     spellCreator.shouldExit = true
