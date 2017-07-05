@@ -132,15 +132,19 @@ type Button* = ref object of Node
   isKeyHeld: bool
 
 method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceManager) =
-  let c =
-    if (button.isMouseOver and button.isHeld) or button.isKeyHeld:
-      rgb(198, 198, 108)
-    elif button.isMouseOver:
-      rgb(172, 172, 134)
-    elif button.color.a == 0:
-      rgb(160, 160, 160)
-    else:
-      button.color
+  let
+    baseColor =
+      if button.color.a == 0:
+        rgb(160, 160, 160)
+      else:
+        button.color
+    c =
+      if (button.isMouseOver and button.isHeld) or button.isKeyHeld:
+        baseColor.average rgb(255, 255, 192)
+      elif button.isMouseOver:
+        baseColor.average rgb(198, 198, 92)
+      else:
+        baseColor
   renderer.fillRect(button.rect, c)
 
 method updateSelf(button: Button, input: InputManager) =
