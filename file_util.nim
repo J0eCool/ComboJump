@@ -7,4 +7,3 @@ proc filesInDirWithExtension*(dir, ext: string): seq[string] =
       let split = os.splitFile(path.path)
       if split.ext == ext:
         result.add path.path
-

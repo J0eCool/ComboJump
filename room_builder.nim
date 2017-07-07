@@ -2,6 +2,7 @@ import
   algorithm,
   hashes,
   random,
+  ospaths,
   sequtils,
   sets,
   strutils,
@@ -57,8 +58,8 @@ proc newGrid(w, h: int): RoomGrid =
 
 type
   EditorMenuMode = enum
-    tilesetSelectMode
     roomSelectMode
+    tilesetSelectMode
   GridEditor = ref object of Node
     grid: ptr RoomGrid
     clickId: int
@@ -87,7 +88,7 @@ proc newGridEditor(grid: ptr RoomGrid): GridEditor =
     hovered: (-1, -1),
     drawGridLines: false,
     drawRoom: true,
-    filename: "voof",
+    filename: "",
   )
   result.updateRoom()
 
@@ -222,6 +223,9 @@ type RoomPair = tuple[name: string, room: RoomGrid]
 proc cmp(a, b: RoomPair): int =
   cmp(a.name, b.name)
 
+const
+  savedRoomDir = "assets/rooms/"
+  roomFileExt = ".room"
 var
   nextWalkRoomTime: float
   cachedRoomPairs = newSeq[RoomPair]()
@@ -231,14 +235,20 @@ proc allRoomPairs(): seq[RoomPair] =
     return cachedRoomPairs
   nextWalkRoomTime = curTime + 1.0
 
-  let paths = filesInDirWithExtension("assets/rooms", ".room")
+  let paths = filesInDirWithExtension(savedRoomDir, roomFileExt)
   result = @[]
   for path in paths:
     var room: RoomGrid
     room.fromJson(readJsonFile(path))
-    result.add((path, room))
+    let name = path.splitFile.name
+    result.add((name, room))
   result.sort(cmp)
   cachedRoomPairs = result
+
+proc saveCurrentRoom(editor: GridEditor) =
+  let fullPath = savedRoomDir & editor.filename & roomFileExt
+  log info, "Saving room: ", fullPath
+  writeJsonFile(fullPath, editor.grid[].toJson, pretty=true)
 
 proc roomSelectionNode(editor: GridEditor): Node =
   Node(
@@ -251,18 +261,23 @@ proc roomSelectionNode(editor: GridEditor): Node =
       Button(
         pos: vec(60, 70),
         size: vec(110, 40),
-        onClick: (proc() =
-          echo "Saving?"
-        ),
         children: @[BorderedTextNode(text: "Save").Node],
+        onClick: (proc() =
+          editor.saveCurrentRoom()
+        ),
       ),
       Button(
         pos: vec(190, 70),
         size: vec(120, 40),
-        onClick: (proc() =
-          echo "Loading?"
-        ),
         children: @[BorderedTextNode(text: "Load").Node],
+        onClick: (proc() =
+          let fullPath = savedRoomDir & editor.filename & roomFileExt
+          log info, "Loading room: ", fullPath
+          let loadedJson = readJsonFile(fullPath)
+          if loadedJson.kind != jsError:
+            editor.grid[].fromJson(loadedJson)
+            editor.updateRoom()
+        ),
       ),
       SpriteNode(
         pos: vec(120, 102),
@@ -276,7 +291,10 @@ proc roomSelectionNode(editor: GridEditor): Node =
         listNodes: (proc(pair: RoomPair): Node =
           Button(
             size: vec(240, 40),
-            children: @[TextNode(text: pair.name).Node],
+            onClick: (proc() =
+              editor.filename = pair.name
+            ),
+            children: @[BorderedTextNode(text: pair.name).Node],
           )
         ),
       ),
@@ -347,10 +365,7 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   result.title = "TileRoom Builder (prototype)"
   result.resources = newResourceManager()
   result.menuManager = MenuManager()
-  let loadedJson = readJsonFile(savedTileFile)
   result.resetGrid()
-  if loadedJson.kind != jsError:
-    result.grid.fromJson(loadedJson)
   result.editor = newGridEditor(addr result.grid)
   result.menu = Node(
     children: @[
@@ -372,8 +387,7 @@ method update*(program: RoomBuilder, dt: float) =
       program.resetGrid()
       program.editor.updateRoom()
     if program.input.isPressed(Input.keyS):
-      writeJsonFile(savedTileFile, program.grid.toJson, pretty=true)
-      log info, "Saved to file ", savedTileFile
+      program.editor.saveCurrentRoom()
 
 method draw*(renderer: RendererPtr, program: RoomBuilder) =
   renderer.draw(program.menu, program.resources)
