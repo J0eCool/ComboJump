@@ -301,53 +301,54 @@ proc roomSelectionNode(editor: GridEditor): Node =
     ],
   )
 
-proc sidebarNode(editor: GridEditor): Node =
-  BindNode[EditorMenuMode](
-    pos: vec(10, 40),
-    item: (proc(): EditorMenuMode = editor.mode),
-    node: (proc(mode: EditorMenuMode): Node =
+type Named[T] = tuple[name: string, item: T]
+proc thingNode[T: enum](item: ptr T, options: array[T, Named[Node]]): Node =
+  BindNode[T](
+    item: (proc(): T = item[]),
+    node: (proc(curState: T): Node =
       Node(
         children: @[
-          List[EditorMenuMode](
+          List[T](
             horizontal: true,
             spacing: vec(6),
-            items: (proc(): seq[EditorMenuMode] =
+            items: (proc(): seq[T] =
               result = @[]
-              for mode in EditorMenuMode:
-                result.add mode
+              for state in T:
+                result.add state
             ),
-            listNodes: (proc(mode: EditorMenuMode): Node =
+            listNodes: (proc(state: T): Node =
               let color =
-                if mode == editor.mode:
+                if state == item[]:
                   rgb(200, 200, 200)
                 else:
                   rgb(60, 60, 60)
               Button(
-                size: vec(30, 30),
+                size: vec(90, 30),
                 color: color,
                 onClick: (proc() =
-                  editor.mode = mode
+                  item[] = state
                 ),
                 children: @[
-                  BorderedTextNode(text: ($mode)[0..0]).Node,
+                  BorderedTextNode(text: options[state].name).Node,
                 ],
               )
             ),
           ),
           Node(
             pos: vec(0, 40),
-            children: @[
-              case mode
-              of tilesetSelectMode:
-                tilemapSelectionNode(editor)
-              of roomSelectMode:
-                roomSelectionNode(editor)
-            ],
+            children: @[options[curState].item],
           ),
         ],
       )
-    )
+    ),
   )
+
+proc sidebarNode(editor: GridEditor): Node =
+  result = thingNode[EditorMenuMode](addr editor.mode, [
+    roomSelectMode: ("Room", roomSelectionNode(editor)),
+    tilesetSelectMode: ("Tile", tilemapSelectionNode(editor)),
+  ])
+  result.pos = vec(10, 40)
 
 type
   RoomBuilder = ref object of Program
