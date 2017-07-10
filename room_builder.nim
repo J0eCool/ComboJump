@@ -246,6 +246,8 @@ proc allRoomPairs(): seq[RoomPair] =
   cachedRoomPairs = result
 
 proc saveCurrentRoom(editor: GridEditor) =
+  if editor.filename == "":
+    return
   let fullPath = savedRoomDir & editor.filename & roomFileExt
   log info, "Saving room: ", fullPath
   writeJsonFile(fullPath, editor.grid[].toJson, pretty=true)
