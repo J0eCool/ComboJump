@@ -40,7 +40,7 @@ proc newGrid*(w, h: int): RoomGrid =
   for x in 0..<w:
     var line: seq[GridTile] = @[]
     for y in 0..<h:
-      line.add({})
+      line.add(tileEmpty)
     result.data.add line
 
 proc decorate(room: var TileRoom, groups: seq[DecorationGroup]) =
@@ -145,23 +145,18 @@ proc selectRandomTiles*(grid: seq[seq[GridTile]]): seq[seq[bool]] =
   for line in grid:
     var toAdd = newSeq[bool]()
     for tile in line:
-      var shouldFill = tileFilled in tile
-      if tileRandom in tile and randomBool():
+      var shouldFill = tile == tileFilled
+      if tile == tileRandom and randomBool():
         shouldFill = true
+      # TODO: handle randomGroups
       toAdd.add(shouldFill)
     result.add toAdd
 
 proc toInt(tile: GridTile): int =
-  for state in TileState:
-    if state in tile:
-      result += 1 shl state.int
+  tile.ord
 
 proc fromInt(num: int): GridTile =
-  var x = num
-  for state in TileState:
-    if (x and 1) != 0:
-      result = result + {state}
-    x = x shr 1
+  num.GridTile
 
 proc toTileString(grid: seq[seq[GridTile]]): string =
   result = ""

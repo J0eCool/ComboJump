@@ -89,17 +89,23 @@ proc isCoordInRange(editor: GridEditor, coord: Coord): bool =
   ( coord.x >= 0 and coord.x < grid.w and
     coord.y >= 0 and coord.y < grid.h )
 
-proc setTile(editor: GridEditor, coord: Coord, state: TileState, val: bool) =
+proc setTile(editor: GridEditor, coord: Coord, state: GridTile) =
   if editor.isCoordInRange(coord):
-    if val:
-      editor.grid.data[coord.x][coord.y].incl(state)
-    else:
-      editor.grid.data[coord.x][coord.y].excl(state)
+    editor.grid.data[coord.x][coord.y] = state
+
+proc tileColor(tile: GridTile): Color =
+  case tile
+  of tileEmpty:
+    Color()
+  of tileFilled:
+    lightGray
+  of tileRandom:
+    red
+  of tileRandomGroup:
+    green
 
 method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var ResourceManager) =
-  const
-    tileColor = lightGray
-    hoverColor = lightYellow
+  const hoverColor = lightYellow
   let grid = editor.grid[]
 
   # Draw tiles
@@ -107,21 +113,9 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
     for x in 0..<grid.w:
       for y in 0..<grid.h:
         let tile = grid.data[x][y]
-        if tileFilled in tile:
+        if tile != tileEmpty:
           let r = editor.tileSize.gridRect(x, y) + editor.globalPos
-          renderer.fillRect r, tileColor
-        if tileRandom in tile:
-          const numLines = 4
-          var r = editor.tileSize.gridRect(x, y) + editor.globalPos
-          if tileFilled notin tile:
-            renderer.fillRect r, color.gray
-          let
-            base = r.x
-            offset = 2.0
-          r.w = 2.0
-          for i in 0..<numLines:
-            r.x = base + editor.tileSize.x * (i / numLines - 0.5) + offset
-            renderer.fillRect r, color.red
+          renderer.fillRect r, tile.tileColor
 
   # Draw hovered tile
   if editor.isCoordInRange(editor.hovered):
@@ -132,8 +126,8 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var Resour
       tile = grid.data[x][y]
       r = editor.tileSize.gridRect(x, y) + editor.globalPos
       color =
-        if tileFilled in tile:
-          average(tileColor, hoverColor)
+        if tile != tileEmpty:
+          average(tile.tileColor, hoverColor)
         else:
           hoverColor
     renderer.fillRect r, color
@@ -161,15 +155,22 @@ method updateSelf(editor: GridEditor, manager: var MenuManager, input: InputMana
   editor.hovered = hovered
 
   if editor.isCoordInRange(hovered):
-    let delete = input.isHeld(Input.ctrl)
     if input.isMouseHeld(mouseLeft):
-      editor.setTile(hovered, tileFilled, not delete)
+      let toSet =
+        if not input.isHeld(Input.ctrl):
+          tileFilled
+        else:
+          tileEmpty
+      editor.setTile(hovered, toSet)
       editor.updateRoom()
     if input.isMouseHeld(mouseRight):
-      editor.setTile(hovered, tileFilled, false)
+      editor.setTile(hovered, tileEmpty)
       editor.updateRoom()
     if input.isHeld(n1):
-      editor.setTile(hovered, tileRandom, not delete)
+      editor.setTile(hovered, tileRandom)
+      editor.updateRoom()
+    if input.isHeld(n2):
+      editor.setTile(hovered, tileRandomGroup)
       editor.updateRoom()
   if input.isPressed(space):
     editor.drawRoom = not editor.drawRoom

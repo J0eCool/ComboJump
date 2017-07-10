@@ -5,11 +5,11 @@ type
     texture*: string
     offset*: Vec
 
-  TileState* = enum
+  GridTile* = enum
+    tileEmpty
     tileFilled
     tileRandom
-
-  GridTile* = set[TileState]
+    tileRandomGroup
 
   SubTileKind* = enum
     tileNone

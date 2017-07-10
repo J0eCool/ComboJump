@@ -217,7 +217,7 @@ proc toGridTiles(data: seq[seq[bool]]): seq[seq[GridTile]] =
   for line in data:
     var resultLine = newSeq[GridTile]()
     for item in line:
-      resultLine.add(if item: {tileFilled} else: {})
+      resultLine.add(if item: tileFilled else: tileEmpty)
     result.add resultLine
 
 proc tileGridEntity(pos, tileSize: Vec, rawData: seq[seq[bool]]): Entity =
