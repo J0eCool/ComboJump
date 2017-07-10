@@ -37,25 +37,6 @@ import
   util,
   vec
 
-const savedTileFile = "saved_room.json"
-
-proc randomSeed(): int =
-  random(int.high)
-
-proc newGrid(w, h: int): RoomGrid =
-  result = RoomGrid(
-    w: w,
-    h: h,
-    data: @[],
-    tilemap: allTilemaps()[0],
-    seed: randomSeed(),
-  )
-  for x in 0..<w:
-    var line: seq[GridTile] = @[]
-    for y in 0..<h:
-      line.add({})
-    result.data.add line
-
 type
   EditorMenuMode = enum
     roomSelectMode
@@ -86,8 +67,8 @@ proc newGridEditor(grid: ptr RoomGrid): GridEditor =
     clickId: 0,
     tileSize: vec(32),
     hovered: (-1, -1),
-    drawGridLines: false,
-    drawRoom: true,
+    drawGridLines: true,
+    drawRoom: false,
     filename: "",
   )
   result.updateRoom()

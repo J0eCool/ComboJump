@@ -26,6 +26,23 @@ type
     tiles*: seq[seq[SubTile]]
   Coord* = tuple[x, y: int]
 
+proc randomSeed*(): int =
+  random(int.high)
+
+proc newGrid*(w, h: int): RoomGrid =
+  result = RoomGrid(
+    w: w,
+    h: h,
+    data: @[],
+    tilemap: allTilemaps()[0],
+    seed: randomSeed(),
+  )
+  for x in 0..<w:
+    var line: seq[GridTile] = @[]
+    for y in 0..<h:
+      line.add({})
+    result.data.add line
+
 proc decorate(room: var TileRoom, groups: seq[DecorationGroup]) =
   for group in groups:
     let possibleTextures = group.textures & newSeqOf[string](nil)
