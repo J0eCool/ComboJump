@@ -302,7 +302,7 @@ proc roomSelectionNode(editor: GridEditor): Node =
   )
 
 type Named[T] = tuple[name: string, item: T]
-proc thingNode[T: enum](item: ptr T, options: array[T, Named[Node]]): Node =
+proc tabSelectNode[T: enum](item: ptr T, options: array[T, Named[Node]]): Node =
   BindNode[T](
     item: (proc(): T = item[]),
     node: (proc(curState: T): Node =
@@ -344,7 +344,7 @@ proc thingNode[T: enum](item: ptr T, options: array[T, Named[Node]]): Node =
   )
 
 proc sidebarNode(editor: GridEditor): Node =
-  result = thingNode[EditorMenuMode](addr editor.mode, [
+  result = tabSelectNode[EditorMenuMode](addr editor.mode, [
     roomSelectMode: ("Room", roomSelectionNode(editor)),
     tilesetSelectMode: ("Tile", tilemapSelectionNode(editor)),
   ])
