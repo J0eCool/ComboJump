@@ -245,6 +245,8 @@ method updateSelf[T](list: List[T], manager: var MenuManager, input: InputManage
 
 type InputTextNode* = ref object of Node
   text*: ptr string
+  ignoreLetters*: bool
+  ignoreNumbers*: bool
   isFocused: bool
 
 method updateSelf(text: InputTextNode, manager: var MenuManager, input: InputManager) =
@@ -255,7 +257,11 @@ method updateSelf(text: InputTextNode, manager: var MenuManager, input: InputMan
 
   text.isFocused = (manager.focusedNode == text)
   if text.isFocused:
-    discard handleTextInput(text.text[], input)
+    discard handleTextInput(
+        text.text[], input,
+        ignoreLetters = text.ignoreLetters,
+        ignoreNumbers = text.ignoreNumbers
+      )
 
 method drawSelf(text: InputTextNode, renderer: RendererPtr, resources: var ResourceManager) =
   var baseRect = text.rect

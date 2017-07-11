@@ -41,6 +41,9 @@ type
   EditorMenuMode = enum
     roomSelectMode
     tilesetSelectMode
+  MainMenuMode = enum
+    roomEditMode
+    mapEditMode
   GridEditor = ref object of Node
     grid: ptr RoomGrid
     clickId: int
@@ -50,7 +53,9 @@ type
     drawRoom: bool
     entities: seq[Entity]
     mode: EditorMenuMode
+    mainMode: MainMenuMode
     filename: string
+    mapLenStr: string
 
 proc updateRoom(editor: GridEditor) =
   editor.entities = @[buildRoomEntity(editor.grid[], editor.pos, editor.tileSize)]
@@ -70,6 +75,7 @@ proc newGridEditor(grid: ptr RoomGrid): GridEditor =
     drawGridLines: true,
     drawRoom: false,
     filename: "",
+    mapLenStr: "3",
   )
   result.updateRoom()
 
@@ -328,11 +334,24 @@ proc tabSelectNode[T: enum](item: ptr T, options: array[T, Named[Node]]): Node =
   )
 
 proc sidebarNode(editor: GridEditor): Node =
-  result = tabSelectNode[EditorMenuMode](addr editor.mode, [
-    roomSelectMode: ("Room", roomSelectionNode(editor)),
+  tabSelectNode[EditorMenuMode](addr editor.mode, [
+    roomSelectMode: ("File", roomSelectionNode(editor)),
     tilesetSelectMode: ("Tile", tilemapSelectionNode(editor)),
   ])
-  result.pos = vec(10, 40)
+
+proc mapEditNode(editor: GridEditor): Node =
+  InputTextNode(
+    pos: vec(120, 20),
+    size: vec(240, 40),
+    text: addr editor.mapLenStr,
+    ignoreLetters: true,
+  )
+
+proc mainSidebarNode(editor: GridEditor): Node =
+  tabSelectNode[MainMenuMode](addr editor.mainMode, [
+    roomEditMode: ("Room", sidebarNode(editor)),
+    mapEditMode: ("Map", mapEditNode(editor)),
+  ])
 
 type
   RoomBuilder = ref object of Program
@@ -354,7 +373,7 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   result.editor = newGridEditor(addr result.grid)
   result.menu = Node(
     children: @[
-      sidebarNode(result.editor),
+      mainSidebarNode(result.editor),
       result.editor,
     ]
   )
