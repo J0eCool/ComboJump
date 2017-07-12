@@ -37,13 +37,14 @@ import
   util,
   vec
 
+const
+  savedRoomDir = "assets/rooms/"
+  roomFileExt = ".room"
+
 type
   EditorMenuMode = enum
     roomSelectMode
     tilesetSelectMode
-  MainMenuMode = enum
-    roomEditMode
-    mapEditMode
   GridEditor = ref object of Node
     grid: ptr RoomGrid
     clickId: int
@@ -53,9 +54,7 @@ type
     drawRoom: bool
     entities: seq[Entity]
     mode: EditorMenuMode
-    mainMode: MainMenuMode
     filename: string
-    mapLenStr: string
 
 proc updateRoom(editor: GridEditor) =
   editor.entities = @[buildRoomEntity(editor.grid[], editor.pos, editor.tileSize)]
@@ -64,6 +63,10 @@ proc updateRoom(editor: GridEditor) =
     grid.seed = randomSeed()
     let pos = vec(50.0 + 360.0 * i.float, 600.0)
     editor.entities.add buildRoomEntity(grid, pos, vec(16))
+
+proc resetGrid(editor: GridEditor) =
+  editor.grid[] = newGrid(19, 15)
+  editor.updateRoom()
 
 proc newGridEditor(grid: ptr RoomGrid): GridEditor =
   result = GridEditor(
@@ -75,9 +78,9 @@ proc newGridEditor(grid: ptr RoomGrid): GridEditor =
     drawGridLines: true,
     drawRoom: false,
     filename: "",
-    mapLenStr: "3",
   )
-  result.updateRoom()
+  result.resetGrid()
+
 
 proc posToCoord(editor: GridEditor, pos: Vec): Coord =
   let
@@ -109,6 +112,13 @@ proc tileColor(tile: GridTile): Color =
     red
   of tileRandomGroup:
     green
+
+proc saveCurrentRoom(editor: GridEditor) =
+  if editor.filename == "":
+    return
+  let fullPath = savedRoomDir & editor.filename & roomFileExt
+  log info, "Saving room: ", fullPath
+  writeJsonFile(fullPath, editor.grid[].toJson, pretty=true)
 
 method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var ResourceManager) =
   const hoverColor = lightYellow
@@ -188,6 +198,12 @@ method updateSelf(editor: GridEditor, manager: var MenuManager, input: InputMana
     editor.grid.seed = randomSeed()
     editor.updateRoom()
 
+  if input.isHeld(Input.ctrl):
+    if input.isPressed(Input.keyN):
+      editor.resetGrid()
+    if input.isPressed(Input.keyS):
+      editor.saveCurrentRoom()
+
 proc tilemapSelectionNode(editor: GridEditor): Node =
   List[Tilemap](
     spacing: vec(6),
@@ -211,9 +227,6 @@ type RoomPair = tuple[name: string, room: RoomGrid]
 proc cmp(a, b: RoomPair): int =
   cmp(a.name, b.name)
 
-const
-  savedRoomDir = "assets/rooms/"
-  roomFileExt = ".room"
 var
   nextWalkRoomTime: float
   cachedRoomPairs = newSeq[RoomPair]()
@@ -232,13 +245,6 @@ proc allRoomPairs(): seq[RoomPair] =
     result.add((name, room))
   result.sort(cmp)
   cachedRoomPairs = result
-
-proc saveCurrentRoom(editor: GridEditor) =
-  if editor.filename == "":
-    return
-  let fullPath = savedRoomDir & editor.filename & roomFileExt
-  log info, "Saving room: ", fullPath
-  writeJsonFile(fullPath, editor.grid[].toJson, pretty=true)
 
 proc roomSelectionNode(editor: GridEditor): Node =
   Node(
@@ -339,44 +345,69 @@ proc sidebarNode(editor: GridEditor): Node =
     tilesetSelectMode: ("Tile", tilemapSelectionNode(editor)),
   ])
 
-proc mapEditNode(editor: GridEditor): Node =
+type
+  MainMenuMode = enum
+    roomEditMode
+    mapEditMode
+  RoomBuilderMenu = ref object of Node
+    gridEditor: GridEditor
+    mode: MainMenuMode
+    mapLenStr: string
+
+proc mapEditNode(roomBuilder: RoomBuilderMenu): Node =
   InputTextNode(
     pos: vec(120, 20),
     size: vec(240, 40),
-    text: addr editor.mapLenStr,
+    text: addr roomBuilder.mapLenStr,
     ignoreLetters: true,
   )
 
-proc mainSidebarNode(editor: GridEditor): Node =
-  tabSelectNode[MainMenuMode](addr editor.mainMode, [
-    roomEditMode: ("Room", sidebarNode(editor)),
-    mapEditMode: ("Map", mapEditNode(editor)),
+proc mainSidebarNode(roomBuilder: RoomBuilderMenu): Node =
+  tabSelectNode[MainMenuMode](addr roomBuilder.mode, [
+    roomEditMode: ("Room", sidebarNode(roomBuilder.gridEditor)),
+    mapEditMode: ("Map", mapEditNode(roomBuilder)),
   ])
+
+method drawSelf(roomBuilder: RoomBuilderMenu, renderer: RendererPtr, resources: var ResourceManager) =
+  case roomBuilder.mode
+  of roomEditMode:
+    if roomBuilder.gridEditor.drawRoom:
+      let
+        camera = Camera()
+        entities = roomBuilder.gridEditor.entities
+      renderer.drawRoomViewers(entities, resources, camera)
+      renderer.drawColliders(entities, camera)
+    renderer.draw(roomBuilder.gridEditor, resources)
+  of mapEditMode:
+    discard
+
+method updateSelf(roomBuilder: RoomBuilderMenu, manager: var MenuManager, input: InputManager) =
+  case roomBuilder.mode
+  of roomEditMode:
+    roomBuilder.gridEditor.update(manager, input)
+  of mapEditMode:
+    discard
 
 type
   RoomBuilder = ref object of Program
     resources: ResourceManager
-    editor: GridEditor
     menu: Node
     grid: RoomGrid
     menuManager: MenuManager
-
-proc resetGrid(program: RoomBuilder) =
-  program.grid = newGrid(19, 15)
 
 proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   new result
   result.title = "TileRoom Builder (prototype)"
   result.resources = newResourceManager()
   result.menuManager = MenuManager()
-  result.resetGrid()
-  result.editor = newGridEditor(addr result.grid)
-  result.menu = Node(
-    children: @[
-      mainSidebarNode(result.editor),
-      result.editor,
-    ]
+  let gridEditor = newGridEditor(addr result.grid)
+  gridEditor.resetGrid()
+  let menu = RoomBuilderMenu(
+    gridEditor: gridEditor,
+    mapLenStr: "4",
   )
+  menu.children = @[mainSidebarNode(menu)]
+  result.menu = menu
 
 method update*(program: RoomBuilder, dt: float) =
   menu.update(program.menu, program.menuManager, program.input)
@@ -386,21 +417,9 @@ method update*(program: RoomBuilder, dt: float) =
 
   if program.input.isPressed(Input.keyC):
     debugDrawColliders = not debugDrawColliders
-  if program.input.isHeld(Input.ctrl):
-    if program.input.isPressed(Input.keyN):
-      program.resetGrid()
-      program.editor.updateRoom()
-    if program.input.isPressed(Input.keyS):
-      program.editor.saveCurrentRoom()
 
 method draw*(renderer: RendererPtr, program: RoomBuilder) =
   renderer.draw(program.menu, program.resources)
-  if program.editor.drawRoom:
-    let
-      camera = Camera()
-      entities = program.editor.entities
-    renderer.drawRoomViewers(entities, program.resources, camera)
-    renderer.drawColliders(entities, camera)
 
 when isMainModule:
   let screenSize = vec(1200, 900)
