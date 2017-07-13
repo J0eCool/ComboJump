@@ -412,9 +412,6 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
 method update*(program: RoomBuilder, dt: float) =
   menu.update(program.menu, program.menuManager, program.input)
 
-  if program.input.isPressed(Input.menu):
-    program.shouldExit = true
-
   if program.input.isPressed(Input.keyC):
     debugDrawColliders = not debugDrawColliders
 

@@ -254,6 +254,10 @@ method updateSelf(text: InputTextNode, manager: var MenuManager, input: InputMan
   input.clickPressedPos.bindAs click:
     if r.contains click:
       manager.focusedNode = text
+    elif manager.focusedNode == text:
+      manager.focusedNode = nil
+  if manager.focusedNode == text and input.isPressed(Input.escape):
+    manager.focusedNode = nil
 
   text.isFocused = (manager.focusedNode == text)
   if text.isFocused:

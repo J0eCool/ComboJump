@@ -22,6 +22,7 @@ type
     backspace
     delete
     quit
+    escape
 
     z
     x
@@ -128,7 +129,7 @@ proc inputFromPairs*(statePairs: seq[InputPair]): InputManager =
 
 proc keyToInputs(key: Scancode): seq[Input] =
   case key
-  of SDL_SCANCODE_ESCAPE:    @[menu]
+  of SDL_SCANCODE_ESCAPE:    @[escape, menu]
   of SDL_SCANCODE_SPACE:     @[space]
   of SDL_SCANCODE_BACKSPACE: @[backspace]
   of SDL_SCANCODE_DELETE:    @[delete]
