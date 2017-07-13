@@ -346,11 +346,14 @@ proc sidebarNode(editor: GridEditor): Node =
   ])
 
 type
+  MapData = object
+    entities: seq[Entity]
   MainMenuMode = enum
     roomEditMode
     mapEditMode
   RoomBuilderMenu = ref object of Node
     gridEditor: GridEditor
+    map: MapData
     mode: MainMenuMode
     mapLenStr: string
 
@@ -368,18 +371,31 @@ proc mainSidebarNode(roomBuilder: RoomBuilderMenu): Node =
     mapEditMode: ("Map", mapEditNode(roomBuilder)),
   ])
 
+proc refreshMapRooms(roomBuilder: RoomBuilderMenu) =
+  randomize()
+  roomBuilder.map.entities = @[]
+  for x in 0..<roomBuilder.mapLenStr.parseInt:
+    var
+      pair = random(allRoomPairs())
+      room = pair.room
+    let
+      tileSize = vec(16)
+      pos = vec(20.0 + x.float * 19.0 * tileSize.x, 400.0)
+    dprint "map rooms: ", pair.name, pos
+    room.seed = randomSeed()
+    roomBuilder.map.entities.add buildRoomEntity(room, pos, tileSize)
+
 method drawSelf(roomBuilder: RoomBuilderMenu, renderer: RendererPtr, resources: var ResourceManager) =
+  let camera = Camera()
   case roomBuilder.mode
   of roomEditMode:
     if roomBuilder.gridEditor.drawRoom:
-      let
-        camera = Camera()
-        entities = roomBuilder.gridEditor.entities
+      let entities = roomBuilder.gridEditor.entities
       renderer.drawRoomViewers(entities, resources, camera)
       renderer.drawColliders(entities, camera)
     renderer.draw(roomBuilder.gridEditor, resources)
   of mapEditMode:
-    discard
+    renderer.drawRoomViewers(roomBuilder.map.entities, resources, camera)
 
 method updateSelf(roomBuilder: RoomBuilderMenu, manager: var MenuManager, input: InputManager) =
   case roomBuilder.mode
@@ -406,6 +422,7 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
     gridEditor: gridEditor,
     mapLenStr: "4",
   )
+  menu.refreshMapRooms()
   menu.children = @[mainSidebarNode(menu)]
   result.menu = menu
 
