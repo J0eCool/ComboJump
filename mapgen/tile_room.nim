@@ -11,6 +11,7 @@ import
   entity,
   jsonparse,
   rect,
+  stack,
   util,
   vec
 
@@ -140,6 +141,56 @@ proc buildRoom*(grid: RoomGrid, data: seq[seq[bool]]): TileRoom =
 
   result.decorate(grid.tilemap.decorationGroups)
 
+proc walkGroups(grid: seq[seq[GridTile]]): seq[seq[Coord]] =
+  var
+    visited: seq[seq[bool]] = @[]
+  let
+    w = grid.len
+    h = grid[0].len
+  for x in 0..<w:
+    var line: seq[bool] = @[]
+    for y in 0..<h:
+      line.add false
+    visited.add line
+
+  proc neighborCoords(pos: Coord): seq[Coord] =
+    let
+      dxs = [-1, 1, 0, 0]
+      dys = [0, 0, -1, 1]
+    result = @[]
+    for i in 0..<4:
+      let
+        x = pos.x + dxs[i]
+        y = pos.y + dys[i]
+      if x < 0 or x >= w or y < 0 or y >= h:
+        continue
+      result.add((x, y))
+
+  result = @[]
+  for x in 0..<w:
+    for y in 0..<h:
+      if grid[x][y] != tileRandomGroup:
+        continue
+
+      var
+        toVisit = newStack[Coord]()
+        toAdd: seq[Coord] = @[]
+      toVisit.push((x, y))
+      toAdd.add((x, y))
+      visited[x][y] = true
+      while toVisit.count > 0:
+        let
+          cur = toVisit.pop()
+          neighbors = neighborCoords(cur)
+        for pos in neighbors:
+          if visited[pos.x][pos.y] or grid[pos.x][pos.y] != tileRandomGroup:
+            continue
+          visited[pos.x][pos.y] = true
+          toVisit.push(pos)
+          toAdd.add(pos)
+      result.add toAdd
+
+
 proc selectRandomTiles*(grid: seq[seq[GridTile]]): seq[seq[bool]] =
   result = @[]
   for line in grid:
@@ -151,6 +202,11 @@ proc selectRandomTiles*(grid: seq[seq[GridTile]]): seq[seq[bool]] =
       # TODO: handle randomGroups
       toAdd.add(shouldFill)
     result.add toAdd
+  let groups = grid.walkGroups
+  for group in groups:
+    if randomBool():
+      for pos in group:
+        result[pos.x][pos.y] = true
 
 proc toInt(tile: GridTile): int =
   tile.ord
