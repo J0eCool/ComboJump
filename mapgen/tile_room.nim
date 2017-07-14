@@ -169,7 +169,7 @@ proc walkGroups(grid: seq[seq[GridTile]]): seq[seq[Coord]] =
   result = @[]
   for x in 0..<w:
     for y in 0..<h:
-      if grid[x][y] != tileRandomGroup:
+      if grid[x][y] != tileRandomGroup or visited[x][y]:
         continue
 
       var
@@ -183,7 +183,7 @@ proc walkGroups(grid: seq[seq[GridTile]]): seq[seq[Coord]] =
           cur = toVisit.pop()
           neighbors = neighborCoords(cur)
         for pos in neighbors:
-          if visited[pos.x][pos.y] or grid[pos.x][pos.y] != tileRandomGroup:
+          if grid[pos.x][pos.y] != tileRandomGroup or visited[pos.x][pos.y]:
             continue
           visited[pos.x][pos.y] = true
           toVisit.push(pos)
@@ -199,7 +199,6 @@ proc selectRandomTiles*(grid: seq[seq[GridTile]]): seq[seq[bool]] =
       var shouldFill = tile == tileFilled
       if tile == tileRandom and randomBool():
         shouldFill = true
-      # TODO: handle randomGroups
       toAdd.add(shouldFill)
     result.add toAdd
   let groups = grid.walkGroups
