@@ -40,6 +40,8 @@ import
 const
   savedRoomDir = "assets/rooms/"
   roomFileExt = ".room"
+  expectedRoomWidth = 19
+  expectedRoomHeight = 15
 
 type
   EditorMenuMode = enum
@@ -65,7 +67,7 @@ proc updateRoom(editor: GridEditor) =
     editor.entities.add buildRoomEntity(grid, pos, vec(16))
 
 proc resetGrid(editor: GridEditor) =
-  editor.grid[] = newGrid(19, 15)
+  editor.grid[] = newGrid(expectedRoomWidth, expectedRoomHeight)
   editor.updateRoom()
 
 proc newGridEditor(grid: ptr RoomGrid): GridEditor =
@@ -380,7 +382,7 @@ proc refreshMapRooms(roomBuilder: RoomBuilderMenu) =
       room = pair.room
     let
       tileSize = vec(16)
-      pos = vec(20.0 + x.float * 19.0 * tileSize.x, 400.0)
+      pos = vec(20.0 + x.float * expectedRoomWidth.float * tileSize.x, 400.0)
     dprint "map rooms: ", pair.name, pos
     room.seed = randomSeed()
     roomBuilder.map.entities.add buildRoomEntity(room, pos, tileSize)
