@@ -362,13 +362,15 @@ type
 proc refreshMapRooms(roomBuilder: RoomBuilderMenu) =
   randomize()
   roomBuilder.map.entities = @[]
-  for x in 0..<roomBuilder.mapLenStr.parseInt:
+  let numRooms = roomBuilder.mapLenStr.parseInt
+  for x in 0..<numRooms:
     var
       pair = random(allRoomPairs())
       room = pair.room
     let
-      tileSize = vec(16)
-      pos = vec(20.0 + x.float * expectedRoomWidth.float * tileSize.x, 400.0)
+      tileSize = vec(1100 div (expectedRoomWidth * numRooms))
+      xOff = x.float * expectedRoomWidth.float * tileSize.x + 50.0
+      pos = vec(xOff, 300.0)
     room.seed = randomSeed()
     roomBuilder.map.entities.add buildRoomEntity(room, pos, tileSize)
 
