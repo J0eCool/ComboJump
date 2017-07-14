@@ -359,20 +359,6 @@ type
     mode: MainMenuMode
     mapLenStr: string
 
-proc mapEditNode(roomBuilder: RoomBuilderMenu): Node =
-  InputTextNode(
-    pos: vec(120, 20),
-    size: vec(240, 40),
-    text: addr roomBuilder.mapLenStr,
-    ignoreLetters: true,
-  )
-
-proc mainSidebarNode(roomBuilder: RoomBuilderMenu): Node =
-  tabSelectNode[MainMenuMode](addr roomBuilder.mode, [
-    roomEditMode: ("Room", sidebarNode(roomBuilder.gridEditor)),
-    mapEditMode: ("Map", mapEditNode(roomBuilder)),
-  ])
-
 proc refreshMapRooms(roomBuilder: RoomBuilderMenu) =
   randomize()
   roomBuilder.map.entities = @[]
@@ -383,9 +369,35 @@ proc refreshMapRooms(roomBuilder: RoomBuilderMenu) =
     let
       tileSize = vec(16)
       pos = vec(20.0 + x.float * expectedRoomWidth.float * tileSize.x, 400.0)
-    dprint "map rooms: ", pair.name, pos
     room.seed = randomSeed()
     roomBuilder.map.entities.add buildRoomEntity(room, pos, tileSize)
+
+proc mapEditNode(roomBuilder: RoomBuilderMenu): Node =
+  Node(
+    children: @[
+      InputTextNode(
+        pos: vec(120, 20),
+        size: vec(240, 40),
+        text: addr roomBuilder.mapLenStr,
+        ignoreLetters: true,
+      ),
+      Button(
+        pos: vec(120, 70),
+        size: vec(240, 40),
+        children: @[BorderedTextNode(text: "Reroll").Node],
+        onClick: (proc() =
+          roomBuilder.refreshMapRooms()
+        ),
+        hotkey: keyR,
+      ),
+    ]
+  )
+
+proc mainSidebarNode(roomBuilder: RoomBuilderMenu): Node =
+  tabSelectNode[MainMenuMode](addr roomBuilder.mode, [
+    roomEditMode: ("Room", sidebarNode(roomBuilder.gridEditor)),
+    mapEditMode: ("Map", mapEditNode(roomBuilder)),
+  ])
 
 method drawSelf(roomBuilder: RoomBuilderMenu, renderer: RendererPtr, resources: var ResourceManager) =
   let camera = Camera()
