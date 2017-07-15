@@ -10,6 +10,7 @@ type
     tileFilled
     tileRandom
     tileRandomGroup
+    tileExit
 
   SubTileKind* = enum
     tileNone

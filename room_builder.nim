@@ -103,6 +103,7 @@ proc isCoordInRange(editor: GridEditor, coord: Coord): bool =
 proc setTile(editor: GridEditor, coord: Coord, state: GridTile) =
   if editor.isCoordInRange(coord):
     editor.grid.data[coord.x][coord.y] = state
+    editor.updateRoom()
 
 proc tileColor(tile: GridTile): Color =
   case tile
@@ -114,6 +115,8 @@ proc tileColor(tile: GridTile): Color =
     red
   of tileRandomGroup:
     green
+  of tileExit:
+    darkPurple
 
 proc saveCurrentRoom(editor: GridEditor) =
   if editor.filename == "":
@@ -180,16 +183,14 @@ method updateSelf(editor: GridEditor, manager: var MenuManager, input: InputMana
         else:
           tileEmpty
       editor.setTile(hovered, toSet)
-      editor.updateRoom()
     if input.isMouseHeld(mouseRight):
       editor.setTile(hovered, tileEmpty)
-      editor.updateRoom()
     if input.isHeld(n1):
       editor.setTile(hovered, tileRandom)
-      editor.updateRoom()
     if input.isHeld(n2):
       editor.setTile(hovered, tileRandomGroup)
-      editor.updateRoom()
+    if input.isHeld(n3):
+      editor.setTile(hovered, tileExit)
   if input.isPressed(space):
     editor.drawRoom = not editor.drawRoom
     if editor.drawRoom:

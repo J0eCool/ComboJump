@@ -54,3 +54,5 @@ const
   pureBlue*    = rgb(  0,   0, 255)
   green*       = rgb( 40, 200,  40)
   pureGreen*   = rgb(  0, 255,   0)
+  purple*      = rgb(140,  12, 214)
+  darkPurple*  = rgb( 90,   8, 140)
