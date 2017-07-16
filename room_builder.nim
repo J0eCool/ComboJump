@@ -65,6 +65,7 @@ proc updateRoom(editor: GridEditor) =
     grid.seed = randomSeed()
     let pos = vec(50.0 + 360.0 * i.float, 600.0)
     editor.entities.add buildRoomEntity(grid, pos, vec(16))
+  editor.grid[].recalculateExits()
 
 proc resetGrid(editor: GridEditor) =
   editor.grid[] = newGrid(expectedRoomWidth, expectedRoomHeight)
@@ -363,17 +364,26 @@ type
 proc refreshMapRooms(roomBuilder: RoomBuilderMenu) =
   randomize()
   roomBuilder.map.entities = @[]
-  let numRooms = roomBuilder.mapLenStr.parseInt
+  let
+    numRooms = roomBuilder.mapLenStr.parseInt
+    rooms = allRoomPairs()
+  var prevExitHeight = -1
   for x in 0..<numRooms:
-    var
-      pair = random(allRoomPairs())
-      room = pair.room
+    let
+      possibleRooms =
+        if x == 0:
+          rooms.filterIt(it.room.leftExitHeight != -1)
+        else:
+          rooms.filterIt(it.room.leftExitHeight == prevExitHeight)
+      pair = random(possibleRooms)
+    var room = pair.room
     let
       tileSize = vec(1100 div (expectedRoomWidth * numRooms))
       xOff = x.float * expectedRoomWidth.float * tileSize.x + 50.0
       pos = vec(xOff, 300.0)
     room.seed = randomSeed()
     roomBuilder.map.entities.add buildRoomEntity(room, pos, tileSize)
+    prevExitHeight = room.rightExitHeight
 
 proc mapEditNode(roomBuilder: RoomBuilderMenu): Node =
   Node(

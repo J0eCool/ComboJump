@@ -21,6 +21,8 @@ type
     data*: seq[seq[GridTile]]
     tilemap*: Tilemap
     seed*: int
+    leftExitHeight*: int
+    rightExitHeight*: int
   TileRoom* = object
     w*, h*: int
     tilemap*: Tilemap
@@ -29,6 +31,19 @@ type
 
 proc randomSeed*(): int =
   random(int.high)
+
+proc recalculateExits*(grid: var RoomGrid) =
+  # Temporary assumptions:
+  #  - only left and right exits
+  #  - exits are exactly 2 tiles tall (not checked!)
+  #  - height == -1 for "no exit found"
+  grid.leftExitHeight = -1
+  grid.rightExitHeight = -1
+  for y in 0..<grid.h:
+    if grid.data[0][y] == tileExit and grid.leftExitHeight == -1:
+      grid.leftExitHeight = y
+    if grid.data[grid.w - 1][y] == tileExit and grid.rightExitHeight == -1:
+      grid.rightExitHeight = y
 
 proc newGrid*(w, h: int): RoomGrid =
   result = RoomGrid(
@@ -43,6 +58,7 @@ proc newGrid*(w, h: int): RoomGrid =
     for y in 0..<h:
       line.add(tileEmpty)
     result.data.add line
+  result.recalculateExits()
 
 proc decorate(room: var TileRoom, groups: seq[DecorationGroup]) =
   for group in groups:
@@ -141,6 +157,16 @@ proc buildRoom*(grid: RoomGrid, data: seq[seq[bool]]): TileRoom =
 
   result.decorate(grid.tilemap.decorationGroups)
 
+iterator neighborCoords(pos: Coord): Coord =
+  let
+    dxs = [-1, 1, 0, 0]
+    dys = [0, 0, -1, 1]
+  for i in 0..<4:
+    let
+      x = pos.x + dxs[i]
+      y = pos.y + dys[i]
+    yield (x, y)
+
 proc walkGroups(grid: seq[seq[GridTile]]): seq[seq[Coord]] =
   var
     visited: seq[seq[bool]] = @[]
@@ -152,19 +178,6 @@ proc walkGroups(grid: seq[seq[GridTile]]): seq[seq[Coord]] =
     for y in 0..<h:
       line.add false
     visited.add line
-
-  proc neighborCoords(pos: Coord): seq[Coord] =
-    let
-      dxs = [-1, 1, 0, 0]
-      dys = [0, 0, -1, 1]
-    result = @[]
-    for i in 0..<4:
-      let
-        x = pos.x + dxs[i]
-        y = pos.y + dys[i]
-      if x < 0 or x >= w or y < 0 or y >= h:
-        continue
-      result.add((x, y))
 
   result = @[]
   for x in 0..<w:
@@ -179,10 +192,10 @@ proc walkGroups(grid: seq[seq[GridTile]]): seq[seq[Coord]] =
       toAdd.add((x, y))
       visited[x][y] = true
       while toVisit.count > 0:
-        let
-          cur = toVisit.pop()
-          neighbors = neighborCoords(cur)
-        for pos in neighbors:
+        let cur = toVisit.pop()
+        for pos in neighborCoords(cur):
+          if pos.x < 0 or pos.x >= w or pos.y < 0 or pos.y >= h:
+            continue
           if grid[pos.x][pos.y] != tileRandomGroup or visited[pos.x][pos.y]:
             continue
           visited[pos.x][pos.y] = true
@@ -249,6 +262,7 @@ proc fromJson*(grid: var RoomGrid, json: Json) =
   var dataStr: string
   dataStr.fromJson(json.obj["dataStr"])
   grid.data = dataStr.fromTileString(grid.w, grid.h)
+  grid.recalculateExits()
 
 proc gridRect*(tileSize: Vec, x, y: int, isSubtile = false): Rect =
   let
