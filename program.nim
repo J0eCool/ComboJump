@@ -20,7 +20,7 @@ type Program* = ref object of RootObj
 
 proc initProgram*(program: Program) =
   program.input = newInputManager()
-  program.menus = MenuManager()
+  program.menus = newMenuManager()
 
 method init*(program: Program) {.base.} =
   discard

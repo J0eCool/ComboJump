@@ -29,13 +29,13 @@ import
 import menu
 
 type
-  RpgBattleData* = object
-    player: RpgBattleEntity
-    enemy: RpgBattleEntity
+  BattleData* = ref object of RootObj
+    player: BattleEntity
+    enemy: BattleEntity
     xp: int
     floatingTexts: seq[FloatingText]
     eventQueue: seq[BattleEvent]
-  RpgBattleEntity* = object
+  BattleEntity* = object
     name: string
     health: int
     maxHealth: int
@@ -75,29 +75,29 @@ const
   textFloatTime = 1.25
   attackAnimDist = 250.0
 
-proc newBattleEntity(name: string, health: int, color: Color): RpgBattleEntity =
-  RpgBattleEntity(
+proc newBattleEntity(name: string, health: int, color: Color): BattleEntity =
+  BattleEntity(
     name: name,
     health: health,
     maxHealth: health,
     color: color,
   )
 
-proc newPlayer(): RpgBattleEntity =
+proc newPlayer(): BattleEntity =
   newBattleEntity("Player", 10, green)
 
-proc newEnemy(): RpgBattleEntity =
+proc newEnemy(): BattleEntity =
   newBattleEntity("Enemy", 5, red)
 
-proc newBattleData(): RpgBattleData =
-  RpgBattleData(
+proc newBattleData(): BattleData =
+  BattleData(
     player: newPlayer(),
     enemy: newEnemy(),
     xp: 0,
     floatingTexts: @[],
   )
 
-proc battleEntityStatusNode(entity: RpgBattleEntity, pos: Vec): Node =
+proc battleEntityStatusNode(entity: BattleEntity, pos: Vec): Node =
   Node(
     pos: pos,
     children: @[
@@ -109,15 +109,15 @@ proc battleEntityStatusNode(entity: RpgBattleEntity, pos: Vec): Node =
       BorderedTextNode(
         text: entity.name,
         pos: vec(0, 80),
-      ).Node,
+      ),
       BorderedTextNode(
         text: $entity.health & " / " & $entity.maxHealth,
         pos: vec(0, 115),
-      ).Node,
+      ),
     ],
   )
 
-proc attackEnemy(battle: var RpgBattleData) =
+proc attackEnemy(battle: BattleData) =
   if battle.eventQueue.len != 0:
     return
 
@@ -126,12 +126,12 @@ proc attackEnemy(battle: var RpgBattleData) =
     BattleEvent(kind: dealDamage, damage: 1),
   ]
 
-proc updateAttackAnimation(battle: var RpgBattleData, pct: float) =
+proc updateAttackAnimation(battle: BattleData, pct: float) =
   battle.player.offset = vec(attackAnimDist * pct, 0.0)
   if pct >= 1.0:
     battle.player.offset = vec()
 
-proc processAttackDamage(battle: var RpgBattleData, damage: int) =
+proc processAttackDamage(battle: BattleData, damage: int) =
   battle.enemy.health -= damage
   battle.floatingTexts.add FloatingText(
     text: $damage,
@@ -149,43 +149,34 @@ proc processAttackDamage(battle: var RpgBattleData, damage: int) =
 proc pos(text: FloatingText): Vec =
   text.startPos - vec(0.0, textFloatHeight * text.t / textFloatTime)
 
-proc newBattleNode(battle: ptr RpgBattleData): Node =
+proc battleView(battle: BattleData, controller: Controller): Node {.procvar.} =
+  var floaties: seq[Node] = @[]
+  for text in battle.floatingTexts:
+    floaties.add BorderedTextNode(
+      text: text.text,
+      pos: text.pos,
+    )
   Node(
     pos: vec(400, 400),
     children: @[
-      BindNode[RpgBattleData](
-        item: (proc(): RpgBattleData = battle[]),
-        node: (proc(curr: RpgBattleData): Node =
-          var floaties: seq[Node] = @[]
-          for text in curr.floatingTexts:
-            floaties.add BorderedTextNode(
-              text: text.text,
-              pos: text.pos,
-            )
-          Node(
-            children: @[
-              battleEntityStatusNode(curr.player, vec(0, 0)),
-              BorderedTextNode(
-                text: "XP: " & $curr.xp,
-                pos: vec(0, 150),
-              ),
-              battleEntityStatusNode(curr.enemy, vec(300, 0)),
-            ] & floaties,
-          )
-        ),
+      battleEntityStatusNode(battle.player, vec(0, 0)),
+      BorderedTextNode(
+        text: "XP: " & $battle.xp,
+        pos: vec(0, 150),
       ),
+      battleEntityStatusNode(battle.enemy, vec(300, 0)),
       Button(
         pos: vec(-45, 210),
         size: vec(60, 60),
         onClick: (proc() =
-          battle[].attackEnemy()
+          battle.attackEnemy()
         ),
         children: @[BorderedTextNode(text: "Atk").Node],
       ),
-    ],
+    ] & floaties,
   )
 
-proc update(battle: var RpgBattleData, dt: float) =
+proc update(battle: BattleData, dt: float) =
   # Update floating text
   var newFloaties: seq[FloatingText] = @[]
   for text in battle.floatingTexts.mitems:
@@ -218,7 +209,7 @@ proc update(battle: var RpgBattleData, dt: float) =
 
 type RpgFrontierGame* = ref object of Game
   notifications: N10nManager
-  battle: RpgBattleData
+  battle: BattleData
   menu: Node
 
 proc newRpgFrontierGame*(screenSize: Vec): RpgFrontierGame =
@@ -227,10 +218,13 @@ proc newRpgFrontierGame*(screenSize: Vec): RpgFrontierGame =
   result.title = "RPG Frontier"
   result.notifications = newN10nManager()
   result.battle = newBattleData()
-  result.menu = newBattleNode(addr result.battle)
 
 method loadEntities*(game: RpgFrontierGame) =
   game.entities = @[]
+  game.menus.add Menu[BattleData, Controller](
+    model: game.battle,
+    view: battleView,
+  )
 
 method onRemove*(game: RpgFrontierGame, entity: Entity) =
   game.notifications.add N10n(kind: entityRemoved, entity: entity)
@@ -238,14 +232,13 @@ method onRemove*(game: RpgFrontierGame, entity: Entity) =
 method draw*(renderer: RendererPtr, game: RpgFrontierGame) =
   renderer.drawGame(game)
 
-  renderer.draw(game.menu, game.resources)
+  renderer.draw(game.menus, game.resources)
 
 method update*(game: RpgFrontierGame, dt: float) =
   game.dt = dt
 
   game.battle.update(dt)
-  game.menu.update(game.menus, game.input)
-
+  game.menus.update(dt, game.input)
 
 when isMainModule:
   let screenSize = vec(1200, 900)

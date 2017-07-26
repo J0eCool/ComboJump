@@ -19,8 +19,26 @@ type
     parent: Node
     children*: seq[Node]
 
+  Controller* = ref object of RootObj
+
+  Menu*[M, C] = object
+    model*: M
+    controller*: C
+    view*: proc(model: M, controller: C): Node
+    node: Node
+
+  MenuBase* = Menu[ref RootObj, Controller]
   MenuManager* = object
     focusedNode*: Node
+    menus*: seq[MenuBase]
+
+proc baseDiff(node, newVal: Node) =
+  node.pos = newVal.pos
+  node.size = newVal.size
+
+method diffSelf(node, newVal: Node): bool {.base.} =
+  node.baseDiff(newVal)
+  node.children.len == newVal.children.len
 
 method drawSelf(node: Node, renderer: RendererPtr, resources: var ResourceManager) {.base.} =
   discard
@@ -51,6 +69,12 @@ proc update*(node: Node, manager: var MenuManager, input: InputManager) =
   node.updateSelf(manager, input)
   for c in node.children:
     c.update(manager, input)
+
+proc diff(node: var Node, newVal: Node) =
+  if not node.diffSelf(newVal):
+    node = newVal
+  for i in 0..<node.children.len:
+    node.children[i].diff(newVal.children[i])
 
 proc rect*(node: Node): Rect =
   rect.rect(node.globalPos, node.size)
@@ -107,6 +131,12 @@ type TextNode* = ref object of Node
   text*: string
   color*: Color
 
+method diffSelf(text, newVal: TextNode): bool =
+  text.baseDiff(newVal)
+  text.text = newVal.text
+  text.color = newVal.color
+  true
+
 method drawSelf(text: TextNode, renderer: RendererPtr, resources: var ResourceManager) =
   let font = resources.loadFont("nevis.ttf")
   renderer.drawCachedText(text.text, text.globalPos, font, text.color)
@@ -114,9 +144,7 @@ method drawSelf(text: TextNode, renderer: RendererPtr, resources: var ResourceMa
 
 # ------
 
-type BorderedTextNode* = ref object of Node
-  text*: string
-  color*: Color
+type BorderedTextNode* = ref object of TextNode
 
 method drawSelf(text: BorderedTextNode, renderer: RendererPtr, resources: var ResourceManager) =
   if text.color == rgba(0, 0, 0, 0):
@@ -134,6 +162,10 @@ type Button* = ref object of Node
   isHeld: bool
   isMouseOver: bool
   isKeyHeld: bool
+
+method diffSelf(button, newVal: Button): bool =
+  button.baseDiff(newVal)
+  true
 
 method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceManager) =
   let
@@ -302,3 +334,42 @@ proc stringListNode*(lines: seq[string], pos = vec(0)): Node =
       )
     ),
   )
+
+# ------
+
+proc update*(menu: var Menu, manager: var MenuManager, dt: float, input: InputManager) =
+  # TODO: more sophisticated virtualDom-style diffing
+  # TODO: diffing unit tests
+  let newNode = menu.view(menu.model, menu.controller)
+  if menu.node == nil:
+    menu.node = newNode
+  else:
+    menu.node.diff(newNode)
+  menu.node.update(manager, input)
+
+proc draw*(renderer: RendererPtr, menu: Menu, resources: var ResourceManager) =
+  renderer.draw(menu.node, resources)
+
+proc newMenuManager*(): MenuManager =
+  MenuManager(
+    menus: @[],
+  )
+
+proc update*(menus: var MenuManager, dt: float, input: InputManager) =
+  for menu in menus.menus.mitems:
+    menu.update(menus, dt, input)
+
+proc draw*(renderer: RendererPtr, menus: MenuManager, resources: var ResourceManager) =
+  for menu in menus.menus:
+    renderer.draw(menu, resources)
+
+proc downcast[M, C](menu: Menu[M, C]): MenuBase =
+  MenuBase(
+    model: cast[ref RootObj](menu.model),
+    controller: cast[Controller](menu.controller),
+    view: (proc(model: ref RootObj, controller: Controller): Node =
+      menu.view(cast[M](model), cast[C](controller))
+    ),
+  )
+proc add*[M, C](menus: var MenuManager, menu: Menu[M, C]) =
+  menus.menus.add(downcast[M, C](menu))
