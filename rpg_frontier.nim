@@ -43,14 +43,17 @@ type
     floatingTexts: seq[FloatingText]
     eventQueue: seq[BattleEvent]
     playerOffset: Vec
+    enemyOffset: Vec
+    didKill: bool
   FloatingText* = object
     text*: string
     startPos*: Vec
     t: float
   BattleEvent* = object
     duration*: float
-    update*: proc(pct: float)
+    update*: EventUpdate
     t: float
+  EventUpdate = proc(pct: float)
 
 proc percent(event: BattleEvent): float =
   if event.duration == 0.0:
@@ -120,21 +123,14 @@ proc processAttackDamage(controller: BattleController, damage: int) =
     text: $damage,
     startPos: vec(300, 0) + randomVec(30.0),
   )
-  if controller.battle.enemy.health <= 0:
-    let xp = 1
-    controller.floatingTexts.add FloatingText(
-      text: "+" & $xp & "xp",
-      startPos: vec(0, 150) + randomVec(5.0),
-    )
-    controller.battle.xp += xp
-    controller.battle.enemy = newEnemy()
+  controller.didKill = controller.battle.enemy.health <= 0
 
-proc newEvent(duration: float, update: (proc(pct: float))): BattleEvent =
+proc newEvent(duration: float, update: EventUpdate): BattleEvent =
   BattleEvent(
     duration: duration,
     update: update,
   )
-proc newEvent(update: (proc(pct: float))): BattleEvent =
+proc newEvent(update: EventUpdate): BattleEvent =
   newEvent(0.0, update)
 
 proc attackEnemy(controller: BattleController) =
@@ -149,6 +145,24 @@ proc attackEnemy(controller: BattleController) =
       controller.processAttackDamage(damage),
     newEvent(0.2) do (pct: float):
       controller.updateAttackAnimation(1.0 - pct),
+    newEvent do (pct: float):
+      let didKill = controller.didKill
+      controller.didKill = false
+      if didKill:
+        let xp = 1
+        controller.floatingTexts.add FloatingText(
+          text: "+" & $xp & "xp",
+          startPos: vec(350, -50) + randomVec(5.0),
+        )
+        controller.battle.xp += xp
+        let dx = random(300.0, 700.0)
+        controller.eventQueue &= @[
+          newEvent(0.8) do (pct: float):
+            controller.enemyOffset = vec(dx * pct, -2200.0 * pct * (0.25 - pct)),
+          newEvent do (pct: float):
+            controller.enemyOffset = vec()
+            controller.battle.enemy = newEnemy(),
+        ],
   ]
 
 proc pos(text: FloatingText): Vec =
@@ -169,7 +183,7 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         text: "XP: " & $battle.xp,
         pos: vec(0, 150),
       ),
-      battleEntityStatusNode(battle.enemy, vec(300, 0), vec()),
+      battleEntityStatusNode(battle.enemy, vec(300, 0), controller.enemyOffset),
       Button(
         pos: vec(-45, 210),
         size: vec(60, 60),
@@ -194,9 +208,9 @@ method update*(controller: BattleController, dt: float) =
   if controller.eventQueue.len > 0:
     controller.eventQueue[0].t += dt
     let cur = controller.eventQueue[0]
-    cur.update(cur.percent)
     if cur.t > cur.duration:
       controller.eventQueue.delete(0)
+    cur.update(cur.percent)
 
 ##
 ##
