@@ -337,7 +337,11 @@ proc stringListNode*(lines: seq[string], pos = vec(0)): Node =
 
 # ------
 
+method update*(controller: Controller, dt: float) =
+  discard
+
 proc update*(menu: var Menu, manager: var MenuManager, dt: float, input: InputManager) =
+  menu.controller.update(dt)
   # TODO: more sophisticated virtualDom-style diffing
   # TODO: diffing unit tests
   let newNode = menu.view(menu.model, menu.controller)
