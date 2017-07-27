@@ -38,32 +38,25 @@ type
     health: int
     maxHealth: int
     color: Color
-    offset: Vec
   BattleController* = ref object of Controller
     battle: BattleData
     floatingTexts: seq[FloatingText]
     eventQueue: seq[BattleEvent]
+    playerOffset: Vec
   FloatingText* = object
     text*: string
     startPos*: Vec
     t: float
-  BattleEventKind* = enum
-    attackAnimation
-    dealDamage
   BattleEvent* = object
-    case kind: BattleEventKind
-    of attackAnimation:
-      discard
-    of dealDamage:
-      damage*: int
     duration*: float
+    update*: proc(pct: float)
     t: float
 
 proc percent(event: BattleEvent): float =
   if event.duration == 0.0:
     0.0
   else:
-    event.t / event.duration
+    clamp(event.t / event.duration, 0, 1)
 
 const
   textFloatHeight = 160.0
@@ -98,12 +91,12 @@ proc newBattleController(battle: BattleData): BattleController =
     eventQueue: @[],
   )
 
-proc battleEntityStatusNode(entity: BattleEntity, pos: Vec): Node =
+proc battleEntityStatusNode(entity: BattleEntity, pos, offset: Vec): Node =
   Node(
     pos: pos,
     children: @[
       SpriteNode(
-        pos: entity.offset,
+        pos: offset,
         size: vec(40, 60),
         color: entity.color,
       ),
@@ -118,19 +111,8 @@ proc battleEntityStatusNode(entity: BattleEntity, pos: Vec): Node =
     ],
   )
 
-proc attackEnemy(battle: BattleController) =
-  if battle.eventQueue.len != 0:
-    return
-
-  battle.eventQueue = @[
-    BattleEvent(kind: attackAnimation, duration: 0.2),
-    BattleEvent(kind: dealDamage, damage: 1),
-  ]
-
 proc updateAttackAnimation(controller: BattleController, pct: float) =
-  controller.battle.player.offset = vec(attackAnimDist * pct, 0.0)
-  if pct >= 1.0:
-    controller.battle.player.offset = vec()
+  controller.playerOffset = vec(attackAnimDist * pct, 0.0)
 
 proc processAttackDamage(controller: BattleController, damage: int) =
   controller.battle.enemy.health -= damage
@@ -147,6 +129,28 @@ proc processAttackDamage(controller: BattleController, damage: int) =
     controller.battle.xp += xp
     controller.battle.enemy = newEnemy()
 
+proc newEvent(duration: float, update: (proc(pct: float))): BattleEvent =
+  BattleEvent(
+    duration: duration,
+    update: update,
+  )
+proc newEvent(update: (proc(pct: float))): BattleEvent =
+  newEvent(0.0, update)
+
+proc attackEnemy(controller: BattleController) =
+  if controller.eventQueue.len != 0:
+    return
+
+  controller.eventQueue = @[
+    newEvent(0.2) do (pct: float):
+      controller.updateAttackAnimation(pct),
+    newEvent do (pct: float):
+      let damage = 1
+      controller.processAttackDamage(damage),
+    newEvent(0.2) do (pct: float):
+      controller.updateAttackAnimation(1.0 - pct),
+  ]
+
 proc pos(text: FloatingText): Vec =
   text.startPos - vec(0.0, textFloatHeight * text.t / textFloatTime)
 
@@ -160,12 +164,12 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
   Node(
     pos: vec(400, 400),
     children: @[
-      battleEntityStatusNode(battle.player, vec(0, 0)),
+      battleEntityStatusNode(battle.player, vec(0, 0), controller.playerOffset),
       BorderedTextNode(
         text: "XP: " & $battle.xp,
         pos: vec(0, 150),
       ),
-      battleEntityStatusNode(battle.enemy, vec(300, 0)),
+      battleEntityStatusNode(battle.enemy, vec(300, 0), vec()),
       Button(
         pos: vec(-45, 210),
         size: vec(60, 60),
@@ -190,17 +194,8 @@ method update*(controller: BattleController, dt: float) =
   if controller.eventQueue.len > 0:
     controller.eventQueue[0].t += dt
     let cur = controller.eventQueue[0]
-    case cur.kind
-    of attackAnimation:
-      controller.updateAttackAnimation(cur.percent)
-    else:
-      discard
+    cur.update(cur.percent)
     if cur.t > cur.duration:
-      case cur.kind
-      of dealDamage:
-        controller.processAttackDamage(cur.damage)
-      else:
-        discard
       controller.eventQueue.delete(0)
 
 ##
