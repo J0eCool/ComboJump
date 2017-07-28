@@ -378,12 +378,6 @@ proc update*(menu: var Menu, manager: var MenuManager, dt: float, input: InputMa
     menu.node.diff(newNode)
   menu.node.update(manager, input)
 
-  let toPush = menu.controller.pushMenu()
-  if menu.controller.shouldPop():
-    manager.pop()
-  if toPush != nil:
-    manager.push(toPush)
-
 proc draw*(renderer: RendererPtr, menu: Menu, resources: var ResourceManager) =
   if menu.node != nil:
     renderer.draw(menu.node, resources)
@@ -395,9 +389,16 @@ proc newMenuManager*(): MenuManager =
 
 proc update*(menus: var MenuManager, dt: float, input: InputManager) =
   for menu in menus.menus.mitems:
-    # TODO: no mutating while iterating, crashes below
     menu.update(menus, dt, input)
-    if not menu.controller.shouldDrawBelow:
+
+    let
+      toPush = menu.controller.pushMenu()
+      shouldPop = menu.controller.shouldPop()
+    if shouldPop:
+      menus.pop()
+    if toPush != nil:
+      menus.push(toPush)
+    if shouldPop or not menu.controller.shouldDrawBelow:
       break
 
 proc draw*(renderer: RendererPtr, menus: MenuManager, resources: var ResourceManager) =
