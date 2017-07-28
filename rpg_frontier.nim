@@ -45,6 +45,7 @@ type
     playerOffset: Vec
     enemyOffset: Vec
     didKill: bool
+    shouldClose: bool
   FloatingText* = object
     text*: string
     startPos*: Vec
@@ -178,6 +179,14 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
   Node(
     pos: vec(400, 400),
     children: @[
+      Button(
+        pos: vec(-345, 350),
+        size: vec(60, 60),
+        onClick: (proc() =
+          controller.shouldClose = true
+        ),
+        children: @[BorderedTextNode(text: "Exit").Node],
+      ),
       battleEntityStatusNode(battle.player, vec(0, 0), controller.playerOffset),
       BorderedTextNode(
         text: "XP: " & $battle.xp,
@@ -212,6 +221,52 @@ method update*(controller: BattleController, dt: float) =
       controller.eventQueue.delete(0)
     cur.update(cur.percent)
 
+method shouldPop(controller: BattleController): bool =
+  controller.shouldClose
+
+proc newBattleMenu(battle: BattleData): Menu[BattleData, BattleController] =
+  Menu[BattleData, BattleController](
+    model: battle,
+    view: battleView,
+    controller: newBattleController(battle),
+  )
+
+type
+  TitleScreen = ref object of RootObj
+  TitleScreenController = ref object of Controller
+    battle: BattleData
+    start: bool
+
+method pushMenu(controller: TitleScreenController): MenuBase =
+  if controller.start:
+    controller.start = false
+    result = downcast(newBattleMenu(controller.battle))
+
+proc mainMenuView(menu: TitleScreen, controller: TitleScreenController): Node {.procvar.} =
+  Node(
+    children: @[
+      BorderedTextNode(
+        pos: vec(600, 150),
+        text: "GAME TITLE",
+      ),
+      Button(
+        pos: vec(600, 700),
+        size: vec(300, 120),
+        children: @[BorderedTextNode(text: "START").Node],
+        onClick: (proc() =
+          controller.start = true
+        ),
+      ),
+    ],
+  )
+
+proc newTitleMenu(battle: BattleData): Menu[TitleScreen, TitleScreenController] =
+  Menu[TitleScreen, TitleScreenController](
+    model: TitleScreen(),
+    view: mainMenuView,
+    controller: TitleScreenController(battle: battle),
+  )
+
 ##
 ##
 ##
@@ -231,11 +286,7 @@ proc newRpgFrontierGame*(screenSize: Vec): RpgFrontierGame =
 
 method loadEntities*(game: RpgFrontierGame) =
   game.entities = @[]
-  game.menus.add Menu[BattleData, BattleController](
-    model: game.battle,
-    view: battleView,
-    controller: newBattleController(game.battle),
-  )
+  game.menus.push newTitleMenu(game.battle)
 
 method onRemove*(game: RpgFrontierGame, entity: Entity) =
   game.notifications.add N10n(kind: entityRemoved, entity: entity)

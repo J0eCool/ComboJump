@@ -21,8 +21,12 @@ proc `$`*[T](stack: Stack[T]): string =
   $stack.list
 
 iterator items*[T](stack: Stack[T]): T =
-  for item in stack.list:
-    yield item
+  for i in 0..<stack.list.len:
+    yield stack.list[stack.list.len - i - 1]
+
+iterator mitems*[T](stack: var Stack[T]): var T =
+  for i in 0..<stack.list.len:
+    yield stack.list[stack.list.len - i - 1]
 
 proc toSeq*[T](stack: Stack[T]): seq[T] =
   stack.list

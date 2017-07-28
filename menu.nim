@@ -9,6 +9,7 @@ import
   option,
   rect,
   resources,
+  stack,
   vec,
   util
 
@@ -21,7 +22,7 @@ type
 
   Controller* = ref object of RootObj
 
-  Menu*[M, C] = object
+  Menu*[M, C] = ref object
     model*: M
     controller*: C
     view*: proc(model: M, controller: C): Node
@@ -30,7 +31,8 @@ type
   MenuBase* = Menu[ref RootObj, Controller]
   MenuManager* = object
     focusedNode*: Node
-    menus*: seq[MenuBase]
+    menus*: Stack[MenuBase]
+    toAdd: seq[MenuBase]
 
 proc baseDiff(node, newVal: Node) =
   node.pos = newVal.pos
@@ -156,6 +158,7 @@ method drawSelf(text: BorderedTextNode, renderer: RendererPtr, resources: var Re
 # ------
 
 type Button* = ref object of Node
+  # TODO: just give buttons labels already goddammit
   onClick*: proc()
   hotkey*: Input
   color*: Color
@@ -337,8 +340,32 @@ proc stringListNode*(lines: seq[string], pos = vec(0)): Node =
 
 # ------
 
-method update*(controller: Controller, dt: float) =
+proc downcast*[M, C](menu: Menu[M, C]): MenuBase =
+  MenuBase(
+    model: cast[ref RootObj](menu.model),
+    controller: cast[Controller](menu.controller),
+    view: (proc(model: ref RootObj, controller: Controller): Node =
+      menu.view(cast[M](model), cast[C](controller))
+    ),
+  )
+
+method update*(controller: Controller, dt: float) {.base.} =
   discard
+
+method shouldDrawBelow*(controller: Controller): bool {.base.} =
+  false
+
+method pushMenu*(controller: Controller): MenuBase {.base.} =
+  nil
+
+method shouldPop*(controller: Controller): bool {.base.} =
+  false
+
+proc push*[M, C](menus: var MenuManager, menu: Menu[M, C]) =
+  menus.menus.push(downcast[M, C](menu))
+
+proc pop*(menus: var MenuManager) =
+  discard menus.menus.pop()
 
 proc update*(menu: var Menu, manager: var MenuManager, dt: float, input: InputManager) =
   menu.controller.update(dt)
@@ -351,29 +378,30 @@ proc update*(menu: var Menu, manager: var MenuManager, dt: float, input: InputMa
     menu.node.diff(newNode)
   menu.node.update(manager, input)
 
+  let toPush = menu.controller.pushMenu()
+  if menu.controller.shouldPop():
+    manager.pop()
+  if toPush != nil:
+    manager.push(toPush)
+
 proc draw*(renderer: RendererPtr, menu: Menu, resources: var ResourceManager) =
-  renderer.draw(menu.node, resources)
+  if menu.node != nil:
+    renderer.draw(menu.node, resources)
 
 proc newMenuManager*(): MenuManager =
   MenuManager(
-    menus: @[],
+    menus: newStack[MenuBase](),
   )
 
 proc update*(menus: var MenuManager, dt: float, input: InputManager) =
   for menu in menus.menus.mitems:
+    # TODO: no mutating while iterating, crashes below
     menu.update(menus, dt, input)
+    if not menu.controller.shouldDrawBelow:
+      break
 
 proc draw*(renderer: RendererPtr, menus: MenuManager, resources: var ResourceManager) =
   for menu in menus.menus:
     renderer.draw(menu, resources)
-
-proc downcast[M, C](menu: Menu[M, C]): MenuBase =
-  MenuBase(
-    model: cast[ref RootObj](menu.model),
-    controller: cast[Controller](menu.controller),
-    view: (proc(model: ref RootObj, controller: Controller): Node =
-      menu.view(cast[M](model), cast[C](controller))
-    ),
-  )
-proc add*[M, C](menus: var MenuManager, menu: Menu[M, C]) =
-  menus.menus.add(downcast[M, C](menu))
+    if not menu.controller.shouldDrawBelow:
+      break
