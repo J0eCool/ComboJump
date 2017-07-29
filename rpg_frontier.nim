@@ -16,7 +16,7 @@ import
   game,
   input,
   logging,
-  notifications,
+  menu,
   program,
   resources,
   vec,
@@ -26,7 +26,70 @@ import
 ## TODO: put these in the right files
 ##
 
-import menu
+type
+  Transition = ref object of RootObj
+  TransitionController = ref object of Controller
+    menu: MenuBase
+    onlyFadeOut: bool
+    t: float
+    shouldPush: bool
+    reverse: bool
+
+const transitionDuration = 0.3
+
+proc percentDone(controller: TransitionController): float =
+  result = clamp(controller.t / transitionDuration, 0.0, 1.0)
+  if controller.reverse:
+    result = 1.0 - result
+
+proc transitionView(transition: Transition, controller: TransitionController): Node {.procvar.} =
+  let size = vec(2400, 900)
+  SpriteNode(
+    size: size,
+    pos: vec(controller.percentDone.lerp(-0.5, 0.5) * size.x, size.y / 2),
+  )
+
+proc newTransitionMenu(menu: MenuBase): Menu[Transition, TransitionController] =
+  Menu[Transition, TransitionController](
+    model: Transition(),
+    view: transitionView,
+    controller: TransitionController(menu: menu),
+  )
+
+proc newFadeOnlyOut(): Menu[Transition, TransitionController] =
+  Menu[Transition, TransitionController](
+    model: Transition(),
+    view: transitionView,
+    controller: TransitionController(onlyFadeOut: true),
+  )
+
+proc newFadeOnlyIn(): Menu[Transition, TransitionController] =
+  Menu[Transition, TransitionController](
+    model: Transition(),
+    view: transitionView,
+    controller: TransitionController(reverse: true),
+  )
+
+method update(controller: TransitionController, dt: float) =
+  controller.t += dt
+  if controller.t >= transitionDuration:
+    if controller.reverse or controller.onlyFadeOut:
+      controller.shouldPop = true
+    else:
+      controller.shouldPush = true
+      controller.reverse = true
+      controller.t = 0.0
+
+method pushMenus(controller: TransitionController): seq[MenuBase] =
+  if controller.shouldPush and controller.menu != nil:
+    result = @[
+      controller.menu,
+      downcast(newFadeOnlyIn()),
+    ]
+  controller.shouldPush = false
+
+method shouldDrawBelow(controller: TransitionController): bool =
+  true
 
 type
   BattleData* = ref object of RootObj
@@ -45,7 +108,7 @@ type
     playerOffset: Vec
     enemyOffset: Vec
     didKill: bool
-    shouldClose: bool
+    bufferClose: bool
   FloatingText* = object
     text*: string
     startPos*: Vec
@@ -183,7 +246,7 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         pos: vec(-345, 350),
         size: vec(60, 60),
         onClick: (proc() =
-          controller.shouldClose = true
+          controller.bufferClose = true
         ),
         children: @[BorderedTextNode(text: "Exit").Node],
       ),
@@ -221,8 +284,12 @@ method update*(controller: BattleController, dt: float) =
       controller.eventQueue.delete(0)
     cur.update(cur.percent)
 
-method shouldPop(controller: BattleController): bool =
-  controller.shouldClose
+  if controller.bufferClose:
+    controller.shouldPop = true
+
+method pushMenus(controller: BattleController): seq[MenuBase] =
+  if controller.bufferClose:
+    result = @[downcast(newFadeOnlyOut())]
 
 proc newBattleMenu(battle: BattleData): Menu[BattleData, BattleController] =
   Menu[BattleData, BattleController](
@@ -237,10 +304,11 @@ type
     battle: BattleData
     start: bool
 
-method pushMenu(controller: TitleScreenController): MenuBase =
+method pushMenus(controller: TitleScreenController): seq[MenuBase] =
   if controller.start:
     controller.start = false
-    result = downcast(newBattleMenu(controller.battle))
+    let battleMenu = downcast(newBattleMenu(controller.battle))
+    result = @[downcast(newTransitionMenu(battleMenu))]
 
 proc mainMenuView(menu: TitleScreen, controller: TitleScreenController): Node {.procvar.} =
   Node(
@@ -273,7 +341,6 @@ proc newTitleMenu(battle: BattleData): Menu[TitleScreen, TitleScreenController] 
 
 
 type RpgFrontierGame* = ref object of Game
-  notifications: N10nManager
   battle: BattleData
   menu: Node
 
@@ -281,15 +348,11 @@ proc newRpgFrontierGame*(screenSize: Vec): RpgFrontierGame =
   new result
   result.camera.screenSize = screenSize
   result.title = "RPG Frontier"
-  result.notifications = newN10nManager()
   result.battle = newBattleData()
 
 method loadEntities*(game: RpgFrontierGame) =
   game.entities = @[]
   game.menus.push newTitleMenu(game.battle)
-
-method onRemove*(game: RpgFrontierGame, entity: Entity) =
-  game.notifications.add N10n(kind: entityRemoved, entity: entity)
 
 method draw*(renderer: RendererPtr, game: RpgFrontierGame) =
   renderer.drawGame(game)

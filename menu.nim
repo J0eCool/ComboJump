@@ -21,6 +21,7 @@ type
     children*: seq[Node]
 
   Controller* = ref object of RootObj
+    shouldPop*: bool
 
   Menu*[M, C] = ref object
     model*: M
@@ -355,11 +356,11 @@ method update*(controller: Controller, dt: float) {.base.} =
 method shouldDrawBelow*(controller: Controller): bool {.base.} =
   false
 
-method pushMenu*(controller: Controller): MenuBase {.base.} =
-  nil
-
-method shouldPop*(controller: Controller): bool {.base.} =
+method shouldUpdateBelow*(controller: Controller): bool {.base.} =
   false
+
+method pushMenus*(controller: Controller): seq[MenuBase] {.base.} =
+  nil
 
 proc push*[M, C](menus: var MenuManager, menu: Menu[M, C]) =
   menus.menus.push(downcast[M, C](menu))
@@ -367,7 +368,7 @@ proc push*[M, C](menus: var MenuManager, menu: Menu[M, C]) =
 proc pop*(menus: var MenuManager) =
   discard menus.menus.pop()
 
-proc update*(menu: var Menu, manager: var MenuManager, dt: float, input: InputManager) =
+proc update*(menu: Menu, manager: var MenuManager, dt: float, input: InputManager) =
   menu.controller.update(dt)
   # TODO: more sophisticated virtualDom-style diffing
   # TODO: diffing unit tests
@@ -392,17 +393,22 @@ proc update*(menus: var MenuManager, dt: float, input: InputManager) =
     menu.update(menus, dt, input)
 
     let
-      toPush = menu.controller.pushMenu()
-      shouldPop = menu.controller.shouldPop()
+      toPush = menu.controller.pushMenus()
+      shouldPop = menu.controller.shouldPop
     if shouldPop:
       menus.pop()
     if toPush != nil:
-      menus.push(toPush)
-    if shouldPop or not menu.controller.shouldDrawBelow:
+      for p in toPush:
+        menus.push(p)
+        p.update(menus, dt, input)
+    if shouldPop or not menu.controller.shouldUpdateBelow:
       break
 
 proc draw*(renderer: RendererPtr, menus: MenuManager, resources: var ResourceManager) =
+  var toDraw = newStack[MenuBase]()
   for menu in menus.menus:
-    renderer.draw(menu, resources)
+    toDraw.push(menu)
     if not menu.controller.shouldDrawBelow:
       break
+  for menu in toDraw:
+    renderer.draw(menu, resources)
