@@ -21,6 +21,7 @@ type
     children*: seq[Node]
 
   Controller* = ref object of RootObj
+    name*: string
     shouldPop*: bool
 
   Menu*[M, C] = ref object
@@ -394,15 +395,19 @@ proc update*(menus: var MenuManager, dt: float, input: InputManager) =
 
     let
       toPush = menu.controller.pushMenus()
-      shouldPop = menu.controller.shouldPop
+      isTop = menu == menus.menus.peek()
+      shouldPop = menu.controller.shouldPop and isTop
     if shouldPop:
       menus.pop()
+      menus.menus.mpeek().update(menus, 0.0, input)
     if toPush != nil:
       for p in toPush:
         menus.push(p)
-        p.update(menus, dt, input)
+        menus.menus.mpeek().update(menus, 0.0, input)
     if shouldPop or not menu.controller.shouldUpdateBelow:
       break
+  while menus.menus.peek().controller.shouldPop:
+    menus.pop()
 
 proc draw*(renderer: RendererPtr, menus: MenuManager, resources: var ResourceManager) =
   var toDraw = newStack[MenuBase]()

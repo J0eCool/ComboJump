@@ -17,6 +17,9 @@ proc pop*[T](stack: var Stack[T]): T =
 proc peek*[T](stack: Stack[T]): T =
   stack.list[stack.count - 1]
 
+proc mpeek*[T](stack: var Stack[T]): var T =
+  stack.list[stack.count - 1]
+
 proc `$`*[T](stack: Stack[T]): string =
   $stack.list
 

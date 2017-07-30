@@ -53,21 +53,30 @@ proc newTransitionMenu(menu: MenuBase): Menu[Transition, TransitionController] =
   Menu[Transition, TransitionController](
     model: Transition(),
     view: transitionView,
-    controller: TransitionController(menu: menu),
+    controller: TransitionController(
+      name: "Transition - NewMenu",
+      menu: menu,
+    ),
   )
 
 proc newFadeOnlyOut(): Menu[Transition, TransitionController] =
   Menu[Transition, TransitionController](
     model: Transition(),
     view: transitionView,
-    controller: TransitionController(onlyFadeOut: true),
+    controller: TransitionController(
+      name: "Transition - FadeOut",
+      onlyFadeOut: true,
+    ),
   )
 
 proc newFadeOnlyIn(): Menu[Transition, TransitionController] =
   Menu[Transition, TransitionController](
     model: Transition(),
     view: transitionView,
-    controller: TransitionController(reverse: true),
+    controller: TransitionController(
+      name: "Transition - FadeIn",
+      reverse: true,
+    ),
   )
 
 method update(controller: TransitionController, dt: float) =
@@ -153,6 +162,7 @@ proc newBattleData(): BattleData =
 
 proc newBattleController(battle: BattleData): BattleController =
   BattleController(
+    name: "Battle",
     battle: battle,
     floatingTexts: @[],
     eventQueue: @[],
@@ -286,6 +296,7 @@ method update*(controller: BattleController, dt: float) =
 
   if controller.bufferClose:
     controller.shouldPop = true
+    controller.bufferClose = false
 
 method pushMenus(controller: BattleController): seq[MenuBase] =
   if controller.bufferClose:
