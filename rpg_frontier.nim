@@ -105,17 +105,17 @@ type
     player: BattleEntity
     enemy: BattleEntity
     xp: int
+    isEnemyTurn: bool
   BattleEntity* = object
     name: string
     health: int
     maxHealth: int
     color: Color
+    offset: Vec
   BattleController* = ref object of Controller
     battle: BattleData
     floatingTexts: seq[FloatingText]
     eventQueue: seq[BattleEvent]
-    playerOffset: Vec
-    enemyOffset: Vec
     didKill: bool
     bufferClose: bool
   FloatingText* = object
@@ -151,7 +151,7 @@ proc newPlayer(): BattleEntity =
   newBattleEntity("Player", 10, green)
 
 proc newEnemy(): BattleEntity =
-  newBattleEntity("Enemy", 5, red)
+  newBattleEntity("Enemy", 3, red)
 
 proc newBattleData(): BattleData =
   BattleData(
@@ -168,12 +168,12 @@ proc newBattleController(battle: BattleData): BattleController =
     eventQueue: @[],
   )
 
-proc battleEntityStatusNode(entity: BattleEntity, pos, offset: Vec): Node =
+proc battleEntityStatusNode(entity: BattleEntity, pos: Vec): Node =
   Node(
     pos: pos,
     children: @[
       SpriteNode(
-        pos: offset,
+        pos: entity.offset,
         size: vec(40, 60),
         color: entity.color,
       ),
@@ -189,15 +189,27 @@ proc battleEntityStatusNode(entity: BattleEntity, pos, offset: Vec): Node =
   )
 
 proc updateAttackAnimation(controller: BattleController, pct: float) =
-  controller.playerOffset = vec(attackAnimDist * pct, 0.0)
+  if not controller.battle.isEnemyTurn:
+    controller.battle.player.offset = vec(attackAnimDist * pct, 0.0)
+  else:
+    controller.battle.enemy.offset = vec(-attackAnimDist * pct, 0.0)
+
+proc takeDamage(entity: var BattleEntity, damage: int): bool =
+  entity.health -= damage
+  return entity.health <= 0
 
 proc processAttackDamage(controller: BattleController, damage: int) =
-  controller.battle.enemy.health -= damage
+  var basePos: Vec
+  if not controller.battle.isEnemyTurn:
+    basePos = vec(300, 0)
+    controller.didKill = controller.battle.enemy.takeDamage(damage)
+  else:
+    basePos = vec(0, 0)
+    controller.didKill = controller.battle.player.takeDamage(damage)
   controller.floatingTexts.add FloatingText(
     text: $damage,
-    startPos: vec(300, 0) + randomVec(30.0),
+    startPos: basePos + randomVec(30.0),
   )
-  controller.didKill = controller.battle.enemy.health <= 0
 
 proc newEvent(duration: float, update: EventUpdate): BattleEvent =
   BattleEvent(
@@ -207,10 +219,44 @@ proc newEvent(duration: float, update: EventUpdate): BattleEvent =
 proc newEvent(update: EventUpdate): BattleEvent =
   newEvent(0.0, update)
 
-proc attackEnemy(controller: BattleController) =
-  if controller.eventQueue.len != 0:
+proc killEnemy(controller: BattleController) =
+  let xp = 1
+  controller.floatingTexts.add FloatingText(
+    text: "+" & $xp & "xp",
+    startPos: vec(350, -50) + randomVec(5.0),
+  )
+  controller.battle.xp += xp
+  let dx = random(300.0, 700.0)
+  controller.eventQueue &= @[
+    newEvent(0.8) do (pct: float):
+      controller.battle.enemy.offset = vec(dx * pct, -2200.0 * pct * (0.25 - pct)),
+    newEvent do (pct: float):
+      controller.battle.enemy.offset = vec()
+      controller.battle.enemy = newEnemy(),
+  ]
+
+proc killPlayer(controller: BattleController) =
+  controller.battle.player = newPlayer()
+  controller.battle.enemy = newEnemy()
+
+proc updateMaybeKill(controller: BattleController) =
+  let didKill = controller.didKill
+  if not didKill:
     return
 
+  controller.didKill = false
+  if not controller.battle.isEnemyTurn:
+    controller.killEnemy()
+  else:
+    controller.killPlayer()
+
+proc noAnimationPlaying(controller: BattleController): bool =
+  controller.eventQueue.len == 0
+
+proc isClickReady(controller: BattleController): bool =
+  controller.noAnimationPlaying and not controller.battle.isEnemyTurn
+
+proc startAttack(controller: BattleController) =
   controller.eventQueue = @[
     newEvent(0.2) do (pct: float):
       controller.updateAttackAnimation(pct),
@@ -220,24 +266,13 @@ proc attackEnemy(controller: BattleController) =
     newEvent(0.2) do (pct: float):
       controller.updateAttackAnimation(1.0 - pct),
     newEvent do (pct: float):
-      let didKill = controller.didKill
-      controller.didKill = false
-      if didKill:
-        let xp = 1
-        controller.floatingTexts.add FloatingText(
-          text: "+" & $xp & "xp",
-          startPos: vec(350, -50) + randomVec(5.0),
-        )
-        controller.battle.xp += xp
-        let dx = random(300.0, 700.0)
-        controller.eventQueue &= @[
-          newEvent(0.8) do (pct: float):
-            controller.enemyOffset = vec(dx * pct, -2200.0 * pct * (0.25 - pct)),
-          newEvent do (pct: float):
-            controller.enemyOffset = vec()
-            controller.battle.enemy = newEnemy(),
-        ],
+      controller.updateMaybeKill()
+      controller.battle.isEnemyTurn = not controller.battle.isEnemyTurn,
   ]
+
+proc attackEnemy(controller: BattleController) =
+  if controller.isClickReady:
+    controller.startAttack()
 
 proc pos(text: FloatingText): Vec =
   text.startPos - vec(0.0, textFloatHeight * text.t / textFloatTime)
@@ -260,12 +295,12 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         ),
         children: @[BorderedTextNode(text: "Exit").Node],
       ),
-      battleEntityStatusNode(battle.player, vec(0, 0), controller.playerOffset),
+      battleEntityStatusNode(battle.player, vec(0, 0)),
       BorderedTextNode(
         text: "XP: " & $battle.xp,
         pos: vec(0, 150),
       ),
-      battleEntityStatusNode(battle.enemy, vec(300, 0), controller.enemyOffset),
+      battleEntityStatusNode(battle.enemy, vec(300, 0)),
       Button(
         pos: vec(-45, 210),
         size: vec(60, 60),
@@ -293,6 +328,9 @@ method update*(controller: BattleController, dt: float) =
     if cur.t > cur.duration:
       controller.eventQueue.delete(0)
     cur.update(cur.percent)
+
+  if controller.noAnimationPlaying() and controller.battle.isEnemyTurn:
+    controller.startAttack()
 
   if controller.bufferClose:
     controller.shouldPop = true
