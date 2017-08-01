@@ -172,6 +172,24 @@ proc newBattleController(battle: BattleData): BattleController =
     eventQueue: @[],
   )
 
+proc quantityBarNode(cur, max: int, pos, size: Vec, color: Color): Node =
+  let
+    border = 2.0
+    borderedSize = size - vec(2.0 * border)
+    percent = cur / max
+  SpriteNode(
+    pos: pos,
+    size: size,
+    children: @[
+      SpriteNode(
+        pos: borderedSize * vec(percent / 2 - 0.5, 0.0),
+        size: borderedSize * vec(percent, 1.0),
+        color: color,
+      ),
+      BorderedTextNode(text: $cur & " / " & $max),
+    ],
+  )
+
 proc battleEntityStatusNode(entity: BattleEntity, pos: Vec): Node =
   Node(
     pos: pos,
@@ -185,9 +203,12 @@ proc battleEntityStatusNode(entity: BattleEntity, pos: Vec): Node =
         text: entity.name,
         pos: vec(0, 80),
       ),
-      BorderedTextNode(
-        text: $entity.health & " / " & $entity.maxHealth,
-        pos: vec(0, 115),
+      quantityBarNode(
+        entity.health,
+        entity.maxHealth,
+        vec(0, 115),
+        vec(120, 30),
+        red,
       ),
     ],
   )
