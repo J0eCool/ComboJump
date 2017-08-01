@@ -335,12 +335,11 @@ proc noAnimationPlaying(controller: BattleController): bool =
 proc isClickReady(controller: BattleController): bool =
   controller.noAnimationPlaying and not controller.battle.isEnemyTurn
 
-proc startAttack(controller: BattleController) =
+proc startAttack(controller: BattleController, damage: int) =
   controller.eventQueue = @[
     newEvent(0.2) do (pct: float):
       controller.updateAttackAnimation(pct),
     newEvent do (pct: float):
-      let damage = 1
       controller.processAttackDamage(damage),
     newEvent(0.2) do (pct: float):
       controller.updateAttackAnimation(1.0 - pct),
@@ -349,9 +348,9 @@ proc startAttack(controller: BattleController) =
       controller.battle.isEnemyTurn = not controller.battle.isEnemyTurn,
   ]
 
-proc attackEnemy(controller: BattleController) =
+proc attackEnemy(controller: BattleController, damage: int) =
   if controller.isClickReady:
-    controller.startAttack()
+    controller.startAttack(damage)
 
 proc pos(text: FloatingText): Vec =
   text.startPos - vec(0.0, textFloatHeight * text.t / textFloatTime)
@@ -384,9 +383,20 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         pos: vec(-45, 210),
         size: vec(60, 60),
         onClick: (proc() =
-          controller.attackEnemy()
+          controller.attackEnemy(1)
         ),
         children: @[BorderedTextNode(text: "Atk").Node],
+      ),
+      Button(
+        pos: vec(20, 210),
+        size: vec(60, 60),
+        onClick: (proc() =
+          let cost = 2
+          if battle.player.mana > cost:
+            battle.player.mana -= cost
+            controller.attackEnemy(2)
+        ),
+        children: @[BorderedTextNode(text: "Pow").Node],
       ),
       Button( # Debug instant-kill node
         pos: vec(450, 210),
@@ -417,7 +427,7 @@ method update*(controller: BattleController, dt: float) =
     cur.update(cur.percent)
 
   if controller.noAnimationPlaying() and controller.battle.isEnemyTurn:
-    controller.startAttack()
+    controller.startAttack(1)
 
   if controller.bufferClose:
     controller.shouldPop = true
