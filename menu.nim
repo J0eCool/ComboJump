@@ -120,6 +120,13 @@ type SpriteNode* = ref object of Node
   color*: Color
   scale*: float
 
+method diffSelf(sprite, newVal: SpriteNode): bool =
+  sprite.baseDiff(newVal)
+  sprite.textureName = newVal.textureName
+  sprite.color = newVal.color
+  sprite.scale = newVal.scale
+  true
+
 method drawSelf(sprite: SpriteNode, renderer: RendererPtr, resources: var ResourceManager) =
   let spriteImg = resources.loadSprite(sprite.textureName, renderer)
   if sprite.size == vec() and sprite.scale != 0.0:

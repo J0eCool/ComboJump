@@ -127,6 +127,15 @@ type
     update*: EventUpdate
     t: float
   EventUpdate = proc(pct: float)
+  EnemyKind = enum
+    slime
+    goblin
+    ogre
+  EnemyInfo = object
+    kind: EnemyKind
+    name: string
+    health: int
+    texture: string
 
 proc percent(event: BattleEvent): float =
   if event.duration == 0.0:
@@ -148,13 +157,28 @@ proc newPlayer(): BattleEntity =
     texture: "Wizard2.png",
   )
 
+proc initializeEnemyData(): seq[EnemyInfo] =
+  result = @[]
+  for tup in @[
+    (slime, "Slime", 3, "Slime.png"),
+    (goblin, "Goblin", 4, "Goblin.png"),
+    (ogre, "Ogre", 5, "Ogre.png"),
+  ]:
+    result.add EnemyInfo(
+      kind: tup[0],
+      name: tup[1],
+      health: tup[2],
+      texture: tup[3],
+    )
+const enemyData = initializeEnemyData()
+
 proc newEnemy(): BattleEntity =
-  let health = 3
+  let enemy = random(enemyData)
   BattleEntity(
-    name: "Slime",
-    health: health,
-    maxHealth: health,
-    texture: "Slime.png",
+    name: enemy.name,
+    health: enemy.health,
+    maxHealth: enemy.health,
+    texture: enemy.texture,
   )
 
 proc newBattleData(): BattleData =
@@ -333,6 +357,14 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
           controller.attackEnemy()
         ),
         children: @[BorderedTextNode(text: "Atk").Node],
+      ),
+      Button( # Debug instant-kill node
+        pos: vec(450, 210),
+        size: vec(60, 60),
+        onClick: (proc() =
+          controller.killEnemy()
+        ),
+        children: @[BorderedTextNode(text: "(kill)").Node],
       ),
     ] & floaties,
   )
