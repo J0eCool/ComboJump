@@ -110,7 +110,7 @@ type
     name: string
     health: int
     maxHealth: int
-    color: Color
+    texture: string
     offset: Vec
   BattleController* = ref object of Controller
     battle: BattleData
@@ -139,19 +139,23 @@ const
   textFloatTime = 1.25
   attackAnimDist = 250.0
 
-proc newBattleEntity(name: string, health: int, color: Color): BattleEntity =
+proc newPlayer(): BattleEntity =
+  let health = 10
   BattleEntity(
-    name: name,
+    name: "Player",
     health: health,
     maxHealth: health,
-    color: color,
+    texture: "Wizard2.png",
   )
 
-proc newPlayer(): BattleEntity =
-  newBattleEntity("Player", 10, green)
-
 proc newEnemy(): BattleEntity =
-  newBattleEntity("Enemy", 3, red)
+  let health = 3
+  BattleEntity(
+    name: "Slime",
+    health: health,
+    maxHealth: health,
+    texture: "Slime.png",
+  )
 
 proc newBattleData(): BattleData =
   BattleData(
@@ -174,8 +178,8 @@ proc battleEntityStatusNode(entity: BattleEntity, pos: Vec): Node =
     children: @[
       SpriteNode(
         pos: entity.offset,
-        size: vec(40, 60),
-        color: entity.color,
+        textureName: entity.texture,
+        scale: 4.0,
       ),
       BorderedTextNode(
         text: entity.name,

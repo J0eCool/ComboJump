@@ -118,11 +118,13 @@ method updateSelf[T](node: BindNode[T], manager: var MenuManager, input: InputMa
 type SpriteNode* = ref object of Node
   textureName*: string
   color*: Color
+  scale*: float
 
 method drawSelf(sprite: SpriteNode, renderer: RendererPtr, resources: var ResourceManager) =
-  let
-    spriteImg = resources.loadSprite(sprite.textureName, renderer)
-    r = rect.rect(sprite.globalPos, sprite.size)
+  let spriteImg = resources.loadSprite(sprite.textureName, renderer)
+  if sprite.size == vec() and sprite.scale != 0.0:
+    sprite.size = spriteImg.size.size * sprite.scale
+  let r = rect.rect(sprite.globalPos, sprite.size)
   if spriteImg != nil:
     renderer.draw(spriteImg, r)
   else:
