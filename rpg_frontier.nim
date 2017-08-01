@@ -108,8 +108,9 @@ type
     isEnemyTurn: bool
   BattleEntity* = object
     name: string
-    health: int
-    maxHealth: int
+    health, maxHealth: int
+    mana, maxMana: int
+    focus, maxFocus: int
     texture: string
     offset: Vec
   BattleController* = ref object of Controller
@@ -149,11 +150,18 @@ const
   attackAnimDist = 250.0
 
 proc newPlayer(): BattleEntity =
-  let health = 10
+  let
+    health = 10
+    mana = 8
+    focus = 20
   BattleEntity(
     name: "Player",
     health: health,
     maxHealth: health,
+    mana: mana,
+    maxMana: mana,
+    focus: 0,
+    maxFocus: focus,
     texture: "Wizard2.png",
   )
 
@@ -173,11 +181,18 @@ proc initializeEnemyData(): seq[EnemyInfo] =
 const enemyData = initializeEnemyData()
 
 proc newEnemy(): BattleEntity =
-  let enemy = random(enemyData)
+  let
+    enemy = random(enemyData)
+    mana = 5
+    focus = 10
   BattleEntity(
     name: enemy.name,
     health: enemy.health,
     maxHealth: enemy.health,
+    mana: mana,
+    maxMana: mana,
+    focus: 0,
+    maxFocus: focus,
     texture: enemy.texture,
   )
 
@@ -215,6 +230,7 @@ proc quantityBarNode(cur, max: int, pos, size: Vec, color: Color): Node =
   )
 
 proc battleEntityStatusNode(entity: BattleEntity, pos: Vec): Node =
+  let barSize = vec(240, 30)
   Node(
     pos: pos,
     children: @[
@@ -225,14 +241,28 @@ proc battleEntityStatusNode(entity: BattleEntity, pos: Vec): Node =
       ),
       BorderedTextNode(
         text: entity.name,
-        pos: vec(0, 80),
+        pos: vec(0, -215),
       ),
       quantityBarNode(
         entity.health,
         entity.maxHealth,
-        vec(0, 115),
-        vec(120, 30),
+        vec(0, -185),
+        barSize,
         red,
+      ),
+      quantityBarNode(
+        entity.mana,
+        entity.maxMana,
+        vec(0, -150),
+        barSize,
+        blue,
+      ),
+      quantityBarNode(
+        entity.focus,
+        entity.maxFocus,
+        vec(0, -115),
+        barSize,
+        yellow,
       ),
     ],
   )
