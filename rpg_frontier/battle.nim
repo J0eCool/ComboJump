@@ -126,11 +126,16 @@ proc newBattleController(battle: BattleData): BattleController =
     eventQueue: @[],
   )
 
-proc quantityBarNode(cur, max: int, pos, size: Vec, color: Color): Node =
+proc quantityBarNode(cur, max: int, pos, size: Vec, color: Color, showText = true): Node =
   let
     border = 2.0
     borderedSize = size - vec(2.0 * border)
     percent = cur / max
+    label =
+      if showText:
+        BorderedTextNode(text: $cur & " / " & $max)
+      else:
+        Node()
   SpriteNode(
     pos: pos,
     size: size,
@@ -140,13 +145,13 @@ proc quantityBarNode(cur, max: int, pos, size: Vec, color: Color): Node =
         size: borderedSize * vec(percent, 1.0),
         color: color,
       ),
-      BorderedTextNode(text: $cur & " / " & $max),
+      label,
     ],
   )
 
-proc battleEntityStatusNode(entity: BattleEntity, pos: Vec): Node =
+proc battleEntityStatusNode(entity: BattleEntity, pos: Vec, isPlayer = true): Node =
   let barSize = vec(240, 30)
-  Node(
+  result = Node(
     pos: pos,
     children: @[
       SpriteNode(
@@ -164,7 +169,12 @@ proc battleEntityStatusNode(entity: BattleEntity, pos: Vec): Node =
         vec(0, -185),
         barSize,
         red,
+        showText = isPlayer,
       ),
+    ],
+  )
+  if isPlayer:
+    result.children &= @[
       quantityBarNode(
         entity.mana,
         entity.maxMana,
@@ -179,8 +189,7 @@ proc battleEntityStatusNode(entity: BattleEntity, pos: Vec): Node =
         barSize,
         yellow,
       ),
-    ],
-  )
+    ]
 
 proc updateAttackAnimation(controller: BattleController, pct: float) =
   if not controller.battle.isEnemyTurn:
@@ -321,12 +330,20 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         ),
         children: @[BorderedTextNode(text: "Exit").Node],
       ),
-      battleEntityStatusNode(battle.player, vec(0, 0)),
+      battleEntityStatusNode(
+        battle.player,
+        vec(0, 0),
+        isPlayer = true,
+      ),
       BorderedTextNode(
         text: "XP: " & $battle.xp,
         pos: vec(0, 150),
       ),
-      battleEntityStatusNode(battle.enemy, vec(300, 0)),
+      battleEntityStatusNode(
+        battle.enemy,
+        vec(300, 0),
+        isPlayer = false,
+      ),
       controller.attackButtonNode(vec(-45, 210), allSkills[0]),
       controller.attackButtonNode(vec(20, 210), allSkills[1]),
       controller.attackButtonNode(vec(85, 210), allSkills[2]),
