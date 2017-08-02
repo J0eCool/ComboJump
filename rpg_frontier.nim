@@ -137,6 +137,11 @@ type
     name: string
     health: int
     texture: string
+  SkillInfo = object
+    name: string
+    damage: int
+    manaCost: int
+    focusCost: int
 
 proc percent(event: BattleEvent): float =
   if event.duration == 0.0:
@@ -355,6 +360,41 @@ proc attackEnemy(controller: BattleController, damage: int) =
 proc pos(text: FloatingText): Vec =
   text.startPos - vec(0.0, textFloatHeight * text.t / textFloatTime)
 
+proc tryUseAttack(controller: BattleController, attack: SkillInfo) =
+  if controller.battle.player.mana >= attack.manaCost and
+     controller.battle.player.focus >= attack.focusCost:
+    controller.battle.player.mana -= attack.manaCost
+    controller.battle.player.focus -= attack.focusCost
+    controller.attackEnemy(attack.damage)
+
+proc attackButtonNode(controller: BattleController, pos: Vec, attack: SkillInfo): Node =
+  Button(
+    pos: pos,
+    size: vec(60, 60),
+    onClick: (proc() =
+      controller.tryUseAttack(attack)
+    ),
+    children: @[BorderedTextNode(text: attack.name).Node],
+  )
+
+let allSkills = @[
+  SkillInfo(
+    name: "Atk",
+    damage: 1,
+    focusCost: -5,
+  ),
+  SkillInfo(
+    name: "Pow",
+    damage: 2,
+    manaCost: 2,
+  ),
+  SkillInfo(
+    name: "Qrz",
+    damage: 3,
+    focusCost: 15,
+  ),
+]
+
 proc battleView(battle: BattleData, controller: BattleController): Node {.procvar.} =
   var floaties: seq[Node] = @[]
   for text in controller.floatingTexts:
@@ -379,25 +419,9 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         pos: vec(0, 150),
       ),
       battleEntityStatusNode(battle.enemy, vec(300, 0)),
-      Button(
-        pos: vec(-45, 210),
-        size: vec(60, 60),
-        onClick: (proc() =
-          controller.attackEnemy(1)
-        ),
-        children: @[BorderedTextNode(text: "Atk").Node],
-      ),
-      Button(
-        pos: vec(20, 210),
-        size: vec(60, 60),
-        onClick: (proc() =
-          let cost = 2
-          if battle.player.mana > cost:
-            battle.player.mana -= cost
-            controller.attackEnemy(2)
-        ),
-        children: @[BorderedTextNode(text: "Pow").Node],
-      ),
+      controller.attackButtonNode(vec(-45, 210), allSkills[0]),
+      controller.attackButtonNode(vec(20, 210), allSkills[1]),
+      controller.attackButtonNode(vec(85, 210), allSkills[2]),
       Button( # Debug instant-kill node
         pos: vec(450, 210),
         size: vec(60, 60),
