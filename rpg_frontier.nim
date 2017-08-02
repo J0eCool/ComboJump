@@ -353,19 +353,17 @@ proc startAttack(controller: BattleController, damage: int) =
       controller.battle.isEnemyTurn = not controller.battle.isEnemyTurn,
   ]
 
-proc attackEnemy(controller: BattleController, damage: int) =
-  if controller.isClickReady:
-    controller.startAttack(damage)
-
 proc pos(text: FloatingText): Vec =
   text.startPos - vec(0.0, textFloatHeight * text.t / textFloatTime)
 
 proc tryUseAttack(controller: BattleController, attack: SkillInfo) =
-  if controller.battle.player.mana >= attack.manaCost and
-     controller.battle.player.focus >= attack.focusCost:
-    controller.battle.player.mana -= attack.manaCost
-    controller.battle.player.focus -= attack.focusCost
-    controller.attackEnemy(attack.damage)
+  let battle = controller.battle
+  if battle.player.mana >= attack.manaCost and
+     battle.player.focus >= attack.focusCost and
+     controller.isClickReady:
+    battle.player.mana -= attack.manaCost
+    battle.player.focus -= attack.focusCost
+    controller.startAttack(attack.damage)
 
 proc attackButtonNode(controller: BattleController, pos: Vec, attack: SkillInfo): Node =
   Button(
