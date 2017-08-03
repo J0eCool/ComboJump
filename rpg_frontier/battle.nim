@@ -378,6 +378,14 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
     ] & floaties,
   )
 
+proc clampResources(entity: var BattleEntity) =
+  entity.health = entity.health.clamp(0, entity.maxHealth)
+  entity.mana = entity.mana.clamp(0, entity.maxMana)
+  entity.focus = entity.focus.clamp(0, entity.maxFocus)
+proc clampResources(battle: BattleData) =
+  battle.player.clampResources()
+  battle.enemy.clampResources()
+
 method update*(controller: BattleController, dt: float) =
   # Update floating text
   var newFloaties: seq[FloatingText] = @[]
@@ -401,6 +409,8 @@ method update*(controller: BattleController, dt: float) =
   if controller.bufferClose:
     controller.shouldPop = true
     controller.bufferClose = false
+
+  controller.battle.clampResources()
 
 method pushMenus(controller: BattleController): seq[MenuBase] =
   if controller.bufferClose:
