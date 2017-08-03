@@ -275,22 +275,36 @@ proc startAttack(controller: BattleController, damage: int) =
 proc pos(text: FloatingText): Vec =
   text.startPos - vec(0.0, textFloatHeight * text.t / textFloatTime)
 
+proc canAfford(battle: BattleData, attack: SkillInfo): bool =
+  battle.player.mana >= attack.manaCost and
+    battle.player.focus >= attack.focusCost
+
 proc tryUseAttack(controller: BattleController, attack: SkillInfo) =
   let battle = controller.battle
-  if battle.player.mana >= attack.manaCost and
-     battle.player.focus >= attack.focusCost and
+  if battle.canAfford(attack) and
      controller.isClickReady:
     battle.player.mana -= attack.manaCost
     battle.player.focus -= attack.focusCost
     controller.startAttack(attack.damage)
 
-proc attackButtonNode(controller: BattleController, pos: Vec, attack: SkillInfo): Node =
+proc attackButtonNode(controller: BattleController, attack: SkillInfo): Node =
+  let
+    disabled = not controller.battle.canAfford(attack)
+    color =
+      if disabled:
+        gray
+      else:
+        lightGray
+    onClick =
+      if disabled:
+        nil
+      else:
+        proc() =
+          controller.tryUseAttack(attack)
   Button(
-    pos: pos,
     size: vec(60, 60),
-    onClick: (proc() =
-      controller.tryUseAttack(attack)
-    ),
+    color: color,
+    onClick: onClick,
     children: @[BorderedTextNode(text: attack.name).Node],
   )
 
@@ -344,9 +358,15 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         vec(300, 0),
         isPlayer = false,
       ),
-      controller.attackButtonNode(vec(-45, 210), allSkills[0]),
-      controller.attackButtonNode(vec(20, 210), allSkills[1]),
-      controller.attackButtonNode(vec(85, 210), allSkills[2]),
+      List[SkillInfo](
+        pos: vec(-75, 210),
+        spacing: vec(5),
+        horizontal: true,
+        items: allSkills,
+        listNodes: (proc(skill: SkillInfo): Node =
+          controller.attackButtonNode(skill)
+        ),
+      ),
       Button( # Debug instant-kill node
         pos: vec(450, 210),
         size: vec(60, 60),

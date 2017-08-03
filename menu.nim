@@ -226,7 +226,7 @@ method updateSelf(button: Button, manager: var MenuManager, input: InputManager)
 # ------
 
 type List*[T] = ref object of Node
-  items*: proc(): seq[T]
+  items*: seq[T]
   listNodes*: proc(item: T): Node
   listNodesIdx*: proc(item: T, idx: int): Node
   spacing*: Vec
@@ -234,7 +234,6 @@ type List*[T] = ref object of Node
   horizontal*: bool
   ignoreSpacing*: bool
   generatedChildren: seq[Node]
-  cachedItems: seq[T]
 
 proc indexOffset(i, width: int, mainDir: bool): int =
   if width == 0:
@@ -249,32 +248,40 @@ proc indexOffset(i, width: int, mainDir: bool): int =
       i mod width
 
 proc generateChildren[T](list: List[T]) =
+  if list.generatedChildren != nil:
+    return
+
   assert list.listNodes != nil xor list.listNodesIdx != nil, "List must have exactly one of listNodes or listNodesIdx"
   let
-    items = list.items()
+    items = list.items
     nodeProc =
       if list.listNodes != nil:
-        proc(idx: int): Node =
+        proc (idx: int): Node =
           list.listNodes(items[idx])
       else:
-        proc(idx: int): Node =
+        proc (idx: int): Node =
           list.listNodesIdx(items[idx], idx)
-  if list.cachedItems != items:
-    list.cachedItems = items
-    list.generatedChildren = @[]
-    for i in 0..<items.len:
-      let
-        n = nodeProc(i)
-        s = n.size + list.spacing
-        x = indexOffset(i, list.width, list.horizontal)
-        y = indexOffset(i, list.width, not list.horizontal)
-      n.pos =
-        if list.ignoreSpacing:
-          n.pos
-        else:
-          n.pos + (vec(x, y) + vec(0.5)) * s - list.size / 2
-      n.parent = list
-      list.generatedChildren.add n
+  list.generatedChildren = @[]
+  for i in 0..<items.len:
+    let
+      n = nodeProc(i)
+      s = n.size + list.spacing
+      x = indexOffset(i, list.width, list.horizontal)
+      y = indexOffset(i, list.width, not list.horizontal)
+    n.pos =
+      if list.ignoreSpacing:
+        n.pos
+      else:
+        n.pos + (vec(x, y) + vec(0.5)) * s - list.size / 2
+    n.parent = list
+    list.generatedChildren.add n
+
+method diffSelf[T](list, newVal: List[T]): bool =
+  if list.items != newVal.items:
+    newVal.generateChildren()
+    list.generatedChildren = newVal.generatedChildren
+  list.baseDiff(newVal)
+  true
 
 method drawSelf[T](list: List[T], renderer: RendererPtr, resources: var ResourceManager) =
   list.generateChildren()
@@ -340,7 +347,7 @@ proc stringListNode*(lines: seq[string], pos = vec(0)): Node =
   List[string](
     pos: pos,
     spacing: vec(0, 25),
-    items: (proc(): seq[string] = lines),
+    items: lines,
     listNodes: (proc(line: string): Node =
       BorderedTextNode(
         text: line,
