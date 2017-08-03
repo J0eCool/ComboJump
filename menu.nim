@@ -169,7 +169,7 @@ method drawSelf(text: BorderedTextNode, renderer: RendererPtr, resources: var Re
 # ------
 
 type Button* = ref object of Node
-  # TODO: just give buttons labels already goddammit
+  label*: string
   onClick*: proc()
   hotkey*: Input
   color*: Color
@@ -196,6 +196,10 @@ method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceMa
       else:
         baseColor
   renderer.fillRect(button.rect, c)
+
+  if button.label != nil:
+    let font = resources.loadFont("nevis.ttf")
+    renderer.drawBorderedText(button.label, button.globalPos, font, white)
 
 method updateSelf(button: Button, manager: var MenuManager, input: InputManager) =
   if button.onClick == nil:

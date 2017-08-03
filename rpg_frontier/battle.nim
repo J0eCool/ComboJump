@@ -303,9 +303,9 @@ proc attackButtonNode(controller: BattleController, attack: SkillInfo): Node =
           controller.tryUseAttack(attack)
   Button(
     size: vec(60, 60),
+    label: attack.name,
     color: color,
     onClick: onClick,
-    children: @[BorderedTextNode(text: attack.name).Node],
   )
 
 let allSkills = @[
@@ -339,10 +339,10 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
       Button(
         pos: vec(-345, 350),
         size: vec(60, 60),
+        label: "Exit",
         onClick: (proc() =
           controller.bufferClose = true
         ),
-        children: @[BorderedTextNode(text: "Exit").Node],
       ),
       battleEntityStatusNode(
         battle.player,
@@ -370,10 +370,10 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
       Button( # Debug instant-kill node
         pos: vec(450, 210),
         size: vec(60, 60),
+        label: "(kill)",
         onClick: (proc() =
           controller.killEnemy()
         ),
-        children: @[BorderedTextNode(text: "(kill)").Node],
       ),
     ] & floaties,
   )
@@ -406,11 +406,11 @@ method update*(controller: BattleController, dt: float) =
   if controller.noAnimationPlaying() and controller.battle.isEnemyTurn:
     controller.startAttack(1)
 
+  controller.battle.clampResources()
+
   if controller.bufferClose:
     controller.shouldPop = true
     controller.bufferClose = false
-
-  controller.battle.clampResources()
 
 method pushMenus(controller: BattleController): seq[MenuBase] =
   if controller.bufferClose:
