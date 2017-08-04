@@ -287,6 +287,21 @@ proc tryUseAttack(controller: BattleController, attack: SkillInfo) =
     battle.player.focus -= attack.focusCost
     controller.startAttack(attack.damage)
 
+proc attackButtonTooltipNode(attack: SkillInfo): Node =
+  var lines: seq[string] = @[]
+  if attack.manaCost > 0:
+    lines.add($attack.manaCost & " Mana")
+  if attack.focusCost > 0:
+    lines.add($attack.focusCost & " Focus")
+  if attack.focusCost < 0:
+    lines.add("Generates " & $(-attack.focusCost) & " Focus")
+  SpriteNode(
+    pos: vec(0, 90),
+    size: vec(240, 80),
+    color: darkGray,
+    children: @[stringListNode(lines)]
+  )
+
 proc attackButtonNode(controller: BattleController, attack: SkillInfo): Node =
   let
     disabled = not controller.battle.canAfford(attack)
@@ -306,10 +321,7 @@ proc attackButtonNode(controller: BattleController, attack: SkillInfo): Node =
     label: attack.name,
     color: color,
     onClick: onClick,
-    hoverNode: BorderedTextNode(
-      text: "Mana cost: " & $attack.manaCost,
-      pos: vec(-40, 55),
-    ),
+    hoverNode: attackButtonTooltipNode(attack),
   )
 
 let allSkills = @[

@@ -195,7 +195,9 @@ method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceMa
       else:
         button.color
     c =
-      if (button.isMouseOver and button.isHeld) or button.isKeyHeld:
+      if button.onClick == nil:
+        baseColor
+      elif (button.isMouseOver and button.isHeld) or button.isKeyHeld:
         baseColor.average rgb(255, 255, 192)
       elif button.isMouseOver:
         baseColor.average rgb(198, 198, 92)
@@ -213,9 +215,6 @@ method getChildren(button: Button): seq[Node] =
       result.safeAdd button.hoverNode
 
 method updateSelf(button: Button, manager: var MenuManager, input: InputManager) =
-  if button.onClick == nil:
-    return
-
   let r = button.rect
   input.clickPressedPos.bindAs click:
     if r.contains click:
@@ -225,12 +224,12 @@ method updateSelf(button: Button, manager: var MenuManager, input: InputManager)
 
   if button.isHeld:
     input.clickReleasedPos.bindAs click:
-      if r.contains click:
+      if button.onClick != nil and r.contains click:
         button.onClick()
       button.isHeld = false
       button.isMouseOver = false
 
-  if button.hotkey != Input.none:
+  if button.hotkey != Input.none and button.onClick != nil:
     if not button.isKeyHeld and input.isPressed(button.hotkey):
       button.isKeyHeld = true
       button.onClick()
