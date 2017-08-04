@@ -306,6 +306,10 @@ proc attackButtonNode(controller: BattleController, attack: SkillInfo): Node =
     label: attack.name,
     color: color,
     onClick: onClick,
+    hoverNode: BorderedTextNode(
+      text: "Mana cost: " & $attack.manaCost,
+      pos: vec(-40, 55),
+    ),
   )
 
 let allSkills = @[
@@ -365,14 +369,6 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         items: allSkills,
         listNodes: (proc(skill: SkillInfo): Node =
           controller.attackButtonNode(skill)
-        ),
-      ),
-      Button( # Debug instant-kill node
-        pos: vec(450, 210),
-        size: vec(60, 60),
-        label: "(kill)",
-        onClick: (proc() =
-          controller.killEnemy()
         ),
       ),
     ] & floaties,

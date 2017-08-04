@@ -50,8 +50,11 @@ method drawSelf(node: Node, renderer: RendererPtr, resources: var ResourceManage
 method updateSelf(node: Node, manager: var MenuManager, input: InputManager) {.base.} =
   discard
 
+method getChildren(node: Node): seq[Node] =
+  node.children
+
 proc updateParents(node: Node) =
-  for c in node.children:
+  for c in node.getChildren():
     c.parent = node
     c.updateParents()
 
@@ -65,20 +68,22 @@ proc globalPos*(node: Node): Vec =
 proc draw*(renderer: RendererPtr, node: Node, resources: var ResourceManager) =
   node.updateParents()
   node.drawSelf(renderer, resources)
-  for c in node.children:
+  for c in node.getChildren():
     renderer.draw(c, resources)
 
 proc update*(node: Node, manager: var MenuManager, input: InputManager) =
   node.updateParents()
   node.updateSelf(manager, input)
-  for c in node.children:
+  for c in node.getChildren():
     c.update(manager, input)
 
 proc diff(node: var Node, newVal: Node) =
   if not node.diffSelf(newVal):
     node = newVal
-  for i in 0..<node.children.len:
-    node.children[i].diff(newVal.children[i])
+  var children = node.getChildren()
+  let newChildren = newVal.getChildren()
+  for i in 0..<min(children.len, newChildren.len):
+    children[i].diff(newChildren[i])
 
 proc rect*(node: Node): Rect =
   rect.rect(node.globalPos, node.size)
@@ -173,6 +178,7 @@ type Button* = ref object of Node
   onClick*: proc()
   hotkey*: Input
   color*: Color
+  hoverNode*: Node
   isHeld: bool
   isMouseOver: bool
   isKeyHeld: bool
@@ -200,6 +206,11 @@ method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceMa
   if button.label != nil:
     let font = resources.loadFont("nevis.ttf")
     renderer.drawBorderedText(button.label, button.globalPos, font, white)
+
+method getChildren(button: Button): seq[Node] =
+  result = button.children
+  if button.hoverNode != nil and button.isMouseOver:
+      result.safeAdd button.hoverNode
 
 method updateSelf(button: Button, manager: var MenuManager, input: InputManager) =
   if button.onClick == nil:
@@ -287,15 +298,10 @@ method diffSelf[T](list, newVal: List[T]): bool =
   list.baseDiff(newVal)
   true
 
-method drawSelf[T](list: List[T], renderer: RendererPtr, resources: var ResourceManager) =
+method getChildren[T](list: List[T]): seq[Node] =
   list.generateChildren()
-  for c in list.generatedChildren:
-    renderer.draw(c, resources)
-
-method updateSelf[T](list: List[T], manager: var MenuManager, input: InputManager) =
-  list.generateChildren()
-  for c in list.generatedChildren:
-    c.update(manager, input)
+  let children = if list.children == nil: @[] else: list.children
+  children & list.generatedChildren
 
 
 # ------
