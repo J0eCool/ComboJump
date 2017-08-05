@@ -148,6 +148,7 @@ method drawSelf(sprite: SpriteNode, renderer: RendererPtr, resources: var Resour
 type TextNode* = ref object of Node
   text*: string
   color*: Color
+  fontSize*: int
 
 method diffSelf(text, newVal: TextNode): bool =
   text.baseDiff(newVal)
@@ -156,7 +157,9 @@ method diffSelf(text, newVal: TextNode): bool =
   true
 
 method drawSelf(text: TextNode, renderer: RendererPtr, resources: var ResourceManager) =
-  let font = resources.loadFont("nevis.ttf")
+  if text.fontSize == 0:
+    text.fontSize = 24
+  let font = resources.loadFont("nevis.ttf", text.fontSize)
   renderer.drawCachedText(text.text, text.globalPos, font, text.color)
 
 
@@ -168,7 +171,9 @@ method drawSelf(text: BorderedTextNode, renderer: RendererPtr, resources: var Re
   if text.color == rgba(0, 0, 0, 0):
     # default color to white
     text.color = rgb(255, 255, 255)
-  let font = resources.loadFont("nevis.ttf")
+  if text.fontSize == 0:
+    text.fontSize = 24
+  let font = resources.loadFont("nevis.ttf", text.fontSize)
   renderer.drawBorderedText(text.text, text.globalPos, font, text.color)
 
 # ------
@@ -352,15 +357,16 @@ method drawSelf(text: InputTextNode, renderer: RendererPtr, resources: var Resou
 
 # ------
 
-proc stringListNode*(lines: seq[string], pos = vec(0)): Node =
+proc stringListNode*(lines: seq[string], pos = vec(0), fontSize = 24): Node =
   List[string](
     pos: pos,
-    spacing: vec(0, 25),
+    spacing: vec(0, fontSize + 1),
     items: lines,
     listNodes: (proc(line: string): Node =
       BorderedTextNode(
         text: line,
         color: rgb(255, 255, 255),
+        fontSize: fontSize,
       )
     ),
   )

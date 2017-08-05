@@ -75,17 +75,19 @@ proc loadSprite*(resources: var ResourceManager, textureName: string, renderer: 
 
   return updatedSpriteCache(resources.sprites[textureName], renderer)
 
-proc loadFont*(resources: var ResourceManager, fontName: string): FontPtr =
+proc loadFont*(resources: var ResourceManager,
+               fontName: string,
+               fontSize = 24,
+              ): FontPtr =
   const fontFolder = "assets/fonts/"
-  if not resources.fonts.hasKey(fontName):
-    log info, "Loading font \"", fontName, "\""
-    const hardcodedFontSize = 24 # TODO: not this?
-    let font = openFont(fontFolder & fontName, hardcodedFontSize)
+  let cachedName = fontName & "__" & $fontSize & "pt"
+  if not resources.fonts.hasKey(cachedName):
+    log info, "Loading font \"", cachedName, "\""
+    let font = openFont(fontFolder & fontName, fontSize.cint)
     if font == nil:
       log error, "Unable to load font at " & fontFolder, fontName
-      return nil
-    resources.fonts[fontName] = font
-  return resources.fonts[fontName]
+    resources.fonts[cachedName] = font
+  return resources.fonts[cachedName]
 
 proc newResourceManager*(): ResourceManager =
   result.sprites = initTable[string, CachedResource[SpriteData]](64)

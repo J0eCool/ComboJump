@@ -345,6 +345,7 @@ proc tryUseAttack(controller: BattleController, attack: SkillInfo) =
 
 proc attackButtonTooltipNode(attack: SkillInfo): Node =
   var lines: seq[string] = @[]
+  lines.add($attack.damage & " Damage")
   if attack.manaCost > 0:
     lines.add($attack.manaCost & " Mana")
   if attack.focusCost > 0:
@@ -355,7 +356,7 @@ proc attackButtonTooltipNode(attack: SkillInfo): Node =
     pos: vec(0, 90),
     size: vec(240, 80),
     color: darkGray,
-    children: @[stringListNode(lines)]
+    children: @[stringListNode(lines, fontSize = 12)]
   )
 
 proc attackButtonNode(controller: BattleController, attack: SkillInfo): Node =
@@ -450,15 +451,6 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         vec(300, 0),
         isPlayer = false,
       ),
-      List[SkillInfo](
-        pos: vec(-75, 210),
-        spacing: vec(5),
-        horizontal: true,
-        items: allSkills,
-        listNodes: (proc(skill: SkillInfo): Node =
-          controller.attackButtonNode(skill)
-        ),
-      ),
       List[Potion](
         pos: vec(-75, 275),
         spacing: vec(5),
@@ -466,6 +458,15 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         items: battle.potions,
         listNodesIdx: (proc(potion: Potion, idx: int): Node =
           controller.potionButtonNode(addr battle.potions[idx])
+        ),
+      ),
+      List[SkillInfo](
+        pos: vec(-75, 210),
+        spacing: vec(5),
+        horizontal: true,
+        items: allSkills,
+        listNodes: (proc(skill: SkillInfo): Node =
+          controller.attackButtonNode(skill)
         ),
       ),
     ] & floaties,
