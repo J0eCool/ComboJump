@@ -13,6 +13,7 @@ type
     enemy: BattleEntity
     xp: int
     isEnemyTurn: bool
+    potions: seq[Potion]
   BattleEntity* = object
     name: string
     health, maxHealth: int
@@ -40,7 +41,19 @@ type
     damage: int
     manaCost: int
     focusCost: int
-
+  Potion = object
+    info: PotionInfo
+    charges: int
+    cooldown: int
+  PotionInfo = object
+    kind: PotionKind
+    name: string
+    effect: int
+    charges: int
+    duration: int
+  PotionKind = enum
+    healthPotion
+    manaPotion
 
 type
   EnemyKind = enum
@@ -52,6 +65,39 @@ type
     name: string
     health: int
     texture: string
+
+let allSkills = @[
+  SkillInfo(
+    name: "Atk",
+    damage: 1,
+    focusCost: -5,
+  ),
+  SkillInfo(
+    name: "Pow",
+    damage: 2,
+    manaCost: 2,
+  ),
+  SkillInfo(
+    name: "Qrz",
+    damage: 3,
+    focusCost: 15,
+  ),
+]
+
+let allPotionInfos = @[
+  PotionInfo(
+    kind: healthPotion,
+    name: "Hth",
+    effect: 5,
+    charges: 3,
+  ),
+  PotionInfo(
+    kind: manaPotion,
+    name: "Mna",
+    effect: 3,
+    charges: 2,
+  ),
+]
 
 proc percent(event: BattleEvent): float =
   if event.duration == 0.0:
@@ -111,11 +157,20 @@ proc newEnemy(): BattleEntity =
     texture: enemy.texture,
   )
 
+proc initPotions(): seq[Potion] =
+  result = @[]
+  for info in allPotionInfos:
+    result.add Potion(
+      info: info,
+      charges: info.charges,
+    )
+
 proc newBattleData*(): BattleData =
   BattleData(
     player: newPlayer(),
     enemy: newEnemy(),
     xp: 0,
+    potions: initPotions(),
   )
 
 proc newBattleController(battle: BattleData): BattleController =
@@ -241,6 +296,7 @@ proc killEnemy(controller: BattleController) =
 proc killPlayer(controller: BattleController) =
   controller.battle.player = newPlayer()
   controller.battle.enemy = newEnemy()
+  controller.battle.potions = initPotions()
 
 proc updateMaybeKill(controller: BattleController) =
   let didKill = controller.didKill
@@ -324,23 +380,43 @@ proc attackButtonNode(controller: BattleController, attack: SkillInfo): Node =
     hoverNode: attackButtonTooltipNode(attack),
   )
 
-let allSkills = @[
-  SkillInfo(
-    name: "Atk",
-    damage: 1,
-    focusCost: -5,
-  ),
-  SkillInfo(
-    name: "Pow",
-    damage: 2,
-    manaCost: 2,
-  ),
-  SkillInfo(
-    name: "Qrz",
-    damage: 3,
-    focusCost: 15,
-  ),
-]
+proc canUse(potion: Potion): bool =
+  potion.charges > 0 and potion.cooldown == 0
+
+proc tryUsePotion(controller: BattleController, potion: ptr Potion) =
+  if not potion[].canUse():
+    return
+  potion.charges -= 1
+
+  let
+    battle = controller.battle
+    info = potion.info
+  case info.kind
+  of healthPotion:
+    battle.player.health += info.effect
+  of manaPotion:
+    battle.player.mana += info.effect
+
+proc potionButtonNode(controller: BattleController, potion: ptr Potion): Node =
+  let
+    disabled = not potion[].canUse()
+    color =
+      if disabled:
+        gray
+      else:
+        lightGray
+    onClick =
+      if disabled:
+        nil
+      else:
+        proc() =
+          controller.tryUsePotion(potion)
+  Button(
+    size: vec(120, 60),
+    label: potion.info.name & " " & $potion.charges & "/" & $potion.info.charges,
+    color: color,
+    onClick: onClick,
+  )
 
 proc battleView(battle: BattleData, controller: BattleController): Node {.procvar.} =
   var floaties: seq[Node] = @[]
@@ -381,6 +457,15 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         items: allSkills,
         listNodes: (proc(skill: SkillInfo): Node =
           controller.attackButtonNode(skill)
+        ),
+      ),
+      List[Potion](
+        pos: vec(-75, 275),
+        spacing: vec(5),
+        horizontal: true,
+        items: battle.potions,
+        listNodesIdx: (proc(potion: Potion, idx: int): Node =
+          controller.potionButtonNode(addr battle.potions[idx])
         ),
       ),
     ] & floaties,
