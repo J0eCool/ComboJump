@@ -356,7 +356,7 @@ proc attackButtonTooltipNode(attack: SkillInfo): Node =
     pos: vec(0, 90),
     size: vec(240, 80),
     color: darkGray,
-    children: @[stringListNode(lines, fontSize = 12)]
+    children: @[stringListNode(lines, fontSize = 18)]
   )
 
 proc attackButtonNode(controller: BattleController, attack: SkillInfo): Node =

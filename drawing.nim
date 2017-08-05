@@ -72,17 +72,19 @@ proc draw*(renderer: RendererPtr,
            angle = 0.0) =
   draw(renderer, sprite, toRect, sprite.size, flipX, angle)
 
-var textCache = initTable[string, RenderedText]()
+var textCache = initTable[FontPtr, Table[string, RenderedText]]()
 proc drawCachedText*(renderer: RendererPtr,
                      text: string,
                      pos: Vec,
                      font: FontPtr,
                      color: color.Color = rgb(255, 255, 255),
                     ) =
+  if not textCache.hasKey(font):
+    textCache[font] = initTable[string, RenderedText]()
   let textKey = text & "__color:" & $color
-  if not textCache.hasKey(textKey):
-    textCache[textKey] = renderer.renderText(text, font, color)
-  renderer.draw(textCache[textKey], pos)
+  if not textCache[font].hasKey(textKey):
+    textCache[font][textKey] = renderer.renderText(text, font, color)
+  renderer.draw(textCache[font][textKey], pos)
 
 proc drawBorderedText*(renderer: RendererPtr,
                        text: string,
