@@ -352,11 +352,16 @@ proc attackButtonTooltipNode(attack: SkillInfo): Node =
     lines.add($attack.focusCost & " Focus")
   if attack.focusCost < 0:
     lines.add("Generates " & $(-attack.focusCost) & " Focus")
+  let height = 20 * lines.len + 10
   SpriteNode(
-    pos: vec(0, 90),
-    size: vec(240, 80),
+    pos: vec(0.0, height/2 + 32.0),
+    size: vec(240, height),
     color: darkGray,
-    children: @[stringListNode(lines, fontSize = 18)]
+    children: @[stringListNode(
+      lines,
+      pos = vec(0, -10 * lines.len),
+      fontSize = 18,
+    )]
   )
 
 proc attackButtonNode(controller: BattleController, attack: SkillInfo): Node =
