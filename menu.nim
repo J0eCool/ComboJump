@@ -191,6 +191,9 @@ type Button* = ref object of Node
 
 method diffSelf(button, newVal: Button): bool =
   button.baseDiff(newVal)
+  button.label = newVal.label
+  button.onClick = newVal.onClick
+  button.color = newVal.color
   true
 
 method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceManager) =
