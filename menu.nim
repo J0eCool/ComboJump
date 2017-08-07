@@ -435,6 +435,7 @@ proc update*(menus: var MenuManager, dt: float, input: InputManager) =
       for p in toPush:
         menus.push(p)
         menus.menus.mpeek().update(menus, 0.0, input)
+      break
     if shouldPop or not menu.controller.shouldUpdateBelow:
       break
   while menus.menus.peek().controller.shouldPop:
