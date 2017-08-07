@@ -50,7 +50,7 @@ method drawSelf(node: Node, renderer: RendererPtr, resources: var ResourceManage
 method updateSelf(node: Node, manager: var MenuManager, input: InputManager) {.base.} =
   discard
 
-method getChildren(node: Node): seq[Node] =
+method getChildren(node: Node): seq[Node] {.base.} =
   node.children
 
 proc updateParents(node: Node) =

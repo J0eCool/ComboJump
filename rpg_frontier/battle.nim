@@ -14,6 +14,8 @@ type
     xp: int
     isEnemyTurn: bool
     potions: seq[Potion]
+    stages: seq[EnemyKind]
+    curStageIndex: int
   BattleEntity* = object
     name: string
     health, maxHealth: int
@@ -54,8 +56,6 @@ type
   PotionKind = enum
     healthPotion
     manaPotion
-
-type
   EnemyKind = enum
     slime
     goblin
@@ -126,24 +126,24 @@ proc newPlayer(): BattleEntity =
     texture: "Wizard2.png",
   )
 
-proc initializeEnemyData(): seq[EnemyInfo] =
-  result = @[]
+proc initializeEnemyData(): array[EnemyKind, EnemyInfo] =
   for tup in @[
     (slime, "Slime", 3, "Slime.png"),
     (goblin, "Goblin", 4, "Goblin.png"),
     (ogre, "Ogre", 5, "Ogre.png"),
   ]:
-    result.add EnemyInfo(
+    let info = EnemyInfo(
       kind: tup[0],
       name: tup[1],
       health: tup[2],
       texture: tup[3],
     )
+    result[info.kind] = info
 const enemyData = initializeEnemyData()
 
-proc newEnemy(): BattleEntity =
+proc newEnemy(kind: EnemyKind): BattleEntity =
   let
-    enemy = random(enemyData)
+    enemy = enemyData[kind]
     mana = 5
     focus = 10
   BattleEntity(
@@ -165,13 +165,29 @@ proc initPotions(): seq[Potion] =
       charges: info.charges,
     )
 
+proc spawnCurrentStage(battle: BattleData): BattleEntity =
+  let index = battle.curStageIndex.clamp(0, battle.stages.len - 1)
+  newEnemy(battle.stages[index])
+
+proc initialize(battle: BattleData) =
+  battle.curStageIndex = 0
+  battle.player = newPlayer()
+  battle.enemy = battle.spawnCurrentStage()
+  battle.potions = initPotions()
+
 proc newBattleData*(): BattleData =
-  BattleData(
-    player: newPlayer(),
-    enemy: newEnemy(),
+  result = BattleData(
     xp: 0,
-    potions: initPotions(),
+    stages: @[
+      slime,
+      goblin,
+      slime,
+      goblin,
+      ogre,
+    ],
+    curStageIndex: 0,
   )
+  result.initialize()
 
 proc newBattleController(battle: BattleData): BattleController =
   BattleController(
@@ -278,25 +294,32 @@ proc newEvent(update: EventUpdate): BattleEvent =
   newEvent(0.0, update)
 
 proc killEnemy(controller: BattleController) =
-  let xp = 1
+  let
+    xpGained = 1
+    battle = controller.battle
   controller.floatingTexts.add FloatingText(
-    text: "+" & $xp & "xp",
+    text: "+" & $xpGained & "xp",
     startPos: vec(350, -50) + randomVec(5.0),
   )
-  controller.battle.xp += xp
+  battle.xp += xpGained
   let dx = random(300.0, 700.0)
   controller.eventQueue &= @[
     newEvent(0.8) do (pct: float):
-      controller.battle.enemy.offset = vec(dx * pct, -2200.0 * pct * (0.25 - pct)),
+      battle.enemy.offset = vec(dx * pct, -2200.0 * pct * (0.25 - pct)),
     newEvent do (pct: float):
-      controller.battle.enemy.offset = vec()
-      controller.battle.enemy = newEnemy(),
+      if battle.curStageIndex + 1 >= battle.stages.len:
+        controller.battle.initialize()
+        controller.bufferClose = true
+      else:
+        battle.curStageIndex += 1
+        battle.enemy.offset = vec()
+        let enemy = battle.stages[battle.curStageIndex]
+        battle.enemy = newEnemy(enemy),
   ]
 
 proc killPlayer(controller: BattleController) =
-  controller.battle.player = newPlayer()
-  controller.battle.enemy = newEnemy()
-  controller.battle.potions = initPotions()
+  controller.battle.initialize()
+  controller.bufferClose = true
 
 proc updateMaybeKill(controller: BattleController) =
   let didKill = controller.didKill
@@ -317,11 +340,11 @@ proc isClickReady(controller: BattleController): bool =
 
 proc startAttack(controller: BattleController, damage: int) =
   controller.eventQueue = @[
-    newEvent(0.2) do (pct: float):
+    newEvent(0.1) do (pct: float):
       controller.updateAttackAnimation(pct),
     newEvent do (pct: float):
       controller.processAttackDamage(damage),
-    newEvent(0.2) do (pct: float):
+    newEvent(0.175) do (pct: float):
       controller.updateAttackAnimation(1.0 - pct),
     newEvent do (pct: float):
       controller.updateMaybeKill()
@@ -486,6 +509,11 @@ proc clampResources(battle: BattleData) =
   battle.enemy.clampResources()
 
 method update*(controller: BattleController, dt: float) =
+  if controller.bufferClose:
+    controller.shouldPop = true
+    controller.bufferClose = false
+    return
+
   # Update floating text
   var newFloaties: seq[FloatingText] = @[]
   for text in controller.floatingTexts.mitems:
@@ -506,10 +534,6 @@ method update*(controller: BattleController, dt: float) =
     controller.startAttack(1)
 
   controller.battle.clampResources()
-
-  if controller.bufferClose:
-    controller.shouldPop = true
-    controller.bufferClose = false
 
 method pushMenus(controller: BattleController): seq[MenuBase] =
   if controller.bufferClose:
