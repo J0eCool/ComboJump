@@ -24,7 +24,6 @@ type
     texture: string
     offset: Vec
   BattleController* = ref object of Controller
-    battle: BattleData
     floatingTexts: seq[FloatingText]
     eventQueue: seq[BattleEvent]
     didKill: bool
@@ -189,10 +188,9 @@ proc newBattleData*(): BattleData =
   )
   result.initialize()
 
-proc newBattleController(battle: BattleData): BattleController =
+proc newBattleController(): BattleController =
   BattleController(
     name: "Battle",
-    battle: battle,
     floatingTexts: @[],
     eventQueue: @[],
   )
@@ -262,24 +260,24 @@ proc battleEntityStatusNode(entity: BattleEntity, pos: Vec, isPlayer = true): No
       ),
     ]
 
-proc updateAttackAnimation(controller: BattleController, pct: float) =
-  if not controller.battle.isEnemyTurn:
-    controller.battle.player.offset = vec(attackAnimDist * pct, 0.0)
+proc updateAttackAnimation(battle: BattleData, pct: float) =
+  if not battle.isEnemyTurn:
+    battle.player.offset = vec(attackAnimDist * pct, 0.0)
   else:
-    controller.battle.enemy.offset = vec(-attackAnimDist * pct, 0.0)
+    battle.enemy.offset = vec(-attackAnimDist * pct, 0.0)
 
 proc takeDamage(entity: var BattleEntity, damage: int): bool =
   entity.health -= damage
   return entity.health <= 0
 
-proc processAttackDamage(controller: BattleController, damage: int) =
+proc processAttackDamage(battle: BattleData, controller: BattleController, damage: int) =
   var basePos: Vec
-  if not controller.battle.isEnemyTurn:
+  if not battle.isEnemyTurn:
     basePos = vec(300, 0)
-    controller.didKill = controller.battle.enemy.takeDamage(damage)
+    controller.didKill = battle.enemy.takeDamage(damage)
   else:
     basePos = vec(0, 0)
-    controller.didKill = controller.battle.player.takeDamage(damage)
+    controller.didKill = battle.player.takeDamage(damage)
   controller.floatingTexts.add FloatingText(
     text: $damage,
     startPos: basePos + randomVec(30.0),
@@ -293,10 +291,8 @@ proc newEvent(duration: float, update: EventUpdate): BattleEvent =
 proc newEvent(update: EventUpdate): BattleEvent =
   newEvent(0.0, update)
 
-proc killEnemy(controller: BattleController) =
-  let
-    xpGained = 1
-    battle = controller.battle
+proc killEnemy(battle: BattleData, controller: BattleController) =
+  let xpGained = 1
   controller.floatingTexts.add FloatingText(
     text: "+" & $xpGained & "xp",
     startPos: vec(350, -50) + randomVec(5.0),
@@ -308,7 +304,7 @@ proc killEnemy(controller: BattleController) =
       battle.enemy.offset = vec(dx * pct, -2200.0 * pct * (0.25 - pct)),
     newEvent do (pct: float):
       if battle.curStageIndex + 1 >= battle.stages.len:
-        controller.battle.initialize()
+        battle.initialize()
         controller.bufferClose = true
       else:
         battle.curStageIndex += 1
@@ -317,38 +313,38 @@ proc killEnemy(controller: BattleController) =
         battle.enemy = newEnemy(enemy),
   ]
 
-proc killPlayer(controller: BattleController) =
-  controller.battle.initialize()
+proc killPlayer(battle: BattleData, controller: BattleController) =
+  battle.initialize()
   controller.bufferClose = true
 
-proc updateMaybeKill(controller: BattleController) =
+proc updateMaybeKill(battle: BattleData, controller: BattleController) =
   let didKill = controller.didKill
   if not didKill:
     return
 
   controller.didKill = false
-  if not controller.battle.isEnemyTurn:
-    controller.killEnemy()
+  if not battle.isEnemyTurn:
+    battle.killEnemy(controller)
   else:
-    controller.killPlayer()
+    battle.killPlayer(controller)
 
 proc noAnimationPlaying(controller: BattleController): bool =
   controller.eventQueue.len == 0
 
-proc isClickReady(controller: BattleController): bool =
-  controller.noAnimationPlaying and not controller.battle.isEnemyTurn
+proc isClickReady(battle: BattleData, controller: BattleController): bool =
+  controller.noAnimationPlaying and not battle.isEnemyTurn
 
-proc startAttack(controller: BattleController, damage: int) =
+proc startAttack(battle: BattleData, controller: BattleController, damage: int) =
   controller.eventQueue = @[
     newEvent(0.1) do (pct: float):
-      controller.updateAttackAnimation(pct),
+      battle.updateAttackAnimation(pct),
     newEvent do (pct: float):
-      controller.processAttackDamage(damage),
+      battle.processAttackDamage(controller, damage),
     newEvent(0.175) do (pct: float):
-      controller.updateAttackAnimation(1.0 - pct),
+      battle.updateAttackAnimation(1.0 - pct),
     newEvent do (pct: float):
-      controller.updateMaybeKill()
-      controller.battle.isEnemyTurn = not controller.battle.isEnemyTurn,
+      battle.updateMaybeKill(controller)
+      battle.isEnemyTurn = not battle.isEnemyTurn,
   ]
 
 proc pos(text: FloatingText): Vec =
@@ -358,13 +354,12 @@ proc canAfford(battle: BattleData, attack: SkillInfo): bool =
   battle.player.mana >= attack.manaCost and
     battle.player.focus >= attack.focusCost
 
-proc tryUseAttack(controller: BattleController, attack: SkillInfo) =
-  let battle = controller.battle
+proc tryUseAttack(battle: BattleData, controller: BattleController, attack: SkillInfo) =
   if battle.canAfford(attack) and
-     controller.isClickReady:
+     battle.isClickReady(controller):
     battle.player.mana -= attack.manaCost
     battle.player.focus -= attack.focusCost
-    controller.startAttack(attack.damage)
+    battle.startAttack(controller, attack.damage)
 
 proc attackButtonTooltipNode(attack: SkillInfo): Node =
   var lines: seq[string] = @[]
@@ -387,9 +382,9 @@ proc attackButtonTooltipNode(attack: SkillInfo): Node =
     )]
   )
 
-proc attackButtonNode(controller: BattleController, attack: SkillInfo): Node =
+proc attackButtonNode(battle: BattleData, controller: BattleController, attack: SkillInfo): Node =
   let
-    disabled = not controller.battle.canAfford(attack)
+    disabled = not battle.canAfford(attack)
     color =
       if disabled:
         gray
@@ -400,7 +395,7 @@ proc attackButtonNode(controller: BattleController, attack: SkillInfo): Node =
         nil
       else:
         proc() =
-          controller.tryUseAttack(attack)
+          battle.tryUseAttack(controller, attack)
   Button(
     size: vec(60, 60),
     label: attack.name,
@@ -412,21 +407,19 @@ proc attackButtonNode(controller: BattleController, attack: SkillInfo): Node =
 proc canUse(potion: Potion): bool =
   potion.charges > 0 and potion.cooldown == 0
 
-proc tryUsePotion(controller: BattleController, potion: ptr Potion) =
+proc tryUsePotion(battle: BattleData, controller: BattleController, potion: ptr Potion) =
   if not potion[].canUse():
     return
   potion.charges -= 1
 
-  let
-    battle = controller.battle
-    info = potion.info
+  let info = potion.info
   case info.kind
   of healthPotion:
     battle.player.health += info.effect
   of manaPotion:
     battle.player.mana += info.effect
 
-proc potionButtonNode(controller: BattleController, potion: ptr Potion): Node =
+proc potionButtonNode(battle: BattleData, controller: BattleController, potion: ptr Potion): Node =
   let
     disabled = not potion[].canUse()
     color =
@@ -439,7 +432,7 @@ proc potionButtonNode(controller: BattleController, potion: ptr Potion): Node =
         nil
       else:
         proc() =
-          controller.tryUsePotion(potion)
+          battle.tryUsePotion(controller, potion)
   Button(
     size: vec(120, 60),
     label: potion.info.name & " " & $potion.charges & "/" & $potion.info.charges,
@@ -485,7 +478,7 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         horizontal: true,
         items: battle.potions,
         listNodesIdx: (proc(potion: Potion, idx: int): Node =
-          controller.potionButtonNode(addr battle.potions[idx])
+          battle.potionButtonNode(controller, addr battle.potions[idx])
         ),
       ),
       List[SkillInfo](
@@ -494,7 +487,7 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         horizontal: true,
         items: allSkills,
         listNodes: (proc(skill: SkillInfo): Node =
-          controller.attackButtonNode(skill)
+          battle.attackButtonNode(controller, skill)
         ),
       ),
     ] & floaties,
@@ -508,7 +501,7 @@ proc clampResources(battle: BattleData) =
   battle.player.clampResources()
   battle.enemy.clampResources()
 
-method update*(controller: BattleController, dt: float) =
+proc battleUpdate(battle: BattleData, controller: BattleController, dt: float) =
   if controller.bufferClose:
     controller.shouldPop = true
     controller.bufferClose = false
@@ -530,10 +523,10 @@ method update*(controller: BattleController, dt: float) =
       controller.eventQueue.delete(0)
     cur.update(cur.percent)
 
-  if controller.noAnimationPlaying() and controller.battle.isEnemyTurn:
-    controller.startAttack(1)
+  if controller.noAnimationPlaying() and battle.isEnemyTurn:
+    battle.startAttack(controller, 1)
 
-  controller.battle.clampResources()
+  battle.clampResources()
 
 method pushMenus(controller: BattleController): seq[MenuBase] =
   if controller.bufferClose:
@@ -543,5 +536,6 @@ proc newBattleMenu*(battle: BattleData): Menu[BattleData, BattleController] =
   Menu[BattleData, BattleController](
     model: battle,
     view: battleView,
-    controller: newBattleController(battle),
+    update: battleUpdate,
+    controller: newBattleController(),
   )

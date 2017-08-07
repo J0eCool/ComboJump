@@ -28,6 +28,7 @@ type
     model*: M
     controller*: C
     view*: proc(model: M, controller: C): Node
+    update*: proc(model: M, controller: C, dt: float)
     node: Node
 
   MenuBase* = Menu[ref RootObj, Controller]
@@ -380,10 +381,11 @@ proc downcast*[M, C](menu: Menu[M, C]): MenuBase =
     view: (proc(model: ref RootObj, controller: Controller): Node =
       menu.view(cast[M](model), cast[C](controller))
     ),
+    update: (proc(model: ref RootObj, controller: Controller, dt: float) =
+      if menu.update != nil:
+        menu.update(cast[M](model), cast[C](controller), dt)
+    ),
   )
-
-method update*(controller: Controller, dt: float) {.base.} =
-  discard
 
 method shouldDrawBelow*(controller: Controller): bool {.base.} =
   false
@@ -400,8 +402,8 @@ proc push*[M, C](menus: var MenuManager, menu: Menu[M, C]) =
 proc pop*(menus: var MenuManager) =
   discard menus.menus.pop()
 
-proc update*(menu: Menu, manager: var MenuManager, dt: float, input: InputManager) =
-  menu.controller.update(dt)
+proc runUpdate*(menu: Menu, manager: var MenuManager, dt: float, input: InputManager) =
+  menu.update(menu.model, menu.controller, dt)
   # TODO: more sophisticated virtualDom-style diffing
   # TODO: diffing unit tests
   let newNode = menu.view(menu.model, menu.controller)
@@ -422,7 +424,7 @@ proc newMenuManager*(): MenuManager =
 
 proc update*(menus: var MenuManager, dt: float, input: InputManager) =
   for menu in menus.menus.mitems:
-    menu.update(menus, dt, input)
+    menu.runUpdate(menus, dt, input)
 
     let
       toPush = menu.controller.pushMenus()
@@ -430,11 +432,11 @@ proc update*(menus: var MenuManager, dt: float, input: InputManager) =
       shouldPop = menu.controller.shouldPop and isTop
     if shouldPop:
       menus.pop()
-      menus.menus.mpeek().update(menus, 0.0, input)
+      menus.menus.mpeek().runUpdate(menus, 0.0, input)
     if toPush != nil:
       for p in toPush:
         menus.push(p)
-        menus.menus.mpeek().update(menus, 0.0, input)
+        menus.menus.mpeek().runUpdate(menus, 0.0, input)
       break
     if shouldPop or not menu.controller.shouldUpdateBelow:
       break

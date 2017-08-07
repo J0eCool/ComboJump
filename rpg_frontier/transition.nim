@@ -26,10 +26,21 @@ proc transitionView(transition: Transition, controller: TransitionController): N
     pos: vec(controller.percentDone.lerp(-0.5, 0.5) * size.x, size.y / 2),
   )
 
+proc transitionUpdate(transition: Transition, controller: TransitionController, dt: float) =
+  controller.t += dt
+  if controller.t >= transitionDuration:
+    if controller.reverse or controller.onlyFadeOut:
+      controller.shouldPop = true
+    else:
+      controller.shouldPush = true
+      controller.reverse = true
+      controller.t = 0.0
+
 proc newTransitionMenu*(menu: MenuBase): Menu[Transition, TransitionController] =
   Menu[Transition, TransitionController](
     model: Transition(),
     view: transitionView,
+    update: transitionUpdate,
     controller: TransitionController(
       name: "Transition - NewMenu",
       menu: menu,
@@ -40,6 +51,7 @@ proc newFadeOnlyOut*(): Menu[Transition, TransitionController] =
   Menu[Transition, TransitionController](
     model: Transition(),
     view: transitionView,
+    update: transitionUpdate,
     controller: TransitionController(
       name: "Transition - FadeOut",
       onlyFadeOut: true,
@@ -50,21 +62,12 @@ proc newFadeOnlyIn*(): Menu[Transition, TransitionController] =
   Menu[Transition, TransitionController](
     model: Transition(),
     view: transitionView,
+    update: transitionUpdate,
     controller: TransitionController(
       name: "Transition - FadeIn",
       reverse: true,
     ),
   )
-
-method update(controller: TransitionController, dt: float) =
-  controller.t += dt
-  if controller.t >= transitionDuration:
-    if controller.reverse or controller.onlyFadeOut:
-      controller.shouldPop = true
-    else:
-      controller.shouldPush = true
-      controller.reverse = true
-      controller.t = 0.0
 
 method pushMenus(controller: TransitionController): seq[MenuBase] =
   if controller.shouldPush and controller.menu != nil:
