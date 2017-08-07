@@ -19,12 +19,13 @@ method pushMenus(controller: TitleScreenController): seq[MenuBase] =
     let battleMenu = downcast(newBattleMenu(controller.battle))
     result = @[downcast(newTransitionMenu(battleMenu))]
 
-proc mainMenuView(menu: TitleScreen, controller: TitleScreenController): Node {.procvar.} =
+proc titleScreenView(menu: TitleScreen, controller: TitleScreenController): Node {.procvar.} =
   Node(
     children: @[
       BorderedTextNode(
         pos: vec(600, 150),
-        text: "GAME TITLE",
+        text: "RPG Frontier",
+        fontSize: 72,
       ),
       Button(
         pos: vec(600, 700),
@@ -40,6 +41,6 @@ proc mainMenuView(menu: TitleScreen, controller: TitleScreenController): Node {.
 proc newTitleMenu*(battle: BattleData): Menu[TitleScreen, TitleScreenController] =
   Menu[TitleScreen, TitleScreenController](
     model: TitleScreen(),
-    view: mainMenuView,
+    view: titleScreenView,
     controller: TitleScreenController(battle: battle),
   )
