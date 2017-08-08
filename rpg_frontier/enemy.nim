@@ -10,16 +10,16 @@ type
     ogre
 
 proc initializeEnemyData(): array[EnemyKind, EnemyInfo] =
-  for tup in @[
-    (slime, "Slime", 3, "Slime.png"),
-    (goblin, "Goblin", 4, "Goblin.png"),
-    (ogre, "Ogre", 5, "Ogre.png"),
-  ]:
+  for  kind,     name, health,      texture in [
+    ( slime,  "Slime",      3,  "Slime.png"),
+    (goblin, "Goblin",      4, "Goblin.png"),
+    (  ogre,   "Ogre",      5,   "Ogre.png"),
+  ].items:
     let info = EnemyInfo(
-      kind: tup[0],
-      name: tup[1],
-      health: tup[2],
-      texture: tup[3],
+      kind: kind,
+      name: name,
+      health: health,
+      texture: texture,
     )
     result[info.kind] = info
 const enemyData* = initializeEnemyData()
