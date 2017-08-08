@@ -1,6 +1,7 @@
 import
   rpg_frontier/[
     battle,
+    player_stats,
     transition,
   ],
   menu,
@@ -10,19 +11,24 @@ import
 type
   LevelSelect = ref object of RootObj
   LevelSelectController = ref object of Controller
-    battle: BattleData
+    stats: PlayerStats
     clickedLevel: int
 
-proc newLevelSelectController(battle: BattleData): LevelSelectController =
+proc newLevelSelect(): LevelSelect =
+  LevelSelect()
+
+proc newLevelSelectController(): LevelSelectController =
   LevelSelectController(
-    battle: battle,
+    stats: newPlayerStats(),
     clickedLevel: -1,
   )
 
 method pushMenus(controller: LevelSelectController): seq[MenuBase] =
   if controller.clickedLevel != -1:
     controller.clickedLevel = -1
-    let battleMenu = downcast(newBattleMenu(controller.battle))
+    let
+      battle = newBattleData(controller.stats)
+      battleMenu = downcast(newBattleMenu(battle))
     result = @[downcast(newTransitionMenu(battleMenu))]
 
 proc levelSelectView(menu: LevelSelect, controller: LevelSelectController): Node {.procvar.} =
@@ -44,9 +50,9 @@ proc levelSelectView(menu: LevelSelect, controller: LevelSelectController): Node
     ],
   )
 
-proc newLevelSelectMenu*(battle: BattleData): Menu[LevelSelect, LevelSelectController] =
+proc newLevelSelectMenu*(): Menu[LevelSelect, LevelSelectController] =
   Menu[LevelSelect, LevelSelectController](
     model: LevelSelect(),
     view: levelSelectView,
-    controller: newLevelSelectController(battle),
+    controller: newLevelSelectController(),
   )

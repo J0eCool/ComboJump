@@ -8,7 +8,6 @@ when Profile != 0:
 import
   component/collider,
   rpg_frontier/[
-    battle,
     title_screen,
   ],
   game,
@@ -18,18 +17,16 @@ import
 
 
 type RpgFrontierGame* = ref object of Game
-  battle: BattleData
   menu: Node
 
 proc newRpgFrontierGame*(screenSize: Vec): RpgFrontierGame =
   new result
   result.camera.screenSize = screenSize
   result.title = "RPG Frontier"
-  result.battle = newBattleData()
 
 method loadEntities*(game: RpgFrontierGame) =
   game.entities = @[]
-  game.menus.push newTitleMenu(game.battle)
+  game.menus.push newTitleMenu()
 
 method draw*(renderer: RendererPtr, game: RpgFrontierGame) =
   renderer.drawGame(game)

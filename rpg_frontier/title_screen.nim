@@ -1,6 +1,5 @@
 import
   rpg_frontier/[
-    battle,
     level_select,
     transition,
   ],
@@ -11,13 +10,12 @@ import
 type
   TitleScreen = ref object of RootObj
   TitleScreenController = ref object of Controller
-    battle: BattleData
     start: bool
 
 method pushMenus(controller: TitleScreenController): seq[MenuBase] =
   if controller.start:
     controller.start = false
-    let levelSelect = downcast(newLevelSelectMenu(controller.battle))
+    let levelSelect = downcast(newLevelSelectMenu())
     result = @[downcast(newTransitionMenu(levelSelect))]
 
 proc titleScreenView(menu: TitleScreen, controller: TitleScreenController): Node {.procvar.} =
@@ -39,9 +37,9 @@ proc titleScreenView(menu: TitleScreen, controller: TitleScreenController): Node
     ],
   )
 
-proc newTitleMenu*(battle: BattleData): Menu[TitleScreen, TitleScreenController] =
+proc newTitleMenu*(): Menu[TitleScreen, TitleScreenController] =
   Menu[TitleScreen, TitleScreenController](
     model: TitleScreen(),
     view: titleScreenView,
-    controller: TitleScreenController(battle: battle),
+    controller: TitleScreenController(),
   )

@@ -1,5 +1,6 @@
 import
   rpg_frontier/[
+    player_stats,
     transition,
   ],
   color,
@@ -11,7 +12,7 @@ type
   BattleData* = ref object of RootObj
     player: BattleEntity
     enemy: BattleEntity
-    xp: int
+    stats: PlayerStats
     isEnemyTurn: bool
     potions: seq[Potion]
     stages: seq[EnemyKind]
@@ -168,15 +169,11 @@ proc spawnCurrentStage(battle: BattleData): BattleEntity =
   let index = battle.curStageIndex.clamp(0, battle.stages.len - 1)
   newEnemy(battle.stages[index])
 
-proc initialize(battle: BattleData) =
-  battle.curStageIndex = 0
-  battle.player = newPlayer()
-  battle.enemy = battle.spawnCurrentStage()
-  battle.potions = initPotions()
-
-proc newBattleData*(): BattleData =
+proc newBattleData*(stats: PLayerStats): BattleData =
   result = BattleData(
-    xp: 0,
+    stats: stats,
+    player: newPlayer(),
+    potions: initPotions(),
     stages: @[
       slime,
       goblin,
@@ -186,7 +183,7 @@ proc newBattleData*(): BattleData =
     ],
     curStageIndex: 0,
   )
-  result.initialize()
+  result.enemy = result.spawnCurrentStage()
 
 proc newBattleController(): BattleController =
   BattleController(
@@ -297,14 +294,13 @@ proc killEnemy(battle: BattleData, controller: BattleController) =
     text: "+" & $xpGained & "xp",
     startPos: vec(350, -50) + randomVec(5.0),
   )
-  battle.xp += xpGained
+  battle.stats.addXp(xpGained)
   let dx = random(300.0, 700.0)
   controller.eventQueue &= @[
     newEvent(0.8) do (pct: float):
       battle.enemy.offset = vec(dx * pct, -2200.0 * pct * (0.25 - pct)),
     newEvent do (pct: float):
       if battle.curStageIndex + 1 >= battle.stages.len:
-        battle.initialize()
         controller.bufferClose = true
       else:
         battle.curStageIndex += 1
@@ -314,7 +310,6 @@ proc killEnemy(battle: BattleData, controller: BattleController) =
   ]
 
 proc killPlayer(battle: BattleData, controller: BattleController) =
-  battle.initialize()
   controller.bufferClose = true
 
 proc updateMaybeKill(battle: BattleData, controller: BattleController) =
@@ -464,7 +459,7 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         isPlayer = true,
       ),
       BorderedTextNode(
-        text: "XP: " & $battle.xp,
+        text: "XP: " & $battle.stats.xp,
         pos: vec(0, 150),
       ),
       battleEntityStatusNode(
