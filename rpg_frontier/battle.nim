@@ -2,6 +2,8 @@ import
   rpg_frontier/[
     enemy,
     player_stats,
+    potion,
+    skill,
     transition,
   ],
   color,
@@ -39,57 +41,6 @@ type
     update*: EventUpdate
     t: float
   EventUpdate = proc(pct: float)
-  SkillInfo = object
-    name: string
-    damage: int
-    manaCost: int
-    focusCost: int
-  Potion = object
-    info: PotionInfo
-    charges: int
-    cooldown: int
-  PotionInfo = object
-    kind: PotionKind
-    name: string
-    effect: int
-    charges: int
-    duration: int
-  PotionKind = enum
-    healthPotion
-    manaPotion
-
-let allSkills = @[
-  SkillInfo(
-    name: "Atk",
-    damage: 1,
-    focusCost: -5,
-  ),
-  SkillInfo(
-    name: "Pow",
-    damage: 2,
-    manaCost: 2,
-  ),
-  SkillInfo(
-    name: "Qrz",
-    damage: 3,
-    focusCost: 15,
-  ),
-]
-
-let allPotionInfos = @[
-  PotionInfo(
-    kind: healthPotion,
-    name: "Hth",
-    effect: 5,
-    charges: 3,
-  ),
-  PotionInfo(
-    kind: manaPotion,
-    name: "Mna",
-    effect: 3,
-    charges: 2,
-  ),
-]
 
 proc percent(event: BattleEvent): float =
   if event.duration == 0.0:
@@ -146,7 +97,7 @@ proc spawnCurrentStage(battle: BattleData): BattleEntity =
   let index = battle.curStageIndex.clamp(0, battle.stages.len - 1)
   newEnemy(battle.stages[index])
 
-proc newBattleData*(stats: PLayerStats): BattleData =
+proc newBattleData*(stats: PlayerStats): BattleData =
   result = BattleData(
     stats: stats,
     player: newPlayer(),
