@@ -97,18 +97,12 @@ proc spawnCurrentStage(battle: BattleData): BattleEntity =
   let index = battle.curStageIndex.clamp(0, battle.stages.len - 1)
   newEnemy(battle.stages[index])
 
-proc newBattleData*(stats: PlayerStats): BattleData =
+proc newBattleData*(stats: PlayerStats, stages: seq[EnemyKind]): BattleData =
   result = BattleData(
     stats: stats,
     player: newPlayer(),
     potions: initPotions(),
-    stages: @[
-      slime,
-      goblin,
-      slime,
-      goblin,
-      ogre,
-    ],
+    stages: stages,
     curStageIndex: 0,
   )
   result.enemy = result.spawnCurrentStage()
