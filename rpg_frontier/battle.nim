@@ -1,5 +1,6 @@
 import
   rpg_frontier/[
+    enemy,
     player_stats,
     transition,
   ],
@@ -56,15 +57,6 @@ type
   PotionKind = enum
     healthPotion
     manaPotion
-  EnemyKind = enum
-    slime
-    goblin
-    ogre
-  EnemyInfo = object
-    kind: EnemyKind
-    name: string
-    health: int
-    texture: string
 
 let allSkills = @[
   SkillInfo(
@@ -125,21 +117,6 @@ proc newPlayer(): BattleEntity =
     maxFocus: focus,
     texture: "Wizard2.png",
   )
-
-proc initializeEnemyData(): array[EnemyKind, EnemyInfo] =
-  for tup in @[
-    (slime, "Slime", 3, "Slime.png"),
-    (goblin, "Goblin", 4, "Goblin.png"),
-    (ogre, "Ogre", 5, "Ogre.png"),
-  ]:
-    let info = EnemyInfo(
-      kind: tup[0],
-      name: tup[1],
-      health: tup[2],
-      texture: tup[3],
-    )
-    result[info.kind] = info
-const enemyData = initializeEnemyData()
 
 proc newEnemy(kind: EnemyKind): BattleEntity =
   let
