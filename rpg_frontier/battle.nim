@@ -19,6 +19,7 @@ type
     stats: PlayerStats
     turnIndex: int
     potions: seq[Potion]
+    levelName: string
     stages: seq[Stage]
     curStageIndex: int
   BattleEntity* = object
@@ -107,6 +108,7 @@ proc newBattleData*(stats: PlayerStats, level: Level): BattleData =
     stats: stats,
     player: newPlayer(),
     potions: initPotions(),
+    levelName: level.name,
     stages: level.stages,
     curStageIndex: 0,
   )
@@ -394,6 +396,15 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         battle.player,
         vec(0, 0),
         isPlayer = true,
+      ),
+      BorderedTextNode(
+        text: battle.levelName,
+        pos: vec(-280, -330),
+      ),
+      BorderedTextNode(
+        text: "Stage: " & $(battle.curStageIndex + 1) & " / " & $battle.stages.len,
+        pos: vec(-280, -300),
+        fontSize: 18,
       ),
       BorderedTextNode(
         text: "XP: " & $battle.stats.xp,
