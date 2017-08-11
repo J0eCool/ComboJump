@@ -2,6 +2,7 @@ import
   rpg_frontier/[
     battle,
     enemy,
+    level,
     player_stats,
     transition,
   ],
@@ -16,23 +17,10 @@ type
   LevelSelectController = ref object of Controller
     stats: PlayerStats
     clickedLevel: Option[Level]
-  Level = object
-    name: string
-    stages: seq[Stage]
-  Stage = EnemyKind
 
 proc newLevelSelect(): LevelSelect =
   LevelSelect(
-    levels: @[
-      Level(
-        name: "Level 1",
-        stages: @[slime, slime, goblin],
-      ),
-      Level(
-        name: "Level 2!?",
-        stages: @[goblin, slime, goblin, ogre],
-      ),
-    ],
+    levels: allLevels,
   )
 
 proc newLevelSelectController(): LevelSelectController =
@@ -44,7 +32,7 @@ method pushMenus(controller: LevelSelectController): seq[MenuBase] =
   controller.clickedLevel.bindAs level:
     controller.clickedLevel = makeNone[Level]()
     let
-      battle = newBattleData(controller.stats, level.stages)
+      battle = newBattleData(controller.stats, level)
       battleMenu = downcast(newBattleMenu(battle))
     result = @[downcast(newTransitionMenu(battleMenu))]
 

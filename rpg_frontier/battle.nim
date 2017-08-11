@@ -1,6 +1,7 @@
 import
   rpg_frontier/[
     enemy,
+    level,
     player_stats,
     potion,
     skill,
@@ -97,12 +98,12 @@ proc spawnCurrentStage(battle: BattleData): BattleEntity =
   let index = battle.curStageIndex.clamp(0, battle.stages.len - 1)
   newEnemy(battle.stages[index])
 
-proc newBattleData*(stats: PlayerStats, stages: seq[EnemyKind]): BattleData =
+proc newBattleData*(stats: PlayerStats, level: Level): BattleData =
   result = BattleData(
     stats: stats,
     player: newPlayer(),
     potions: initPotions(),
-    stages: stages,
+    stages: level.stages,
     curStageIndex: 0,
   )
   result.enemy = result.spawnCurrentStage()
