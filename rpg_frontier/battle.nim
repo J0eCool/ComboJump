@@ -15,11 +15,11 @@ import
 type
   BattleData* = ref object of RootObj
     player: BattleEntity
-    enemy: BattleEntity
+    enemies: seq[BattleEntity]
     stats: PlayerStats
-    isEnemyTurn: bool
+    turnIndex: int
     potions: seq[Potion]
-    stages: seq[EnemyKind]
+    stages: seq[Stage]
     curStageIndex: int
   BattleEntity* = object
     name: string
@@ -94,9 +94,13 @@ proc initPotions(): seq[Potion] =
       charges: info.charges,
     )
 
-proc spawnCurrentStage(battle: BattleData): BattleEntity =
-  let index = battle.curStageIndex.clamp(0, battle.stages.len - 1)
-  newEnemy(battle.stages[index])
+proc spawnCurrentStage(battle: BattleData): seq[BattleEntity] =
+  let
+    index = battle.curStageIndex.clamp(0, battle.stages.len - 1)
+    stage = battle.stages[index]
+  result = @[]
+  for enemyKind in stage:
+    result.add newEnemy(enemyKind)
 
 proc newBattleData*(stats: PlayerStats, level: Level): BattleData =
   result = BattleData(
@@ -106,7 +110,8 @@ proc newBattleData*(stats: PlayerStats, level: Level): BattleData =
     stages: level.stages,
     curStageIndex: 0,
   )
-  result.enemy = result.spawnCurrentStage()
+  result.enemies = result.spawnCurrentStage()
+  result.turnIndex = result.enemies.len
 
 proc newBattleController(): BattleController =
   BattleController(
@@ -144,7 +149,7 @@ proc battleEntityStatusNode(entity: BattleEntity, pos: Vec, isPlayer = true): No
     pos: pos,
     children: @[
       SpriteNode(
-        pos: entity.offset,
+        pos: entity.offset + (if isPlayer: vec() else: vec(0, -120)),
         textureName: entity.texture,
         scale: 4.0,
       ),
@@ -180,11 +185,14 @@ proc battleEntityStatusNode(entity: BattleEntity, pos: Vec, isPlayer = true): No
       ),
     ]
 
+proc isEnemyTurn(battle: BattleData): bool =
+  battle.turnIndex < battle.enemies.len
+
 proc updateAttackAnimation(battle: BattleData, pct: float) =
   if not battle.isEnemyTurn:
     battle.player.offset = vec(attackAnimDist * pct, 0.0)
   else:
-    battle.enemy.offset = vec(-attackAnimDist * pct, 0.0)
+    battle.enemies[battle.turnIndex].offset = vec(-attackAnimDist * pct, 0.0)
 
 proc takeDamage(entity: var BattleEntity, damage: int): bool =
   entity.health -= damage
@@ -194,7 +202,7 @@ proc processAttackDamage(battle: BattleData, controller: BattleController, damag
   var basePos: Vec
   if not battle.isEnemyTurn:
     basePos = vec(300, 0)
-    controller.didKill = battle.enemy.takeDamage(damage)
+    controller.didKill = battle.enemies[0].takeDamage(damage)
   else:
     basePos = vec(0, 0)
     controller.didKill = battle.player.takeDamage(damage)
@@ -211,6 +219,13 @@ proc newEvent(duration: float, update: EventUpdate): BattleEvent =
 proc newEvent(update: EventUpdate): BattleEvent =
   newEvent(0.0, update)
 
+proc advanceStage(battle: BattleData, controller: BattleController) =
+  if battle.curStageIndex + 1 >= battle.stages.len:
+    controller.bufferClose = true
+  else:
+    battle.curStageIndex += 1
+    battle.enemies = battle.spawnCurrentStage()
+
 proc killEnemy(battle: BattleData, controller: BattleController) =
   let xpGained = 1
   controller.floatingTexts.add FloatingText(
@@ -221,15 +236,11 @@ proc killEnemy(battle: BattleData, controller: BattleController) =
   let dx = random(300.0, 700.0)
   controller.eventQueue &= @[
     newEvent(0.8) do (pct: float):
-      battle.enemy.offset = vec(dx * pct, -2200.0 * pct * (0.25 - pct)),
+      battle.enemies[0].offset = vec(dx * pct, -2200.0 * pct * (0.25 - pct)),
     newEvent do (pct: float):
-      if battle.curStageIndex + 1 >= battle.stages.len:
-        controller.bufferClose = true
-      else:
-        battle.curStageIndex += 1
-        battle.enemy.offset = vec()
-        let enemy = battle.stages[battle.curStageIndex]
-        battle.enemy = newEnemy(enemy),
+      battle.enemies.delete(0)
+      if battle.enemies.len == 0:
+        battle.advanceStage(controller)
   ]
 
 proc killPlayer(battle: BattleData, controller: BattleController) =
@@ -262,7 +273,10 @@ proc startAttack(battle: BattleData, controller: BattleController, damage: int) 
       battle.updateAttackAnimation(1.0 - pct),
     newEvent do (pct: float):
       battle.updateMaybeKill(controller)
-      battle.isEnemyTurn = not battle.isEnemyTurn,
+      if battle.isEnemyTurn:
+        battle.turnIndex += 1
+      else:
+        battle.turnIndex = 0
   ]
 
 proc pos(text: FloatingText): Vec =
@@ -385,10 +399,17 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         text: "XP: " & $battle.stats.xp,
         pos: vec(0, 150),
       ),
-      battleEntityStatusNode(
-        battle.enemy,
-        vec(300, 0),
-        isPlayer = false,
+      List[BattleEntity](
+        pos: vec(300, 0),
+        spacing: vec(130),
+        items: battle.enemies,
+        listNodes: (proc(enemy: BattleEntity): Node =
+          battleEntityStatusNode(
+            enemy,
+            vec(0, 0),
+            isPlayer = false,
+          ),
+        ),
       ),
       List[Potion](
         pos: vec(-75, 275),
@@ -417,7 +438,8 @@ proc clampResources(entity: var BattleEntity) =
   entity.focus = entity.focus.clamp(0, entity.maxFocus)
 proc clampResources(battle: BattleData) =
   battle.player.clampResources()
-  battle.enemy.clampResources()
+  for enemy in battle.enemies.mitems:
+    enemy.clampResources()
 
 proc battleUpdate(battle: BattleData, controller: BattleController, dt: float) =
   if controller.bufferClose:
