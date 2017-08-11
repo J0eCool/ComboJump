@@ -319,7 +319,7 @@ proc attackButtonTooltipNode(attack: SkillInfo): Node =
 
 proc attackButtonNode(battle: BattleData, controller: BattleController, attack: SkillInfo): Node =
   let
-    disabled = not battle.canAfford(attack)
+    disabled = not battle.canAfford(attack) or not battle.isClickReady(controller)
     color =
       if disabled:
         gray
@@ -356,7 +356,7 @@ proc tryUsePotion(battle: BattleData, controller: BattleController, potion: ptr 
 
 proc potionButtonNode(battle: BattleData, controller: BattleController, potion: ptr Potion): Node =
   let
-    disabled = not potion[].canUse()
+    disabled = not potion[].canUse() or not battle.isClickReady(controller)
     color =
       if disabled:
         gray
