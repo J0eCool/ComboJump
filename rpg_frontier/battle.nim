@@ -213,13 +213,15 @@ proc processAttackDamage(battle: BattleData, controller: BattleController, damag
     startPos: basePos + randomVec(30.0),
   )
 
-proc newEvent(duration: float, update: EventUpdate): BattleEvent =
-  BattleEvent(
+proc queueEvent(controller: BattleController, duration: float, update: EventUpdate) =
+  controller.eventQueue.add BattleEvent(
     duration: duration,
     update: update,
   )
-proc newEvent(update: EventUpdate): BattleEvent =
-  newEvent(0.0, update)
+proc queueEvent(controller: BattleController, update: EventUpdate) =
+  controller.queueEvent(0.0, update)
+proc wait(controller: BattleController, duration: float) =
+  controller.queueEvent(duration, (proc(t: float) = discard))
 
 proc advanceStage(battle: BattleData, controller: BattleController) =
   if battle.curStageIndex + 1 >= battle.stages.len:
@@ -236,14 +238,14 @@ proc killEnemy(battle: BattleData, controller: BattleController) =
   )
   battle.stats.addXp(xpGained)
   let dx = random(300.0, 700.0)
-  controller.eventQueue &= @[
-    newEvent(0.8) do (pct: float):
-      battle.enemies[0].offset = vec(dx * pct, -2200.0 * pct * (0.25 - pct)),
-    newEvent do (pct: float):
-      battle.enemies.delete(0)
-      if battle.enemies.len == 0:
-        battle.advanceStage(controller)
-  ]
+  controller.queueEvent(0.8) do (pct: float):
+    battle.enemies[0].offset = vec(dx * pct, -2200.0 * pct * (0.25 - pct))
+  controller.wait(0.1)
+  controller.queueEvent do (pct: float):
+    battle.enemies.delete(0)
+    if battle.enemies.len == 0:
+      battle.advanceStage(controller)
+  controller.wait(0.3)
 
 proc killPlayer(battle: BattleData, controller: BattleController) =
   controller.bufferClose = true
@@ -266,20 +268,19 @@ proc isClickReady(battle: BattleData, controller: BattleController): bool =
   controller.noAnimationPlaying and not battle.isEnemyTurn
 
 proc startAttack(battle: BattleData, controller: BattleController, damage: int) =
-  controller.eventQueue = @[
-    newEvent(0.1) do (pct: float):
-      battle.updateAttackAnimation(pct),
-    newEvent do (pct: float):
-      battle.processAttackDamage(controller, damage),
-    newEvent(0.175) do (pct: float):
-      battle.updateAttackAnimation(1.0 - pct),
-    newEvent do (pct: float):
-      battle.updateMaybeKill(controller)
-      if battle.isEnemyTurn:
-        battle.turnIndex += 1
-      else:
-        battle.turnIndex = 0
-  ]
+  controller.queueEvent(0.1) do (pct: float):
+    battle.updateAttackAnimation(pct)
+  controller.queueEvent do (pct: float):
+    battle.processAttackDamage(controller, damage)
+  controller.queueEvent(0.175) do (pct: float):
+    battle.updateAttackAnimation(1.0 - pct)
+  controller.queueEvent do (pct: float):
+    battle.updateMaybeKill(controller)
+    if battle.isEnemyTurn:
+      battle.turnIndex += 1
+    else:
+      battle.turnIndex = 0
+  controller.wait(0.25)
 
 proc pos(text: FloatingText): Vec =
   text.startPos - vec(0.0, textFloatHeight * text.t / textFloatTime)
