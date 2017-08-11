@@ -23,7 +23,8 @@ type Game* = ref object of Program
   camera*: Camera
   dt*: float
 
-method loadEntities*(game: Game) {.base.}
+method loadEntities*(game: Game) {.base.} =
+  discard
 
 proc newGame*(screenSize: Vec): Game =
   new result
@@ -34,9 +35,6 @@ method init*(game: Game) =
   game.initProgram()
   game.resources = newResourceManager()
   game.loadEntities()
-
-method loadEntities*(game: Game) {.base.} =
-  discard
 
 method onRemove*(game: Game, entity: Entity) {.base.} =
   discard
