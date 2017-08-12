@@ -32,15 +32,16 @@ type
   BattleController* = ref object of Controller
     floatingTexts: seq[FloatingText]
     eventQueue: seq[BattleEvent]
+    asyncQueue: seq[BattleEvent]
     didKill: bool
     bufferClose: bool
   FloatingText* = object
     text*: string
     startPos*: Vec
     t: float
-  BattleEvent* = object
-    duration*: float
-    update*: EventUpdate
+  BattleEvent = object
+    duration: float
+    update: EventUpdate
     t: float
   EventUpdate = proc(pct: float)
 
@@ -120,6 +121,7 @@ proc newBattleController(): BattleController =
     name: "Battle",
     floatingTexts: @[],
     eventQueue: @[],
+    asyncQueue: @[],
   )
 
 proc quantityBarNode(cur, max: int, pos, size: Vec, color: Color, showText = true): Node =
@@ -242,6 +244,12 @@ proc queueEvent(controller: BattleController, update: EventUpdate) =
 proc wait(controller: BattleController, duration: float) =
   controller.queueEvent(duration, (proc(t: float) = discard))
 
+proc queueAsync(controller: BattleController, duration: float, update: EventUpdate) =
+  controller.asyncQueue.add BattleEvent(
+    duration: duration,
+    update: update,
+  )
+
 proc advanceStage(battle: BattleData, controller: BattleController) =
   if battle.curStageIndex + 1 >= battle.stages.len:
     controller.bufferClose = true
@@ -287,19 +295,20 @@ proc isClickReady(battle: BattleData, controller: BattleController): bool =
   controller.noAnimationPlaying and not battle.isEnemyTurn
 
 proc startAttack(battle: BattleData, controller: BattleController, damage: int) =
-  controller.queueEvent(0.1) do (pct: float):
-    battle.updateAttackAnimation(pct)
-  controller.queueEvent do (pct: float):
+  controller.queueEvent(0.1) do (t: float):
+    battle.updateAttackAnimation(t)
+  controller.queueEvent do (t: float):
     battle.processAttackDamage(controller, damage)
-  controller.queueEvent(0.175) do (pct: float):
-    battle.updateAttackAnimation(1.0 - pct)
-  controller.queueEvent do (pct: float):
+    controller.queueAsync(0.175) do (t: float):
+      battle.updateAttackAnimation(1.0 - t)
+  controller.queueEvent do (t: float):
     battle.updateMaybeKill(controller)
+  controller.wait(0.25)
+  controller.queueEvent do (t: float):
     if battle.isEnemyTurn:
       battle.turnIndex += 1
     else:
       battle.turnIndex = 0
-  controller.wait(0.25)
 
 proc pos(text: FloatingText): Vec =
   text.startPos - vec(0.0, textFloatHeight * text.t / textFloatTime)
@@ -471,13 +480,7 @@ proc clampResources(battle: BattleData) =
   for enemy in battle.enemies.mitems:
     enemy.clampResources()
 
-proc battleUpdate(battle: BattleData, controller: BattleController, dt: float) =
-  if controller.bufferClose:
-    controller.shouldPop = true
-    controller.bufferClose = false
-    return
-
-  # Update floating text
+proc updateFloatingText(controller: BattleController, dt: float) =
   var newFloaties: seq[FloatingText] = @[]
   for text in controller.floatingTexts.mitems:
     text.t += dt
@@ -485,13 +488,33 @@ proc battleUpdate(battle: BattleData, controller: BattleController, dt: float) =
       newFloaties.add text
   controller.floatingTexts = newFloaties
 
-  # Process events
+proc updateEventQueue(controller: BattleController, dt: float) =
   if controller.eventQueue.len > 0:
     controller.eventQueue[0].t += dt
     let cur = controller.eventQueue[0]
     if cur.t > cur.duration:
       controller.eventQueue.delete(0)
     cur.update(cur.percent)
+
+proc updateAsyncQueue(controller: BattleController, dt: float) =
+  var i = controller.asyncQueue.len - 1
+  while i >= 0:
+    controller.asyncQueue[i].t += dt
+    let cur = controller.asyncQueue[i]
+    cur.update(cur.percent)
+    if cur.t > cur.duration:
+      controller.asyncQueue.delete(i)
+    i -= 1
+
+proc battleUpdate(battle: BattleData, controller: BattleController, dt: float) =
+  if controller.bufferClose:
+    controller.shouldPop = true
+    controller.bufferClose = false
+    return
+
+  controller.updateFloatingText(dt)
+  controller.updateEventQueue(dt)
+  controller.updateAsyncQueue(dt)
 
   if controller.noAnimationPlaying() and battle.isEnemyTurn:
     battle.startAttack(controller, 1)
