@@ -7,18 +7,18 @@ type
 
 const allSkills* = @[
   SkillInfo(
-    name: "Atk",
+    name: "Attack",
     damage: 1,
-    focusCost: -5,
+    focusCost: -4,
   ),
   SkillInfo(
-    name: "Pow",
+    name: "Power Attack",
     damage: 2,
-    manaCost: 2,
+    focusCost: 10,
   ),
   SkillInfo(
-    name: "Qrz",
+    name: "Flameblast",
     damage: 3,
-    focusCost: 15,
+    manaCost: 2,
   ),
 ]

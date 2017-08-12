@@ -203,10 +203,10 @@ proc takeDamage(entity: var BattleEntity, damage: int): bool =
 proc processAttackDamage(battle: BattleData, controller: BattleController, damage: int) =
   var basePos: Vec
   if not battle.isEnemyTurn:
-    basePos = vec(300, 0)
+    basePos = vec(700, 400)
     controller.didKill = battle.enemies[0].takeDamage(damage)
   else:
-    basePos = vec(0, 0)
+    basePos = vec(400, 400)
     controller.didKill = battle.player.takeDamage(damage)
   controller.floatingTexts.add FloatingText(
     text: $damage,
@@ -234,7 +234,7 @@ proc killEnemy(battle: BattleData, controller: BattleController) =
   let xpGained = 1
   controller.floatingTexts.add FloatingText(
     text: "+" & $xpGained & "xp",
-    startPos: vec(350, -50) + randomVec(5.0),
+    startPos: vec(750, 350) + randomVec(5.0),
   )
   battle.stats.addXp(xpGained)
   let dx = random(300.0, 700.0)
@@ -307,7 +307,7 @@ proc attackButtonTooltipNode(attack: SkillInfo): Node =
     lines.add("Generates " & $(-attack.focusCost) & " Focus")
   let height = 20 * lines.len + 10
   SpriteNode(
-    pos: vec(0.0, height/2 + 32.0),
+    pos: vec(0.0, -height/2 - 32.0),
     size: vec(240, height),
     color: darkGray,
     children: @[stringListNode(
@@ -332,7 +332,7 @@ proc attackButtonNode(battle: BattleData, controller: BattleController, attack: 
         proc() =
           battle.tryUseAttack(controller, attack)
   Button(
-    size: vec(60, 60),
+    size: vec(180, 40),
     label: attack.name,
     color: color,
     onClick: onClick,
@@ -369,7 +369,7 @@ proc potionButtonNode(battle: BattleData, controller: BattleController, potion: 
         proc() =
           battle.tryUsePotion(controller, potion)
   Button(
-    size: vec(120, 60),
+    size: vec(180, 40),
     label: potion.info.name & " " & $potion.charges & "/" & $potion.info.charges,
     color: color,
     onClick: onClick,
@@ -383,10 +383,9 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
       pos: text.pos,
     )
   Node(
-    pos: vec(400, 400),
     children: @[
       Button(
-        pos: vec(-345, 350),
+        pos: vec(50, 50),
         size: vec(60, 60),
         label: "Exit",
         onClick: (proc() =
@@ -395,24 +394,24 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
       ),
       battleEntityStatusNode(
         battle.player,
-        vec(0, 0),
+        vec(400, 400),
         isPlayer = true,
       ),
       BorderedTextNode(
         text: battle.levelName,
-        pos: vec(-280, -330),
+        pos: vec(150, 50),
       ),
       BorderedTextNode(
         text: "Stage: " & $(battle.curStageIndex + 1) & " / " & $battle.stages.len,
-        pos: vec(-280, -300),
+        pos: vec(150, 80),
         fontSize: 18,
       ),
       BorderedTextNode(
         text: "XP: " & $battle.stats.xp,
-        pos: vec(0, 150),
+        pos: vec(300, 70),
       ),
       List[BattleEntity](
-        pos: vec(300, 0),
+        pos: vec(700, 400),
         spacing: vec(130),
         items: battle.enemies,
         listNodes: (proc(enemy: BattleEntity): Node =
@@ -423,22 +422,20 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
           ),
         ),
       ),
-      List[Potion](
-        pos: vec(-75, 275),
-        spacing: vec(5),
-        horizontal: true,
-        items: battle.potions,
-        listNodesIdx: (proc(potion: Potion, idx: int): Node =
-          battle.potionButtonNode(controller, addr battle.potions[idx])
-        ),
-      ),
       List[SkillInfo](
-        pos: vec(-75, 210),
+        pos: vec(110, 600),
         spacing: vec(5),
-        horizontal: true,
         items: allSkills,
         listNodes: (proc(skill: SkillInfo): Node =
           battle.attackButtonNode(controller, skill)
+        ),
+      ),
+      List[Potion](
+        pos: vec(310, 600),
+        spacing: vec(5),
+        items: battle.potions,
+        listNodesIdx: (proc(potion: Potion, idx: int): Node =
+          battle.potionButtonNode(controller, addr battle.potions[idx])
         ),
       ),
     ] & floaties,
