@@ -145,47 +145,66 @@ proc quantityBarNode(cur, max: int, pos, size: Vec, color: Color, showText = tru
     ],
   )
 
-proc battleEntityStatusNode(entity: BattleEntity, pos: Vec, isPlayer = true): Node =
-  let barSize = vec(240, 30)
+proc battleEntityNode(entity: BattleEntity, pos = vec()): Node =
+  SpriteNode(
+    pos: pos + entity.offset,
+    textureName: entity.texture,
+    scale: 4.0,
+  )
+
+proc enemyEntityNode(entity: BattleEntity, pos: Vec): Node =
+  let barSize = vec(180, 22)
   result = Node(
     pos: pos,
     children: @[
-      SpriteNode(
-        pos: entity.offset + (if isPlayer: vec() else: vec(0, -120)),
-        textureName: entity.texture,
-        scale: 4.0,
-      ),
-      BorderedTextNode(
-        text: entity.name,
-        pos: vec(0, -215),
-      ),
+      battleEntityNode(entity),
       quantityBarNode(
         entity.health,
         entity.maxHealth,
-        vec(0, -185),
+        vec(0, -60),
         barSize,
         red,
-        showText = isPlayer,
+        showText = false,
+      ),
+      BorderedTextNode(
+        text: entity.name,
+        pos: vec(0, -60),
+        fontSize: 18,
       ),
     ],
   )
-  if isPlayer:
-    result.children &= @[
+
+proc playerStatusHudNode(entity: BattleEntity, pos: Vec): Node =
+  let
+    barSize = vec(320, 30)
+    spacing = 5.0 + barSize.y
+  Node(
+    pos: pos,
+    children: @[
+      BorderedTextNode(text: entity.name),
+      quantityBarNode(
+        entity.health,
+        entity.maxHealth,
+        vec(0.0, spacing),
+        barSize,
+        red,
+      ),
       quantityBarNode(
         entity.mana,
         entity.maxMana,
-        vec(0, -150),
+        vec(0.0, 2 * spacing),
         barSize,
         blue,
       ),
       quantityBarNode(
         entity.focus,
         entity.maxFocus,
-        vec(0, -115),
+        vec(0.0, 3 * spacing),
         barSize,
         yellow,
       ),
-    ]
+    ],
+  )
 
 proc isEnemyTurn(battle: BattleData): bool =
   battle.turnIndex < battle.enemies.len
@@ -375,6 +394,30 @@ proc potionButtonNode(battle: BattleData, controller: BattleController, potion: 
     onClick: onClick,
   )
 
+proc actionButtonsNode(battle: BattleData, controller: BattleController, pos: Vec): Node =
+  Node(
+    pos: pos,
+    children: @[
+      List[SkillInfo](
+        pos: vec(0, 0),
+        spacing: vec(5),
+        items: allSkills,
+        listNodes: (proc(skill: SkillInfo): Node =
+          battle.attackButtonNode(controller, skill)
+        ),
+      ),
+      List[Potion](
+        pos: vec(200, 0),
+        spacing: vec(5),
+        items: battle.potions,
+        listNodesIdx: (proc(potion: Potion, idx: int): Node =
+          battle.potionButtonNode(controller, addr battle.potions[idx])
+        ),
+      ),
+    ],
+  )
+
+
 proc battleView(battle: BattleData, controller: BattleController): Node {.procvar.} =
   var floaties: seq[Node] = @[]
   for text in controller.floatingTexts:
@@ -392,10 +435,14 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
           controller.bufferClose = true
         ),
       ),
-      battleEntityStatusNode(
-        battle.player,
-        vec(400, 400),
-        isPlayer = true,
+      battleEntityNode(battle.player, vec(130, 400)),
+      List[BattleEntity](
+        pos: vec(700, 200),
+        spacing: vec(130),
+        items: battle.enemies,
+        listNodes: (proc(enemy: BattleEntity): Node =
+          enemyEntityNode(enemy, vec(0, 0)),
+        ),
       ),
       BorderedTextNode(
         text: battle.levelName,
@@ -410,34 +457,8 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         text: "XP: " & $battle.stats.xp,
         pos: vec(300, 70),
       ),
-      List[BattleEntity](
-        pos: vec(700, 400),
-        spacing: vec(130),
-        items: battle.enemies,
-        listNodes: (proc(enemy: BattleEntity): Node =
-          battleEntityStatusNode(
-            enemy,
-            vec(0, 0),
-            isPlayer = false,
-          ),
-        ),
-      ),
-      List[SkillInfo](
-        pos: vec(110, 600),
-        spacing: vec(5),
-        items: allSkills,
-        listNodes: (proc(skill: SkillInfo): Node =
-          battle.attackButtonNode(controller, skill)
-        ),
-      ),
-      List[Potion](
-        pos: vec(310, 600),
-        spacing: vec(5),
-        items: battle.potions,
-        listNodesIdx: (proc(potion: Potion, idx: int): Node =
-          battle.potionButtonNode(controller, addr battle.potions[idx])
-        ),
-      ),
+      playerStatusHudNode(battle.player, vec(300, 620)),
+      actionButtonsNode(battle, controller, vec(610, 600)),
     ] & floaties,
   )
 
