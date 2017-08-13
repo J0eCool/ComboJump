@@ -1,3 +1,5 @@
+import sequtils
+
 import
   rpg_frontier/[
     enemy,
@@ -13,12 +15,14 @@ import
   vec
 
 type
+  TurnPair = tuple[entity: BattleEntity, t: float]
   BattleData* = ref object of RootObj
     player: BattleEntity
     enemies: seq[BattleEntity]
+    turnQueue: seq[TurnPair]
+    activeEntity: BattleEntity
     selectedSkill: SkillInfo
     stats: PlayerStats
-    turnIndex: int
     potions: seq[Potion]
     levelName: string
     stages: seq[Stage]
@@ -99,7 +103,7 @@ proc initPotions(): seq[Potion] =
       charges: info.charges,
     )
 
-proc spawnCurrentStage(battle: BattleData): seq[BattleEntity] =
+proc spawnCurrentStage(battle: BattleData): seq[BattleEntity] {.nosideeffect.} =
   let
     index = battle.curStageIndex.clamp(0, battle.stages.len - 1)
     stage = battle.stages[index]
@@ -109,18 +113,24 @@ proc spawnCurrentStage(battle: BattleData): seq[BattleEntity] =
     enemy.pos = vec(630, 240) + vec(100, 150) * result.len
     result.add enemy
 
+proc initializeTurnOrder(battle: BattleData) =
+  battle.turnQueue = @[]
+  battle.turnQueue.add((battle.player, random(0.0, 1.0)))
+  for enemy in battle.enemies:
+    battle.turnQueue.add((enemy, random(0.0, 1.0)))
+
 proc newBattleData*(stats: PlayerStats, level: Level): BattleData =
   result = BattleData(
-    stats: stats,
     player: newPlayer(),
+    stats: stats,
     potions: initPotions(),
     levelName: level.name,
     stages: level.stages,
     curStageIndex: 0,
   )
-  result.enemies = result.spawnCurrentStage()
-  result.turnIndex = result.enemies.len
   result.selectedSkill = allSkills[0]
+  result.enemies = result.spawnCurrentStage()
+  result.initializeTurnOrder()
 
 proc newBattleController(): BattleController =
   BattleController(
@@ -131,13 +141,15 @@ proc newBattleController(): BattleController =
   )
 
 proc isEnemyTurn(battle: BattleData): bool =
-  battle.turnIndex < battle.enemies.len
+  battle.activeEntity != nil and battle.activeEntity != battle.player
 
 proc updateAttackAnimation(battle: BattleData, pct: float) =
-  if not battle.isEnemyTurn:
-    battle.player.offset = vec(attackAnimDist * pct, 0.0)
-  else:
-    battle.enemies[battle.turnIndex].offset = vec(-attackAnimDist * pct, 0.0)
+  let mult =
+    if not battle.isEnemyTurn:
+      1.0
+    else:
+      -1.0
+  battle.activeEntity.offset = vec(attackAnimDist * pct * mult, 0.0)
 
 proc takeDamage(entity: BattleEntity, damage: int): bool =
   entity.health -= damage
@@ -186,6 +198,7 @@ proc killEnemy(battle: BattleData, controller: BattleController, target: BattleE
   controller.wait(0.1)
   controller.queueEvent do (pct: float):
     battle.enemies.mustRemove(target)
+    battle.turnQueue = battle.turnQueue.filterIt(it.entity != target)
     if battle.enemies.len == 0:
       battle.advanceStage(controller)
   controller.wait(0.3)
@@ -208,7 +221,24 @@ proc noAnimationPlaying(controller: BattleController): bool =
   controller.eventQueue.len == 0
 
 proc isClickReady(battle: BattleData, controller: BattleController): bool =
-  controller.noAnimationPlaying and not battle.isEnemyTurn
+  controller.noAnimationPlaying and battle.activeEntity == battle.player
+
+proc updateTurnQueue(battle: BattleData, dt: float) =
+  if battle.activeEntity != nil:
+    return
+  for pair in battle.turnQueue:
+    if pair.t >= 1.0:
+      battle.activeEntity = pair.entity
+      return
+  for pair in battle.turnQueue.mitems:
+    pair.t += dt
+
+proc endTurn(battle: BattleData) =
+  for pair in battle.turnQueue.mitems:
+    if pair.entity == battle.activeEntity:
+      pair.t -= 1.0
+      break
+  battle.activeEntity = nil
 
 proc startAttack(battle: BattleData, controller: BattleController, damage: int, target: BattleEntity) =
   controller.queueEvent(0.1) do (t: float):
@@ -221,10 +251,7 @@ proc startAttack(battle: BattleData, controller: BattleController, damage: int, 
     battle.updateMaybeKill(controller, target)
   controller.wait(0.25)
   controller.queueEvent do (t: float):
-    if battle.isEnemyTurn:
-      battle.turnIndex += 1
-    else:
-      battle.turnIndex = 0
+    battle.endTurn()
 
 proc canAfford(battle: BattleData, skill: SkillInfo): bool =
   battle.player.mana >= skill.manaCost and
@@ -533,8 +560,10 @@ proc battleUpdate(battle: BattleData, controller: BattleController, dt: float) =
   controller.updateEventQueue(dt)
   controller.updateAsyncQueue(dt)
 
-  if controller.noAnimationPlaying() and battle.isEnemyTurn:
-    battle.startAttack(controller, 1, battle.player)
+  if controller.noAnimationPlaying():
+    battle.updateTurnQueue(dt)
+    if battle.isEnemyTurn:
+      battle.startAttack(controller, 1, battle.player)
 
   battle.clampResources()
 
