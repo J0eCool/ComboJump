@@ -120,6 +120,7 @@ proc newBattleData*(stats: PlayerStats, level: Level): BattleData =
   )
   result.enemies = result.spawnCurrentStage()
   result.turnIndex = result.enemies.len
+  result.selectedSkill = allSkills[0]
 
 proc newBattleController(): BattleController =
   BattleController(
