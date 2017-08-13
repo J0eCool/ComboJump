@@ -64,6 +64,11 @@ proc remove*[T](list: var seq[T], item: T) =
   if index >= 0:
     list.delete(index)
 
+proc mustRemove*[T](list: var seq[T], item: T) =
+  let index = list.find(item)
+  assert index >= 0, "Did not find item to remove"
+  list.delete(index)
+
 proc removeAll*[T](list: var seq[T], items: seq[T]) =
   for i in items:
     list.remove(i)

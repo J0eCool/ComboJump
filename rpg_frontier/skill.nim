@@ -1,11 +1,11 @@
 type
-  SkillInfo* = object
+  SkillInfo* = ref object
     name*: string
     damage*: int
     manaCost*: int
     focusCost*: int
 
-const allSkills* = @[
+let allSkills* = @[
   SkillInfo(
     name: "Attack",
     damage: 1,
@@ -14,7 +14,7 @@ const allSkills* = @[
   SkillInfo(
     name: "Power Attack",
     damage: 2,
-    focusCost: 10,
+    focusCost: 6,
   ),
   SkillInfo(
     name: "Flameblast",

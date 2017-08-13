@@ -185,6 +185,7 @@ type Button* = ref object of Node
   hotkey*: Input
   color*: Color
   hoverNode*: Node
+  invisible*: bool
   isHeld: bool
   isMouseOver: bool
   isKeyHeld: bool
@@ -194,9 +195,13 @@ method diffSelf(button, newVal: Button): bool =
   button.label = newVal.label
   button.onClick = newVal.onClick
   button.color = newVal.color
+  button.invisible = newVal.invisible
   true
 
 method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceManager) =
+  if button.invisible:
+    return
+
   let
     baseColor =
       if button.color.a == 0:
