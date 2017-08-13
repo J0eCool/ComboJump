@@ -25,6 +25,7 @@ type
     curStageIndex: int
   BattleEntity* = ref object
     name: string
+    pos: Vec
     health, maxHealth: int
     mana, maxMana: int
     focus, maxFocus: int
@@ -64,6 +65,7 @@ proc newPlayer(): BattleEntity =
     focus = 20
   BattleEntity(
     name: "Player",
+    pos: vec(130, 400),
     health: health,
     maxHealth: health,
     mana: mana,
@@ -103,7 +105,9 @@ proc spawnCurrentStage(battle: BattleData): seq[BattleEntity] =
     stage = battle.stages[index]
   result = @[]
   for enemyKind in stage:
-    result.add newEnemy(enemyKind)
+    let enemy = newEnemy(enemyKind)
+    enemy.pos = vec(630, 240) + vec(100, 150) * result.len
+    result.add enemy
 
 proc newBattleData*(stats: PlayerStats, level: Level): BattleData =
   result = BattleData(
@@ -139,11 +143,10 @@ proc takeDamage(entity: BattleEntity, damage: int): bool =
   return entity.health <= 0
 
 proc processAttackDamage(controller: BattleController, damage: int, target: BattleEntity) =
-  let basePos = vec(400, 400)
   controller.didKill = target.takeDamage(damage)
   controller.floatingTexts.add FloatingText(
     text: $damage,
-    startPos: basePos + randomVec(30.0),
+    startPos: target.pos + randomVec(30.0),
   )
 
 proc queueEvent(controller: BattleController, duration: float, update: EventUpdate) =
@@ -342,10 +345,10 @@ proc battleEntityNode(battle: BattleData, controller: BattleController,
   )
 
 proc enemyEntityNode(battle: BattleData, controller: BattleController,
-                     entity: BattleEntity, pos: Vec): Node =
+                     entity: BattleEntity): Node =
   let barSize = vec(180, 22)
   result = Node(
-    pos: pos,
+    pos: entity.pos,
     children: @[
       battleEntityNode(battle, controller, entity),
       quantityBarNode(
@@ -458,13 +461,12 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
           controller.bufferClose = true
         ),
       ),
-      battleEntityNode(battle, controller, battle.player, vec(130, 400)),
+      battleEntityNode(battle, controller, battle.player, battle.player.pos),
       List[BattleEntity](
-        pos: vec(700, 200),
-        spacing: vec(130),
+        ignoreSpacing: true,
         items: battle.enemies,
         listNodes: (proc(enemy: BattleEntity): Node =
-          enemyEntityNode(battle, controller, enemy, vec(0, 0))
+          enemyEntityNode(battle, controller, enemy)
         ),
       ),
       BorderedTextNode(
