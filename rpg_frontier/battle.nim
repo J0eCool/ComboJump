@@ -16,7 +16,6 @@ type
   BattleData* = ref object of RootObj
     player: BattleEntity
     enemies: seq[BattleEntity]
-    targetEnemy: BattleEntity
     selectedSkill: SkillInfo
     stats: PlayerStats
     turnIndex: int
@@ -135,19 +134,13 @@ proc updateAttackAnimation(battle: BattleData, pct: float) =
   else:
     battle.enemies[battle.turnIndex].offset = vec(-attackAnimDist * pct, 0.0)
 
-proc takeDamage(entity: var BattleEntity, damage: int): bool =
+proc takeDamage(entity: BattleEntity, damage: int): bool =
   entity.health -= damage
   return entity.health <= 0
 
-proc processAttackDamage(battle: BattleData, controller: BattleController, damage: int) =
-  assert battle.targetEnemy != nil
-  var basePos: Vec
-  if not battle.isEnemyTurn:
-    basePos = vec(700, 400)
-    controller.didKill = battle.targetEnemy.takeDamage(damage)
-  else:
-    basePos = vec(400, 400)
-    controller.didKill = battle.player.takeDamage(damage)
+proc processAttackDamage(controller: BattleController, damage: int, target: BattleEntity) =
+  let basePos = vec(400, 400)
+  controller.didKill = target.takeDamage(damage)
   controller.floatingTexts.add FloatingText(
     text: $damage,
     startPos: basePos + randomVec(30.0),
@@ -176,8 +169,7 @@ proc advanceStage(battle: BattleData, controller: BattleController) =
     battle.curStageIndex += 1
     battle.enemies = battle.spawnCurrentStage()
 
-proc killEnemy(battle: BattleData, controller: BattleController) =
-  assert battle.targetEnemy != nil
+proc killEnemy(battle: BattleData, controller: BattleController, target: BattleEntity) =
   let xpGained = 1
   controller.floatingTexts.add FloatingText(
     text: "+" & $xpGained & "xp",
@@ -186,10 +178,10 @@ proc killEnemy(battle: BattleData, controller: BattleController) =
   battle.stats.addXp(xpGained)
   let dx = random(300.0, 700.0)
   controller.queueEvent(0.8) do (pct: float):
-    battle.targetEnemy.offset = vec(dx * pct, -2200.0 * pct * (0.25 - pct))
+    target.offset = vec(dx * pct, -2200.0 * pct * (0.25 - pct))
   controller.wait(0.1)
   controller.queueEvent do (pct: float):
-    battle.enemies.mustRemove(battle.targetEnemy)
+    battle.enemies.mustRemove(target)
     if battle.enemies.len == 0:
       battle.advanceStage(controller)
   controller.wait(0.3)
@@ -197,16 +189,16 @@ proc killEnemy(battle: BattleData, controller: BattleController) =
 proc killPlayer(battle: BattleData, controller: BattleController) =
   controller.bufferClose = true
 
-proc updateMaybeKill(battle: BattleData, controller: BattleController) =
+proc updateMaybeKill(battle: BattleData, controller: BattleController, target: BattleEntity) =
   let didKill = controller.didKill
   if not didKill:
     return
 
   controller.didKill = false
-  if not battle.isEnemyTurn:
-    battle.killEnemy(controller)
-  else:
+  if target == battle.player:
     battle.killPlayer(controller)
+  else:
+    battle.killEnemy(controller, target)
 
 proc noAnimationPlaying(controller: BattleController): bool =
   controller.eventQueue.len == 0
@@ -214,15 +206,15 @@ proc noAnimationPlaying(controller: BattleController): bool =
 proc isClickReady(battle: BattleData, controller: BattleController): bool =
   controller.noAnimationPlaying and not battle.isEnemyTurn
 
-proc startAttack(battle: BattleData, controller: BattleController, damage: int) =
+proc startAttack(battle: BattleData, controller: BattleController, damage: int, target: BattleEntity) =
   controller.queueEvent(0.1) do (t: float):
     battle.updateAttackAnimation(t)
   controller.queueEvent do (t: float):
-    battle.processAttackDamage(controller, damage)
+    controller.processAttackDamage(damage, target)
     controller.queueAsync(0.175) do (t: float):
       battle.updateAttackAnimation(1.0 - t)
   controller.queueEvent do (t: float):
-    battle.updateMaybeKill(controller)
+    battle.updateMaybeKill(controller, target)
   controller.wait(0.25)
   controller.queueEvent do (t: float):
     if battle.isEnemyTurn:
@@ -234,12 +226,15 @@ proc canAfford(battle: BattleData, skill: SkillInfo): bool =
   battle.player.mana >= skill.manaCost and
     battle.player.focus >= skill.focusCost
 
-proc tryUseAttack(battle: BattleData, controller: BattleController, skill: SkillInfo) =
+proc tryUseAttack(battle: BattleData, controller: BattleController, entity: BattleEntity) =
+  let skill = battle.selectedSkill
+  assert skill != nil
+  assert entity != nil
   if battle.canAfford(skill) and
      battle.isClickReady(controller):
     battle.player.mana -= skill.manaCost
     battle.player.focus -= skill.focusCost
-    battle.startAttack(controller, skill.damage)
+    battle.startAttack(controller, skill.damage, entity)
 
 proc pos(text: FloatingText): Vec =
   text.startPos - vec(0.0, textFloatHeight * text.t / textFloatTime)
@@ -340,8 +335,7 @@ proc battleEntityNode(battle: BattleData, controller: BattleController,
         invisible: true,
         onClick: (proc() =
           if entity != battle.player and battle.selectedSkill != nil:
-            battle.targetEnemy = entity
-            battle.tryUseAttack(controller, battle.selectedSkill)
+            battle.tryUseAttack(controller, entity)
         ),
       ).Node,
     ],
@@ -491,7 +485,7 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
     ] & floaties,
   )
 
-proc clampResources(entity: var BattleEntity) =
+proc clampResources(entity: BattleEntity) =
   entity.health = entity.health.clamp(0, entity.maxHealth)
   entity.mana = entity.mana.clamp(0, entity.maxMana)
   entity.focus = entity.focus.clamp(0, entity.maxFocus)
@@ -537,7 +531,7 @@ proc battleUpdate(battle: BattleData, controller: BattleController, dt: float) =
   controller.updateAsyncQueue(dt)
 
   if controller.noAnimationPlaying() and battle.isEnemyTurn:
-    battle.startAttack(controller, 1)
+    battle.startAttack(controller, 1, battle.player)
 
   battle.clampResources()
 
