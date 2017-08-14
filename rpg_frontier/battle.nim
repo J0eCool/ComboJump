@@ -204,7 +204,7 @@ proc killEnemy(battle: BattleData, controller: BattleController, target: BattleE
   let xpGained = 1
   controller.floatingTexts.add FloatingText(
     text: "+" & $xpGained & "xp",
-    startPos: vec(750, 350) + randomVec(5.0),
+    startPos: target.pos + randomVec(5.0),
   )
   battle.stats.addXp(xpGained)
   let dx = random(300.0, 700.0)
