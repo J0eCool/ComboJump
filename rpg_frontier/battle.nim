@@ -29,11 +29,13 @@ type
     curStageIndex: int
   BattleEntity* = ref object
     name: string
+    texture: string
     pos: Vec
     health, maxHealth: int
     mana, maxMana: int
     focus, maxFocus: int
-    texture: string
+    damage: int
+    speed: float
     offset: Vec
   BattleController* = ref object of Controller
     floatingTexts: seq[FloatingText]
@@ -69,6 +71,7 @@ proc newPlayer(): BattleEntity =
     focus = 20
   BattleEntity(
     name: "Player",
+    texture: "Wizard2.png",
     pos: vec(130, 400),
     health: health,
     maxHealth: health,
@@ -76,7 +79,7 @@ proc newPlayer(): BattleEntity =
     maxMana: mana,
     focus: 0,
     maxFocus: focus,
-    texture: "Wizard2.png",
+    speed: 1.0,
   )
 
 proc newEnemy(kind: EnemyKind): BattleEntity =
@@ -86,13 +89,15 @@ proc newEnemy(kind: EnemyKind): BattleEntity =
     focus = 10
   BattleEntity(
     name: enemy.name,
+    texture: enemy.texture,
     health: enemy.health,
     maxHealth: enemy.health,
     mana: mana,
     maxMana: mana,
     focus: 0,
     maxFocus: focus,
-    texture: enemy.texture,
+    damage: enemy.damage,
+    speed: enemy.speed,
   )
 
 proc initPotions(): seq[Potion] =
@@ -234,7 +239,7 @@ proc updateTurnQueue(battle: BattleData, dt: float) =
       battle.activeEntity = pair.entity
       return
   for pair in battle.turnQueue.mitems:
-    pair.t += dt
+    pair.t += dt * pair.entity.speed
 
 proc endTurn(battle: BattleData) =
   for pair in battle.turnQueue.mitems:
@@ -603,7 +608,7 @@ proc battleUpdate(battle: BattleData, controller: BattleController, dt: float) =
   if controller.noAnimationPlaying():
     battle.updateTurnQueue(dt)
     if battle.isEnemyTurn:
-      battle.startAttack(controller, 1, battle.player)
+      battle.startAttack(controller, battle.activeEntity.damage, battle.player)
 
   battle.clampResources()
 

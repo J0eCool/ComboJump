@@ -2,24 +2,28 @@ type
   EnemyInfo* = object
     kind*: EnemyKind
     name*: string
-    health*: int
     texture*: string
+    health*: int
+    damage*: int
+    speed*: float
   EnemyKind* = enum
     slime
     goblin
     ogre
 
 proc initializeEnemyData(): array[EnemyKind, EnemyInfo] =
-  for  kind,     name, health,      texture in [
-    ( slime,  "Slime",      3,  "Slime.png"),
-    (goblin, "Goblin",      4, "Goblin.png"),
-    (  ogre,   "Ogre",      5,   "Ogre.png"),
+  for  kind,     name,      texture, health, damage, speed in [
+    ( slime,  "Slime",  "Slime.png",      3,      1,   0.8),
+    (goblin, "Goblin", "Goblin.png",      4,      1,   1.1),
+    (  ogre,   "Ogre",   "Ogre.png",      5,      2,   0.7),
   ].items:
     let info = EnemyInfo(
       kind: kind,
       name: name,
-      health: health,
       texture: texture,
+      health: health,
+      damage: damage,
+      speed: speed,
     )
     result[info.kind] = info
 const enemyData* = initializeEnemyData()
