@@ -80,6 +80,7 @@ proc newPlayer(): BattleEntity =
     maxMana: mana,
     focus: 0,
     maxFocus: focus,
+    damage: 1,
     speed: 1.0,
     knownSkills: @[
       attack,
@@ -254,7 +255,9 @@ proc endTurn(battle: BattleData) =
       break
   battle.activeEntity = nil
 
-proc startAttack(battle: BattleData, controller: BattleController, damage: int, target: BattleEntity) =
+proc startAttack(battle: BattleData, controller: BattleController,
+                 skill: SkillInfo, attacker, target: BattleEntity) =
+  let damage = skill.damage * attacker.damage
   controller.queueEvent(0.1) do (t: float):
     battle.updateAttackAnimation(t)
   controller.queueEvent do (t: float):
@@ -279,7 +282,7 @@ proc tryUseAttack(battle: BattleData, controller: BattleController, entity: Batt
      battle.isClickReady(controller):
     battle.player.mana -= skill.manaCost
     battle.player.focus -= skill.focusCost
-    battle.startAttack(controller, skill.damage, entity)
+    battle.startAttack(controller, skill, battle.player, entity)
 
 proc pos(text: FloatingText): Vec =
   text.startPos - vec(0.0, textFloatHeight * text.t / textFloatTime)
@@ -601,6 +604,12 @@ proc updateAsyncQueue(controller: BattleController, dt: float) =
       controller.asyncQueue.delete(i)
     i -= 1
 
+proc beginEnemyAttack(battle: BattleData, controller: BattleController) =
+  let
+    enemy = battle.activeEntity
+    skill = allSkills[enemy.knownSkills[0]]
+  battle.startAttack(controller, skill, enemy, battle.player)
+
 proc battleUpdate(battle: BattleData, controller: BattleController, dt: float) =
   if controller.bufferClose:
     controller.shouldPop = true
@@ -614,7 +623,7 @@ proc battleUpdate(battle: BattleData, controller: BattleController, dt: float) =
   if controller.noAnimationPlaying():
     battle.updateTurnQueue(dt)
     if battle.isEnemyTurn:
-      battle.startAttack(controller, battle.activeEntity.damage, battle.player)
+      battle.beginEnemyAttack(controller)
 
   battle.clampResources()
 
