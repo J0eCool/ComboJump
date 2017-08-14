@@ -103,7 +103,7 @@ proc initPotions(): seq[Potion] =
       charges: info.charges,
     )
 
-proc spawnCurrentStage(battle: BattleData): seq[BattleEntity] {.nosideeffect.} =
+proc currentStageEnemies(battle: BattleData): seq[BattleEntity] {.nosideeffect.} =
   let
     index = battle.curStageIndex.clamp(0, battle.stages.len - 1)
     stage = battle.stages[index]
@@ -113,11 +113,15 @@ proc spawnCurrentStage(battle: BattleData): seq[BattleEntity] {.nosideeffect.} =
     enemy.pos = vec(630, 240) + vec(100, 150) * result.len
     result.add enemy
 
-proc initializeTurnOrder(battle: BattleData) =
-  battle.turnQueue = @[]
-  battle.turnQueue.add((battle.player, random(0.0, 1.0)))
+proc freshTurnOrder(battle: BattleData): seq[TurnPair] =
+  result = @[]
+  result.add((battle.player, random(0.0, 1.0)))
   for enemy in battle.enemies:
-    battle.turnQueue.add((enemy, random(0.0, 1.0)))
+    result.add((enemy, random(0.0, 1.0)))
+
+proc spawnCurrentStage(battle: BattleData) =
+  battle.enemies = battle.currentStageEnemies()
+  battle.turnQueue = battle.freshTurnOrder()
 
 proc newBattleData*(stats: PlayerStats, level: Level): BattleData =
   result = BattleData(
@@ -129,8 +133,7 @@ proc newBattleData*(stats: PlayerStats, level: Level): BattleData =
     curStageIndex: 0,
   )
   result.selectedSkill = allSkills[0]
-  result.enemies = result.spawnCurrentStage()
-  result.initializeTurnOrder()
+  result.spawnCurrentStage()
 
 proc newBattleController(): BattleController =
   BattleController(
@@ -183,7 +186,7 @@ proc advanceStage(battle: BattleData, controller: BattleController) =
     controller.bufferClose = true
   else:
     battle.curStageIndex += 1
-    battle.enemies = battle.spawnCurrentStage()
+    battle.spawnCurrentStage()
 
 proc killEnemy(battle: BattleData, controller: BattleController, target: BattleEntity) =
   let xpGained = 1
@@ -299,7 +302,7 @@ proc skillButtonNode(battle: BattleData, controller: BattleController, skill: Sk
       if disabled:
         gray
       elif selected:
-        white
+        lightGreen
       else:
         lightGray
     onClick =
@@ -471,6 +474,42 @@ proc actionButtonsNode(battle: BattleData, controller: BattleController, pos: Ve
     ],
   )
 
+proc turnQueueNode(battle: BattleData, pos: Vec): Node =
+  let
+    width = 600.0
+    thickness = 10.0
+    endHeight = 40.0
+    color = lightGray
+  Node(
+    pos: pos,
+    children: @[
+      SpriteNode(
+        size: vec(width, thickness),
+        color: color,
+      ),
+      SpriteNode(
+        pos: vec(-width / 2.0, 0.0),
+        size: vec(thickness, endHeight),
+        color: color,
+      ),
+      SpriteNode(
+        pos: vec(width / 2.0, 0.0),
+        size: vec(thickness, endHeight),
+        color: color,
+      ),
+      List[TurnPair](
+        items: battle.turnQueue,
+        ignoreSpacing: true,
+        listNodes: (proc(pair: TurnPair): Node =
+          SpriteNode(
+            pos: vec(pair.t.lerp(-0.5, 0.5) * width, 0.0),
+            textureName: pair.entity.texture,
+            scale: 2.0,
+          )
+        ),
+      ),
+    ],
+  )
 
 proc battleView(battle: BattleData, controller: BattleController): Node {.procvar.} =
   var floaties: seq[Node] = @[]
@@ -512,6 +551,7 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
       ),
       playerStatusHudNode(battle.player, vec(300, 620)),
       actionButtonsNode(battle, controller, vec(610, 600)),
+      turnQueueNode(battle, vec(800, 60)),
     ] & floaties,
   )
 
