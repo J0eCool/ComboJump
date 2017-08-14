@@ -11,7 +11,7 @@ type
 
 const allLevels* = @[
   Level(
-    name: "Level 1",
+    name: "Field - 1",
     stages: @[
       @[slime],
       @[slime],
@@ -19,12 +19,21 @@ const allLevels* = @[
     ],
   ),
   Level(
-    name: "Level 2!?",
+    name: "Field - 2",
     stages: @[
-      @[goblin, slime],
-      @[slime],
       @[goblin],
+      @[slime],
+      @[goblin, slime],
       @[ogre],
+    ],
+  ),
+  Level(
+    name: "Field - 3",
+    stages: @[
+      @[slime, slime],
+      @[slime, goblin],
+      @[slime, slime, slime],
+      @[slime, goblin, slime],
     ],
   ),
 ]

@@ -37,6 +37,7 @@ type
     damage: int
     speed: float
     offset: Vec
+    knownSkills: seq[SkillKind]
   BattleController* = ref object of Controller
     floatingTexts: seq[FloatingText]
     eventQueue: seq[BattleEvent]
@@ -80,6 +81,10 @@ proc newPlayer(): BattleEntity =
     focus: 0,
     maxFocus: focus,
     speed: 1.0,
+    knownSkills: @[
+      attack,
+      powerAttack,
+    ],
   )
 
 proc newEnemy(kind: EnemyKind): BattleEntity =
@@ -98,6 +103,7 @@ proc newEnemy(kind: EnemyKind): BattleEntity =
     maxFocus: focus,
     damage: enemy.damage,
     speed: enemy.speed,
+    knownSkills: @[attack],
   )
 
 proc initPotions(): seq[Potion] =
@@ -137,7 +143,7 @@ proc newBattleData*(stats: PlayerStats, level: Level): BattleData =
     stages: level.stages,
     curStageIndex: 0,
   )
-  result.selectedSkill = allSkills[0]
+  result.selectedSkill = allSkills[result.player.knownSkills[0]]
   result.spawnCurrentStage()
 
 proc newBattleController(): BattleController =
@@ -460,12 +466,12 @@ proc actionButtonsNode(battle: BattleData, controller: BattleController, pos: Ve
   Node(
     pos: pos,
     children: @[
-      List[SkillInfo](
+      List[SkillKind](
         pos: vec(0, 0),
         spacing: vec(5),
-        items: allSkills,
-        listNodes: (proc(skill: SkillInfo): Node =
-          battle.skillButtonNode(controller, skill)
+        items: battle.player.knownSkills,
+        listNodes: (proc(skill: SkillKind): Node =
+          battle.skillButtonNode(controller, allSkills[skill])
         ),
       ),
       List[Potion](
