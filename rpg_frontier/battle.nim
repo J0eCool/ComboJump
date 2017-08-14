@@ -255,9 +255,12 @@ proc endTurn(battle: BattleData) =
       break
   battle.activeEntity = nil
 
+proc damageFor(skill: SkillInfo, entity: BattleEntity): int =
+  skill.damage * entity.damage
+
 proc startAttack(battle: BattleData, controller: BattleController,
                  skill: SkillInfo, attacker, target: BattleEntity) =
-  let damage = skill.damage * attacker.damage
+  let damage = skill.damageFor(attacker)
   controller.queueEvent(0.1) do (t: float):
     battle.updateAttackAnimation(t)
   controller.queueEvent do (t: float):
@@ -287,9 +290,9 @@ proc tryUseAttack(battle: BattleData, controller: BattleController, entity: Batt
 proc pos(text: FloatingText): Vec =
   text.startPos - vec(0.0, textFloatHeight * text.t / textFloatTime)
 
-proc skillButtonTooltipNode(skill: SkillInfo): Node =
+proc skillButtonTooltipNode(skill: SkillInfo, player: BattleEntity): Node =
   var lines: seq[string] = @[]
-  lines.add($skill.damage & " Damage")
+  lines.add($skill.damageFor(player) & " Damage")
   if skill.manaCost > 0:
     lines.add($skill.manaCost & " Mana")
   if skill.focusCost > 0:
@@ -330,7 +333,7 @@ proc skillButtonNode(battle: BattleData, controller: BattleController, skill: Sk
     label: skill.name,
     color: color,
     onClick: onClick,
-    hoverNode: skillButtonTooltipNode(skill),
+    hoverNode: skillButtonTooltipNode(skill, battle.player),
   )
 
 proc canUse(potion: Potion): bool =
