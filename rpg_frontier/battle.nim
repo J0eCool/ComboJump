@@ -2,11 +2,13 @@ import sequtils
 
 import
   rpg_frontier/[
+    battle_entity,
     enemy,
     level,
     player_stats,
     potion,
     skill,
+    skill_kind,
     transition,
   ],
   color,
@@ -27,22 +29,10 @@ type
     levelName: string
     stages: seq[Stage]
     curStageIndex: int
-  BattleEntity* = ref object
-    name: string
-    texture: string
-    pos: Vec
-    health, maxHealth: int
-    mana, maxMana: int
-    focus, maxFocus: int
-    damage: int
-    speed: float
-    offset: Vec
-    knownSkills: seq[SkillKind]
   BattleController* = ref object of Controller
     floatingTexts: seq[FloatingText]
     eventQueue: seq[BattleEvent]
     asyncQueue: seq[BattleEvent]
-    didKill: bool
     bufferClose: bool
   FloatingText* = object
     text*: string
@@ -64,48 +54,6 @@ const
   textFloatHeight = 160.0
   textFloatTime = 1.25
   attackAnimDist = 250.0
-
-proc newPlayer(): BattleEntity =
-  let
-    health = 10
-    mana = 8
-    focus = 20
-  BattleEntity(
-    name: "Player",
-    texture: "Wizard2.png",
-    pos: vec(130, 400),
-    health: health,
-    maxHealth: health,
-    mana: mana,
-    maxMana: mana,
-    focus: 0,
-    maxFocus: focus,
-    damage: 1,
-    speed: 1.0,
-    knownSkills: @[
-      attack,
-      powerAttack,
-    ],
-  )
-
-proc newEnemy(kind: EnemyKind): BattleEntity =
-  let
-    enemy = enemyData[kind]
-    mana = 5
-    focus = 10
-  BattleEntity(
-    name: enemy.name,
-    texture: enemy.texture,
-    health: enemy.health,
-    maxHealth: enemy.health,
-    mana: mana,
-    maxMana: mana,
-    focus: 0,
-    maxFocus: focus,
-    damage: enemy.damage,
-    speed: enemy.speed,
-    knownSkills: @[attack],
-  )
 
 proc initPotions(): seq[Potion] =
   result = @[]
@@ -166,12 +114,8 @@ proc updateAttackAnimation(battle: BattleData, pct: float) =
       -1.0
   battle.activeEntity.offset = vec(attackAnimDist * pct * mult, 0.0)
 
-proc takeDamage(entity: BattleEntity, damage: int): bool =
-  entity.health -= damage
-  return entity.health <= 0
-
 proc processAttackDamage(controller: BattleController, damage: int, target: BattleEntity) =
-  controller.didKill = target.takeDamage(damage)
+  target.takeDamage(damage)
   controller.floatingTexts.add FloatingText(
     text: $damage,
     startPos: target.pos + randomVec(30.0),
@@ -222,11 +166,9 @@ proc killPlayer(battle: BattleData, controller: BattleController) =
   controller.bufferClose = true
 
 proc updateMaybeKill(battle: BattleData, controller: BattleController, target: BattleEntity) =
-  let didKill = controller.didKill
-  if not didKill:
+  if target.health > 0:
     return
 
-  controller.didKill = false
   if target == battle.player:
     battle.killPlayer(controller)
   else:
@@ -260,15 +202,19 @@ proc damageFor(skill: SkillInfo, entity: BattleEntity): int =
 
 proc startAttack(battle: BattleData, controller: BattleController,
                  skill: SkillInfo, attacker, target: BattleEntity) =
-  let damage = skill.damageFor(attacker)
+  let
+    damage = skill.damageFor(attacker)
+    targets = skill.toTargets(battle.enemies, target)
   controller.queueEvent(0.1) do (t: float):
     battle.updateAttackAnimation(t)
   controller.queueEvent do (t: float):
-    controller.processAttackDamage(damage, target)
+    for enemy in targets:
+      controller.processAttackDamage(damage, enemy)
     controller.queueAsync(0.175) do (t: float):
       battle.updateAttackAnimation(1.0 - t)
   controller.queueEvent do (t: float):
-    battle.updateMaybeKill(controller, target)
+    for enemy in targets:
+      battle.updateMaybeKill(controller, enemy)
   controller.wait(0.25)
   controller.queueEvent do (t: float):
     battle.endTurn()
