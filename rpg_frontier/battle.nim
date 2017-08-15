@@ -493,7 +493,7 @@ proc actionButtonsNode(battle: BattleData, controller: BattleController, pos: Ve
 
 proc turnQueueNode(battle: BattleData, pos: Vec): Node =
   let
-    width = 600.0
+    width = 400.0
     thickness = 10.0
     endHeight = 40.0
     color = lightGray
@@ -521,7 +521,7 @@ proc turnQueueNode(battle: BattleData, pos: Vec): Node =
           SpriteNode(
             pos: vec(pair.t.lerp(-0.5, 0.5) * width, 0.0),
             textureName: pair.entity.texture,
-            scale: 2.0,
+            scale: 3.0,
           )
         ),
       ),
