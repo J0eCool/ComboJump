@@ -1,10 +1,12 @@
 import
   rpg_frontier/[
-    battle_entity,
     level,
     player_stats,
     potion,
     skill,
+  ],
+  rpg_frontier/battle/[
+    battle_entity,
   ],
   util,
   vec

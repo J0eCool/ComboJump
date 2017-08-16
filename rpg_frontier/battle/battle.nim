@@ -2,8 +2,6 @@ import sequtils
 
 import
   rpg_frontier/[
-    battle_entity,
-    battle_model,
     enemy,
     level,
     player_stats,
@@ -11,6 +9,10 @@ import
     skill,
     skill_kind,
     transition,
+  ],
+  rpg_frontier/battle/[
+    battle_entity,
+    battle_model,
   ],
   color,
   menu,

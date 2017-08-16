@@ -1,7 +1,9 @@
 import
   rpg_frontier/[
-    battle_entity,
     skill_kind,
+  ],
+  rpg_frontier/battle/[
+    battle_entity,
   ]
 
 type

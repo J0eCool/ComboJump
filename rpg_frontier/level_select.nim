@@ -1,11 +1,13 @@
 import
   rpg_frontier/[
-    battle,
-    battle_model,
     enemy,
     level,
     player_stats,
     transition,
+  ],
+  rpg_frontier/battle/[
+    battle,
+    battle_model,
   ],
   menu,
   option,
