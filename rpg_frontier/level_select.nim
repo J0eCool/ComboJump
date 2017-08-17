@@ -6,8 +6,8 @@ import
     transition,
   ],
   rpg_frontier/battle/[
-    battle,
     battle_model,
+    battle_view,
   ],
   menu,
   option,

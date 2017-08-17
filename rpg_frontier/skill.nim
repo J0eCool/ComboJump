@@ -58,3 +58,6 @@ let allSkills*: array[SkillKind, SkillInfo] = [
     toTargets: hitSingle,
   ),
 ]
+
+proc damageFor*(skill: SkillInfo, entity: BattleEntity): int =
+  skill.damage * entity.damage
