@@ -22,6 +22,7 @@ import
 type
   BattleController* = ref object of Controller
     floatingTexts*: seq[FloatingText]
+    vfxs*: seq[Vfx]
     eventQueue*: seq[BattleEvent]
     asyncQueue*: seq[BattleEvent]
     bufferClose*: bool
@@ -33,7 +34,15 @@ type
     duration: float
     update: EventUpdate
     t: float
-  EventUpdate = proc(pct: float)
+  EventUpdate = proc(t: float)
+  Vfx = object
+    sprite*: string
+    pos*: Vec
+    scale*: float
+    update: VfxUpdate
+    duration: float
+    t: float
+  VfxUpdate = proc(vfx: var Vfx, t: float)
 
 const
   textFloatHeight = 160.0
@@ -45,10 +54,17 @@ proc percent(event: BattleEvent): float =
   else:
     clamp(event.t / event.duration, 0, 1)
 
+proc percent(vfx: Vfx): float =
+  if vfx.duration == 0.0:
+    0.0
+  else:
+    clamp(vfx.t / vfx.duration, 0, 1)
+
 proc newBattleController*(): BattleController =
   BattleController(
     name: "Battle",
     floatingTexts: @[],
+    vfxs: @[],
     eventQueue: @[],
     asyncQueue: @[],
   )
@@ -127,6 +143,18 @@ proc startAttack*(battle: BattleData, controller: BattleController,
   controller.queueEvent(0.1) do (t: float):
     battle.updateAttackAnimation(t)
   controller.queueEvent do (t: float):
+    let basePos = target.pos - vec(100)
+    controller.vfxs.add Vfx(
+      pos: basePos,
+      sprite: "Slash.png",
+      scale: 4,
+      duration: 0.2,
+      update: (proc(vfx: var Vfx, t: float) =
+        vfx.pos = basePos + t * vec(200)
+      ),
+    )
+  controller.wait(0.1)
+  controller.queueEvent do (t: float):
     for enemy in targets:
       controller.processAttackDamage(damage, enemy)
     controller.queueAsync(0.175) do (t: float):
@@ -183,6 +211,15 @@ proc updateFloatingText(controller: BattleController, dt: float) =
       newFloaties.add text
   controller.floatingTexts = newFloaties
 
+proc updateVfx(controller: BattleController, dt: float) =
+  var newVfxs: seq[Vfx] = @[]
+  for vfx in controller.vfxs.mitems:
+    vfx.t += dt
+    vfx.update(vfx, vfx.percent)
+    if vfx.t <= vfx.duration:
+      newVfxs.add vfx
+  controller.vfxs = newVfxs
+
 proc updateEventQueue(controller: BattleController, dt: float) =
   if controller.eventQueue.len > 0:
     controller.eventQueue[0].t += dt
@@ -214,6 +251,7 @@ proc battleUpdate*(battle: BattleData, controller: BattleController, dt: float) 
     return
 
   controller.updateFloatingText(dt)
+  controller.updateVfx(dt)
   controller.updateEventQueue(dt)
   controller.updateAsyncQueue(dt)
 

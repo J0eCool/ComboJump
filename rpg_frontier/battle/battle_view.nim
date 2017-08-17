@@ -244,11 +244,17 @@ proc turnQueueNode(battle: BattleData, pos: Vec): Node =
   )
 
 proc battleView(battle: BattleData, controller: BattleController): Node {.procvar.} =
-  var floaties: seq[Node] = @[]
+  var extraNodes: seq[Node] = @[]
   for text in controller.floatingTexts:
-    floaties.add BorderedTextNode(
+    extraNodes.add BorderedTextNode(
       text: text.text,
       pos: text.pos,
+    )
+  for vfx in controller.vfxs:
+    extraNodes.add SpriteNode(
+      pos: vfx.pos,
+      textureName: vfx.sprite,
+      scale: vfx.scale,
     )
   Node(
     children: @[
@@ -284,7 +290,7 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
       playerStatusHudNode(battle.player, vec(300, 620)),
       actionButtonsNode(battle, controller, vec(610, 600)),
       turnQueueNode(battle, vec(800, 60)),
-    ] & floaties,
+    ] & extraNodes,
   )
 
 proc newBattleMenu*(battle: BattleData): Menu[BattleData, BattleController] =
