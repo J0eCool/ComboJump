@@ -101,7 +101,7 @@ proc battleEntityNode(battle: BattleData, controller: BattleController,
         size: vec(100),
         invisible: true,
         onClick: (proc() =
-          if entity != battle.player and battle.selectedSkill != nil:
+          if not entity.isPlayer and battle.selectedSkill != nil and battle.isClickReady(controller):
             battle.tryUseAttack(controller, entity)
         ),
       ).Node,

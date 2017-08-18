@@ -83,29 +83,10 @@ proc startAttack*(battle: BattleData, controller: BattleController,
   let
     damage = skill.damageFor(attacker)
     targets = skill.toTargets(battle.enemies, target)
-  controller.animation.queueEvent(0.1) do (t: float):
-    attacker.updateAttackAnimation(t)
-  controller.animation.queueEvent do (t: float):
-    let basePos = target.pos - vec(100)
-    controller.animation.addVfx Vfx(
-      pos: basePos,
-      sprite: "Slash.png",
-      scale: 4,
-      duration: 0.2,
-      update: (proc(vfx: var Vfx, t: float) =
-        vfx.pos = basePos + t * vec(200)
-      ),
-    )
-  controller.animation.wait(0.1)
-  controller.animation.queueEvent do (t: float):
-    for enemy in targets:
-      controller.processAttackDamage(damage, enemy)
-    controller.animation.queueAsync(0.175) do (t: float):
-      attacker.updateAttackAnimation(1.0 - t)
-  controller.animation.queueEvent do (t: float):
-    for enemy in targets:
-      battle.updateMaybeKill(controller, enemy)
-  controller.animation.wait(0.25)
+    onHit = proc(target: BattleEntity, damage: int) =
+      controller.processAttackDamage(damage, target)
+      battle.updateMaybeKill(controller, target)
+  skill.attackAnim(controller.animation, onHit, damage, attacker, targets)
   controller.animation.queueEvent do (t: float):
     battle.endTurn()
 
