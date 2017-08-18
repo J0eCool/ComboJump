@@ -34,9 +34,16 @@ let
   hitSingle: TargetProc =
     proc(allEntities: seq[BattleEntity], target: BattleEntity): seq[BattleEntity] =
       @[target]
+
   hitAll: TargetProc =
     proc(allEntities: seq[BattleEntity], target: BattleEntity): seq[BattleEntity] =
       allEntities
+
+proc hitRepeated(times: int): TargetProc =
+  result = proc(allEntities: seq[BattleEntity], target: BattleEntity): seq[BattleEntity] =
+    result = @[]
+    for i in 0..<times:
+      result.add target
 
 let
   basicHit: AttackAnimProc =
@@ -60,6 +67,32 @@ let
       animation.queueEvent do (t: float):
         for enemy in targets:
           onHit(enemy, damage)
+        animation.queueAsync(0.175) do (t: float):
+          attacker.updateAttackAnimation(1.0 - t)
+      animation.wait(0.25)
+
+  multiHit: AttackAnimProc =
+    proc(animation: AnimationCollection, onHit: HitCallback, damage: int,
+         attacker: BattleEntity, targets: seq[BattleEntity]) =
+      animation.queueEvent(0.1) do (t: float):
+        attacker.updateAttackAnimation(t)
+      for target in targets:
+        animation.queueEvent do (t: float):
+          let basePos = target.pos - vec(100)
+          animation.addVfx Vfx(
+            pos: basePos,
+            sprite: "Slash.png",
+            scale: 4,
+            duration: 0.2,
+            update: (proc(vfx: var Vfx, t: float) =
+              vfx.pos = basePos + t * vec(200)
+            ),
+          )
+        animation.wait(0.1)
+        animation.queueEvent do (t: float):
+          onHit(target, damage)
+        animation.wait(0.2)
+      animation.queueEvent do (t: float):
         animation.queueAsync(0.175) do (t: float):
           attacker.updateAttackAnimation(1.0 - t)
       animation.wait(0.25)
@@ -88,6 +121,14 @@ let allSkills*: array[SkillKind, SkillInfo] = [
     focusCost: 5,
     toTargets: hitAll,
     attackAnim: basicHit,
+  ),
+  doubleHit: SkillInfo(
+    name: "Double Hit",
+    target: single,
+    damage: 1,
+    focusCost: 4,
+    toTargets: hitRepeated(2),
+    attackAnim: multiHit,
   ),
   flameblast: SkillInfo(
     name: "Flameblast",

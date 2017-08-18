@@ -3,4 +3,5 @@ type
     attack
     powerAttack
     cleave
+    doubleHit
     flameblast
