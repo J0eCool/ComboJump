@@ -98,3 +98,8 @@ proc endTurn*(battle: BattleData) =
 proc canAfford*(battle: BattleData, skill: SkillInfo): bool =
   battle.player.mana >= skill.manaCost and
     battle.player.focus >= skill.focusCost
+
+proc clampResources*(battle: BattleData) =
+  battle.player.clampResources()
+  for enemy in battle.enemies.mitems:
+    enemy.clampResources()

@@ -63,3 +63,8 @@ proc newEnemy*(kind: EnemyKind): BattleEntity =
 
 proc takeDamage*(entity: BattleEntity, damage: int) =
   entity.health -= damage
+
+proc clampResources*(entity: BattleEntity) =
+  entity.health = entity.health.clamp(0, entity.maxHealth)
+  entity.mana = entity.mana.clamp(0, entity.maxMana)
+  entity.focus = entity.focus.clamp(0, entity.maxFocus)

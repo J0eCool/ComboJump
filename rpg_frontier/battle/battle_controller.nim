@@ -113,8 +113,7 @@ proc tryUseAttack*(battle: BattleData, controller: BattleController, entity: Bat
   let skill = battle.selectedSkill
   assert skill != nil
   assert entity != nil
-  if battle.canAfford(skill) and
-     battle.isClickReady(controller):
+  if battle.canAfford(skill):
     battle.player.mana -= skill.manaCost
     battle.player.focus -= skill.focusCost
     battle.startAttack(controller, skill, battle.player, entity)
@@ -133,15 +132,6 @@ proc tryUsePotion*(battle: BattleData, controller: BattleController, potion: ptr
     battle.player.health += info.effect
   of manaPotion:
     battle.player.mana += info.effect
-
-proc clampResources(entity: BattleEntity) =
-  entity.health = entity.health.clamp(0, entity.maxHealth)
-  entity.mana = entity.mana.clamp(0, entity.maxMana)
-  entity.focus = entity.focus.clamp(0, entity.maxFocus)
-proc clampResources(battle: BattleData) =
-  battle.player.clampResources()
-  for enemy in battle.enemies.mitems:
-    enemy.clampResources()
 
 proc beginEnemyAttack(battle: BattleData, controller: BattleController) =
   let
