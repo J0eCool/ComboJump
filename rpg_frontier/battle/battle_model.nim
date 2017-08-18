@@ -25,8 +25,6 @@ type
     stages*: seq[Stage]
     curStageIndex*: int
 
-const attackAnimDist = 250.0
-
 proc initPotions(): seq[Potion] =
   result = @[]
   for info in allPotionInfos:
@@ -69,14 +67,6 @@ proc newBattleData*(stats: PlayerStats, level: Level): BattleData =
 
 proc isEnemyTurn*(battle: BattleData): bool =
   battle.activeEntity != nil and battle.activeEntity != battle.player
-
-proc updateAttackAnimation*(battle: BattleData, pct: float) =
-  let mult =
-    if not battle.isEnemyTurn:
-      1.0
-    else:
-      -1.0
-  battle.activeEntity.offset = vec(attackAnimDist * pct * mult, 0.0)
 
 proc updateTurnQueue*(battle: BattleData, dt: float) =
   if battle.activeEntity != nil:

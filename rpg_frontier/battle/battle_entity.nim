@@ -10,12 +10,13 @@ type
     name*: string
     texture*: string
     pos*: Vec
+    offset*: Vec
+    isPlayer*: bool
     health*, maxHealth*: int
     mana*, maxMana*: int
     focus*, maxFocus*: int
     damage*: int
     speed*: float
-    offset*: Vec
     knownSkills*: seq[SkillKind]
 
 proc newPlayer*(): BattleEntity =
@@ -27,6 +28,7 @@ proc newPlayer*(): BattleEntity =
     name: "Player",
     texture: "Wizard2.png",
     pos: vec(130, 400),
+    isPlayer: true,
     health: health,
     maxHealth: health,
     mana: mana,
@@ -68,3 +70,12 @@ proc clampResources*(entity: BattleEntity) =
   entity.health = entity.health.clamp(0, entity.maxHealth)
   entity.mana = entity.mana.clamp(0, entity.maxMana)
   entity.focus = entity.focus.clamp(0, entity.maxFocus)
+
+const attackAnimDist = 250.0
+proc updateAttackAnimation*(entity: BattleEntity, pct: float) =
+  let mult =
+    if entity.isPlayer:
+      1.0
+    else:
+      -1.0
+  entity.offset = vec(attackAnimDist * pct * mult, 0.0)

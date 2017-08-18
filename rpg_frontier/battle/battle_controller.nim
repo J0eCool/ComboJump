@@ -84,7 +84,7 @@ proc startAttack*(battle: BattleData, controller: BattleController,
     damage = skill.damageFor(attacker)
     targets = skill.toTargets(battle.enemies, target)
   controller.animation.queueEvent(0.1) do (t: float):
-    battle.updateAttackAnimation(t)
+    attacker.updateAttackAnimation(t)
   controller.animation.queueEvent do (t: float):
     let basePos = target.pos - vec(100)
     controller.animation.addVfx Vfx(
@@ -101,7 +101,7 @@ proc startAttack*(battle: BattleData, controller: BattleController,
     for enemy in targets:
       controller.processAttackDamage(damage, enemy)
     controller.animation.queueAsync(0.175) do (t: float):
-      battle.updateAttackAnimation(1.0 - t)
+      attacker.updateAttackAnimation(1.0 - t)
   controller.animation.queueEvent do (t: float):
     for enemy in targets:
       battle.updateMaybeKill(controller, enemy)
