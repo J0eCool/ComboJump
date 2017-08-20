@@ -2,6 +2,7 @@ type
   PotionKind* = enum
     healthPotion
     manaPotion
+    focusPotion
   PotionInfo* = object
     kind*: PotionKind
     name*: string
@@ -23,7 +24,13 @@ const allPotionInfos* = @[
   PotionInfo(
     kind: manaPotion,
     name: "Mna",
-    effect: 3,
-    charges: 2,
+    effect: 5,
+    charges: 3,
+  ),
+  PotionInfo(
+    kind: focusPotion,
+    name: "Fcs",
+    effect: 10,
+    charges: 3,
   ),
 ]

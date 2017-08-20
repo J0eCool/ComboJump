@@ -85,9 +85,10 @@ proc startAttack*(battle: BattleData, controller: BattleController,
     targets = skill.toTargets(battle.enemies, target)
     onHit = proc(target: BattleEntity, damage: int) =
       controller.processAttackDamage(damage, target)
-      battle.updateMaybeKill(controller, target)
   skill.attackAnim(controller.animation, onHit, damage, attacker, targets)
   controller.animation.queueEvent do (t: float):
+    for entity in battle.enemies & battle.player:
+      battle.updateMaybeKill(controller, entity)
     battle.endTurn()
 
 proc tryUseAttack*(battle: BattleData, controller: BattleController, entity: BattleEntity) =
@@ -113,6 +114,8 @@ proc tryUsePotion*(battle: BattleData, controller: BattleController, potion: ptr
     battle.player.health += info.effect
   of manaPotion:
     battle.player.mana += info.effect
+  of focusPotion:
+    battle.player.focus += info.effect
 
 proc beginEnemyAttack(battle: BattleData, controller: BattleController) =
   let
