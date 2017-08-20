@@ -18,6 +18,12 @@ type
     damage*: int
     speed*: float
     knownSkills*: seq[SkillKind]
+    id: int
+
+var nextId: int = 0
+proc getNextId(): int =
+  result = nextId
+  nextId += 1
 
 proc newPlayer*(): BattleEntity =
   let
@@ -39,10 +45,11 @@ proc newPlayer*(): BattleEntity =
     speed: 1.0,
     knownSkills: @[
       attack,
-      powerAttack,
       doubleHit,
-      cleave,
+      bounceHit,
+      bladeDance,
     ],
+    id: getNextId(),
   )
 
 proc newEnemy*(kind: EnemyKind): BattleEntity =
@@ -62,6 +69,7 @@ proc newEnemy*(kind: EnemyKind): BattleEntity =
     damage: enemy.damage,
     speed: enemy.speed,
     knownSkills: @[attack],
+    id: getNextId(),
   )
 
 proc takeDamage*(entity: BattleEntity, damage: int) =
@@ -80,3 +88,6 @@ proc updateAttackAnimation*(entity: BattleEntity, pct: float) =
     else:
       -1.0
   entity.offset = vec(attackAnimDist * pct * mult, 0.0)
+
+proc debugName*(entity: BattleEntity): string =
+  entity.name & " : id=" & $entity.id

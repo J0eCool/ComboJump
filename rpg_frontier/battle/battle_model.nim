@@ -33,7 +33,7 @@ proc initPotions(): seq[Potion] =
       charges: info.charges,
     )
 
-proc currentStageEnemies(battle: BattleData): seq[BattleEntity] {.nosideeffect.} =
+proc currentStageEnemies(battle: BattleData): seq[BattleEntity] =
   let
     index = battle.curStageIndex.clamp(0, battle.stages.len - 1)
     stage = battle.stages[index]

@@ -18,7 +18,7 @@ type
     duration*: float
     update*: EventUpdate
     t: float
-  EventUpdate = proc(t: float)
+  EventUpdate* = proc(t: float)
   Vfx* = object
     sprite*: string
     pos*: Vec

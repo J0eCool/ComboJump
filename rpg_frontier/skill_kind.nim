@@ -4,4 +4,7 @@ type
     powerAttack
     cleave
     doubleHit
+    bounceHit
+    bladeDance
+
     flameblast
