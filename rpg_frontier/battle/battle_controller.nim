@@ -112,22 +112,25 @@ proc tryUsePotion*(battle: BattleData, controller: BattleController, potion: ptr
   potion.charges -= 1
   potion.cooldown = max(0, info.duration)
 
+  let player = battle.player
   if not info.instantUse:
-    battle.player.tickStatusEffects()
+    player.tickStatusEffects()
 
-  case info.kind
-  of healthPotion:
-    battle.player.health += info.effect
+  template restorationPotion(field: untyped, effectKind: StatusEffectKind): untyped =
+    player.field += info.effect
     if info.duration > 1:
-      battle.player.effects.add StatusEffect(
-        kind: healthRegen,
+      player.effects.add StatusEffect(
+        kind: effectKind,
         amount: info.effect,
         duration: info.duration - 1,
       )
+  case info.kind
+  of healthPotion:
+    restorationPotion(health, healthRegen)
   of manaPotion:
-    battle.player.mana += info.effect
+    restorationPotion(mana, manaRegen)
   of focusPotion:
-    battle.player.focus += info.effect
+    restorationPotion(focus, focusRegen)
 
   if not info.instantUse:
     battle.endTurn()

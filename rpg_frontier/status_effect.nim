@@ -6,3 +6,4 @@ type
   StatusEffectKind* = enum
     healthRegen
     manaRegen
+    focusRegen
