@@ -65,8 +65,17 @@ proc hitRandom(numTargets: int): TargetProc =
       let e = random(allEntities)
       result.add e
 
-type Capture[T] = ref object
-  val: T
+proc slashVfx(pos: Vec): Vfx =
+  let basePos = pos - vec(100)
+  Vfx(
+    pos: basePos,
+    sprite: "Slash.png",
+    scale: 4,
+    duration: 0.2,
+    update: (proc(vfx: var Vfx, t: float) =
+      vfx.pos = basePos + t * vec(200)
+    ),
+  )
 
 let
   basicHit: AttackAnimProc =
@@ -74,16 +83,7 @@ let
          attacker: BattleEntity, targets: seq[BattleEntity]) =
       let target = targets[0]
       animation.queueEvent do (t: float):
-        let basePos = target.pos - vec(100)
-        animation.addVfx Vfx(
-          pos: basePos,
-          sprite: "Slash.png",
-          scale: 4,
-          duration: 0.2,
-          update: (proc(vfx: var Vfx, t: float) =
-            vfx.pos = basePos + t * vec(200)
-          ),
-        )
+        animation.addVfx slashVfx(target.pos)
       animation.wait(0.1)
       animation.queueEvent do (t: float):
         for enemy in targets:
@@ -96,16 +96,7 @@ let
         let queueVfx = proc(target: BattleEntity): EventUpdate =
           # Explicitly thunk to capture target to work around a Nim bug
           return proc(t: float) =
-            let basePos = target.pos - vec(100)
-            animation.addVfx Vfx(
-              pos: basePos,
-              sprite: "Slash.png",
-              scale: 4,
-              duration: 0.2,
-              update: (proc(vfx: var Vfx, t: float) =
-                vfx.pos = basePos + t * vec(200)
-              ),
-            )
+            animation.addVfx slashVfx(target.pos)
         animation.queueEvent(queueVfx(target))
         animation.wait(0.1)
         let doDamage = proc(target: BattleEntity): EventUpdate =
