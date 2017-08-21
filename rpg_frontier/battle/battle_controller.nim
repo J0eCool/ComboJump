@@ -5,6 +5,7 @@ import
     animation,
     enemy,
     level,
+    percent,
     player_stats,
     potion,
     skill,
@@ -110,7 +111,7 @@ proc tryUsePotion*(battle: BattleData, controller: BattleController, potion: ptr
     return
   let info = potion.info
   potion.charges -= 1
-  potion.cooldown = max(0, info.duration)
+  potion.cooldown = max(1, info.duration)
 
   let player = battle.player
   if not info.instantUse:
@@ -131,6 +132,12 @@ proc tryUsePotion*(battle: BattleData, controller: BattleController, potion: ptr
     restorationPotion(mana, manaRegen)
   of focusPotion:
     restorationPotion(focus, focusRegen)
+  of damagePotion:
+    player.effects.add StatusEffect(
+      kind: damageBuff,
+      amount: info.effect,
+      duration: info.duration,
+    )
 
   if not info.instantUse:
     battle.endTurn()

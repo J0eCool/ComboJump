@@ -3,6 +3,7 @@ type
     healthPotion
     manaPotion
     focusPotion
+    damagePotion
   PotionInfo* = object
     kind*: PotionKind
     name*: string
@@ -36,5 +37,13 @@ const allPotionInfos* = @[
     effect: 6,
     charges: 2,
     duration: 4,
+  ),
+  PotionInfo(
+    kind: damagePotion,
+    name: "Damage+",
+    effect: 50,
+    charges: 2,
+    duration: 4,
+    instantUse: true,
   ),
 ]

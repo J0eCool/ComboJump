@@ -106,6 +106,8 @@ proc tickStatusEffects*(entity: BattleEntity) =
       entity.mana += effect.amount
     of focusRegen:
       entity.focus += effect.amount
+    else:
+      discard
   entity.effects.keepItIf(it.duration > 0)
 
 proc debugName*(entity: BattleEntity): string =

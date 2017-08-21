@@ -196,6 +196,10 @@ method diffSelf(button, newVal: Button): bool =
   button.onClick = newVal.onClick
   button.color = newVal.color
   button.invisible = newVal.invisible
+
+  if button.hoverNode != nil:
+    button.hoverNode.diff(newVal.hoverNode)
+
   true
 
 method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceManager) =

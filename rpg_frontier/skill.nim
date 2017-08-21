@@ -3,7 +3,9 @@ import sequtils
 import
   rpg_frontier/[
     animation,
+    percent,
     skill_kind,
+    status_effect,
   ],
   rpg_frontier/battle/[
     battle_model,
@@ -13,7 +15,6 @@ import
   vec
 
 type
-  Percent = distinct int
   SkillInfo* = ref object
     name*: string
     target*: SkillTarget
@@ -31,17 +32,14 @@ type
                         attacker: BattleEntity, targets: seq[BattleEntity])
   HitCallback = proc(target: BattleEntity, damage: int)
 
-proc `*`(pct: Percent, n: int): int =
-  (n * pct.int) div 100
-proc `*`(n: int, pct: Percent): int =
-  pct * n
-proc `*`(pct: Percent, n: float): float =
-  n * pct.float / 100.0
-proc `*`(n: float, pct: Percent): float =
-  pct * n
-
 proc damageFor*(skill: SkillInfo, entity: BattleEntity): int =
-  skill.damage * entity.damage
+  result = entity.damage * skill.damage
+  for effect in entity.effects:
+    case effect.kind
+    of damageBuff:
+      result = result * Percent(100 + effect.amount)
+    else:
+      discard
 
 # template makeTargetProc
 
