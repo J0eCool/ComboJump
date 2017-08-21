@@ -133,14 +133,20 @@ let allSkills*: array[SkillKind, SkillInfo] = [
     target: single,
     damage: 140.Percent,
     focusCost: 6,
-    toTargets: (
+    toTargets:
       proc(allEntities: seq[BattleEntity], target: BattleEntity): seq[BattleEntity] =
         let rest = allEntities.filterIt(it != target)
         result = @[target] 
         if rest.len > 0:
           result.add random(rest)
-    ),
-    attackAnim: multiHit,
+    ,
+    attackAnim:
+      proc(animation: AnimationCollection, onHit: HitCallback, damage: int,
+           attacker: BattleEntity, targets: seq[BattleEntity]) =
+        basicHit(animation, onHit, damage, attacker, @[targets[0]])
+        if targets.len > 1:
+          basicHit(animation, onHit, damage div 2, attacker, @[targets[1]])
+    ,
   ),
   bladeDance: SkillInfo(
     name: "Blade Dance",
