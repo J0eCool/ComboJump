@@ -9,6 +9,7 @@ type
     effect*: int
     charges*: int
     duration*: int
+    instantUse*: bool
   Potion* = object
     info*: PotionInfo
     charges*: int
@@ -20,6 +21,7 @@ const allPotionInfos* = @[
     name: "Ins Health+",
     effect: 10,
     charges: 3,
+    instantUse: true,
   ),
   PotionInfo(
     kind: healthPotion,
@@ -33,11 +35,13 @@ const allPotionInfos* = @[
     name: "Ins Mana+",
     effect: 5,
     charges: 3,
+    instantUse: true,
   ),
   PotionInfo(
     kind: focusPotion,
     name: "Ins Focus+",
     effect: 10,
     charges: 3,
+    instantUse: true,
   ),
 ]

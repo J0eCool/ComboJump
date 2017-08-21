@@ -108,9 +108,13 @@ proc canUse*(potion: Potion): bool =
 proc tryUsePotion*(battle: BattleData, controller: BattleController, potion: ptr Potion) =
   if not potion[].canUse():
     return
-  potion.charges -= 1
-
   let info = potion.info
+  potion.charges -= 1
+  potion.cooldown = max(0, info.duration)
+
+  if not info.instantUse:
+    battle.player.tickStatusEffects()
+
   case info.kind
   of healthPotion:
     battle.player.health += info.effect
@@ -124,6 +128,9 @@ proc tryUsePotion*(battle: BattleData, controller: BattleController, potion: ptr
     battle.player.mana += info.effect
   of focusPotion:
     battle.player.focus += info.effect
+
+  if not info.instantUse:
+    battle.endTurn()
 
 proc beginEnemyAttack(battle: BattleData, controller: BattleController) =
   let

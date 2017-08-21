@@ -68,12 +68,19 @@ proc newBattleData*(stats: PlayerStats, level: Level): BattleData =
 proc isEnemyTurn*(battle: BattleData): bool =
   battle.activeEntity != nil and battle.activeEntity != battle.player
 
+proc startPlayerTurn*(battle: BattleData) =
+  for potion in battle.potions.mitems:
+    if potion.cooldown > 0:
+      potion.cooldown -= 1
+
 proc updateTurnQueue*(battle: BattleData, dt: float) =
   if battle.activeEntity != nil:
     return
   for pair in battle.turnQueue:
     if pair.t >= 1.0:
       battle.activeEntity = pair.entity
+      if pair.entity == battle.player:
+        battle.startPlayerTurn()
       return
   for pair in battle.turnQueue.mitems:
     pair.t += dt * pair.entity.speed
