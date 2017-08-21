@@ -9,6 +9,7 @@ import
     potion,
     skill,
     skill_kind,
+    status_effect,
     transition,
   ],
   rpg_frontier/battle/[
@@ -99,6 +100,7 @@ proc tryUseAttack*(battle: BattleData, controller: BattleController, entity: Bat
     battle.player.mana -= skill.manaCost
     battle.player.focus -= skill.focusCost
     battle.startAttack(controller, skill, battle.player, entity)
+    battle.activeEntity.tickStatusEffects()
 
 proc canUse*(potion: Potion): bool =
   potion.charges > 0 and potion.cooldown == 0
@@ -112,6 +114,12 @@ proc tryUsePotion*(battle: BattleData, controller: BattleController, potion: ptr
   case info.kind
   of healthPotion:
     battle.player.health += info.effect
+    if info.duration > 1:
+      battle.player.effects.add StatusEffect(
+        kind: healthRegen,
+        amount: info.effect,
+        duration: info.duration - 1,
+      )
   of manaPotion:
     battle.player.mana += info.effect
   of focusPotion:

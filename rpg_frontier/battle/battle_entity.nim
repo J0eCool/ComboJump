@@ -1,7 +1,10 @@
+import sequtils
+
 import
   rpg_frontier/[
     enemy,
     skill_kind,
+    status_effect,
   ],
   vec
 
@@ -18,6 +21,7 @@ type
     damage*: int
     speed*: float
     knownSkills*: seq[SkillKind]
+    effects*: seq[StatusEffect]
     id: int
 
 var nextId: int = 0
@@ -27,9 +31,9 @@ proc getNextId(): int =
 
 proc newPlayer*(): BattleEntity =
   let
-    health = 10
-    mana = 8
-    focus = 20
+    health = 30
+    mana = 16
+    focus = 25
   BattleEntity(
     name: "Player",
     texture: "Wizard2.png",
@@ -41,7 +45,7 @@ proc newPlayer*(): BattleEntity =
     maxMana: mana,
     focus: 0,
     maxFocus: focus,
-    damage: 1,
+    damage: 4,
     speed: 1.0,
     knownSkills: @[
       attack,
@@ -49,6 +53,7 @@ proc newPlayer*(): BattleEntity =
       bounceHit,
       bladeDance,
     ],
+    effects: @[],
     id: getNextId(),
   )
 
@@ -69,6 +74,7 @@ proc newEnemy*(kind: EnemyKind): BattleEntity =
     damage: enemy.damage,
     speed: enemy.speed,
     knownSkills: @[attack],
+    effects: @[],
     id: getNextId(),
   )
 
@@ -88,6 +94,16 @@ proc updateAttackAnimation*(entity: BattleEntity, pct: float) =
     else:
       -1.0
   entity.offset = vec(attackAnimDist * pct * mult, 0.0)
+
+proc tickStatusEffects*(entity: BattleEntity) =
+  for effect in entity.effects.mitems:
+    effect.duration -= 1
+    case effect.kind
+    of healthRegen:
+      entity.health += effect.amount
+    of manaRegen:
+      entity.mana += effect.amount
+  entity.effects.keepItIf(it.duration > 0)
 
 proc debugName*(entity: BattleEntity): string =
   entity.name & " : id=" & $entity.id

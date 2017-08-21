@@ -13,9 +13,9 @@ type
 
 proc initializeEnemyData(): array[EnemyKind, EnemyInfo] =
   for  kind,     name,      texture, health, damage, speed in [
-    ( slime,  "Slime",  "Slime.png",      3,      1,   0.8),
-    (goblin, "Goblin", "Goblin.png",      4,      1,   1.1),
-    (  ogre,   "Ogre",   "Ogre.png",      5,      2,   0.7),
+    ( slime,  "Slime",  "Slime.png",     10,      2,   0.8),
+    (goblin, "Goblin", "Goblin.png",      8,      3,   1.1),
+    (  ogre,   "Ogre",   "Ogre.png",     24,      7,   0.7),
   ].items:
     let info = EnemyInfo(
       kind: kind,

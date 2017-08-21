@@ -17,19 +17,26 @@ type
 const allPotionInfos* = @[
   PotionInfo(
     kind: healthPotion,
-    name: "Hth",
-    effect: 5,
+    name: "Ins Health+",
+    effect: 10,
     charges: 3,
   ),
   PotionInfo(
+    kind: healthPotion,
+    name: "Health+",
+    effect: 6,
+    charges: 3,
+    duration: 4,
+  ),
+  PotionInfo(
     kind: manaPotion,
-    name: "Mna",
+    name: "Ins Mana+",
     effect: 5,
     charges: 3,
   ),
   PotionInfo(
     kind: focusPotion,
-    name: "Fcs",
+    name: "Ins Focus+",
     effect: 10,
     charges: 3,
   ),
