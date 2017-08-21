@@ -73,8 +73,6 @@ let
     proc(animation: AnimationCollection, onHit: HitCallback, damage: int,
          attacker: BattleEntity, targets: seq[BattleEntity]) =
       let target = targets[0]
-      animation.queueEvent(0.1) do (t: float):
-        attacker.updateAttackAnimation(t)
       animation.queueEvent do (t: float):
         let basePos = target.pos - vec(100)
         animation.addVfx Vfx(
@@ -90,15 +88,10 @@ let
       animation.queueEvent do (t: float):
         for enemy in targets:
           onHit(enemy, damage)
-        animation.queueAsync(0.175) do (t: float):
-          attacker.updateAttackAnimation(1.0 - t)
-      animation.wait(0.25)
 
   multiHit: AttackAnimProc =
     proc(animation: AnimationCollection, onHit: HitCallback, damage: int,
          attacker: BattleEntity, targets: seq[BattleEntity]) =
-      animation.queueEvent(0.1) do (t: float):
-        attacker.updateAttackAnimation(t)
       for target in targets:
         let queueVfx = proc(target: BattleEntity): EventUpdate =
           # Explicitly thunk to capture target to work around a Nim bug
@@ -120,10 +113,6 @@ let
             onHit(target, damage)
         animation.queueEvent(doDamage(target))
         animation.wait(0.2)
-      animation.queueEvent do (t: float):
-        animation.queueAsync(0.175) do (t: float):
-          attacker.updateAttackAnimation(1.0 - t)
-      animation.wait(0.25)
 
 let allSkills*: array[SkillKind, SkillInfo] = [
   attack: SkillInfo(
@@ -161,7 +150,7 @@ let allSkills*: array[SkillKind, SkillInfo] = [
   bounceHit: SkillInfo(
     name: "Bounce Hit",
     target: single,
-    damage: 200.Percent,
+    damage: 140.Percent,
     focusCost: 6,
     toTargets: (
       proc(allEntities: seq[BattleEntity], target: BattleEntity): seq[BattleEntity] =

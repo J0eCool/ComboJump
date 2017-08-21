@@ -83,12 +83,19 @@ proc isClickReady*(battle: BattleData, controller: BattleController): bool =
 proc startAttack*(battle: BattleData, controller: BattleController,
                  skill: SkillInfo, attacker, target: BattleEntity) =
   let
+    animation = controller.animation
     damage = skill.damageFor(attacker)
     targets = skill.toTargets(battle.enemies, target)
     onHit = proc(target: BattleEntity, damage: int) =
       controller.processAttackDamage(damage, target)
-  skill.attackAnim(controller.animation, onHit, damage, attacker, targets)
-  controller.animation.queueEvent do (t: float):
+  animation.queueEvent(0.1) do (t: float):
+    attacker.updateAttackAnimation(t)
+  skill.attackAnim(animation, onHit, damage, attacker, targets)
+  animation.queueEvent do (t: float):
+    animation.queueAsync(0.175) do (t: float):
+      attacker.updateAttackAnimation(1.0 - t)
+  animation.wait(0.25)
+  animation.queueEvent do (t: float):
     for entity in battle.enemies & battle.player:
       battle.updateMaybeKill(controller, entity)
     battle.endTurn()
