@@ -82,8 +82,7 @@ let
     proc(animation: AnimationCollection, onHit: HitCallback, damage: int,
          attacker: BattleEntity, targets: seq[BattleEntity]) =
       let target = targets[0]
-      animation.queueEvent do (t: float):
-        animation.addVfx slashVfx(target.pos)
+      animation.queueAddVfx slashVfx(target.pos)
       animation.wait(0.1)
       animation.queueEvent do (t: float):
         for enemy in targets:
@@ -93,17 +92,13 @@ let
     proc(animation: AnimationCollection, onHit: HitCallback, damage: int,
          attacker: BattleEntity, targets: seq[BattleEntity]) =
       for target in targets:
-        let queueVfx = proc(target: BattleEntity): EventUpdate =
-          # Explicitly thunk to capture target to work around a Nim bug
-          return proc(t: float) =
-            animation.addVfx slashVfx(target.pos)
-        animation.queueEvent(queueVfx(target))
+        animation.queueAddVfx slashVfx(target.pos)
         animation.wait(0.1)
         let doDamage = proc(target: BattleEntity): EventUpdate =
           return proc(t: float) =
             onHit(target, damage)
         animation.queueEvent(doDamage(target))
-        animation.wait(0.2)
+        animation.wait(0.05)
 
 let allSkills*: array[SkillKind, SkillInfo] = [
   attack: SkillInfo(

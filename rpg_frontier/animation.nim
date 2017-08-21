@@ -58,9 +58,6 @@ proc pos*(text: FloatingText): Vec =
 proc addFloatingText*(animation: AnimationCollection, text: FloatingText) =
   animation.floatingTexts.add text
 
-proc addVfx*(animation: AnimationCollection, vfx: Vfx) =
-  animation.vfxs.add vfx
-
 proc queueEvent*(animation: AnimationCollection, duration: float, update: EventUpdate) =
   animation.eventQueue.add Event(
     duration: duration,
@@ -76,6 +73,12 @@ proc queueAsync*(animation: AnimationCollection, duration: float, update: EventU
     duration: duration,
     update: update,
   )
+
+proc addVfx*(animation: AnimationCollection, vfx: Vfx) =
+  animation.vfxs.add vfx
+proc queueAddVfx*(animation: AnimationCollection, vfx: Vfx) =
+  animation.queueEvent do (t: float):
+    animation.addVfx vfx
 
 proc notBlocking*(animation: AnimationCollection): bool =
   animation.eventQueue.len == 0
