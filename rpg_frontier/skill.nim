@@ -92,12 +92,7 @@ let
     proc(animation: AnimationCollection, onHit: HitCallback, damage: int,
          attacker: BattleEntity, targets: seq[BattleEntity]) =
       for target in targets:
-        animation.queueAddVfx slashVfx(target.pos)
-        animation.wait(0.1)
-        let doDamage = proc(target: BattleEntity): EventUpdate =
-          return proc(t: float) =
-            onHit(target, damage)
-        animation.queueEvent(doDamage(target))
+        basicHit(animation, onHit, damage, attacker, @[target])
         animation.wait(0.05)
 
 let allSkills*: array[SkillKind, SkillInfo] = [

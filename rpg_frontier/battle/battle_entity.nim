@@ -50,6 +50,7 @@ proc newPlayer*(): BattleEntity =
     knownSkills: @[
       attack,
       powerAttack,
+      cleave,
       doubleHit,
       bounceHit,
       bladeDance,
