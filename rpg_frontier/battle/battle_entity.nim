@@ -49,7 +49,7 @@ proc newPlayer*(): BattleEntity =
     speed: 1.0,
     knownSkills: @[
       attack,
-      powerAttack,
+      powerHit,
       cleave,
       doubleHit,
       bounceHit,

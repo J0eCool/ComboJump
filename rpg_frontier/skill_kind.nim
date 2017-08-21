@@ -1,7 +1,7 @@
 type
   SkillKind* = enum
     attack
-    powerAttack
+    powerHit
     cleave
     doubleHit
     bounceHit

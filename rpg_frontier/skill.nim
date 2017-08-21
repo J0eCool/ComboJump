@@ -104,8 +104,8 @@ let allSkills*: array[SkillKind, SkillInfo] = [
     toTargets: hitSingle,
     attackAnim: basicHit,
   ),
-  powerAttack: SkillInfo(
-    name: "Power Attack",
+  powerHit: SkillInfo(
+    name: "Power Hit",
     target: single,
     damage: 160.Percent,
     focusCost: 4,
