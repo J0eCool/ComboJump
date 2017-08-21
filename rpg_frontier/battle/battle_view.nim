@@ -9,6 +9,7 @@ import
     potion,
     skill,
     skill_kind,
+    status_effect,
     transition,
   ],
   rpg_frontier/battle/[
@@ -90,6 +91,21 @@ proc quantityBarNode(cur, max: int, pos, size: Vec, color: Color, showText = tru
     ],
   )
 
+proc statusEffectNode(effect: StatusEffect): Node {.procvar.} =
+  Button(
+    size: vec(40),
+    label: ($effect.kind)[0..0] & $effect.duration,
+  )
+
+proc entityStatusNode(entity: BattleEntity, pos: Vec): Node =
+  List[StatusEffect](
+    pos: pos,
+    items: entity.effects,
+    listNodes: statusEffectNode,
+    horizontal: true,
+    spacing: vec(5),
+  )
+
 proc battleEntityNode(battle: BattleData, controller: BattleController,
                       entity: BattleEntity, pos = vec()): Node =
   SpriteNode(
@@ -115,6 +131,7 @@ proc enemyEntityNode(battle: BattleData, controller: BattleController,
     pos: entity.pos,
     children: @[
       battleEntityNode(battle, controller, entity),
+      entityStatusNode(entity, vec(80, 80)),
       quantityBarNode(
         entity.health,
         entity.maxHealth,
@@ -256,6 +273,7 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         ),
       ),
       battleEntityNode(battle, controller, battle.player, battle.player.pos),
+      entityStatusNode(battle.player, battle.player.pos + vec(-80, 80)),
       List[BattleEntity](
         ignoreSpacing: true,
         items: battle.enemies,
