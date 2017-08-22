@@ -18,9 +18,14 @@ import
     battle_model,
   ],
   color,
+  input,
   menu,
   util,
   vec
+
+let
+  skillHotkeys = @[keyQ, keyW, keyE, keyR, keyT]
+  potionHotkeys = @[n1, n2, n3, n4, n5]
 
 proc skillButtonTooltipNode(skill: SkillInfo, player: BattleEntity): Node =
   var lines: seq[string] = @[]
@@ -43,7 +48,8 @@ proc skillButtonTooltipNode(skill: SkillInfo, player: BattleEntity): Node =
     )]
   )
 
-proc skillButtonNode(battle: BattleData, controller: BattleController, skill: SkillInfo): Node =
+proc skillButtonNode(battle: BattleData, controller: BattleController,
+                     skill: SkillInfo, index: int): Node =
   let
     disabled = not battle.canAfford(skill) or not battle.isClickReady(controller)
     selected = battle.selectedSkill == skill
@@ -60,12 +66,18 @@ proc skillButtonNode(battle: BattleData, controller: BattleController, skill: Sk
       else:
         proc() =
           battle.selectedSkill = skill
+    hotkey =
+      if index >= 0 and index < skillHotkeys.len:
+        skillHotkeys[index]
+      else:
+        none
   Button(
     size: vec(180, 40),
     label: skill.name,
     color: color,
     onClick: onClick,
     hoverNode: skillButtonTooltipNode(skill, battle.player),
+    hotkey: hotkey,
   )
 
 proc quantityBarNode(cur, max: int, pos, size: Vec, color: Color, showText = true): Node =
@@ -180,7 +192,8 @@ proc playerStatusHudNode(entity: BattleEntity, pos: Vec): Node =
     ],
   )
 
-proc potionButtonNode(battle: BattleData, controller: BattleController, potion: ptr Potion): Node =
+proc potionButtonNode(battle: BattleData, controller: BattleController,
+                      potion: ptr Potion, index: int): Node =
   let
     disabled = not potion[].canUse() or not battle.isClickReady(controller)
     color =
@@ -194,11 +207,17 @@ proc potionButtonNode(battle: BattleData, controller: BattleController, potion: 
       else:
         proc() =
           battle.tryUsePotion(controller, potion)
+    hotkey =
+      if index >= 0 and index < potionHotkeys.len:
+        potionHotkeys[index]
+      else:
+        none
   Button(
     size: vec(180, 40),
     label: potion.info.name & " " & $potion.charges & "/" & $potion.info.charges,
     color: color,
     onClick: onClick,
+    hotkey: hotkey,
   )
 
 proc actionButtonsNode(battle: BattleData, controller: BattleController, pos: Vec): Node =
@@ -209,8 +228,8 @@ proc actionButtonsNode(battle: BattleData, controller: BattleController, pos: Ve
         pos: vec(0, 0),
         spacing: vec(5),
         items: battle.player.knownSkills,
-        listNodes: (proc(skill: SkillKind): Node =
-          battle.skillButtonNode(controller, allSkills[skill])
+        listNodesIdx: (proc(skill: SkillKind, idx: int): Node =
+          battle.skillButtonNode(controller, allSkills[skill], idx)
         ),
       ),
       List[Potion](
@@ -218,7 +237,7 @@ proc actionButtonsNode(battle: BattleData, controller: BattleController, pos: Ve
         spacing: vec(5),
         items: battle.potions,
         listNodesIdx: (proc(potion: Potion, idx: int): Node =
-          battle.potionButtonNode(controller, addr battle.potions[idx])
+          battle.potionButtonNode(controller, addr battle.potions[idx], idx)
         ),
       ),
     ],
