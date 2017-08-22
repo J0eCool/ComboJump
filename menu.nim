@@ -79,12 +79,14 @@ proc update*(node: Node, manager: var MenuManager, input: InputManager) =
     c.update(manager, input)
 
 proc diff(node: var Node, newVal: Node) =
-  if not node.diffSelf(newVal):
+  if node == nil or not node.diffSelf(newVal):
     node = newVal
-  var children = node.getChildren()
-  let newChildren = newVal.getChildren()
-  for i in 0..<min(children.len, newChildren.len):
-    children[i].diff(newChildren[i])
+    return
+  if node.children.len != newVal.children.len:
+    node.children = newVal.children
+    return
+  for i in 0..<node.children.len:
+    node.children[i].diff(newVal.children[i])
 
 proc rect*(node: Node): Rect =
   rect.rect(node.globalPos, node.size)
@@ -309,9 +311,13 @@ proc generateChildren[T](list: List[T]) =
     list.generatedChildren.add n
 
 method diffSelf[T](list, newVal: List[T]): bool =
+  newVal.generateChildren()
   if list.items != newVal.items:
-    newVal.generateChildren()
     list.generatedChildren = newVal.generatedChildren
+  else:
+    list.generateChildren()
+    for i in 0..<list.items.len:
+      list.generatedChildren[i].diff(newVal.generatedChildren[i])
   list.baseDiff(newVal)
   true
 
@@ -419,10 +425,7 @@ proc runUpdate*(menu: Menu, manager: var MenuManager, dt: float, input: InputMan
   # TODO: more sophisticated virtualDom-style diffing
   # TODO: diffing unit tests
   let newNode = menu.view(menu.model, menu.controller)
-  if menu.node == nil:
-    menu.node = newNode
-  else:
-    menu.node.diff(newNode)
+  menu.node.diff(newNode)
   menu.node.update(manager, input)
 
 proc draw*(renderer: RendererPtr, menu: Menu, resources: var ResourceManager) =
