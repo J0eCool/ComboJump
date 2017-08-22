@@ -103,7 +103,6 @@ proc startAttack*(battle: BattleData, controller: BattleController,
 proc tryUseAttack*(battle: BattleData, controller: BattleController, entity: BattleEntity) =
   let skill = battle.selectedSkill
   assert skill != nil
-  assert entity != nil
   if battle.canAfford(skill):
     battle.player.mana -= skill.manaCost
     battle.player.focus -= skill.focusCost

@@ -124,16 +124,6 @@ proc battleEntityNode(battle: BattleData, controller: BattleController,
     pos: pos + entity.offset,
     textureName: entity.texture,
     scale: 4.0,
-    children: @[
-      Button(
-        size: vec(100),
-        invisible: true,
-        onClick: (proc() =
-          if not entity.isPlayer and battle.selectedSkill != nil and battle.isClickReady(controller):
-            battle.tryUseAttack(controller, entity)
-        ),
-      ).Node,
-    ],
   )
 
 proc enemyEntityNode(battle: BattleData, controller: BattleController,
@@ -280,6 +270,46 @@ proc turnQueueNode(battle: BattleData, pos: Vec): Node =
     ],
   )
 
+proc entityTargetNode(battle: BattleData, controller: BattleController, entity: BattleEntity): Node =
+  Button(
+    size: vec(100),
+    pos: entity.pos,
+    color: red,
+    onClick: (proc() =
+      battle.tryUseAttack(controller, entity)
+    ),
+  )
+
+proc attackTargetsNode(battle: BattleData, controller: BattleController): Node =
+  if not battle.isClickReady(controller) or battle.selectedSkill == nil:
+    return Node()
+  case battle.selectedSkill.target
+  of single:
+    Node(children: @[Node(), #HACK: for bad diffing
+      List[BattleEntity](
+        ignoreSpacing: true,
+        items: battle.enemies,
+        listNodes: (proc(enemy: BattleEntity): Node =
+          entityTargetNode(battle, controller, enemy)
+        ),
+      )
+    ])
+  of self:
+    Node(children: @[Node(), Node(), #HACK: for bad diffing
+      entityTargetNode(battle, controller, battle.player)
+    ])
+  of group:
+    Node(children: @[Node(), Node(), Node(), #HACK: for bad diffing
+      Button(
+        size: vec(400),
+        pos: vec(800, 400),
+        color: red,
+        onClick: (proc() =
+          battle.tryUseAttack(controller, nil)
+        ),
+      )
+    ])
+
 proc battleView(battle: BattleData, controller: BattleController): Node {.procvar.} =
   Node(
     children: @[
@@ -291,6 +321,7 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
           controller.bufferClose = true
         ),
       ),
+      attackTargetsNode(battle, controller),
       battleEntityNode(battle, controller, battle.player, battle.player.pos),
       entityStatusNode(battle.player, battle.player.pos + vec(-80, 80)),
       List[BattleEntity](

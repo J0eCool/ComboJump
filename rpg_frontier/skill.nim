@@ -8,7 +8,6 @@ import
     status_effect,
   ],
   rpg_frontier/battle/[
-    battle_model,
     battle_entity,
   ],
   util,
@@ -26,6 +25,7 @@ type
   SkillTarget* = enum
     single
     group
+    self
   TargetProc = proc(allEntities: seq[BattleEntity],
                     target: BattleEntity): seq[BattleEntity]
   AttackAnimProc = proc(animation: AnimationCollection, onHit: HitCallback, damage: int,
@@ -40,8 +40,6 @@ proc damageFor*(skill: SkillInfo, entity: BattleEntity): int =
       result = result * Percent(100 + effect.amount)
     else:
       discard
-
-# template makeTargetProc
 
 let
   hitSingle: TargetProc =
@@ -156,6 +154,7 @@ let allSkills*: array[SkillKind, SkillInfo] = [
     toTargets: hitRandom(6),
     attackAnim: multiHit,
   ),
+
   flameblast: SkillInfo(
     name: "Flameblast",
     target: single,
@@ -163,5 +162,22 @@ let allSkills*: array[SkillKind, SkillInfo] = [
     manaCost: 2,
     toTargets: hitSingle,
     attackAnim: basicHit,
+  ),
+
+  buildup: SkillInfo(
+    name: "Buildup",
+    target: self,
+    manaCost: 5,
+    toTargets: hitSingle,
+    attackAnim:
+      proc(animation: AnimationCollection, onHit: HitCallback, damage: int,
+           attacker: BattleEntity, targets: seq[BattleEntity]) =
+        animation.queueEvent do (t: float):
+          targets[0].effects.add StatusEffect(
+            kind: damageBuff,
+            amount: 75,
+            duration: 3,
+          )
+    ,
   ),
 ]
