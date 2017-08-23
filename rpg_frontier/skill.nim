@@ -41,23 +41,33 @@ proc damageFor*(skill: SkillInfo, entity: BattleEntity): int =
     else:
       discard
 
-let
-  hitSingle: TargetProc =
-    proc(allEntities: seq[BattleEntity], target: BattleEntity): seq[BattleEntity] =
-      @[target]
+template makeTargetProc(body: untyped): untyped {.dirty.} =
+  (proc(allEntities: seq[BattleEntity], target: BattleEntity): seq[BattleEntity] =
+    body
+  )
 
-  hitAll: TargetProc =
-    proc(allEntities: seq[BattleEntity], target: BattleEntity): seq[BattleEntity] =
-      allEntities
+let
+  hitSingle: TargetProc = makeTargetProc:
+    @[target]
+
+  hitAll: TargetProc = makeTargetProc:
+    allEntities
+
+  hitBounce: TargetProc = makeTargetProc:
+    let rest = allEntities.filterIt(it != target)
+    result = @[target] 
+    if rest.len > 0:
+      result.add random(rest)
+
 
 proc hitRepeated(times: int): TargetProc =
-  return proc(allEntities: seq[BattleEntity], target: BattleEntity): seq[BattleEntity] =
+  makeTargetProc:
     result = @[]
     for i in 0..<times:
       result.add target
 
 proc hitRandom(numTargets: int): TargetProc =
-  return proc(allEntities: seq[BattleEntity], target: BattleEntity): seq[BattleEntity] =
+  makeTargetProc:
     result = @[]
     for i in 0..<numTargets:
       let e = random(allEntities)
@@ -131,13 +141,7 @@ let allSkills*: array[SkillKind, SkillInfo] = [
     target: single,
     damage: 140.Percent,
     focusCost: 6,
-    toTargets:
-      proc(allEntities: seq[BattleEntity], target: BattleEntity): seq[BattleEntity] =
-        let rest = allEntities.filterIt(it != target)
-        result = @[target] 
-        if rest.len > 0:
-          result.add random(rest)
-    ,
+    toTargets: hitBounce,
     attackAnim:
       proc(animation: AnimationCollection, onHit: HitCallback, damage: int,
            attacker: BattleEntity, targets: seq[BattleEntity]) =
