@@ -1,4 +1,5 @@
 from sdl2 import RendererPtr
+import typetraits
 
 import
   component/sprite,
@@ -41,9 +42,11 @@ proc baseDiff(node, newVal: Node) =
   node.pos = newVal.pos
   node.size = newVal.size
 
-method diffSelf(node, newVal: Node): bool {.base.} =
+method typeName(node: Node): string {.base.} =
+  "Node"
+
+method diffSelf(node, newVal: Node) {.base.} =
   node.baseDiff(newVal)
-  node.children.len == newVal.children.len
 
 method drawSelf(node: Node, renderer: RendererPtr, resources: var ResourceManager) {.base.} =
   discard
@@ -78,10 +81,11 @@ proc update*(node: Node, manager: var MenuManager, input: InputManager) =
   for c in node.getChildren():
     c.update(manager, input)
 
-proc diff(node: var Node, newVal: Node) =
-  if node == nil or not node.diffSelf(newVal):
+proc diff*[T: Node](node: var T, newVal: T) =
+  if node == nil or node.typeName != newVal.typeName:
     node = newVal
     return
+  node.diffSelf(newVal)
   if node.children.len != newVal.children.len:
     node.children = newVal.children
     return
@@ -128,12 +132,14 @@ type SpriteNode* = ref object of Node
   color*: Color
   scale*: float
 
-method diffSelf(sprite, newVal: SpriteNode): bool =
+method typeName(sprite: SpriteNode): string =
+  "SpriteNode"
+
+method diffSelf(sprite, newVal: SpriteNode) =
   sprite.baseDiff(newVal)
   sprite.textureName = newVal.textureName
   sprite.color = newVal.color
   sprite.scale = newVal.scale
-  true
 
 method drawSelf(sprite: SpriteNode, renderer: RendererPtr, resources: var ResourceManager) =
   let spriteImg = resources.loadSprite(sprite.textureName, renderer)
@@ -153,11 +159,13 @@ type TextNode* = ref object of Node
   color*: Color
   fontSize*: int
 
-method diffSelf(text, newVal: TextNode): bool =
+method typeName(text: TextNode): string =
+  "TextNode"
+
+method diffSelf(text, newVal: TextNode) =
   text.baseDiff(newVal)
   text.text = newVal.text
   text.color = newVal.color
-  true
 
 method drawSelf(text: TextNode, renderer: RendererPtr, resources: var ResourceManager) =
   if text.fontSize == 0:
@@ -192,17 +200,19 @@ type Button* = ref object of Node
   isMouseOver: bool
   isKeyHeld: bool
 
-method diffSelf(button, newVal: Button): bool =
+method typeName(button: Button): string =
+  "Button"
+
+method diffSelf(button, newVal: Button) =
   button.baseDiff(newVal)
   button.label = newVal.label
   button.onClick = newVal.onClick
+  button.hotkey = newVal.hotkey
   button.color = newVal.color
   button.invisible = newVal.invisible
 
   if button.hoverNode != nil:
     button.hoverNode.diff(newVal.hoverNode)
-
-  true
 
 method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceManager) =
   if button.invisible:
@@ -285,7 +295,8 @@ proc generateChildren[T](list: List[T]) =
   if list.generatedChildren != nil:
     return
 
-  assert list.listNodes != nil xor list.listNodesIdx != nil, "List must have exactly one of listNodes or listNodesIdx"
+  assert(list.listNodes == nil or list.listNodesIdx == nil,
+         "List must have no more than one nodes proc")
   let
     items = list.items
     nodeProc =
@@ -310,7 +321,14 @@ proc generateChildren[T](list: List[T]) =
     n.parent = list
     list.generatedChildren.add n
 
-method diffSelf[T](list, newVal: List[T]): bool =
+proc toStr*(t: typedesc): string =
+  # For some reason this proc needs to exist to avoid requiring List[T] users to
+  # also import typetraits
+  name(t)
+method typeName[T](list: List[T]): string =
+  "List[" & T.toStr & "]"
+
+method diffSelf[T](list, newVal: List[T]) =
   newVal.generateChildren()
   if list.items != newVal.items:
     list.generatedChildren = newVal.generatedChildren
@@ -319,7 +337,6 @@ method diffSelf[T](list, newVal: List[T]): bool =
     for i in 0..<list.items.len:
       list.generatedChildren[i].diff(newVal.generatedChildren[i])
   list.baseDiff(newVal)
-  true
 
 method getChildren[T](list: List[T]): seq[Node] =
   list.generateChildren()

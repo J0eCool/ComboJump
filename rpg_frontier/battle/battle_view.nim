@@ -285,30 +285,24 @@ proc attackTargetsNode(battle: BattleData, controller: BattleController): Node =
     return Node()
   case battle.selectedSkill.target
   of single:
-    Node(children: @[Node(), #HACK: for bad diffing
-      List[BattleEntity](
-        ignoreSpacing: true,
-        items: battle.enemies,
-        listNodes: (proc(enemy: BattleEntity): Node =
-          entityTargetNode(battle, controller, enemy)
-        ),
-      )
-    ])
+    List[BattleEntity](
+      ignoreSpacing: true,
+      items: battle.enemies,
+      listNodes: (proc(enemy: BattleEntity): Node =
+        entityTargetNode(battle, controller, enemy)
+      ),
+    )
   of self:
-    Node(children: @[Node(), Node(), #HACK: for bad diffing
-      entityTargetNode(battle, controller, battle.player)
-    ])
+    entityTargetNode(battle, controller, battle.player)
   of group:
-    Node(children: @[Node(), Node(), Node(), #HACK: for bad diffing
-      Button(
-        size: vec(400),
-        pos: vec(800, 400),
-        color: red,
-        onClick: (proc() =
-          battle.tryUseAttack(controller, nil)
-        ),
-      )
-    ])
+    Button(
+      size: vec(400),
+      pos: vec(800, 400),
+      color: red,
+      onClick: (proc() =
+        battle.tryUseAttack(controller, nil)
+      ),
+    )
 
 proc battleView(battle: BattleData, controller: BattleController): Node {.procvar.} =
   Node(
