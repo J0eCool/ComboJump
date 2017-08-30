@@ -3,6 +3,7 @@ import sequtils
 import
   rpg_frontier/[
     animation,
+    damage,
     percent,
     skill_kind,
     status_effect,
@@ -28,16 +29,18 @@ type
     self
   TargetProc = proc(allEntities: seq[BattleEntity],
                     target: BattleEntity): seq[BattleEntity]
-  AttackAnimProc = proc(animation: AnimationCollection, onHit: HitCallback, damage: int,
-                        attacker: BattleEntity, targets: seq[BattleEntity])
-  HitCallback = proc(target: BattleEntity, damage: int)
+  AttackAnimProc = proc(
+    animation: AnimationCollection, onHit: HitCallback, damage: Damage,
+    attacker: BattleEntity, targets: seq[BattleEntity])
+  HitCallback = proc(target: BattleEntity, damage: Damage)
 
-proc damageFor*(skill: SkillInfo, entity: BattleEntity): int =
-  result = entity.damage * skill.damage
+proc damageFor*(skill: SkillInfo, entity: BattleEntity): Damage =
+  result = entity.baseDamage
+  result.amounts = result.amounts * newElementSet(skill.damage)
   for effect in entity.effects:
     case effect.kind
     of damageBuff:
-      result = result * Percent(100 + effect.amount)
+      result.amounts = result.amounts + newElementSet(Percent(effect.amount))
     else:
       discard
 
@@ -87,7 +90,7 @@ proc slashVfx(pos: Vec): Vfx =
 
 let
   basicHit: AttackAnimProc =
-    proc(animation: AnimationCollection, onHit: HitCallback, damage: int,
+    proc(animation: AnimationCollection, onHit: HitCallback, damage: Damage,
          attacker: BattleEntity, targets: seq[BattleEntity]) =
       let target = targets[0]
       animation.queueAddVfx slashVfx(target.pos)
@@ -97,7 +100,7 @@ let
           onHit(enemy, damage)
 
   multiHit: AttackAnimProc =
-    proc(animation: AnimationCollection, onHit: HitCallback, damage: int,
+    proc(animation: AnimationCollection, onHit: HitCallback, damage: Damage,
          attacker: BattleEntity, targets: seq[BattleEntity]) =
       for target in targets:
         basicHit(animation, onHit, damage, attacker, @[target])
@@ -143,11 +146,14 @@ let allSkills*: array[SkillKind, SkillInfo] = [
     focusCost: 6,
     toTargets: hitBounce,
     attackAnim:
-      proc(animation: AnimationCollection, onHit: HitCallback, damage: int,
+      proc(animation: AnimationCollection, onHit: HitCallback, damage: Damage,
            attacker: BattleEntity, targets: seq[BattleEntity]) =
         basicHit(animation, onHit, damage, attacker, @[targets[0]])
         if targets.len > 1:
-          basicHit(animation, onHit, damage div 2, attacker, @[targets[1]])
+          let lessDamage = Damage(
+            amounts: damage.amounts * newElementSet(50.Percent),
+          )
+          basicHit(animation, onHit, lessDamage, attacker, @[targets[1]])
     ,
   ),
   bladeDance: SkillInfo(
@@ -174,7 +180,7 @@ let allSkills*: array[SkillKind, SkillInfo] = [
     manaCost: 5,
     toTargets: hitSingle,
     attackAnim:
-      proc(animation: AnimationCollection, onHit: HitCallback, damage: int,
+      proc(animation: AnimationCollection, onHit: HitCallback, damage: Damage,
            attacker: BattleEntity, targets: seq[BattleEntity]) =
         animation.queueEvent do (t: float):
           targets[0].effects.add StatusEffect(

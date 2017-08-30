@@ -18,6 +18,10 @@ type
 proc newElementSet*[T](): ElementSet[T] =
   discard
 
+proc newElementSet*[T](initVal: T): ElementSet[T] =
+  for e in Element:
+    result[e] = initVal
+
 proc init*[T](elements: ElementSet[T], element: Element, val: T): ElementSet[T] =
   result = elements
   result[element] = val
@@ -31,3 +35,10 @@ proc apply*(damage: Damage, defense: Defense): Damage =
   for e in Element:
     reduced[e] = damage.amounts[e] - defense.resistances[e]
   Damage(amounts: reduced)
+
+proc `*`*[T](elements: ElementSet[T], pcts: ElementSet[Percent]): ElementSet[T] =
+  for e in Element:
+    result[e] = elements[e] * pcts[e]
+proc `+`*[T](elements: ElementSet[T], pcts: ElementSet[Percent]): ElementSet[T] =
+  for e in Element:
+    result[e] = elements[e] + pcts[e]

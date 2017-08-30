@@ -2,7 +2,9 @@ import sequtils
 
 import
   rpg_frontier/[
+    damage,
     enemy,
+    percent,
     skill_kind,
     status_effect,
   ],
@@ -18,8 +20,9 @@ type
     health*, maxHealth*: int
     mana*, maxMana*: int
     focus*, maxFocus*: int
-    damage*: int
+    baseDamage*: Damage
     speed*: float
+    defense*: Defense
     knownSkills*: seq[SkillKind]
     effects*: seq[StatusEffect]
     id: int
@@ -45,7 +48,10 @@ proc newPlayer*(): BattleEntity =
     maxMana: mana,
     focus: 0,
     maxFocus: focus,
-    damage: 4,
+    baseDamage: Damage(
+      amounts: newElementSet[int]()
+        .init(physical, 4)
+    ),
     speed: 1.0,
     knownSkills: @[
       attack,
@@ -72,15 +78,23 @@ proc newEnemy*(kind: EnemyKind): BattleEntity =
     maxMana: mana,
     focus: 0,
     maxFocus: focus,
-    damage: enemy.damage,
+    baseDamage: Damage(
+      amounts: newElementSet[int]()
+        .init(physical, enemy.damage)
+    ),
     speed: enemy.speed,
+    defense: enemy.defense,
     knownSkills: @[attack],
     effects: @[],
     id: getNextId(),
   )
 
-proc takeDamage*(entity: BattleEntity, damage: int) =
-  entity.health -= damage
+proc takeDamage*(entity: BattleEntity, damage: Damage): int =
+  let
+    applied = damage.apply(entity.defense)
+    totalDamage = applied.total()
+  entity.health -= totalDamage
+  totalDamage
 
 proc clampResources*(entity: BattleEntity) =
   entity.health = entity.health.clamp(0, entity.maxHealth)

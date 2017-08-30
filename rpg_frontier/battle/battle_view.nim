@@ -3,6 +3,7 @@ import sequtils
 import
   rpg_frontier/[
     animation,
+    damage,
     enemy,
     level,
     player_stats,
@@ -29,7 +30,7 @@ let
 
 proc skillButtonTooltipNode(skill: SkillInfo, player: BattleEntity): Node =
   var lines: seq[string] = @[]
-  lines.add($skill.damageFor(player) & " Damage")
+  lines.add($skill.damageFor(player).total() & " Damage")
   if skill.manaCost > 0:
     lines.add($skill.manaCost & " Mana")
   if skill.focusCost > 0:

@@ -3,6 +3,7 @@ import sequtils
 import
   rpg_frontier/[
     animation,
+    damage,
     enemy,
     level,
     percent,
@@ -33,10 +34,10 @@ proc newBattleController*(): BattleController =
     animation: newAnimationCollection(),
   )
 
-proc processAttackDamage*(controller: BattleController, damage: int, target: BattleEntity) =
-  target.takeDamage(damage)
+proc processAttackDamage*(controller: BattleController, damage: Damage, target: BattleEntity) =
+  let taken = target.takeDamage(damage)
   controller.animation.addFloatingText FloatingText(
-    text: $damage,
+    text: $taken,
     startPos: target.pos + randomVec(30.0),
   )
 
@@ -86,7 +87,7 @@ proc startAttack*(battle: BattleData, controller: BattleController,
     animation = controller.animation
     damage = skill.damageFor(attacker)
     targets = skill.toTargets(battle.enemies, target)
-    onHit = proc(target: BattleEntity, damage: int) =
+    onHit = proc(target: BattleEntity, damage: Damage) =
       controller.processAttackDamage(damage, target)
   animation.queueEvent(0.1) do (t: float):
     attacker.updateAttackAnimation(t)
