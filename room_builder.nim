@@ -211,7 +211,7 @@ method updateSelf(editor: GridEditor, manager: var MenuManager, input: InputMana
 proc tilemapSelectionNode(editor: GridEditor): Node =
   List[Tilemap](
     spacing: vec(6),
-    items: allTilemaps,
+    items: allTilemaps(),
     listNodes: (proc(tilemap: Tilemap): Node =
       Button(
         size: vec(240, 40),
@@ -287,7 +287,7 @@ proc roomSelectionNode(editor: GridEditor): Node =
       List[RoomPair](
         pos: vec(0, 110),
         spacing: vec(6),
-        items: allRoomPairs,
+        items: allRoomPairs(),
         listNodes: (proc(pair: RoomPair): Node =
           Button(
             size: vec(240, 40),
@@ -306,16 +306,15 @@ proc tabSelectNode[T: enum](item: ptr T, options: array[T, Named[Node]]): Node =
   BindNode[T](
     item: (proc(): T = item[]),
     node: (proc(curState: T): Node =
+      var states: seq[T] = @[]
+      for state in T:
+        states.add state
       Node(
         children: @[
           List[T](
             horizontal: true,
             spacing: vec(6),
-            items: (proc(): seq[T] =
-              result = @[]
-              for state in T:
-                result.add state
-            ),
+            items: states,
             listNodes: (proc(state: T): Node =
               let color =
                 if state == item[]:
