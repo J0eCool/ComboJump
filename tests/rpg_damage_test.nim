@@ -3,14 +3,9 @@ import unittest
 import
   rpg_frontier/[
     damage,
+    element,
     percent,
   ]
-
-proc singleDamage(element: Element, damage: int): Damage =
-  Damage(amounts: newElementSet[int]().init(element, damage))
-
-proc singleResist(element: Element, resist: Percent): Defense =
-  Defense(resistances: newElementSet[Percent]().init(element, resist))
 
 suite "Damage":
   test "ElementSets initialize properly":

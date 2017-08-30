@@ -4,6 +4,7 @@ import
   rpg_frontier/[
     animation,
     damage,
+    element,
     percent,
     skill_kind,
     status_effect,

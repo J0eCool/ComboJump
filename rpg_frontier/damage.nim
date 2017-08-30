@@ -1,30 +1,16 @@
 import
   rpg_frontier/[
+    element,
     percent,
   ]
 
 type
-  Element* = enum
-    physical
-    fire
-    ice
-  ElementSet*[T] = array[Element, T]
   Damage* = object
     amounts*: ElementSet[int]
+    ailment*: int
   Defense* = object
-    armor*: int
     resistances*: ElementSet[Percent]
-
-proc newElementSet*[T](): ElementSet[T] =
-  discard
-
-proc newElementSet*[T](initVal: T): ElementSet[T] =
-  for e in Element:
-    result[e] = initVal
-
-proc init*[T](elements: ElementSet[T], element: Element, val: T): ElementSet[T] =
-  result = elements
-  result[element] = val
+    armor*: int
 
 proc total*(damage: Damage): int =
   for val in damage.amounts:
@@ -36,9 +22,11 @@ proc apply*(damage: Damage, defense: Defense): Damage =
     reduced[e] = damage.amounts[e] - defense.resistances[e]
   Damage(amounts: reduced)
 
-proc `*`*[T](elements: ElementSet[T], pcts: ElementSet[Percent]): ElementSet[T] =
-  for e in Element:
-    result[e] = elements[e] * pcts[e]
-proc `+`*[T](elements: ElementSet[T], pcts: ElementSet[Percent]): ElementSet[T] =
-  for e in Element:
-    result[e] = elements[e] + pcts[e]
+proc singleDamage*(element: Element, damage: int, ailment = 0): Damage =
+  Damage(
+    amounts: newElementSet[int]().init(element, damage),
+    ailment: ailment,
+  )
+
+proc singleResist*(element: Element, resist: Percent): Defense =
+  Defense(resistances: newElementSet[Percent]().init(element, resist))

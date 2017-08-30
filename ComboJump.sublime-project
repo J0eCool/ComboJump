@@ -84,7 +84,7 @@
         "cmd": ["nim", "c", "-r",
             "-d:debug", "--parallelBuild:0",
             "--nimcache:nimcache",
-            "--out:out/single_file", "tests/map_desc_test.nim"],
+            "--out:out/single_file", "tests/rpg_ailment_test.nim"],
         "working_dir": "$project_path"
     }, {
         "name": "Current File",

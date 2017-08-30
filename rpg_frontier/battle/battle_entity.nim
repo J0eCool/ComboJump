@@ -3,6 +3,7 @@ import sequtils
 import
   rpg_frontier/[
     damage,
+    element,
     enemy,
     percent,
     skill_kind,

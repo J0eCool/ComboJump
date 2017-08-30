@@ -1,6 +1,7 @@
 import
   rpg_frontier/[
     damage,
+    element,
     percent,
   ]
 
