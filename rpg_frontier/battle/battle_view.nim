@@ -302,11 +302,12 @@ proc turnQueueNode(battle: BattleData, pos: Vec): Node =
     ],
   )
 
+let targetColor = rgb(112, 224, 182)
 proc entityTargetNode(battle: BattleData, controller: BattleController, entity: BattleEntity): Node =
   Button(
     size: vec(100),
     pos: entity.pos,
-    color: red,
+    color: targetColor,
     onClick: (proc() =
       battle.tryUseAttack(controller, entity)
     ),
@@ -330,7 +331,7 @@ proc attackTargetsNode(battle: BattleData, controller: BattleController): Node =
     Button(
       size: vec(400),
       pos: vec(800, 400),
-      color: red,
+      color: targetColor,
       onClick: (proc() =
         battle.tryUseAttack(controller, nil)
       ),
