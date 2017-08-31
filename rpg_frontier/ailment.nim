@@ -9,7 +9,7 @@ type
   AilmentState* = object
     progress*: int
     capacity*: int
-    stacks: int
+    stacks*: int
 
 proc newAilments*(): Ailments =
   result = newElementSet[AilmentState]()
@@ -28,7 +28,7 @@ proc percent*(ailments: Ailments, element: Element): float =
 
 proc takeDamage*(ailments: var Ailments, damage: Damage) =
   let total = damage.total()
-  if total == 0:
+  if damage.ailment == 0 or total == 0:
     return
   for element in Element:
     template cur: AilmentState = ailments[element]

@@ -2,8 +2,10 @@ import sequtils
 
 import
   rpg_frontier/[
+    ailment,
     animation,
     damage,
+    element,
     enemy,
     level,
     player_stats,
@@ -119,6 +121,34 @@ proc entityStatusNode(entity: BattleEntity, pos: Vec): Node =
     spacing: vec(5),
   )
 
+proc ailmentsNode(ailments: Ailments, pos: Vec): Node =
+  var elements: seq[Element] = @[]
+  for e in Element:
+    if ailments.stacks(e) > 0 or ailments.progress(e) > 0:
+      elements.add e
+  List[Element](
+    pos: pos,
+    items: elements,
+    listNodes: (proc(element: Element): Node =
+      let state = ailments[element]
+      nodes(@[
+        quantityBarNode(
+          state.progress,
+          state.capacity,
+          vec(),
+          vec(120, 22),
+          darkRed,
+          showText = false,
+        ),
+        BorderedTextNode(
+          text: $element & " - " & $state.stacks,
+          fontSize: 16,
+        ),
+      ])
+    ),
+    spacing: vec(5),
+  )
+
 proc battleEntityNode(battle: BattleData, controller: BattleController,
                       entity: BattleEntity, pos = vec()): Node =
   SpriteNode(
@@ -143,6 +173,7 @@ proc enemyEntityNode(battle: BattleData, controller: BattleController,
         red,
         showText = false,
       ),
+      ailmentsNode(entity.ailments, vec(100, -30)),
       BorderedTextNode(
         text: entity.name,
         pos: vec(0, -60),

@@ -483,3 +483,6 @@ proc draw*(renderer: RendererPtr, menus: MenuManager, resources: var ResourceMan
       break
   for menu in toDraw:
     renderer.draw(menu, resources)
+
+proc nodes*(children: seq[Node]): Node =
+  Node(children: children)

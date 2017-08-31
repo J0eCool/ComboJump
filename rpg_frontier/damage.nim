@@ -20,7 +20,10 @@ proc apply*(damage: Damage, defense: Defense): Damage =
   var reduced = newElementSet[int]()
   for e in Element:
     reduced[e] = damage.amounts[e] - defense.resistances[e]
-  Damage(amounts: reduced)
+  Damage(
+    amounts: reduced,
+    ailment: damage.ailment,
+  )
 
 proc singleDamage*(element: Element, damage: int, ailment = 0): Damage =
   Damage(

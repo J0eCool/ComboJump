@@ -42,3 +42,10 @@ suite "Damage":
     check:
       reduced.total() == 15
       reduced.amounts[fire] == 15
+
+  test "Ailment damage is preserved when applying resistance":
+    let
+      damage = singleDamage(fire, 10, 10)
+      defense = singleResist(fire, 50.Percent)
+      reduced = damage.apply(defense)
+    check reduced.ailment == 10
