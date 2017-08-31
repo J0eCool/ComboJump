@@ -27,7 +27,12 @@ proc percent*(ailments: Ailments, element: Element): float =
   ailments[element].percent
 
 proc takeDamage*(ailments: var Ailments, damage: Damage) =
-  ailments[physical].progress += damage.ailment
-  while ailments[physical].progress > ailments[physical].capacity:
-    ailments[physical].progress -= ailments[physical].capacity
-    ailments[physical].stacks += 1
+  let total = damage.total()
+  if total == 0:
+    return
+  for element in Element:
+    template cur: AilmentState = ailments[element]
+    cur.progress += damage.ailment * damage.amounts[element] div total
+    while cur.progress >= cur.capacity:
+      cur.progress -= cur.capacity
+      cur.stacks += 1
