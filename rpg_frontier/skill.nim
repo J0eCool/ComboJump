@@ -16,10 +16,20 @@ import
   vec
 
 type
+  SkillKind* = enum
+    attackSkill
+    spellSkill
+    effectSkill
   SkillInfo* = ref object
+    case kind*: SkillKind
+    of attackSkill:
+      damage*: Percent
+    of spellSkill:
+      baseDamage*: Damage
+    of effectSkill:
+      discard
     name*: string
     target*: SkillTarget
-    damage*: Percent
     manaCost*: int
     focusCost*: int
     toTargets*: TargetProc
@@ -35,9 +45,18 @@ type
     attacker: BattleEntity, targets: seq[BattleEntity])
   HitCallback = proc(target: BattleEntity, damage: Damage)
 
+proc baseDamageFor(skill: SkillInfo, entity: BattleEntity): Damage =
+  case skill.kind
+  of attackSkill:
+    result = entity.baseDamage
+    result.amounts = result.amounts * newElementSet(skill.damage)
+  of spellSkill:
+    result = skill.baseDamage
+  of effectSkill:
+    discard
+
 proc damageFor*(skill: SkillInfo, entity: BattleEntity): Damage =
-  result = entity.baseDamage
-  result.amounts = result.amounts * newElementSet(skill.damage)
+  result = skill.baseDamageFor(entity)
   for effect in entity.effects:
     case effect.kind
     of damageBuff:
@@ -110,6 +129,7 @@ let
 let allSkills*: array[SkillID, SkillInfo] = [
   attack: SkillInfo(
     name: "Attack",
+    kind: attackSkill,
     target: single,
     damage: 100.Percent,
     focusCost: -4,
@@ -118,6 +138,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
   ),
   powerHit: SkillInfo(
     name: "Power Hit",
+    kind: attackSkill,
     target: single,
     damage: 160.Percent,
     focusCost: 4,
@@ -126,6 +147,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
   ),
   cleave: SkillInfo(
     name: "Cleave",
+    kind: attackSkill,
     target: group,
     damage: 100.Percent,
     focusCost: 5,
@@ -134,6 +156,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
   ),
   doubleHit: SkillInfo(
     name: "Double Hit",
+    kind: attackSkill,
     target: single,
     damage: 90.Percent,
     focusCost: 4,
@@ -142,6 +165,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
   ),
   bounceHit: SkillInfo(
     name: "Bounce Hit",
+    kind: attackSkill,
     target: single,
     damage: 140.Percent,
     focusCost: 6,
@@ -159,6 +183,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
   ),
   bladeDance: SkillInfo(
     name: "Blade Dance",
+    kind: attackSkill,
     target: group,
     damage: 60.Percent,
     focusCost: 8,
@@ -168,8 +193,9 @@ let allSkills*: array[SkillID, SkillInfo] = [
 
   flameblast: SkillInfo(
     name: "Flameblast",
+    kind: spellSkill,
     target: single,
-    damage: 300.Percent,
+    baseDamage: singleDamage(fire, 5, 60),
     manaCost: 2,
     toTargets: hitSingle,
     attackAnim: basicHit,
@@ -177,6 +203,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
 
   buildup: SkillInfo(
     name: "Buildup",
+    kind: effectSkill,
     target: self,
     manaCost: 5,
     toTargets: hitSingle,
