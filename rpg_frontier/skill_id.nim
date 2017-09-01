@@ -8,5 +8,7 @@ type
     bladeDance
 
     flameblast
+    scorch
+    chill
 
     buildup

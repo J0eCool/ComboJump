@@ -200,6 +200,24 @@ let allSkills*: array[SkillID, SkillInfo] = [
     toTargets: hitSingle,
     attackAnim: basicHit,
   ),
+  scorch: SkillInfo(
+    name: "Scorch",
+    kind: spellSkill,
+    target: single,
+    baseDamage: singleDamage(fire, 1, 125),
+    manaCost: 2,
+    toTargets: hitSingle,
+    attackAnim: basicHit,
+  ),
+  chill: SkillInfo(
+    name: "Chill",
+    kind: spellSkill,
+    target: single,
+    baseDamage: singleDamage(ice, 1, 125),
+    manaCost: 2,
+    toTargets: hitSingle,
+    attackAnim: basicHit,
+  ),
 
   buildup: SkillInfo(
     name: "Buildup",

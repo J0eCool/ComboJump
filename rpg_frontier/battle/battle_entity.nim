@@ -59,11 +59,10 @@ proc newPlayer*(): BattleEntity =
     speed: 1.0,
     knownSkills: @[
       attack,
-      powerHit,
-      cleave,
-      bladeDance,
-      buildup,
+      doubleHit,
       flameblast,
+      scorch,
+      chill,
     ],
     effects: @[],
     ailments: newAilments(),
@@ -84,10 +83,7 @@ proc newEnemy*(kind: EnemyKind): BattleEntity =
     maxMana: mana,
     focus: 0,
     maxFocus: focus,
-    baseDamage: Damage(
-      amounts: newElementSet[int]()
-        .init(physical, enemy.damage)
-    ),
+    baseDamage: singleDamage(physical, enemy.damage),
     speed: enemy.speed,
     defense: enemy.defense,
     knownSkills: @[attack],
