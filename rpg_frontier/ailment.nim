@@ -2,7 +2,8 @@ import
   rpg_frontier/[
     damage,
     element,
-  ]
+  ],
+  color
 
 type
   Ailments* = ElementSet[AilmentState]
@@ -36,3 +37,21 @@ proc takeDamage*(ailments: var Ailments, damage: Damage) =
     while cur.progress >= cur.capacity:
       cur.progress -= cur.capacity
       cur.stacks += 1
+
+proc ailmentName*(element: Element): string =
+  case element
+  of physical:
+    "Bleed"
+  of fire:
+    "Burn"
+  of ice:
+    "Chill"
+
+proc ailmentColor*(element: Element): Color =
+  case element
+  of physical:
+    darkRed
+  of fire:
+    orange
+  of ice:
+    lightBlue

@@ -23,6 +23,13 @@ suite "Ailments":
           .init(fire, 5),
         ailment: 100,
       )
+      threeMixedDamage = Damage(
+        amounts: newElementSet[int]()
+          .init(physical, 1)
+          .init(fire, 1)
+          .init(ice, 1),
+        ailment: 60,
+      )
 
     proc checkStatus(element: Element, expectedStacks, expectedProgress: int) =
       check:
@@ -59,5 +66,11 @@ suite "Ailments":
     ailments.takeDamage(mixedDamage)
     checkStatus(physical, 0, 75)
     checkStatus(fire, 0, 25)
+
+  test "Three damage types work":
+    ailments.takeDamage(threeMixedDamage)
+    checkStatus(physical, 0, 20)
+    checkStatus(fire, 0, 20)
+    checkStatus(ice, 0, 20)
 
 {.pop.} # hint[XDeclaredButNotUsed]: off

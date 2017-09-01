@@ -54,7 +54,7 @@ proc newPlayer*(): BattleEntity =
     baseDamage: Damage(
       amounts: newElementSet[int]()
         .init(physical, 4),
-      ailment: 40,
+      ailment: 60,
     ),
     speed: 1.0,
     knownSkills: @[

@@ -137,16 +137,16 @@ proc ailmentsNode(ailments: Ailments, pos: Vec): Node =
           state.capacity,
           vec(),
           vec(120, 22),
-          darkRed,
+          ailmentColor(element),
           showText = false,
         ),
         BorderedTextNode(
-          text: $element & " - " & $state.stacks,
+          text: ailmentName(element) & " - " & $state.stacks,
           fontSize: 16,
         ),
       ])
     ),
-    spacing: vec(5),
+    spacing: vec(0, 28),
   )
 
 proc battleEntityNode(battle: BattleData, controller: BattleController,
