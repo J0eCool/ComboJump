@@ -11,7 +11,7 @@ import
     player_stats,
     potion,
     skill,
-    skill_kind,
+    skill_id,
     status_effect,
     transition,
   ],

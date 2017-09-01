@@ -11,7 +11,7 @@ import
     player_stats,
     potion,
     skill,
-    skill_kind,
+    skill_id,
     status_effect,
     transition,
   ],
@@ -246,11 +246,11 @@ proc actionButtonsNode(battle: BattleData, controller: BattleController, pos: Ve
   Node(
     pos: pos,
     children: @[
-      List[SkillKind](
+      List[SkillID](
         pos: vec(0, 0),
         spacing: vec(5),
         items: battle.player.knownSkills,
-        listNodesIdx: (proc(skill: SkillKind, idx: int): Node =
+        listNodesIdx: (proc(skill: SkillID, idx: int): Node =
           battle.skillButtonNode(controller, allSkills[skill], idx)
         ),
       ),

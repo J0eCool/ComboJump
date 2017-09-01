@@ -6,7 +6,7 @@ import
     damage,
     element,
     percent,
-    skill_kind,
+    skill_id,
     status_effect,
   ],
   rpg_frontier/battle/[
@@ -107,7 +107,7 @@ let
         basicHit(animation, onHit, damage, attacker, @[target])
         animation.wait(0.05)
 
-let allSkills*: array[SkillKind, SkillInfo] = [
+let allSkills*: array[SkillID, SkillInfo] = [
   attack: SkillInfo(
     name: "Attack",
     target: single,

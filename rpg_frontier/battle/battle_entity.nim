@@ -7,7 +7,7 @@ import
     element,
     enemy,
     percent,
-    skill_kind,
+    skill_id,
     status_effect,
   ],
   vec
@@ -25,7 +25,7 @@ type
     baseDamage*: Damage
     speed*: float
     defense*: Defense
-    knownSkills*: seq[SkillKind]
+    knownSkills*: seq[SkillID]
     effects*: seq[StatusEffect]
     ailments*: Ailments
     id: int

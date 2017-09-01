@@ -1,5 +1,5 @@
 type
-  SkillKind* = enum
+  SkillID* = enum
     attack
     powerHit
     cleave
