@@ -63,6 +63,7 @@ proc newPlayer*(): BattleEntity =
       cleave,
       bladeDance,
       buildup,
+      flameblast,
     ],
     effects: @[],
     ailments: newAilments(),

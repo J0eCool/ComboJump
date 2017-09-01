@@ -55,3 +55,11 @@ proc ailmentColor*(element: Element): Color =
     orange
   of ice:
     lightBlue
+
+proc bleedDamage*(ailments: Ailments): Damage =
+  let stacks = ailments.stacks(physical)
+  singleDamage(physical, 2 * stacks)
+
+proc burnDamage*(ailments: Ailments): Damage =
+  let stacks = ailments.stacks(fire)
+  singleDamage(fire, 2 * stacks)

@@ -3,6 +3,7 @@ import sequtils
 import
   rpg_frontier/[
     animation,
+    ailment,
     damage,
     enemy,
     level,
@@ -35,6 +36,14 @@ proc newBattleController*(): BattleController =
   )
 
 proc processAttackDamage*(controller: BattleController, damage: Damage, target: BattleEntity) =
+  let bleed = target.ailments.bleedDamage()
+  if bleed.total() > 0:
+    let bleedTaken = target.takeDamage(bleed)
+    controller.animation.addFloatingText FloatingText(
+      text: $bleedTaken,
+      startPos: target.pos + randomVec(10.0) + vec(30.0),
+      color: red,
+    )
   let taken = target.takeDamage(damage)
   controller.animation.addFloatingText FloatingText(
     text: $taken,

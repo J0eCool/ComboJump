@@ -13,6 +13,7 @@ type
   FloatingText* = object
     text*: string
     startPos*: Vec
+    color*: Color
     t: float
   Event* = object
     duration*: float
@@ -56,7 +57,10 @@ proc pos*(text: FloatingText): Vec =
   text.startPos - vec(0.0, textFloatHeight * text.t / textFloatTime)
 
 proc addFloatingText*(animation: AnimationCollection, text: FloatingText) =
-  animation.floatingTexts.add text
+  var toAdd = text
+  if toAdd.color == Color():
+    toAdd.color = white
+  animation.floatingTexts.add toAdd
 
 proc queueEvent*(animation: AnimationCollection, duration: float, update: EventUpdate) =
   animation.eventQueue.add Event(
@@ -130,6 +134,7 @@ proc nodes*(animation: AnimationCollection): seq[Node] =
     result.add BorderedTextNode(
       text: text.text,
       pos: text.pos,
+      color: text.color,
     )
   for vfx in animation.vfxs:
     result.add SpriteNode(
