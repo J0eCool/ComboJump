@@ -60,9 +60,9 @@ proc newPlayer*(): BattleEntity =
     knownSkills: @[
       attack,
       doubleHit,
+      bounceHit,
       flameblast,
-      scorch,
-      chill,
+      fireball,
     ],
     effects: @[],
     ailments: newAilments(),

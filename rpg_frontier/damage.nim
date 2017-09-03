@@ -33,3 +33,9 @@ proc singleDamage*(element: Element, damage: int, ailment = 0): Damage =
 
 proc singleResist*(element: Element, resist: Percent): Defense =
   Defense(resistances: newElementSet[Percent]().init(element, resist))
+
+proc `*`*(damage: Damage, percent: Percent): Damage =
+  Damage(
+    amounts: damage.amounts * newElementSet(percent),
+    ailment: damage.ailment * percent,
+  )

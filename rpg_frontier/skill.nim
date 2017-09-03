@@ -82,6 +82,9 @@ let
     if rest.len > 0:
       result.add random(rest)
 
+  hitSplash: TargetProc = makeTargetProc:
+    let rest = allEntities.filterIt(it != target)
+    @[target] & rest
 
 proc hitRepeated(times: int): TargetProc =
   makeTargetProc:
@@ -125,6 +128,17 @@ let
       for target in targets:
         basicHit(animation, onHit, damage, attacker, @[target])
         animation.wait(0.05)
+
+proc splashHit(splashDamage: Percent): AttackAnimProc =
+  (proc(animation: AnimationCollection, onHit: HitCallback, damage: Damage,
+       attacker: BattleEntity, targets: seq[BattleEntity]) =
+    let myOnHit: HitCallback = proc(target: BattleEntity, damage: Damage) =
+      onHit(target, damage)
+      let lessDamage = damage * splashDamage
+      for i in 1..<targets.len:
+        onHit(targets[i], lessDamage)
+    basicHit(animation, myOnHit, damage, attacker, @[targets[0]])
+  )
 
 let allSkills*: array[SkillID, SkillInfo] = [
   attack: SkillInfo(
@@ -170,16 +184,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
     damage: 140.Percent,
     focusCost: 6,
     toTargets: hitBounce,
-    attackAnim:
-      proc(animation: AnimationCollection, onHit: HitCallback, damage: Damage,
-           attacker: BattleEntity, targets: seq[BattleEntity]) =
-        basicHit(animation, onHit, damage, attacker, @[targets[0]])
-        if targets.len > 1:
-          let lessDamage = Damage(
-            amounts: damage.amounts * newElementSet(50.Percent),
-          )
-          basicHit(animation, onHit, lessDamage, attacker, @[targets[1]])
-    ,
+    attackAnim: splashHit(50.Percent),
   ),
   bladeDance: SkillInfo(
     name: "Blade Dance",
@@ -199,6 +204,15 @@ let allSkills*: array[SkillID, SkillInfo] = [
     manaCost: 2,
     toTargets: hitSingle,
     attackAnim: basicHit,
+  ),
+  fireball: SkillInfo(
+    name: "Fireball",
+    kind: spellSkill,
+    target: single,
+    baseDamage: singleDamage(fire, 6, 60),
+    manaCost: 5,
+    toTargets: hitSplash,
+    attackAnim: splashHit(35.Percent),
   ),
   scorch: SkillInfo(
     name: "Scorch",

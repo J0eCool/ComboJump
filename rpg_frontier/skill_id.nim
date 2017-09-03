@@ -8,6 +8,7 @@ type
     bladeDance
 
     flameblast
+    fireball
     scorch
     chill
 
