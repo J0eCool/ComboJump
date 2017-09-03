@@ -35,15 +35,20 @@ proc newBattleController*(): BattleController =
     animation: newAnimationCollection(),
   )
 
-proc processAttackDamage*(controller: BattleController, damage: Damage, target: BattleEntity) =
-  let bleed = target.ailments.bleedDamage()
-  if bleed.total() > 0:
-    let bleedTaken = target.takeDamage(bleed)
+proc processAilmentDamage*(controller: BattleController, target: BattleEntity,
+                        damage: Damage, color: Color) =
+  let taken = target.takeDamage(damage)
+  if taken > 0:
     controller.animation.addFloatingText FloatingText(
-      text: $bleedTaken,
+      text: $taken,
       startPos: target.pos + randomVec(10.0) + vec(30.0),
-      color: red,
+      color: color,
     )
+
+
+proc processAttackDamage*(controller: BattleController, target: BattleEntity,
+                          damage: Damage) =
+  controller.processAilmentDamage(target, target.ailments.bleedDamage(), darkRed)
   let taken = target.takeDamage(damage)
   controller.animation.addFloatingText FloatingText(
     text: $taken,
@@ -78,7 +83,8 @@ proc killEnemy(battle: BattleData, controller: BattleController, target: BattleE
 proc killPlayer(battle: BattleData, controller: BattleController) =
   controller.bufferClose = true
 
-proc updateMaybeKill(battle: BattleData, controller: BattleController, target: BattleEntity) =
+proc updateMaybeKill(battle: BattleData, controller: BattleController,
+                     target: BattleEntity) =
   if target.health > 0:
     return
 
@@ -97,7 +103,7 @@ proc startAttack*(battle: BattleData, controller: BattleController,
     damage = skill.damageFor(attacker)
     targets = skill.toTargets(battle.enemies, target)
     onHit = proc(target: BattleEntity, damage: Damage) =
-      controller.processAttackDamage(damage, target)
+      controller.processAttackDamage(target, damage)
   animation.queueEvent(0.1) do (t: float):
     attacker.updateAttackAnimation(t)
   skill.attackAnim(animation, onHit, damage, attacker, targets)
@@ -159,9 +165,13 @@ proc tryUsePotion*(battle: BattleData, controller: BattleController, potion: ptr
     battle.endTurn()
 
 proc beginEnemyAttack(battle: BattleData, controller: BattleController) =
-  let
-    enemy = battle.activeEntity
-    skill = allSkills[enemy.knownSkills[0]]
+  let enemy = battle.activeEntity
+  controller.processAilmentDamage(enemy, enemy.ailments.burnDamage(), orange)
+  if enemy.health <= 0:
+    battle.updateMaybeKill(controller, enemy)
+    battle.endTurn()
+    return
+  let skill = allSkills[enemy.knownSkills[0]]
   battle.startAttack(controller, skill, enemy, battle.player)
 
 proc battleUpdate*(battle: BattleData, controller: BattleController, dt: float) =
