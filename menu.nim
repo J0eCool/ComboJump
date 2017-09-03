@@ -331,6 +331,7 @@ method typeName[T](list: List[T]): string =
 method diffSelf[T](list, newVal: List[T]) =
   newVal.generateChildren()
   if list.items != newVal.items:
+    list.items = newVal.items
     list.generatedChildren = newVal.generatedChildren
   else:
     list.generateChildren()

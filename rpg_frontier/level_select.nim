@@ -46,7 +46,7 @@ proc levelSelectView(levels: LevelSelect, controller: LevelSelectController): No
       ),
       Button(
         pos: vec(800, 300),
-        size: vec(100, 30),
+        size: vec(200, 60),
         label: "Skill Select",
         onClick: (proc() =
           let skillSelectMenu = downcast(newSkillSelectMenu(controller.stats))

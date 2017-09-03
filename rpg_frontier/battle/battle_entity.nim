@@ -58,7 +58,7 @@ proc newPlayer*(stats: PlayerStats): BattleEntity =
       ailment: 60,
     ),
     speed: 1.0,
-    knownSkills: @[attack] & stats.skills,
+    knownSkills: stats.skills,
     effects: @[],
     ailments: newAilments(),
     id: getNextId(),

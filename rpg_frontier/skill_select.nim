@@ -1,3 +1,5 @@
+import sequtils
+
 import
   rpg_frontier/[
     player_stats,
@@ -5,6 +7,7 @@ import
     skill_id,
     transition,
   ],
+  color,
   menu,
   util,
   vec
@@ -39,7 +42,7 @@ proc skillSelectView(levels: SkillSelect, controller: SkillSelectController): No
     ),
     Button(
       pos: vec(100, 150),
-      size: vec(50, 30),
+      size: vec(90, 60),
       label: "Back",
       onClick: (proc() =
         controller.bufferClose = true
@@ -47,15 +50,62 @@ proc skillSelectView(levels: SkillSelect, controller: SkillSelectController): No
     ),
     List[SkillID](
       pos: vec(200, 300),
-      spacing: vec(5),
-      items: allOf[SkillID](),
+      spacing: vec(50),
+      items: levels.stats.skills,
+      listNodesIdx: (proc(id: SkillID, idx: int): Node =
+        let
+          skill = allSkills[id]
+          stats = levels.stats
+        result = nodes(@[
+          SpriteNode(
+            pos: vec(25, 0),
+            size: vec(294, 44),
+            color: lightGray,
+          ),
+          BorderedTextNode(text: skill.name),
+        ])
+        if idx > 0:
+          result.children.add Button(
+            pos: vec(-100, 0),
+            size: vec(40),
+            label: "^",
+            onClick: (proc() =
+              swap(stats.skills[idx], stats.skills[idx - 1])
+            ),
+          )
+        if idx < stats.skills.len - 1:
+          result.children.add Button(
+            pos: vec(100, 0),
+            size: vec(40),
+            label: "v",
+            onClick: (proc() =
+              swap(stats.skills[idx], stats.skills[idx + 1])
+            ),
+          )
+        if id != attack:
+          result.children.add Button(
+            pos: vec(150, 0),
+            size: vec(40),
+            label: "x",
+            onClick: (proc() =
+              stats.skills.delete(idx)
+            ),
+          )
+      ),
+    ),
+    List[SkillID](
+      pos: vec(600, 300),
+      spacing: vec(10),
+      width: 3,
+      items: allOf[SkillID]().filterIt(it notin levels.stats.skills),
       listNodes: (proc(id: SkillID): Node =
         let skill = allSkills[id]
         Button(
-          size: vec(200, 60),
+          size: vec(140, 40),
           label: skill.name,
           onClick: (proc() =
-            echo "Clicked on ", skill.name
+            if levels.stats.skills.len < 5:
+              levels.stats.skills.add id
           ),
         ),
       ),

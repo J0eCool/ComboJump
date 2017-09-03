@@ -10,7 +10,7 @@ type
 
 proc newPlayerStats*(): PlayerStats =
   PlayerStats(
-    skills: @[scorch, chill, doubleHit],
+    skills: @[attack, scorch, chill, doubleHit],
   )
 
 proc addXp*(stats: PlayerStats, xpGained: int) =
