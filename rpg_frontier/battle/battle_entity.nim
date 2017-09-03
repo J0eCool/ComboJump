@@ -7,6 +7,7 @@ import
     element,
     enemy,
     percent,
+    player_stats,
     skill_id,
     status_effect,
   ],
@@ -35,7 +36,7 @@ proc getNextId(): int =
   result = nextId
   nextId += 1
 
-proc newPlayer*(): BattleEntity =
+proc newPlayer*(stats: PlayerStats): BattleEntity =
   let
     health = 30
     mana = 16
@@ -57,13 +58,7 @@ proc newPlayer*(): BattleEntity =
       ailment: 60,
     ),
     speed: 1.0,
-    knownSkills: @[
-      attack,
-      doubleHit,
-      bounceHit,
-      flameblast,
-      fireball,
-    ],
+    knownSkills: @[attack] & stats.skills,
     effects: @[],
     ailments: newAilments(),
     id: getNextId(),

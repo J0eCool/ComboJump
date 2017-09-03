@@ -55,7 +55,7 @@ proc spawnCurrentStage*(battle: BattleData) =
 
 proc newBattleData*(stats: PlayerStats, level: Level): BattleData =
   result = BattleData(
-    player: newPlayer(),
+    player: newPlayer(stats),
     stats: stats,
     potions: initPotions(),
     levelName: level.name,

@@ -48,12 +48,11 @@ type
 proc baseDamageFor(skill: SkillInfo, entity: BattleEntity): Damage =
   case skill.kind
   of attackSkill:
-    result = entity.baseDamage
-    result.amounts = result.amounts * newElementSet(skill.damage)
+    entity.baseDamage * skill.damage
   of spellSkill:
-    result = skill.baseDamage
+    skill.baseDamage
   of effectSkill:
-    discard
+    Damage()
 
 proc damageFor*(skill: SkillInfo, entity: BattleEntity): Damage =
   result = skill.baseDamageFor(entity)
