@@ -3,6 +3,7 @@ import
     enemy,
     level,
     player_stats,
+    skill_select,
     transition,
   ],
   rpg_frontier/battle/[
@@ -10,7 +11,6 @@ import
     battle_view,
   ],
   menu,
-  option,
   vec
 
 
@@ -19,7 +19,7 @@ type
     levels: seq[Level]
   LevelSelectController = ref object of Controller
     stats: PlayerStats
-    clickedLevel: Option[Level]
+    nextMenu: MenuBase
 
 proc newLevelSelect(): LevelSelect =
   LevelSelect(
@@ -32,12 +32,9 @@ proc newLevelSelectController(): LevelSelectController =
   )
 
 method pushMenus(controller: LevelSelectController): seq[MenuBase] =
-  controller.clickedLevel.bindAs level:
-    controller.clickedLevel = makeNone[Level]()
-    let
-      battle = newBattleData(controller.stats, level)
-      battleMenu = downcast(newBattleMenu(battle))
-    result = @[downcast(newTransitionMenu(battleMenu))]
+  if controller.nextMenu != nil:
+    result = @[controller.nextMenu]
+    controller.nextMenu = nil
 
 proc levelSelectView(levels: LevelSelect, controller: LevelSelectController): Node {.procvar.} =
   Node(
@@ -46,6 +43,15 @@ proc levelSelectView(levels: LevelSelect, controller: LevelSelectController): No
         pos: vec(600, 150),
         text: "Level Select",
         fontSize: 32,
+      ),
+      Button(
+        pos: vec(800, 300),
+        size: vec(100, 30),
+        label: "Skill Select",
+        onClick: (proc() =
+          let skillSelectMenu = downcast(newSkillSelectMenu(controller.stats))
+          controller.nextMenu = downcast(newTransitionMenu(skillSelectMenu))
+        ),
       ),
       List[Level](
         pos: vec(200, 300),
@@ -56,7 +62,10 @@ proc levelSelectView(levels: LevelSelect, controller: LevelSelectController): No
             size: vec(200, 60),
             label: level.name,
             onClick: (proc() =
-              controller.clickedLevel = makeJust(level)
+              let
+                battle = newBattleData(controller.stats, level)
+                battleMenu = downcast(newBattleMenu(battle))
+              controller.nextMenu = downcast(newTransitionMenu(battleMenu))
             ),
           ),
         ),

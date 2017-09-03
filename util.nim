@@ -116,3 +116,8 @@ proc approxEq*(a, b: float, epsilon=0.00001): bool =
 proc newOf*[T](item: T): ref T =
   new(result)
   result[] = item
+
+proc allOf*[T: enum](): seq[T] =
+  result = @[]
+  for item in T:
+    result.add item
