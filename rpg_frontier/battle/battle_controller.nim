@@ -164,15 +164,27 @@ proc tryUsePotion*(battle: BattleData, controller: BattleController, potion: ptr
   if not info.instantUse:
     battle.endTurn()
 
-proc beginEnemyAttack(battle: BattleData, controller: BattleController) =
-  let enemy = battle.activeEntity
-  controller.processAilmentDamage(enemy, enemy.ailments.burnDamage(), orange)
-  if enemy.health <= 0:
-    battle.updateMaybeKill(controller, enemy)
-    battle.endTurn()
-    return
-  let skill = allSkills[enemy.knownSkills[0]]
+proc beginPlayerTurn(battle: BattleData, controller: BattleController) =
+  battle.startPlayerTurn()
+
+proc beginEnemyTurn(battle: BattleData, controller: BattleController) =
+  let
+    enemy = battle.activeEntity
+    skill = allSkills[enemy.knownSkills[0]]
   battle.startAttack(controller, skill, enemy, battle.player)
+
+proc beginTurn(battle: BattleData, controller: BattleController) =
+  let entity = battle.activeEntity
+  controller.processAilmentDamage(entity, entity.ailments.burnDamage(), orange)
+  if entity.health <= 0:
+    battle.updateMaybeKill(controller, entity)
+    battle.endTurn()
+  else:
+    if battle.isEnemyTurn:
+      battle.beginEnemyTurn(controller)
+    else:
+      battle.beginPlayerTurn(controller)
+
 
 proc battleUpdate*(battle: BattleData, controller: BattleController, dt: float) =
   if controller.bufferClose:
@@ -182,10 +194,10 @@ proc battleUpdate*(battle: BattleData, controller: BattleController, dt: float) 
 
   controller.animation.update(dt)
 
-  if controller.animation.notBlocking():
+  if controller.animation.notBlocking() and battle.activeEntity == nil:
     battle.updateTurnQueue(dt)
-    if battle.isEnemyTurn:
-      battle.beginEnemyAttack(controller)
+    if battle.activeEntity != nil:
+      battle.beginTurn(controller)
 
   battle.clampResources()
 

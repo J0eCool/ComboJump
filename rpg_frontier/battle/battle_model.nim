@@ -79,8 +79,6 @@ proc updateTurnQueue*(battle: BattleData, dt: float) =
   for pair in battle.turnQueue:
     if pair.t >= 1.0:
       battle.activeEntity = pair.entity
-      if pair.entity == battle.player:
-        battle.startPlayerTurn()
       return
   for pair in battle.turnQueue.mitems:
     pair.t += dt * pair.entity.speed
