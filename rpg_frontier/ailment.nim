@@ -2,6 +2,7 @@ import
   rpg_frontier/[
     damage,
     element,
+    percent,
   ],
   color
 
@@ -63,3 +64,7 @@ proc bleedDamage*(ailments: Ailments): Damage =
 proc burnDamage*(ailments: Ailments): Damage =
   let stacks = ailments.stacks(fire)
   singleDamage(fire, 2 * stacks)
+
+proc chillEffect*(ailments: Ailments): Percent =
+  let stacks = ailments.stacks(ice)
+  Percent(50 * stacks)

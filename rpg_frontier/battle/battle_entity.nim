@@ -95,7 +95,7 @@ proc newEnemy*(kind: EnemyKind): BattleEntity =
 proc takeDamage*(entity: BattleEntity, damage: Damage): int =
   let
     applied = damage.apply(entity.defense)
-    totalDamage = applied.total()
+    totalDamage = applied.total() + entity.ailments.chillEffect()
   entity.health -= totalDamage
   entity.ailments.takeDamage(applied)
   totalDamage
