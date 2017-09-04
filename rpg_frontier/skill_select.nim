@@ -30,10 +30,14 @@ proc newSkillSelectController(): SkillSelectController =
 method pushMenus(controller: SkillSelectController): seq[MenuBase] =
   if controller.bufferClose:
     result = @[downcast(newFadeOnlyOut())]
+
+proc skillSelectUpdate(model: SkillSelect, controller: SkillSelectController, dt: float) {.procvar.} =
+  if controller.bufferClose:
     controller.shouldPop = true
     controller.bufferClose = false
 
-proc skillSelectView(levels: SkillSelect, controller: SkillSelectController): Node {.procvar.} =
+proc skillSelectView(model: SkillSelect, controller: SkillSelectController): Node {.procvar.} =
+  let stats = model.stats
   nodes(@[
     BorderedTextNode(
       pos: vec(600, 150),
@@ -51,11 +55,9 @@ proc skillSelectView(levels: SkillSelect, controller: SkillSelectController): No
     List[SkillID](
       pos: vec(200, 300),
       spacing: vec(50),
-      items: levels.stats.skills,
+      items: model.stats.skills,
       listNodesIdx: (proc(id: SkillID, idx: int): Node =
-        let
-          skill = allSkills[id]
-          stats = levels.stats
+        let skill = allSkills[id]
         result = nodes(@[
           SpriteNode(
             pos: vec(25, 0),
@@ -95,17 +97,17 @@ proc skillSelectView(levels: SkillSelect, controller: SkillSelectController): No
     ),
     List[SkillID](
       pos: vec(600, 300),
-      spacing: vec(10),
+      spacing: vec(5),
       width: 3,
-      items: allOf[SkillID]().filterIt(it notin levels.stats.skills),
+      items: allOf[SkillID]().filterIt(it notin stats.skills),
       listNodes: (proc(id: SkillID): Node =
         let skill = allSkills[id]
         Button(
-          size: vec(140, 40),
+          size: vec(160, 50),
           label: skill.name,
           onClick: (proc() =
-            if levels.stats.skills.len < 5:
-              levels.stats.skills.add id
+            if stats.skills.len < 5:
+              stats.skills.add id
           ),
         ),
       ),
@@ -116,5 +118,6 @@ proc newSkillSelectMenu*(stats: PlayerStats): Menu[SkillSelect, SkillSelectContr
   Menu[SkillSelect, SkillSelectController](
     model: newSkillSelect(stats),
     view: skillSelectView,
+    update: skillSelectUpdate,
     controller: newSkillSelectController(),
   )
