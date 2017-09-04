@@ -44,6 +44,7 @@ type
     animation: AnimationCollection, onHit: HitCallback, damage: Damage,
     attacker: BattleEntity, targets: seq[BattleEntity])
   HitCallback = proc(target: BattleEntity, damage: Damage)
+  VfxProc = proc(pos: Vec): Vfx
 
 proc baseDamageFor(skill: SkillInfo, entity: BattleEntity): Damage =
   case skill.kind
@@ -98,7 +99,7 @@ proc hitRandom(numTargets: int): TargetProc =
       let e = random(allEntities)
       result.add e
 
-proc slashVfx(pos: Vec): Vfx =
+proc slashVfx(pos: Vec): Vfx {.procvar.} =
   let basePos = pos - vec(100)
   Vfx(
     pos: basePos,
@@ -110,33 +111,58 @@ proc slashVfx(pos: Vec): Vfx =
     ),
   )
 
-let
-  basicHit: AttackAnimProc =
-    proc(animation: AnimationCollection, onHit: HitCallback, damage: Damage,
-         attacker: BattleEntity, targets: seq[BattleEntity]) =
-      let target = targets[0]
-      animation.queueAddVfx slashVfx(target.pos)
-      animation.wait(0.1)
-      animation.queueEvent do (t: float):
-        for enemy in targets:
-          onHit(enemy, damage)
+proc explosionVfx(pos: Vec): Vfx {.procvar.} =
+  Vfx(
+    pos: pos,
+    sprite: "Explosion.png",
+    scale: 1,
+    duration: 0.35,
+    update: (proc(vfx: var Vfx, t: float) =
+      vfx.scale = t * 8 + 1
+    ),
+  )
 
-  multiHit: AttackAnimProc =
-    proc(animation: AnimationCollection, onHit: HitCallback, damage: Damage,
-         attacker: BattleEntity, targets: seq[BattleEntity]) =
-      for target in targets:
-        basicHit(animation, onHit, damage, attacker, @[target])
-        animation.wait(0.05)
+proc iceVfx(pos: Vec): Vfx {.procvar.} =
+  let basePos = pos + vec(0, 50)
+  Vfx(
+    pos: basePos,
+    sprite: "Crystal.png",
+    scale: 4,
+    duration: 0.3,
+    update: (proc(vfx: var Vfx, t: float) =
+      vfx.pos = basePos - t * vec(0, 150)
+    ),
+  )
 
-proc splashHit(splashDamage: Percent): AttackAnimProc =
+
+proc basicHit(vfx: VfxProc): AttackAnimProc =
   (proc(animation: AnimationCollection, onHit: HitCallback, damage: Damage,
-       attacker: BattleEntity, targets: seq[BattleEntity]) =
+        attacker: BattleEntity, targets: seq[BattleEntity]) =
+    let target = targets[0]
+    animation.queueAddVfx vfx(target.pos)
+    animation.wait(0.1)
+    animation.queueEvent do (t: float):
+      for enemy in targets:
+        onHit(enemy, damage)
+  )
+
+proc multiHit(vfx: VfxProc): AttackAnimProc =
+  (proc(animation: AnimationCollection, onHit: HitCallback, damage: Damage,
+        attacker: BattleEntity, targets: seq[BattleEntity]) =
+    for target in targets:
+      basicHit(vfx)(animation, onHit, damage, attacker, @[target])
+      animation.wait(0.05)
+  )
+
+proc splashHit(vfx: VfxProc, splashDamage: Percent): AttackAnimProc =
+  (proc(animation: AnimationCollection, onHit: HitCallback, damage: Damage,
+        attacker: BattleEntity, targets: seq[BattleEntity]) =
     let myOnHit: HitCallback = proc(target: BattleEntity, damage: Damage) =
       onHit(target, damage)
       let lessDamage = damage * splashDamage
       for i in 1..<targets.len:
         onHit(targets[i], lessDamage)
-    basicHit(animation, myOnHit, damage, attacker, @[targets[0]])
+    basicHit(vfx)(animation, myOnHit, damage, attacker, @[targets[0]])
   )
 
 let allSkills*: array[SkillID, SkillInfo] = [
@@ -147,7 +173,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
     damage: 100.Percent,
     focusCost: -4,
     toTargets: hitSingle,
-    attackAnim: basicHit,
+    attackAnim: basicHit(slashVfx),
   ),
   powerHit: SkillInfo(
     name: "Power Hit",
@@ -156,7 +182,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
     damage: 160.Percent,
     focusCost: 4,
     toTargets: hitSingle,
-    attackAnim: basicHit,
+    attackAnim: basicHit(slashVfx),
   ),
   cleave: SkillInfo(
     name: "Cleave",
@@ -165,7 +191,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
     damage: 100.Percent,
     focusCost: 5,
     toTargets: hitAll,
-    attackAnim: basicHit,
+    attackAnim: basicHit(slashVfx),
   ),
   doubleHit: SkillInfo(
     name: "Double Hit",
@@ -174,7 +200,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
     damage: 90.Percent,
     focusCost: 4,
     toTargets: hitRepeated(2),
-    attackAnim: multiHit,
+    attackAnim: multiHit(slashVfx),
   ),
   bounceHit: SkillInfo(
     name: "Bounce Hit",
@@ -183,7 +209,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
     damage: 140.Percent,
     focusCost: 6,
     toTargets: hitBounce,
-    attackAnim: splashHit(50.Percent),
+    attackAnim: splashHit(slashVfx, 50.Percent),
   ),
   bladeDance: SkillInfo(
     name: "Blade Dance",
@@ -192,7 +218,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
     damage: 60.Percent,
     focusCost: 8,
     toTargets: hitRandom(6),
-    attackAnim: multiHit,
+    attackAnim: multiHit(slashVfx),
   ),
 
   flameblast: SkillInfo(
@@ -202,7 +228,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
     baseDamage: singleDamage(fire, 5, 60),
     manaCost: 2,
     toTargets: hitSingle,
-    attackAnim: basicHit,
+    attackAnim: basicHit(explosionVfx),
   ),
   fireball: SkillInfo(
     name: "Fireball",
@@ -211,7 +237,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
     baseDamage: singleDamage(fire, 6, 60),
     manaCost: 5,
     toTargets: hitSplash,
-    attackAnim: splashHit(35.Percent),
+    attackAnim: splashHit(explosionVfx, 35.Percent),
   ),
   scorch: SkillInfo(
     name: "Scorch",
@@ -220,7 +246,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
     baseDamage: singleDamage(fire, 1, 125),
     manaCost: 2,
     toTargets: hitSingle,
-    attackAnim: basicHit,
+    attackAnim: basicHit(explosionVfx),
   ),
   chill: SkillInfo(
     name: "Chill",
@@ -229,7 +255,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
     baseDamage: singleDamage(ice, 1, 125),
     manaCost: 2,
     toTargets: hitSingle,
-    attackAnim: basicHit,
+    attackAnim: basicHit(iceVfx),
   ),
 
   buildup: SkillInfo(
