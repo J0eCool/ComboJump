@@ -25,7 +25,7 @@ proc runeValueListNode*(pos: Vec, items: (proc(): seq[ValueKind])): Node =
     pos: pos,
     size: vec(12, 0),
     spacing: vec(-2),
-    items: items,
+    items: items(),
     listNodesIdx: (proc(kind: ValueKind, idx: int): Node =
       let
         size = 12
@@ -80,7 +80,7 @@ proc runeMenuNode(spellData: ptr SpellData): Node =
         spacing: vec(10),
         width: 3,
         size: vec(300, 400),
-        items: (proc(): seq[Rune] = spellData[].unlockedRunes),
+        items: spellData[].unlockedRunes,
         listNodesIdx: (proc(rune: Rune, runeIndex: int): Node =
           let hotkey = if runeIndex < inputs.len: inputs[runeIndex] else: none
           Button(

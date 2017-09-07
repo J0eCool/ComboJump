@@ -5,7 +5,7 @@ import
   component/[
     bullet,
     collider,
-    damage,
+    damage_component,
     mana,
     movement,
     transform,

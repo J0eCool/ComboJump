@@ -3,7 +3,7 @@ import unittest
 import
   component/[
     collider,
-    damage,
+    damage_component,
     health,
     popup_text,
     transform,

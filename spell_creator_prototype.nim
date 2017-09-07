@@ -159,7 +159,7 @@ proc runeTileNode(tile: RuneTile, pos: Vec, onClick: proc()): Node =
       ),
       List[DirData](
         ignoreSpacing: true,
-        items: (proc(): seq[DirData] = tile.dirData),
+        items: tile.dirData,
         listNodes: (proc(data: DirData): Node =
           SpriteNode(
             pos: data.dir.offset,
@@ -282,15 +282,14 @@ proc tileInfo(rune: Rune): RuneTileInfo =
 
 proc runeGridNode(grid: ptr RuneGrid): Node =
   type Pair = tuple[slot: Slot, tileOpt: Option[RuneTile]]
-  proc gridItems(): seq[Pair] =
-    result = @[]
-    for slot in grid[].slots:
-      let tileOpt =
-        if grid.tiles.hasKey(slot):
-          makeJust(grid.tiles[slot])
-        else:
-          makeNone[RuneTile]()
-      result.add((slot, tileOpt))
+  var gridItems: seq[Pair] = @[]
+  for slot in grid[].slots:
+    let tileOpt =
+      if grid.tiles.hasKey(slot):
+        makeJust(grid.tiles[slot])
+      else:
+        makeNone[RuneTile]()
+    gridItems.add((slot, tileOpt))
   proc gridList(nodes: (proc(pair: Pair): Node)): Node =
     List[Pair](
       ignoreSpacing: true,

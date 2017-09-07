@@ -23,7 +23,7 @@ proc questMenuNode(questData: ptr QuestData, notifications: ptr N10nManager): No
   List[Quest](
     pos: vec(850, 300),
     spacing: vec(5),
-    items: (proc(): seq[Quest] = questData[].activeQuests),
+    items: questData[].activeQuests,
     listNodes: (proc(quest: Quest): Node =
       let
         info = quest.info
@@ -51,7 +51,7 @@ proc questMenuNode(questData: ptr QuestData, notifications: ptr N10nManager): No
           ),
           List[QuestStep](
             pos: vec(0, -10),
-            items: (proc(): seq[QuestStep] = quest.steps),
+            items: quest.steps,
             listNodes: (proc(req: QuestStep): Node =
               BorderedTextNode(
                 text: "- " & req.menuString,

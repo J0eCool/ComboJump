@@ -42,7 +42,7 @@ proc levelMenuNode(stageData: ptr StageData): Node =
         spacing: vec(10),
         pos: vec(0, 26),
         size: vec(400, 400),
-        items: (proc(): seq[Group] = openGroups(stageData[])),
+        items: openGroups(stageData[]),
         listNodesIdx: (proc(group: Group, groupIdx: int): Node =
           var isOpen = false
           Button(
@@ -59,7 +59,7 @@ proc levelMenuNode(stageData: ptr StageData): Node =
                     List[Stage](
                       spacing: vec(10),
                       pos: vec(110, -20),
-                      items: (proc(): seq[Stage] = group),
+                      items: group,
                       listNodesIdx: (proc(stage: Stage, stageIdx: int): Node =
                         Button(
                           size: vec(180, 30),

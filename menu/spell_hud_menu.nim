@@ -52,7 +52,7 @@ proc spellHudMenuNode(spellData: ptr SpellData, stats: ptr PlayerStats, spellSho
   List[int](
     pos: vec(20, 680),
     spacing: vec(4),
-    items: (proc(): seq[int] = toSeq(0..<spellData.spells.len)),
+    items: toSeq(0..<spellData.spells.len),
     listNodes: (proc(descIdx: int): Node =
       SpriteNode(
         size: vec(810, 48),
@@ -131,7 +131,7 @@ proc spellHudMenuNode(spellData: ptr SpellData, stats: ptr PlayerStats, spellSho
             horizontal: true,
             pos: vec(25, 0),
             size: vec(800, 24),
-            items: (proc(): seq[Rune] = spellData.spellDescs[descIdx]),
+            items: spellData.spellDescs[descIdx],
             listNodesIdx: (proc(rune: Rune, runeIdx: int): Node =
               SpriteNode(
                 size: vec(24, 24),

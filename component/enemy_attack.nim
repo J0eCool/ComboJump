@@ -2,7 +2,7 @@ import
   component/[
     bullet,
     collider,
-    damage,
+    damage_component,
     enemy_proximity,
     movement,
     sprite,

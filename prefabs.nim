@@ -1,7 +1,7 @@
 import
   component/[
     collider,
-    damage,
+    damage_component,
     enemy_attack,
     enemy_movement,
     enemy_proximity,

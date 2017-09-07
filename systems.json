@@ -284,7 +284,7 @@
       "args": [
         "player"
       ],
-      "filename": "damage.nim",
+      "filename": "damage_component.nim",
       "id": "4",
       "priority": "0",
       "types": [
