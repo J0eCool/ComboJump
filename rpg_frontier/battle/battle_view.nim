@@ -338,6 +338,7 @@ proc attackTargetsNode(battle: BattleData, controller: BattleController): Node =
     )
 
 proc battleView(battle: BattleData, controller: BattleController): Node {.procvar.} =
+  let player = battle.player
   Node(
     children: @[
       Button(
@@ -349,8 +350,9 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         ),
       ),
       attackTargetsNode(battle, controller),
-      battleEntityNode(battle, controller, battle.player, battle.player.pos),
-      entityStatusNode(battle.player, battle.player.pos + vec(-80, 80)),
+      battleEntityNode(battle, controller, player, player.pos),
+      entityStatusNode(player, player.pos + vec(-80, 80)),
+      ailmentsNode(player.ailments, player.pos + vec(100, -30)),
       List[BattleEntity](
         ignoreSpacing: true,
         items: battle.enemies,
@@ -371,7 +373,7 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         text: "XP: " & $battle.stats.xp,
         pos: vec(300, 70),
       ),
-      playerStatusHudNode(battle.player, vec(300, 620)),
+      playerStatusHudNode(player, vec(300, 620)),
       actionButtonsNode(battle, controller, vec(610, 600)),
       turnQueueNode(battle, vec(800, 60)),
     ] & controller.animation.nodes(),

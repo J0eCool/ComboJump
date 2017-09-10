@@ -36,4 +36,10 @@ const allLevels* = @[
       @[slime, goblin, slime],
     ],
   ),
+  Level(
+    name: "Field - Boss",
+    stages: @[
+      @[blueOgre],
+    ],
+  ),
 ]

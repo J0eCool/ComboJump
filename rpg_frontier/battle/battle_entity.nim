@@ -81,7 +81,7 @@ proc newEnemy*(kind: EnemyKind): BattleEntity =
     baseDamage: singleDamage(physical, enemy.damage),
     speed: enemy.speed,
     defense: enemy.defense,
-    knownSkills: @[attack],
+    knownSkills: enemy.skills,
     effects: @[],
     ailments: newAilments(),
     id: getNextId(),

@@ -170,7 +170,7 @@ proc beginPlayerTurn(battle: BattleData, controller: BattleController) =
 proc beginEnemyTurn(battle: BattleData, controller: BattleController) =
   let
     enemy = battle.activeEntity
-    skill = allSkills[enemy.knownSkills[0]]
+    skill = allSkills[random(enemy.knownSkills)]
   battle.startAttack(controller, skill, enemy, battle.player)
 
 proc beginTurn(battle: BattleData, controller: BattleController) =
