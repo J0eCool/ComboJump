@@ -56,13 +56,7 @@ proc baseDamageFor(skill: SkillInfo, entity: BattleEntity): Damage =
     Damage()
 
 proc damageFor*(skill: SkillInfo, entity: BattleEntity): Damage =
-  result = skill.baseDamageFor(entity)
-  for effect in entity.effects:
-    case effect.kind
-    of damageBuff:
-      result.amounts = result.amounts + newElementSet(Percent(effect.amount))
-    else:
-      discard
+  skill.baseDamageFor(entity).applyAttackEffects(entity.effects)
 
 template makeTargetProc(body: untyped): untyped {.dirty.} =
   (proc(allEntities: seq[BattleEntity], target: BattleEntity): seq[BattleEntity] =
@@ -165,6 +159,13 @@ proc splashHit(vfx: VfxProc, splashDamage: Percent): AttackAnimProc =
     basicHit(vfx)(animation, myOnHit, damage, attacker, @[targets[0]])
   )
 
+proc statusHit(effect: StatusEffect): AttackAnimProc =
+  (proc(animation: AnimationCollection, onHit: HitCallback, damage: Damage,
+        attacker: BattleEntity, targets: seq[BattleEntity]) =
+    animation.queueEvent do (t: float):
+      targets[0].effects.add effect
+  )
+
 let allSkills*: array[SkillID, SkillInfo] = [
   attack: SkillInfo(
     name: "Attack",
@@ -264,15 +265,22 @@ let allSkills*: array[SkillID, SkillInfo] = [
     target: self,
     manaCost: 5,
     toTargets: hitSingle,
-    attackAnim:
-      proc(animation: AnimationCollection, onHit: HitCallback, damage: Damage,
-           attacker: BattleEntity, targets: seq[BattleEntity]) =
-        animation.queueEvent do (t: float):
-          targets[0].effects.add StatusEffect(
-            kind: damageBuff,
-            amount: 75,
-            duration: 3,
-          )
-    ,
+    attackAnim: statusHit(StatusEffect(
+      kind: damageBuff,
+      amount: 75,
+      duration: 3,
+    )),
+  ),
+  wither: SkillInfo(
+    name: "Wither",
+    kind: effectSkill,
+    target: single,
+    manaCost: 5,
+    toTargets: hitSingle,
+    attackAnim: statusHit(StatusEffect(
+      kind: damageTakenDebuff,
+      amount: 75,
+      duration: 3,
+    )),
   ),
 ]

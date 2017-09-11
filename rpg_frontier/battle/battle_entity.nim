@@ -87,9 +87,27 @@ proc newEnemy*(kind: EnemyKind): BattleEntity =
     id: getNextId(),
   )
 
+proc applyAttackEffects*(damage: Damage, effects: seq[StatusEffect]): Damage =
+  result = damage
+  for effect in effects:
+    case effect.kind
+    of damageBuff:
+      result.amounts = result.amounts + newElementSet(Percent(effect.amount))
+    else:
+      discard
+
+proc applyDefenseEffects*(damage: Damage, effects: seq[StatusEffect]): Damage =
+  result = damage
+  for effect in effects:
+    case effect.kind
+    of damageTakenDebuff:
+      result.amounts = result.amounts + newElementSet(Percent(effect.amount))
+    else:
+      discard
+
 proc takeDamage*(entity: BattleEntity, damage: Damage): int =
   let
-    applied = damage.apply(entity.defense)
+    applied = damage.apply(entity.defense).applyDefenseEffects(entity.effects)
     totalDamage = applied.total() + entity.ailments.chillEffect()
   entity.health -= totalDamage
   entity.ailments.takeDamage(applied)
