@@ -16,6 +16,7 @@ import
     transition,
   ],
   rpg_frontier/battle/[
+    battle_ai_logic,
     battle_entity,
     battle_model,
   ],
@@ -115,6 +116,7 @@ proc startAttack*(battle: BattleData, controller: BattleController,
     for entity in battle.enemies & battle.player:
       battle.updateMaybeKill(controller, entity)
     battle.endTurn()
+  battle.activeEntity.tickStatusEffects()
 
 proc tryUseAttack*(battle: BattleData, controller: BattleController, entity: BattleEntity) =
   let skill = battle.selectedSkill
@@ -123,7 +125,6 @@ proc tryUseAttack*(battle: BattleData, controller: BattleController, entity: Bat
     battle.player.mana -= skill.manaCost
     battle.player.focus -= skill.focusCost
     battle.startAttack(controller, skill, battle.player, entity)
-    battle.activeEntity.tickStatusEffects()
 
 proc canUse*(potion: Potion): bool =
   potion.charges > 0 and potion.cooldown == 0
@@ -170,7 +171,7 @@ proc beginPlayerTurn(battle: BattleData, controller: BattleController) =
 proc beginEnemyTurn(battle: BattleData, controller: BattleController) =
   let
     enemy = battle.activeEntity
-    skill = allSkills[random(enemy.knownSkills)]
+    skill = enemy.selectEnemySkill()
   battle.startAttack(controller, skill, enemy, battle.player)
 
 proc beginTurn(battle: BattleData, controller: BattleController) =

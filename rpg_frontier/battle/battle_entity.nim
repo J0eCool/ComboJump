@@ -9,7 +9,11 @@ import
     percent,
     player_stats,
     skill_id,
+    stance,
     status_effect,
+  ],
+  rpg_frontier/battle/[
+    battle_ai,
   ],
   vec
 
@@ -26,9 +30,11 @@ type
     baseDamage*: Damage
     speed*: float
     defense*: Defense
-    knownSkills*: seq[SkillID]
+    knownSkills*: seq[SkillID] # TODO: move this to PlayerStats and BattleAIPhase
+    stance*: Stance
     effects*: seq[StatusEffect]
     ailments*: Ailments
+    ai*: BattleAI
     id: int
 
 var nextId: int = 0
@@ -59,6 +65,7 @@ proc newPlayer*(stats: PlayerStats): BattleEntity =
     ),
     speed: 1.0,
     knownSkills: stats.skills,
+    stance: normalStance,
     effects: @[],
     ailments: newAilments(),
     id: getNextId(),
@@ -69,9 +76,10 @@ proc newEnemy*(kind: EnemyKind): BattleEntity =
     enemy = enemyData[kind]
     mana = 5
     focus = 10
+    startPhase = enemy.ai.curPhase
   BattleEntity(
     name: enemy.name,
-    texture: enemy.texture,
+    texture: startPhase.texture,
     health: enemy.health,
     maxHealth: enemy.health,
     mana: mana,
@@ -82,8 +90,10 @@ proc newEnemy*(kind: EnemyKind): BattleEntity =
     speed: enemy.speed,
     defense: enemy.defense,
     knownSkills: enemy.skills,
+    stance: startPhase.stance,
     effects: @[],
     ailments: newAilments(),
+    ai: enemy.ai,
     id: getNextId(),
   )
 
@@ -105,9 +115,12 @@ proc applyDefenseEffects*(damage: Damage, effects: seq[StatusEffect]): Damage =
     else:
       discard
 
+proc allEffects*(entity: BattleEntity): seq[StatusEffect] =
+  entity.effects & entity.stance.effects
+
 proc takeDamage*(entity: BattleEntity, damage: Damage): int =
   let
-    applied = damage.apply(entity.defense).applyDefenseEffects(entity.effects)
+    applied = damage.apply(entity.defense).applyDefenseEffects(entity.allEffects)
     totalDamage = applied.total() + entity.ailments.chillEffect()
   entity.health -= totalDamage
   entity.ailments.takeDamage(applied)
@@ -130,6 +143,7 @@ proc updateAttackAnimation*(entity: BattleEntity, pct: float) =
 proc tickStatusEffects*(entity: BattleEntity) =
   for effect in entity.effects.mitems:
     effect.duration -= 1
+  for effect in entity.allEffects:
     case effect.kind
     of healthRegen:
       entity.health += effect.amount

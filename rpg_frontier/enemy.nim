@@ -4,45 +4,64 @@ import
     element,
     skill_id,
     percent,
+    stance,
+  ],
+  rpg_frontier/battle/[
+    battle_ai,
   ]
 
 type
   EnemyInfo* = object
     kind*: EnemyKind
     name*: string
-    texture*: string
     health*: int
     damage*: int
     speed*: float
     defense*: Defense
     skills*: seq[SkillID]
+    ai*: BattleAI
   EnemyKind* = enum
     slime
     goblin
     ogre
-    blueOgre
+    bossOgre
 
 proc initializeEnemyData(): array[EnemyKind, EnemyInfo] =
-  for    kind,       name,    texture, health, damage, speed,
-      physRes,    fireRes,     iceRes,
-      skills in [
-    (   slime,    "Slime",    "Slime",      5,      2,   0.8,
-           50,        -50,          0,
-      @[attack]),
-    (  goblin,   "Goblin",   "Goblin",      8,      3,   1.1,
-            0,          0,          0,
-      @[attack]),
-    (    ogre,     "Ogre",     "Ogre",     24,      7,   0.7,
-            0,          0,          0,
-      @[attack]),
-    (blueOgre, "BlueOgre", "BlueOgre",    100,      5,  0.75,
-            0,          0,          0,
-      @[chill, scorch]),
+  for    kind,       name, health, damage, speed,
+      physRes,    fireRes, iceRes,
+      skills,
+      ai in [
+    (   slime,    "Slime",      5,      2,   0.8,
+           50,        -50,      0,
+      @[attack],
+      simpleAI("Slime.png")),
+    (  goblin,   "Goblin",      8,      3,   1.1,
+            0,          0,      0,
+      @[attack],
+      simpleAI("Goblin.png")),
+    (    ogre,     "Ogre",     24,      7,   0.7,
+            0,          0,      0,
+      @[attack],
+      simpleAI("Ogre.png")),
+    (bossOgre, "Ogre Boss",    100,      5,  0.75,
+            0,          0,      0,
+      @[attack],
+      BattleAI(phases: @[
+        BattleAIPhase(
+          stance: defensiveStance,
+          texture: "BlueOgre.png",
+          duration: 2,
+        ),
+        BattleAIPhase(
+          stance: powerStance,
+          texture: "PinkOgre.png",
+          duration: 2,
+        ),
+      ])),
   ].items:
     let info = EnemyInfo(
       kind: kind,
       name: name,
-      texture: texture & ".png",
       health: health,
       damage: damage,
       speed: speed,
@@ -55,6 +74,7 @@ proc initializeEnemyData(): array[EnemyKind, EnemyInfo] =
         ,
       ),
       skills: skills,
+      ai: ai,
     )
-    result[info.kind] = info
+    result[kind] = info
 const enemyData* = initializeEnemyData()

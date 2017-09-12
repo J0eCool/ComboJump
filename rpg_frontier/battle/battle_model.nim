@@ -6,6 +6,7 @@ import
     skill,
   ],
   rpg_frontier/battle/[
+    battle_ai_logic,
     battle_entity,
   ],
   util,
@@ -88,6 +89,8 @@ proc endTurn*(battle: BattleData) =
     if pair.entity == battle.activeEntity:
       pair.t -= 1.0
       break
+  if battle.activeEntity != battle.player:
+    battle.activeEntity.finishEnemyTurn()
   battle.activeEntity = nil
 
 proc canAfford*(battle: BattleData, skill: SkillInfo): bool =

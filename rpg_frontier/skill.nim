@@ -56,7 +56,7 @@ proc baseDamageFor(skill: SkillInfo, entity: BattleEntity): Damage =
     Damage()
 
 proc damageFor*(skill: SkillInfo, entity: BattleEntity): Damage =
-  skill.baseDamageFor(entity).applyAttackEffects(entity.effects)
+  skill.baseDamageFor(entity).applyAttackEffects(entity.allEffects)
 
 template makeTargetProc(body: untyped): untyped {.dirty.} =
   (proc(allEntities: seq[BattleEntity], target: BattleEntity): seq[BattleEntity] =

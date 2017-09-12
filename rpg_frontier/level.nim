@@ -39,7 +39,7 @@ const allLevels* = @[
   Level(
     name: "Field - Boss",
     stages: @[
-      @[blueOgre],
+      @[bossOgre],
     ],
   ),
 ]
