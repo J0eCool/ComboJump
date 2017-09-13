@@ -12,5 +12,7 @@ type
     scorch
     chill
 
+    defend
     buildup
+
     wither

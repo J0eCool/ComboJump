@@ -244,7 +244,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
     name: "Scorch",
     kind: spellSkill,
     target: single,
-    baseDamage: singleDamage(fire, 1, 125),
+    baseDamage: singleDamage(fire, 2, 125),
     manaCost: 2,
     toTargets: hitSingle,
     attackAnim: basicHit(explosionVfx),
@@ -253,12 +253,23 @@ let allSkills*: array[SkillID, SkillInfo] = [
     name: "Chill",
     kind: spellSkill,
     target: single,
-    baseDamage: singleDamage(ice, 1, 125),
+    baseDamage: singleDamage(ice, 2, 125),
     manaCost: 2,
     toTargets: hitSingle,
     attackAnim: basicHit(iceVfx),
   ),
 
+  defend: SkillInfo(
+    name: "Defend",
+    kind: effectSkill,
+    target: self,
+    toTargets: hitSingle,
+    attackAnim: statusHit(StatusEffect(
+      kind: damageTakenDebuff,
+      amount: -50,
+      duration: 1,
+    )),
+  ),
   buildup: SkillInfo(
     name: "Buildup",
     kind: effectSkill,
@@ -271,6 +282,7 @@ let allSkills*: array[SkillID, SkillInfo] = [
       duration: 3,
     )),
   ),
+
   wither: SkillInfo(
     name: "Wither",
     kind: effectSkill,
