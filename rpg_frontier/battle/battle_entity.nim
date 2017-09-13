@@ -30,7 +30,6 @@ type
     baseDamage*: Damage
     speed*: float
     defense*: Defense
-    knownSkills*: seq[SkillID] # TODO: move this to PlayerStats and BattleAIPhase
     stance*: Stance
     effects*: seq[StatusEffect]
     ailments*: Ailments
@@ -64,7 +63,6 @@ proc newPlayer*(stats: PlayerStats): BattleEntity =
       ailment: 60,
     ),
     speed: 1.0,
-    knownSkills: stats.skills,
     stance: normalStance,
     effects: @[],
     ailments: newAilments(),
@@ -89,7 +87,6 @@ proc newEnemy*(kind: EnemyKind): BattleEntity =
     baseDamage: singleDamage(physical, enemy.damage),
     speed: enemy.speed,
     defense: enemy.defense,
-    knownSkills: enemy.skills,
     stance: startPhase.stance,
     effects: @[],
     ailments: newAilments(),

@@ -249,7 +249,7 @@ proc actionButtonsNode(battle: BattleData, controller: BattleController, pos: Ve
       List[SkillID](
         pos: vec(0, 0),
         spacing: vec(5),
-        items: battle.player.knownSkills,
+        items: battle.stats.skills,
         listNodesIdx: (proc(skill: SkillID, idx: int): Node =
           battle.skillButtonNode(controller, allSkills[skill], idx)
         ),

@@ -18,7 +18,6 @@ type
     damage*: int
     speed*: float
     defense*: Defense
-    skills*: seq[SkillID]
     ai*: BattleAI
   EnemyKind* = enum
     slime
@@ -29,33 +28,30 @@ type
 proc initializeEnemyData(): array[EnemyKind, EnemyInfo] =
   for    kind,       name, health, damage, speed,
       physRes,    fireRes, iceRes,
-      skills,
       ai in [
     (   slime,    "Slime",      5,      2,   0.8,
            50,        -50,      0,
-      @[attack],
       simpleAI("Slime.png")),
     (  goblin,   "Goblin",      8,      3,   1.1,
             0,          0,      0,
-      @[attack],
       simpleAI("Goblin.png")),
     (    ogre,     "Ogre",     24,      7,   0.7,
             0,          0,      0,
-      @[attack],
       simpleAI("Ogre.png")),
     (bossOgre, "Ogre Boss",    100,      5,  0.75,
             0,          0,      0,
-      @[attack],
       BattleAI(phases: @[
         BattleAIPhase(
           stance: defensiveStance,
           texture: "BlueOgre.png",
           duration: 2,
+          skills: @[attack],
         ),
         BattleAIPhase(
           stance: powerStance,
           texture: "PinkOgre.png",
           duration: 2,
+          skills: @[attack],
         ),
       ])),
   ].items:
@@ -73,7 +69,6 @@ proc initializeEnemyData(): array[EnemyKind, EnemyInfo] =
           .init(ice, iceRes.Percent)
         ,
       ),
-      skills: skills,
       ai: ai,
     )
     result[kind] = info

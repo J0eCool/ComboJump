@@ -1,5 +1,6 @@
 import
   rpg_frontier/[
+    skill_id,
     stance,
   ]
 
@@ -13,12 +14,14 @@ type
     stance*: Stance
     texture*: string
     duration*: int
+    skills*: seq[SkillID]
 
-proc simpleAI*(texture: string): BattleAI =
+proc simpleAI*(texture: string, skills = @[attack]): BattleAI =
   BattleAI(phases: @[
     BattleAIPhase(
       stance: normalStance,
       texture: texture,
+      skills: skills,
     )
   ])
 

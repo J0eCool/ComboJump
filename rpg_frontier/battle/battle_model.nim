@@ -63,7 +63,7 @@ proc newBattleData*(stats: PlayerStats, level: Level): BattleData =
     stages: level.stages,
     curStageIndex: 0,
   )
-  result.selectedSkill = allSkills[result.player.knownSkills[0]]
+  result.selectedSkill = allSkills[result.stats.skills[0]]
   result.spawnCurrentStage()
 
 proc isEnemyTurn*(battle: BattleData): bool =

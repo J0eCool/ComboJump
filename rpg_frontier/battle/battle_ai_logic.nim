@@ -9,7 +9,7 @@ import
   util
 
 proc selectEnemySkill*(enemy: BattleEntity): SkillInfo =
-  allSkills[random(enemy.knownSkills)]
+  allSkills[random(enemy.ai.curPhase.skills)]
 
 proc finishEnemyTurn*(enemy: BattleEntity) =
   enemy.ai.updateTurn()
