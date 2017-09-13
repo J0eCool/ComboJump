@@ -2,6 +2,7 @@ import
   rpg_frontier/[
     damage,
     element,
+    enemy_id,
     skill_id,
     percent,
     stance,
@@ -12,21 +13,16 @@ import
 
 type
   EnemyInfo* = object
-    kind*: EnemyKind
+    id*: EnemyID
     name*: string
     health*: int
     damage*: int
     speed*: float
     defense*: Defense
     ai*: BattleAI
-  EnemyKind* = enum
-    slime
-    goblin
-    ogre
-    bossOgre
 
-proc initializeEnemyData(): array[EnemyKind, EnemyInfo] =
-  for    kind,       name, health, damage, speed,
+proc initializeEnemyData(): array[EnemyID, EnemyInfo] =
+  for      id,       name, health, damage, speed,
       physRes,    fireRes, iceRes,
       ai in [
     (   slime,    "Slime",      5,      2,   0.8,
@@ -38,7 +34,7 @@ proc initializeEnemyData(): array[EnemyKind, EnemyInfo] =
     (    ogre,     "Ogre",     24,      7,   0.7,
             0,          0,      0,
       simpleAI("Ogre.png")),
-    (bossOgre, "Ogre Boss",    100,      5,  0.75,
+    (bossOgre, "Ogre Boss",   100,      5,  0.75,
             0,          0,      0,
       BattleAI(phases: @[
         BattleAIPhase(
@@ -54,9 +50,19 @@ proc initializeEnemyData(): array[EnemyKind, EnemyInfo] =
           skills: @[attack],
         ),
       ])),
+    (summoner, "Summoner",    100,      2,  0.75,
+            0,          0,      0,
+      BattleAI(phases: @[
+        BattleAIPhase(
+          stance: normalStance,
+          texture: "PinkOgre.png",
+          duration: 2,
+          skills: @[attack],
+        ),
+      ])),
   ].items:
     let info = EnemyInfo(
-      kind: kind,
+      id: id,
       name: name,
       health: health,
       damage: damage,
@@ -71,5 +77,7 @@ proc initializeEnemyData(): array[EnemyKind, EnemyInfo] =
       ),
       ai: ai,
     )
-    result[kind] = info
+    result[id] = info
+  for id in EnemyID:
+    assert result[id].name != nil, "Uninitialized enemy id: " & $id
 const enemyData* = initializeEnemyData()

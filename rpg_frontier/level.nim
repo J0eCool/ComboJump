@@ -1,13 +1,13 @@
 import
   rpg_frontier/[
-    enemy,
+    enemy_id,
   ]
 
 type
   Level* = object
     name*: string
     stages*: seq[Stage]
-  Stage* = seq[EnemyKind]
+  Stage* = seq[EnemyID]
 
 const allLevels* = @[
   Level(
@@ -36,10 +36,6 @@ const allLevels* = @[
       @[slime, goblin, slime],
     ],
   ),
-  Level(
-    name: "Field - Boss",
-    stages: @[
-      @[bossOgre],
-    ],
-  ),
+  Level(name: "Boss", stages: @[@[bossOgre]]),
+  Level(name: "Summoner", stages: @[@[summoner]]),
 ]

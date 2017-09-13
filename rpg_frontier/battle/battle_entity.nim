@@ -6,6 +6,7 @@ import
     damage,
     element,
     enemy,
+    enemy_id,
     percent,
     player_stats,
     skill_id,
@@ -69,9 +70,9 @@ proc newPlayer*(stats: PlayerStats): BattleEntity =
     id: getNextId(),
   )
 
-proc newEnemy*(kind: EnemyKind): BattleEntity =
+proc newEnemy*(id: EnemyID): BattleEntity =
   let
-    enemy = enemyData[kind]
+    enemy = enemyData[id]
     mana = 5
     focus = 10
     startPhase = enemy.ai.curPhase

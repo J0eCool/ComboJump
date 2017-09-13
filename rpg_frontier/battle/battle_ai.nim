@@ -1,5 +1,6 @@
 import
   rpg_frontier/[
+    enemy_id,
     skill_id,
     stance,
   ]
@@ -10,7 +11,16 @@ type
     turns*: int
     curPhaseIdx: int
 
+  BattleAIPhaseKind* = enum
+    normalPhaseKind
+    summonPhaseKind
+
   BattleAIPhase* = object
+    case kind: BattleAIPhaseKind
+    of summonPhaseKind:
+      toSummon: seq[EnemyID]
+    else:
+      discard
     stance*: Stance
     texture*: string
     duration*: int
