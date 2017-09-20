@@ -20,6 +20,7 @@ type
     attackSkill
     spellSkill
     effectSkill
+    summonSkill
   SkillInfo* = ref object
     case kind*: SkillKind
     of attackSkill:
@@ -28,6 +29,8 @@ type
       baseDamage*: Damage
     of effectSkill:
       discard
+    of summonSkill:
+      toSummon*: seq[BattleEntity]
     name*: string
     target*: SkillTarget
     manaCost*: int
@@ -52,7 +55,7 @@ proc baseDamageFor(skill: SkillInfo, entity: BattleEntity): Damage =
     entity.baseDamage * skill.damage
   of spellSkill:
     skill.baseDamage
-  of effectSkill:
+  of effectSkill, summonSkill:
     Damage()
 
 proc damageFor*(skill: SkillInfo, entity: BattleEntity): Damage =
@@ -64,7 +67,7 @@ template makeTargetProc(body: untyped): untyped {.dirty.} =
   )
 
 let
-  hitSingle: TargetProc = makeTargetProc:
+  hitSingle*: TargetProc = makeTargetProc:
     @[target]
 
   hitAll: TargetProc = makeTargetProc:

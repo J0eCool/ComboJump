@@ -16,9 +16,9 @@ type
     summonPhaseKind
 
   BattleAIPhase* = object
-    case kind: BattleAIPhaseKind
+    case kind*: BattleAIPhaseKind
     of summonPhaseKind:
-      toSummon: seq[EnemyID]
+      toSummon*: seq[EnemyID]
     else:
       discard
     stance*: Stance
@@ -37,6 +37,9 @@ proc simpleAI*(texture: string, skills = @[attack]): BattleAI =
 
 proc curPhase*(ai: BattleAI): BattleAIPhase =
   ai.phases[ai.curPhaseIdx]
+
+proc willChangePhase*(ai: BattleAI): bool =
+  ai.turns + 1 >= ai.curPhase.duration
 
 proc updateTurn*(ai: var BattleAI) =
   ai.turns += 1

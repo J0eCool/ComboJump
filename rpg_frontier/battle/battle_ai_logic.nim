@@ -1,3 +1,5 @@
+import sequtils
+
 import
   rpg_frontier/[
     skill,
@@ -9,7 +11,15 @@ import
   util
 
 proc selectEnemySkill*(enemy: BattleEntity): SkillInfo =
-  allSkills[random(enemy.ai.curPhase.skills)]
+  let phase = enemy.ai.curPhase
+  result = allSkills[random(phase.skills)]
+  if phase.kind == summonPhaseKind and enemy.ai.willChangePhase:
+    result = SkillInfo(
+      kind: summonSkill,
+      toSummon: phase.toSummon.mapIt(newEnemy(it)),
+      name: "SUMMONING",
+      toTargets: hitSingle,
+    )
 
 proc finishEnemyTurn*(enemy: BattleEntity) =
   enemy.ai.updateTurn()

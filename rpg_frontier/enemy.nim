@@ -50,14 +50,16 @@ proc initializeEnemyData(): array[EnemyID, EnemyInfo] =
           skills: @[attack],
         ),
       ])),
-    (summoner, "Summoner",    100,      2,  0.75,
+    (summoner, "Summoner",    100,      2,  0.4,
             0,          0,      0,
       BattleAI(phases: @[
         BattleAIPhase(
+          kind: summonPhaseKind,
           stance: normalStance,
           texture: "PinkOgre.png",
-          duration: 2,
+          duration: 1,
           skills: @[attack],
+          toSummon: @[goblin],
         ),
       ])),
   ].items:

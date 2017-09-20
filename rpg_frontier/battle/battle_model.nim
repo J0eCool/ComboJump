@@ -20,6 +20,7 @@ type
     turnQueue*: seq[TurnPair]
     activeEntity*: BattleEntity
     selectedSkill*: SkillInfo
+    enemyGrid*: array[3, array[3, BattleEntity]]
     stats*: PlayerStats
     potions*: seq[Potion]
     levelName*: string
@@ -40,23 +41,43 @@ proc currentStageEnemies(battle: BattleData): seq[BattleEntity] =
     stage = battle.stages[index]
   result = @[]
   for enemyKind in stage:
-    let enemy = newEnemy(enemyKind)
-    enemy.pos = vec(630, 240) + vec(100, 150) * result.len
-    result.add enemy
+    result.add newEnemy(enemyKind)
 
-proc freshTurnOrder(battle: BattleData): seq[TurnPair] =
+proc clearEnemyGrid(battle: BattleData) =
+  for i, _ in battle.enemyGrid:
+    for j, _ in battle.enemyGrid[i]:
+      battle.enemyGrid[i][j] = nil
+
+proc openEnemyGridCoords(battle: BattleData): seq[tuple[x, y: int]] =
   result = @[]
-  result.add((battle.player, random(0.0, 1.0)))
-  for enemy in battle.enemies:
-    result.add((enemy, random(0.0, 1.0)))
+  for i, row in battle.enemyGrid:
+    for j, enemy in row:
+      if enemy == nil:
+        result.add((i, j))
+
+proc addToTurnQueue(battle: BattleData, entity: BattleEntity) =
+  battle.turnQueue.add((entity, random(0.0, 1.0)))
+
+proc addEnemy*(battle: BattleData, enemy: BattleEntity) =
+  battle.enemies.add enemy
+  battle.addToTurnQueue enemy
+  let coord = random(battle.openEnemyGridCoords)
+  enemy.pos = vec(550, 240) + vec(180, 120) * vec(coord.x, coord.y)
+  battle.enemyGrid[coord.x][coord.y] = enemy
 
 proc spawnCurrentStage*(battle: BattleData) =
-  battle.enemies = battle.currentStageEnemies()
-  battle.turnQueue = battle.freshTurnOrder()
+  battle.turnQueue = @[]
+  battle.addToTurnQueue battle.player
+
+  battle.clearEnemyGrid()
+  let enemies = battle.currentStageEnemies()
+  for enemy in enemies:
+    battle.addEnemy enemy
 
 proc newBattleData*(stats: PlayerStats, level: Level): BattleData =
   result = BattleData(
     player: newPlayer(stats),
+    enemies: @[],
     stats: stats,
     potions: initPotions(),
     levelName: level.name,

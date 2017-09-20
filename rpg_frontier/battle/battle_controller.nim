@@ -107,7 +107,13 @@ proc startAttack*(battle: BattleData, controller: BattleController,
       controller.processAttackDamage(target, damage)
   animation.queueEvent(0.1) do (t: float):
     attacker.updateAttackAnimation(t)
-  skill.attackAnim(animation, onHit, damage, attacker, targets)
+
+  if skill.kind != summonSkill:
+    skill.attackAnim(animation, onHit, damage, attacker, targets)
+  else:
+    for enemy in skill.toSummon:
+      battle.addEnemy enemy
+
   animation.queueEvent do (t: float):
     animation.queueAsync(0.175) do (t: float):
       attacker.updateAttackAnimation(1.0 - t)
