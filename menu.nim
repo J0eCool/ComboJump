@@ -29,7 +29,7 @@ type
     model*: M
     controller*: C
     view*: proc(model: M, controller: C): Node
-    update*: proc(model: M, controller: C, dt: float)
+    update*: proc(model: M, controller: C, dt: float, input: InputManager)
     node: Node
 
   MenuBase* = Menu[ref RootObj, Controller]
@@ -417,9 +417,9 @@ proc downcast*[M, C](menu: Menu[M, C]): MenuBase =
     view: (proc(model: ref RootObj, controller: Controller): Node =
       menu.view(cast[M](model), cast[C](controller))
     ),
-    update: (proc(model: ref RootObj, controller: Controller, dt: float) =
+    update: (proc(model: ref RootObj, controller: Controller, dt: float, input: InputManager) =
       if menu.update != nil:
-        menu.update(cast[M](model), cast[C](controller), dt)
+        menu.update(cast[M](model), cast[C](controller), dt, input)
     ),
   )
 
@@ -439,9 +439,7 @@ proc pop*(menus: var MenuManager) =
   discard menus.menus.pop()
 
 proc runUpdate*(menu: Menu, manager: var MenuManager, dt: float, input: InputManager) =
-  menu.update(menu.model, menu.controller, dt)
-  # TODO: more sophisticated virtualDom-style diffing
-  # TODO: diffing unit tests
+  menu.update(menu.model, menu.controller, dt, input)
   let newNode = menu.view(menu.model, menu.controller)
   menu.node.diff(newNode)
   menu.node.update(manager, input)

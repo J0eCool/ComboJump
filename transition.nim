@@ -1,4 +1,5 @@
 import
+  input,
   menu,
   util,
   vec
@@ -26,7 +27,8 @@ proc transitionView(transition: Transition, controller: TransitionController): N
     pos: vec(controller.percentDone.lerp(-0.5, 0.5) * size.x, size.y / 2),
   )
 
-proc transitionUpdate(transition: Transition, controller: TransitionController, dt: float) =
+proc transitionUpdate(transition: Transition, controller: TransitionController,
+                      dt: float, input: InputManager) {.procvar.} =
   controller.t += dt
   if controller.t >= transitionDuration:
     if controller.reverse or controller.onlyFadeOut:
