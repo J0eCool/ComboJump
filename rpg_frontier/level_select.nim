@@ -1,6 +1,7 @@
 import
   rpg_frontier/[
     enemy,
+    inventory_menu,
     level,
     player_stats,
     skill_select,
@@ -51,6 +52,15 @@ proc levelSelectView(levels: LevelSelect, controller: LevelSelectController): No
         onClick: (proc() =
           let skillSelectMenu = downcast(newSkillSelectMenu(controller.stats))
           controller.nextMenu = downcast(newTransitionMenu(skillSelectMenu))
+        ),
+      ),
+      Button(
+        pos: vec(800, 365),
+        size: vec(200, 60),
+        label: "Inventory",
+        onClick: (proc() =
+          let inventoryMenu = downcast(newInventoryMenu(controller.stats))
+          controller.nextMenu = downcast(newTransitionMenu(inventoryMenu))
         ),
       ),
       List[Level](

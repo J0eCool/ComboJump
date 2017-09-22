@@ -58,11 +58,7 @@ proc newPlayer*(stats: PlayerStats): BattleEntity =
     maxMana: mana,
     focus: 0,
     maxFocus: focus,
-    baseDamage: Damage(
-      amounts: newElementSet[int]()
-        .init(physical, 4),
-      ailment: 60,
-    ),
+    baseDamage: stats.damage,
     speed: 1.0,
     stance: normalStance,
     effects: @[],
