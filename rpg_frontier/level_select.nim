@@ -5,13 +5,13 @@ import
     level,
     player_stats,
     skill_select,
-    transition,
   ],
   rpg_frontier/battle/[
     battle_model,
     battle_view,
   ],
   menu,
+  transition,
   vec
 
 

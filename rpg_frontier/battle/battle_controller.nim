@@ -13,7 +13,6 @@ import
     skill,
     skill_id,
     status_effect,
-    transition,
   ],
   rpg_frontier/battle/[
     battle_ai_logic,
@@ -22,6 +21,7 @@ import
   ],
   color,
   menu,
+  transition,
   util,
   vec
 

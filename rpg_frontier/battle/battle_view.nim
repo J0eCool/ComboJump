@@ -13,7 +13,6 @@ import
     skill,
     skill_id,
     status_effect,
-    transition,
   ],
   rpg_frontier/battle/[
     battle_controller,
