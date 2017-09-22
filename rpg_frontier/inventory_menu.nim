@@ -14,19 +14,12 @@ import
 
 
 type
-  Inventory = ref object of RootObj
-    stats: PlayerStats
   InventoryController = ref object of Controller
     bufferClose: bool
 
 type Weapon = object
   name: string
   damage: Damage
-
-proc newInventory(stats: PlayerStats): Inventory =
-  Inventory(
-    stats: stats,
-  )
 
 proc newInventoryController(): InventoryController =
   InventoryController()
@@ -35,13 +28,12 @@ method pushMenus(controller: InventoryController): seq[MenuBase] =
   if controller.bufferClose:
     result = @[downcast(newFadeOnlyOut())]
 
-proc inventoryUpdate(model: Inventory, controller: InventoryController, dt: float) {.procvar.} =
+proc inventoryUpdate(stats: PlayerStats, controller: InventoryController, dt: float) {.procvar.} =
   if controller.bufferClose:
     controller.shouldPop = true
     controller.bufferClose = false
 
-proc inventoryView(model: Inventory, controller: InventoryController): Node {.procvar.} =
-  let stats = model.stats
+proc inventoryView(stats: PlayerStats, controller: InventoryController): Node {.procvar.} =
   nodes(@[
     BorderedTextNode(
       pos: vec(600, 150),
@@ -89,9 +81,9 @@ proc inventoryView(model: Inventory, controller: InventoryController): Node {.pr
     ),
   ])
 
-proc newInventoryMenu*(stats: PlayerStats): Menu[Inventory, InventoryController] =
-  Menu[Inventory, InventoryController](
-    model: newInventory(stats),
+proc newInventoryMenu*(stats: PlayerStats): Menu[PlayerStats, InventoryController] =
+  Menu[PlayerStats, InventoryController](
+    model: stats,
     view: inventoryView,
     update: inventoryUpdate,
     controller: newInventoryController(),

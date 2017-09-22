@@ -14,15 +14,8 @@ import
 
 
 type
-  SkillSelect = ref object of RootObj
-    stats: PlayerStats
   SkillSelectController = ref object of Controller
     bufferClose: bool
-
-proc newSkillSelect(stats: PlayerStats): SkillSelect =
-  SkillSelect(
-    stats: stats,
-  )
 
 proc newSkillSelectController(): SkillSelectController =
   SkillSelectController()
@@ -31,13 +24,12 @@ method pushMenus(controller: SkillSelectController): seq[MenuBase] =
   if controller.bufferClose:
     result = @[downcast(newFadeOnlyOut())]
 
-proc skillSelectUpdate(model: SkillSelect, controller: SkillSelectController, dt: float) {.procvar.} =
+proc skillSelectUpdate(stats: PlayerStats, controller: SkillSelectController, dt: float) {.procvar.} =
   if controller.bufferClose:
     controller.shouldPop = true
     controller.bufferClose = false
 
-proc skillSelectView(model: SkillSelect, controller: SkillSelectController): Node {.procvar.} =
-  let stats = model.stats
+proc skillSelectView(stats: PlayerStats, controller: SkillSelectController): Node {.procvar.} =
   nodes(@[
     BorderedTextNode(
       pos: vec(600, 150),
@@ -55,7 +47,7 @@ proc skillSelectView(model: SkillSelect, controller: SkillSelectController): Nod
     List[SkillID](
       pos: vec(200, 300),
       spacing: vec(50),
-      items: model.stats.skills,
+      items: stats.skills,
       listNodesIdx: (proc(id: SkillID, idx: int): Node =
         let skill = allSkills[id]
         result = nodes(@[
@@ -114,9 +106,9 @@ proc skillSelectView(model: SkillSelect, controller: SkillSelectController): Nod
     ),
   ])
 
-proc newSkillSelectMenu*(stats: PlayerStats): Menu[SkillSelect, SkillSelectController] =
-  Menu[SkillSelect, SkillSelectController](
-    model: newSkillSelect(stats),
+proc newSkillSelectMenu*(stats: PlayerStats): Menu[PlayerStats, SkillSelectController] =
+  Menu[PlayerStats, SkillSelectController](
+    model: stats,
     view: skillSelectView,
     update: skillSelectUpdate,
     controller: newSkillSelectController(),
