@@ -149,6 +149,32 @@ macro defineComponent*(component: untyped, jsonBlacklist: untyped = nil): untype
   if jsonBlacklist == nil:
     return
 
+  template generateDebugStrMethod(n): typed =
+    proc debugStrImpl(c: ComponentObj): string =
+      var a = n & "\n"
+      for k, v in c.fieldPairs:
+        when compiles($v):
+          a &= "  " & k & ": "
+          when compiles(v == nil):
+            if v == nil:
+              a &= "(nil)"
+            else:
+              a &= $v
+          else:
+            a &= $v
+          a &= "\n"
+      return a
+    method debugStr(c: Component): string =
+      if c != nil:
+        c[].debugStrImpl
+      else:
+        ""
+  let debugStrMethods = getAst(generateDebugStrMethod(name))
+  debugStrMethods[0].params[1][1] = ident(name & "Obj")
+  debugStrMethods[1].params[1][1] = ident(name)
+  result.add debugStrMethods[0]
+  result.add debugStrMethods[1]
+
   let importJsonStmt = newTree(nnkImportStmt, ident("jsonparse"))
   result.add importJsonStmt
 
@@ -156,3 +182,8 @@ macro defineComponent*(component: untyped, jsonBlacklist: untyped = nil): untype
   result.add newCall("autoObjectJsonProcs", ident(name & "Obj"), jsonBlacklist)
 
 defineComponent(Component, @[])
+
+proc debugStr*(entity: Entity): string =
+  result = $entity & "\n"
+  for c in entity.components:
+    result &= c.debugStr
