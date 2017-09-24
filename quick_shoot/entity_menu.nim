@@ -35,6 +35,7 @@ type
     input: InputManager
     camera: Camera
     spawnTimer: float
+    player: Entity
   EntityController = ref object of Controller
     bufferClose: bool
 
@@ -44,30 +45,33 @@ proc process(model: EntityModel, events: Events) =
 defineSystemCalls(EntityModel)
 
 proc newEntityModel(): EntityModel =
-  EntityModel(entities: @[
-    newEntity("Player", [
-      Transform(pos: vec(300, 300), size: vec(80, 36)),
-      Movement(),
-      Collider(layer: Layer.player),
-      Sprite(textureName: "Ship.png"),
-      GridControl(
-        moveSpeed: 300,
-        followMouse: true,
-      ),
-    ]),
-    newEntity("Enemy", [
-      Transform(pos: vec(800, 500), size: vec(50, 50)),
-      Movement(),
-      Collider(layer: Layer.enemy),
-      Sprite(textureName: "Goblin.png"),
-      EnemyAttack(
-        damage: 1,
-        size: 25,
-        attackSpeed: 1.2,
-        bulletSpeed: 400,
-        attackDir: vec(-1, 0),
-      ),
-    ]),
+  new(result)
+  result.player = newEntity("Player", [
+    Transform(pos: vec(300, 300), size: vec(80, 36)),
+    Movement(),
+    Collider(layer: Layer.player),
+    Sprite(textureName: "Ship.png"),
+    GridControl(
+      moveSpeed: 300,
+      followMouse: true,
+    ),
+  ])
+  result.entities = @[result.player]
+
+proc spawnEnemy(model: EntityModel) =
+  model.entities.add newEntity("Goblin", [
+    Transform(pos: vec(1000, 0), size: vec(50, 50)),
+    Movement(),
+    Collider(layer: Layer.enemy),
+    Sprite(textureName: "Goblin.png"),
+    EnemyAttack(
+      damage: 1,
+      size: 25,
+      attackSpeed: 1.2,
+      bulletSpeed: 400,
+      attackDir: vec(-1, 0),
+    ),
+    EnemyShooterMovement(moveSpeed: 120),
   ])
 
 method pushMenus(controller: EntityController): seq[MenuBase] =
@@ -80,6 +84,12 @@ proc entityModelUpdate(model: EntityModel, controller: EntityController,
     controller.bufferClose = false
     controller.shouldPop = true
     return
+
+  model.spawnTimer += dt
+  let timeToSpawn = 1.5
+  if model.spawnTimer >= timeToSpawn:
+    model.spawnTimer -= timeToSpawn
+    model.spawnEnemy()
 
   model.dt = dt
   model.input = input
