@@ -184,6 +184,7 @@
       "id": "10",
       "priority": "0",
       "types": [
+        "float",
         "InputManager"
       ]
     },
@@ -323,6 +324,17 @@
       "priority": "0",
       "types": [
         "Entity"
+      ]
+    },
+    "updateEnemyShooterMovement": {
+      "args": [
+        "dt"
+      ],
+      "filename": "component/enemy_shooter_movement.nim",
+      "id": "53",
+      "priority": "0",
+      "types": [
+        "float"
       ]
     },
     "updateEnemyStatsN10ns": {

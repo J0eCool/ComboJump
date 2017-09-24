@@ -10,6 +10,8 @@ import
   jsonparse,
   option
 
+const RebuildSystems {.intdefine.}: int = 0
+
 type
   System = object
     id: int
@@ -140,16 +142,18 @@ proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
         assert false, "Unrecognized system metadata: " & metaKind
   assert sysProc != nil, "Must find proc in system"
 
-  # var
-  #   data = readData()
-  #   systems = if sysType == "update": data.update else: data.draw
+  when RebuildSystems != 0:
+    var
+      data = readData()
+      systems = if sysType == "update": data.update else: data.draw
 
   let key = ($sysProc.name)[0..^2]
-  # if not systems.hasKey(key):
-  #   let nextId = getNextId(data)
-  #   systems[key] = System()
-  #   systems[key].id = nextId
-  #   systems[key].filename = lineinfo(body).split("(")[0].replace("\\", by="/")
+  when RebuildSystems != 0:
+    if not systems.hasKey(key):
+      let nextId = getNextId(data)
+      systems[key] = System()
+      systems[key].id = nextId
+      systems[key].filename = lineinfo(body).split("(")[0].replace("\\", by="/")
 
   var params = sysProc.params
   assert params[0].kind == nnkEmpty, "System " & key & " should not have a return value"
@@ -160,25 +164,26 @@ proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
   if sysType == "draw":
     params.insert 1, newIdentDefs(ident("renderer"), ident("RendererPtr"))
     paramStart += 1
-  # var
-  #   args: seq[string] = @[]
-  #   types: seq[string] = @[]
-  # for i in paramStart..<params.len:
-  #   let arg = params[i]
-  #   args.add $arg[0].ident
-  #   if arg[1].kind == nnkVarTy:
-  #     types.add "var " & $arg[1][0].ident
-  #   else:
-  #     types.add $arg[1].ident
-  # systems[key].args = args
-  # systems[key].types = types
-  # systems[key].priority = priority
+  when RebuildSystems != 0:
+    var
+      args: seq[string] = @[]
+      types: seq[string] = @[]
+    for i in paramStart..<params.len:
+      let arg = params[i]
+      args.add $arg[0].ident
+      if arg[1].kind == nnkVarTy:
+        types.add "var " & $arg[1][0].ident
+      else:
+        types.add $arg[1].ident
+    systems[key].args = args
+    systems[key].types = types
+    systems[key].priority = priority
 
-  # if sysType == "update":
-  #   data.update = systems
-  # else:
-  #   data.draw = systems
-  # writeData(data)
+    if sysType == "update":
+      data.update = systems
+    else:
+      data.draw = systems
+    writeData(data)
 
   if components != nil:
     let
