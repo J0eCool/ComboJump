@@ -126,7 +126,7 @@ proc saveCurrentRoom(editor: GridEditor) =
   log info, "Saving room: ", fullPath
   writeJsonFile(fullPath, editor.grid[].toJson, pretty=true)
 
-method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: var ResourceManager) =
+method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: ResourceManager) =
   const hoverColor = lightYellow
   let grid = editor.grid[]
 
@@ -411,7 +411,7 @@ proc mainSidebarNode(roomBuilder: RoomBuilderMenu): Node =
     mapEditMode: ("Map", mapEditNode(roomBuilder)),
   ])
 
-method drawSelf(roomBuilder: RoomBuilderMenu, renderer: RendererPtr, resources: var ResourceManager) =
+method drawSelf(roomBuilder: RoomBuilderMenu, renderer: RendererPtr, resources: ResourceManager) =
   let camera = Camera()
   case roomBuilder.mode
   of roomEditMode:

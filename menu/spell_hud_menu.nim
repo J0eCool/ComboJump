@@ -157,7 +157,7 @@ proc spellHudMenuNode(spellData: ptr SpellData, stats: ptr PlayerStats, spellSho
 
 defineDrawSystem:
   priority = -100
-  proc drawSpellHudMenu*(resources: var ResourceManager) =
+  proc drawSpellHudMenu*(resources: ResourceManager) =
     entities.forComponents entity, [
       SpellHudMenu, spellHudMenu,
     ]:

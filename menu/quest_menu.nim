@@ -67,7 +67,7 @@ proc questMenuNode(questData: ptr QuestData, notifications: ptr N10nManager): No
 
 defineDrawSystem:
   priority = -100
-  proc drawQuestMenu*(resources: var ResourceManager) =
+  proc drawQuestMenu*(resources: ResourceManager) =
     entities.forComponents entity, [
       QuestMenu, questMenu,
     ]:

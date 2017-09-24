@@ -38,7 +38,7 @@ proc statsMenuNode(stats: ptr PlayerStats): Node =
 
 defineDrawSystem:
   priority = -100
-  proc drawStatsMenu*(resources: var ResourceManager) =
+  proc drawStatsMenu*(resources: ResourceManager) =
     entities.forComponents entity, [
       StatsMenu, statsMenu,
     ]:

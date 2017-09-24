@@ -81,7 +81,7 @@ proc levelMenuNode(stageData: ptr StageData): Node =
 
 defineDrawSystem:
   priority = -100
-  proc drawStageSelectMenu*(resources: var ResourceManager) =
+  proc drawStageSelectMenu*(resources: ResourceManager) =
     entities.forComponents entity, [
       LevelMenu, levelMenu,
     ]:

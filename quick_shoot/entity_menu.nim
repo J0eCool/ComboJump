@@ -29,6 +29,7 @@ import
   ],
   camera,
   color,
+  game_system,
   event,
   input,
   menu,
@@ -40,9 +41,18 @@ import
 type
   EntityModel = ref object of RootObj
     entities: Entities
+    dt: float
+    input: InputManager
+    camera: Camera
     spawnTimer: float
   EntityController = ref object of Controller
     bufferClose: bool
+
+proc process(model: EntityModel, events: Events) =
+  model.entities.process(events)
+
+importAllSystems()
+defineSystemCalls(EntityModel, dt, input, camera)
 
 proc newEntityModel(): EntityModel =
   EntityModel(entities: @[
@@ -83,21 +93,27 @@ proc entityModelUpdate(model: EntityModel, controller: EntityController,
     controller.shouldPop = true
     return
 
-  template ents: Entities = model.entities
-  discard gridControl(ents, dt, input)
-  discard updateEnemyShooterMovement(ents, dt)
-  process(ents, updateEnemyAttack(ents, dt))
-  process(ents, updateBullets(ents, dt))
-
-  discard physics(model.entities, dt)
+  model.dt = dt
+  model.input = input
+  model.updateSystems()
 
 type EntityRenderNode = ref object of Node
   entities: Entities
+  resources: ResourceManager
+  camera: Camera
 
-method drawSelf(node: EntityRenderNode, renderer: RendererPtr, resources: var ResourceManager) =
-  let camera = Camera()
+proc process(node: EntityRenderNode, events: Events) =
+  node.entities.process(events)
+
+method diffSelf(node, newVal: EntityRenderNode) =
+  node.entities = newVal.entities
+
+defineSystemCalls(EntityRenderNode, resources, camera)
+
+method drawSelf(node: EntityRenderNode, renderer: RendererPtr, resources: ResourceManager) =
   loadResources(node.entities, resources, renderer)
-  renderer.renderSystem(node.entities, camera)
+  node.resources = resources
+  renderer.drawSystems(node)
 
 proc entityModelView(model: EntityModel, controller: EntityController): Node {.procvar.} =
   nodes(@[

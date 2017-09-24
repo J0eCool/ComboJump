@@ -33,7 +33,7 @@
       "id": "16",
       "priority": "-100",
       "types": [
-        "var ResourceManager",
+        "ResourceManager",
         "Camera"
       ]
     },
@@ -46,7 +46,7 @@
       "id": "20",
       "priority": "-100",
       "types": [
-        "var ResourceManager",
+        "ResourceManager",
         "Camera"
       ]
     },
@@ -58,7 +58,7 @@
       "id": "34",
       "priority": "-100",
       "types": [
-        "var ResourceManager"
+        "ResourceManager"
       ]
     },
     "drawPopupText": {
@@ -70,7 +70,7 @@
       "id": "3",
       "priority": "-50",
       "types": [
-        "var ResourceManager",
+        "ResourceManager",
         "Camera"
       ]
     },
@@ -82,7 +82,7 @@
       "id": "36",
       "priority": "-100",
       "types": [
-        "var ResourceManager"
+        "ResourceManager"
       ]
     },
     "drawRoomViewers": {
@@ -94,7 +94,7 @@
       "id": "52",
       "priority": "0",
       "types": [
-        "var ResourceManager",
+        "ResourceManager",
         "Camera"
       ]
     },
@@ -106,7 +106,7 @@
       "id": "38",
       "priority": "-100",
       "types": [
-        "var ResourceManager"
+        "ResourceManager"
       ]
     },
     "drawSpellHudMenu": {
@@ -117,7 +117,7 @@
       "id": "40",
       "priority": "-100",
       "types": [
-        "var ResourceManager"
+        "ResourceManager"
       ]
     },
     "drawStageSelectMenu": {
@@ -128,7 +128,7 @@
       "id": "32",
       "priority": "-100",
       "types": [
-        "var ResourceManager"
+        "ResourceManager"
       ]
     },
     "drawStatsMenu": {
@@ -139,7 +139,7 @@
       "id": "42",
       "priority": "-100",
       "types": [
-        "var ResourceManager"
+        "ResourceManager"
       ]
     },
     "drawTargeting": {
@@ -177,6 +177,7 @@
     },
     "gridControl": {
       "args": [
+        "dt",
         "input"
       ],
       "filename": "grid_control.nim",

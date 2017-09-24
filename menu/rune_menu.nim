@@ -137,7 +137,7 @@ proc runeMenuNode(spellData: ptr SpellData): Node =
 
 defineDrawSystem:
   priority = -100
-  proc drawRuneMenu*(resources: var ResourceManager) =
+  proc drawRuneMenu*(resources: ResourceManager) =
     entities.forComponents entity, [
       RuneMenu, runeMenu,
     ]:

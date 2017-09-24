@@ -35,7 +35,7 @@ defineSystem:
 defineDrawSystem:
   priority = -50
   components = [PopupText, Transform]
-  proc drawPopupText*(resources: var ResourceManager, camera: Camera) =
+  proc drawPopupText*(resources: ResourceManager, camera: Camera) =
     let
       font = resources.loadFont("nevis.ttf")
       pos = transform.globalPos - vec(0.0, popupDist * popupText.liveTime / timeToLive) + camera.offset

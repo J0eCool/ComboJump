@@ -40,7 +40,7 @@ proc shouldUpdateCache*[T](cache: var CachedResource[T]): bool =
   cache.lastModified = modified
 
 type
-  ResourceManager* = object
+  ResourceManager* = ref object
     sprites: Table[string, CachedResource[SpriteData]]
     fonts: Table[string, FontPtr]
 
@@ -66,7 +66,7 @@ proc updatedSpriteCache(cache: var CachedResource[SpriteData],
     cache.item = doSpriteLoad(cache.filename, renderer)
   cache.item
 
-proc loadSprite*(resources: var ResourceManager, textureName: string, renderer: RendererPtr): SpriteData =
+proc loadSprite*(resources: ResourceManager, textureName: string, renderer: RendererPtr): SpriteData =
   if textureName == nil:
     return nil
     
@@ -75,7 +75,7 @@ proc loadSprite*(resources: var ResourceManager, textureName: string, renderer: 
 
   return updatedSpriteCache(resources.sprites[textureName], renderer)
 
-proc loadFont*(resources: var ResourceManager,
+proc loadFont*(resources: ResourceManager,
                fontName: string,
                fontSize = 24,
               ): FontPtr =
@@ -90,10 +90,12 @@ proc loadFont*(resources: var ResourceManager,
   return resources.fonts[cachedName]
 
 proc newResourceManager*(): ResourceManager =
-  result.sprites = initTable[string, CachedResource[SpriteData]](64)
-  result.fonts = initTable[string, FontPtr](8)
+  ResourceManager(
+    sprites: initTable[string, CachedResource[SpriteData]](64),
+    fonts: initTable[string, FontPtr](8),
+  )
 
-proc loadResources*(entities: Entities, resources: var ResourceManager, renderer: RendererPtr) =
+proc loadResources*(entities: Entities, resources: ResourceManager, renderer: RendererPtr) =
   entities.forComponents e, [
     Text, text,
   ]:

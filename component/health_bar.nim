@@ -88,7 +88,7 @@ proc healthBarNode(health: Health, enemyStats: EnemyStats): Node =
 defineDrawSystem:
   priority = -100
   components = [HealthBar, Transform]
-  proc drawHealthBarNodes*(resources: var ResourceManager, camera: Camera) =
+  proc drawHealthBarNodes*(resources: ResourceManager, camera: Camera) =
     healthBar.menu.pos = transform.pos + camera.offset + vec(0, -75)
     renderer.draw(healthBar.menu, resources)
 

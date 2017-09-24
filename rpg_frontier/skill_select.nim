@@ -7,6 +7,7 @@ import
     skill_id,
   ],
   color,
+  input,
   menu,
   transition,
   util,
@@ -24,7 +25,8 @@ method pushMenus(controller: SkillSelectController): seq[MenuBase] =
   if controller.bufferClose:
     result = @[downcast(newFadeOnlyOut())]
 
-proc skillSelectUpdate(stats: PlayerStats, controller: SkillSelectController, dt: float) {.procvar.} =
+proc skillSelectUpdate(stats: PlayerStats, controller: SkillSelectController,
+                       dt: float, input: InputManager) {.procvar.} =
   if controller.bufferClose:
     controller.shouldPop = true
     controller.bufferClose = false

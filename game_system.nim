@@ -263,7 +263,10 @@ proc sortCallPairs(list: var seq[CallPair]) =
       -cmp[int](a.priority, b.priority)
   )
 
-macro defineSystemCalls*(gameType: typed): untyped =
+macro defineSystemCalls*(gameType: typed, validArgs: varargs[untyped]): untyped =
+  var validArgNames: seq[string] = @[]
+  for argIdent in validArgs:
+    validArgNames.add $argIdent
   result = newNimNode(nnkStmtList)
   let
     data = readData()
@@ -276,8 +279,18 @@ macro defineSystemCalls*(gameType: typed): untyped =
     rendererParam = newIdentDefs(renderer, ident("RendererPtr"))
     drawDef = newProc(ident("drawSystems"), [retVal, rendererParam, gameParam])
 
+  proc canAdd(args: seq[string]): bool =
+    if validArgNames.len == 0:
+      return true
+    for arg in args:
+      if arg notin validArgNames:
+        return false
+    return true
+
   var updatePairs = newSeq[CallPair]()
   for k, v in data.update:
+    if not canAdd(v.args):
+      continue
     when useDylibs:
       let
         sysName = ident(k & "Dylib")
@@ -298,6 +311,8 @@ macro defineSystemCalls*(gameType: typed): untyped =
 
   var drawPairs = newSeq[CallPair]()
   for k, v in data.draw:
+    if not canAdd(v.args):
+      continue
     let
       drawName = ident(k)
       callNode = newCall(drawName, renderer, newDotExpr(game, ident("entities")))

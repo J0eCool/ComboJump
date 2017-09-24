@@ -20,6 +20,7 @@ import
     battle_model,
   ],
   color,
+  input,
   menu,
   transition,
   util,
@@ -193,7 +194,8 @@ proc beginTurn(battle: BattleData, controller: BattleController) =
       battle.beginPlayerTurn(controller)
 
 
-proc battleUpdate*(battle: BattleData, controller: BattleController, dt: float) =
+proc battleUpdate*(battle: BattleData, controller: BattleController,
+                   dt: float, input: InputManager) =
   if controller.bufferClose:
     controller.shouldPop = true
     controller.bufferClose = false

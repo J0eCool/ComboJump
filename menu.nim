@@ -48,7 +48,7 @@ method typeName(node: Node): string {.base.} =
 method diffSelf(node, newVal: Node) {.base.} =
   node.baseDiff(newVal)
 
-method drawSelf(node: Node, renderer: RendererPtr, resources: var ResourceManager) {.base.} =
+method drawSelf(node: Node, renderer: RendererPtr, resources: ResourceManager) {.base.} =
   discard
 
 method updateSelf(node: Node, manager: var MenuManager, input: InputManager) {.base.} =
@@ -69,7 +69,7 @@ proc globalPos*(node: Node): Vec =
     result += cur.pos
     cur = cur.parent
 
-proc draw*(renderer: RendererPtr, node: Node, resources: var ResourceManager) =
+proc draw*(renderer: RendererPtr, node: Node, resources: ResourceManager) =
   node.updateParents()
   node.drawSelf(renderer, resources)
   for c in node.getChildren():
@@ -116,7 +116,7 @@ proc generateChild[T](node: BindNode[T]) =
     n.parent = node
     node.generated = n
 
-method drawSelf[T](node: BindNode[T], renderer: RendererPtr, resources: var ResourceManager) =
+method drawSelf[T](node: BindNode[T], renderer: RendererPtr, resources: ResourceManager) =
   node.generateChild()
   renderer.draw(node.generated, resources)
 
@@ -141,7 +141,7 @@ method diffSelf(sprite, newVal: SpriteNode) =
   sprite.color = newVal.color
   sprite.scale = newVal.scale
 
-method drawSelf(sprite: SpriteNode, renderer: RendererPtr, resources: var ResourceManager) =
+method drawSelf(sprite: SpriteNode, renderer: RendererPtr, resources: ResourceManager) =
   let spriteImg = resources.loadSprite(sprite.textureName, renderer)
   if sprite.size == vec() and sprite.scale != 0.0:
     sprite.size = spriteImg.size.size * sprite.scale
@@ -167,7 +167,7 @@ method diffSelf(text, newVal: TextNode) =
   text.text = newVal.text
   text.color = newVal.color
 
-method drawSelf(text: TextNode, renderer: RendererPtr, resources: var ResourceManager) =
+method drawSelf(text: TextNode, renderer: RendererPtr, resources: ResourceManager) =
   if text.fontSize == 0:
     text.fontSize = 24
   let font = resources.loadFont("nevis.ttf", text.fontSize)
@@ -178,7 +178,7 @@ method drawSelf(text: TextNode, renderer: RendererPtr, resources: var ResourceMa
 
 type BorderedTextNode* = ref object of TextNode
 
-method drawSelf(text: BorderedTextNode, renderer: RendererPtr, resources: var ResourceManager) =
+method drawSelf(text: BorderedTextNode, renderer: RendererPtr, resources: ResourceManager) =
   if text.color == rgba(0, 0, 0, 0):
     # default color to white
     text.color = rgb(255, 255, 255)
@@ -214,7 +214,7 @@ method diffSelf(button, newVal: Button) =
   if button.hoverNode != nil:
     button.hoverNode.diff(newVal.hoverNode)
 
-method drawSelf(button: Button, renderer: RendererPtr, resources: var ResourceManager) =
+method drawSelf(button: Button, renderer: RendererPtr, resources: ResourceManager) =
   if button.invisible:
     return
 
@@ -371,7 +371,7 @@ method updateSelf(text: InputTextNode, manager: var MenuManager, input: InputMan
         ignoreNumbers = text.ignoreNumbers
       )
 
-method drawSelf(text: InputTextNode, renderer: RendererPtr, resources: var ResourceManager) =
+method drawSelf(text: InputTextNode, renderer: RendererPtr, resources: ResourceManager) =
   var baseRect = text.rect
   let
     font = resources.loadFont("nevis.ttf")
@@ -444,7 +444,7 @@ proc runUpdate*(menu: Menu, manager: var MenuManager, dt: float, input: InputMan
   menu.node.diff(newNode)
   menu.node.update(manager, input)
 
-proc draw*(renderer: RendererPtr, menu: Menu, resources: var ResourceManager) =
+proc draw*(renderer: RendererPtr, menu: Menu, resources: ResourceManager) =
   if menu.node != nil:
     renderer.draw(menu.node, resources)
 
@@ -474,7 +474,7 @@ proc update*(menus: var MenuManager, dt: float, input: InputManager) =
   while menus.menus.peek().controller.shouldPop:
     menus.pop()
 
-proc draw*(renderer: RendererPtr, menus: MenuManager, resources: var ResourceManager) =
+proc draw*(renderer: RendererPtr, menus: MenuManager, resources: ResourceManager) =
   var toDraw = newStack[MenuBase]()
   for menu in menus.menus:
     toDraw.push(menu)

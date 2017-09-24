@@ -31,7 +31,7 @@ defineComponent(RoomViewer)
 
 defineDrawSystem:
   components = [RoomViewer, Transform]
-  proc drawRoomViewers*(resources: var ResourceManager, camera: Camera) =
+  proc drawRoomViewers*(resources: ResourceManager, camera: Camera) =
     renderer.drawRoom(
       resources,
       roomViewer.room,

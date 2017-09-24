@@ -7,6 +7,7 @@ import
     player_stats,
   ],
   color,
+  input,
   menu,
   transition,
   util,
@@ -28,7 +29,8 @@ method pushMenus(controller: InventoryController): seq[MenuBase] =
   if controller.bufferClose:
     result = @[downcast(newFadeOnlyOut())]
 
-proc inventoryUpdate(stats: PlayerStats, controller: InventoryController, dt: float) {.procvar.} =
+proc inventoryUpdate(stats: PlayerStats, controller: InventoryController,
+                     dt: float, input: InputManager) {.procvar.} =
   if controller.bufferClose:
     controller.shouldPop = true
     controller.bufferClose = false

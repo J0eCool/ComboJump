@@ -34,11 +34,11 @@ proc clipRect(subtile: SubTileKind, sprite: SpriteData): Rect =
       else:         vec()
   rect(tileSize * tilePos, tileSize)
 
-proc loadSprite(subtile: SubTile, resources: var ResourceManager, renderer: RendererPtr): SpriteData =
+proc loadSprite(subtile: SubTile, resources: ResourceManager, renderer: RendererPtr): SpriteData =
   let tilemapName = "tilemaps/" & subtile.texture
   resources.loadSprite(tilemapName, renderer)
 
-proc drawRoom*(renderer: RendererPtr, resources: var ResourceManager, room: TileRoom, pos, tileSize: Vec) =
+proc drawRoom*(renderer: RendererPtr, resources: ResourceManager, room: TileRoom, pos, tileSize: Vec) =
   for x in 0..<room.w:
     for y in 0..<room.h:
       let tile = room.tiles[x][y]

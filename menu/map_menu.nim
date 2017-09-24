@@ -89,7 +89,7 @@ proc mapMenuNode(container: MapContainer, player: Entity): Node =
 defineDrawSystem:
   priority = -100
   components = [MapMenu]
-  proc drawMapMenu*(resources: var ResourceManager) =
+  proc drawMapMenu*(resources: ResourceManager) =
     if mapMenu.menu != nil:
       renderer.draw(mapMenu.menu, resources)
 

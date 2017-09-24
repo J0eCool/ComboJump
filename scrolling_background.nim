@@ -43,7 +43,7 @@ proc newScrollingBackground*(): ScrollingBackground =
 
 proc loadBackgroundAssets*(
     background: var ScrollingBackground,
-    resources: var ResourceManager,
+    resources: ResourceManager,
     renderer: RendererPtr) =
   if not background.loaded:
     for info in background.infos.mitems:

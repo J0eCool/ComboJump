@@ -110,7 +110,7 @@ proc hudMenuNode(player: Entity, stats: ptr PlayerStats, stageData: ptr StageDat
 defineDrawSystem:
   priority = -100
   components = [HudMenu]
-  proc drawHudMenu*(resources: var ResourceManager, camera: Camera) =
+  proc drawHudMenu*(resources: ResourceManager, camera: Camera) =
     if hudMenu.menu != nil:
       renderer.draw(hudMenu.menu, resources)
 
