@@ -6,20 +6,10 @@ import
     damage_component,
     enemy_attack,
     enemy_shooter_movement,
-    enemy_proximity,
-    enemy_stats,
     grid_control,
     health,
-    health_bar,
-    hud_menu,
-    limited_quantity,
-    locked_door,
-    mana,
     movement,
-    player_health,
-    progress_bar,
     sprite,
-    text,
     transform,
   ],
   system/[
@@ -51,8 +41,7 @@ type
 proc process(model: EntityModel, events: Events) =
   model.entities.process(events)
 
-importAllSystems()
-defineSystemCalls(EntityModel, dt, input, camera)
+defineSystemCalls(EntityModel)
 
 proc newEntityModel(): EntityModel =
   EntityModel(entities: @[
@@ -78,7 +67,6 @@ proc newEntityModel(): EntityModel =
         bulletSpeed: 400,
         attackDir: vec(-1, 0),
       ),
-      # EnemyProximity(),
     ]),
   ])
 
@@ -108,7 +96,7 @@ proc process(node: EntityRenderNode, events: Events) =
 method diffSelf(node, newVal: EntityRenderNode) =
   node.entities = newVal.entities
 
-defineSystemCalls(EntityRenderNode, resources, camera)
+defineSystemCalls(EntityRenderNode)
 
 method drawSelf(node: EntityRenderNode, renderer: RendererPtr, resources: ResourceManager) =
   loadResources(node.entities, resources, renderer)

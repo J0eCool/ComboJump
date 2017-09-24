@@ -263,10 +263,7 @@ proc sortCallPairs(list: var seq[CallPair]) =
       -cmp[int](a.priority, b.priority)
   )
 
-macro defineSystemCalls*(gameType: typed, validArgs: varargs[untyped]): untyped =
-  var validArgNames: seq[string] = @[]
-  for argIdent in validArgs:
-    validArgNames.add $argIdent
+macro defineSystemCalls*(gameType: typed): untyped =
   result = newNimNode(nnkStmtList)
   let
     data = readData()
@@ -279,18 +276,8 @@ macro defineSystemCalls*(gameType: typed, validArgs: varargs[untyped]): untyped 
     rendererParam = newIdentDefs(renderer, ident("RendererPtr"))
     drawDef = newProc(ident("drawSystems"), [retVal, rendererParam, gameParam])
 
-  proc canAdd(args: seq[string]): bool =
-    if validArgNames.len == 0:
-      return true
-    for arg in args:
-      if arg notin validArgNames:
-        return false
-    return true
-
   var updatePairs = newSeq[CallPair]()
   for k, v in data.update:
-    if not canAdd(v.args):
-      continue
     when useDylibs:
       let
         sysName = ident(k & "Dylib")
@@ -306,13 +293,17 @@ macro defineSystemCalls*(gameType: typed, validArgs: varargs[untyped]): untyped 
     updatePairs.add((v.priority, newCall(!"process", game, callNode)))
   updatePairs.sortCallPairs()
   for p in updatePairs:
-    updateDef.body.add p.callNode
+    updateDef.body.add newTree(
+      nnkWhenStmt,
+      newTree(nnkElifBranch,
+        newCall(!"compiles", p.callNode),
+        p.callNode,
+      ),
+    )
   result.add updateDef
 
   var drawPairs = newSeq[CallPair]()
   for k, v in data.draw:
-    if not canAdd(v.args):
-      continue
     let
       drawName = ident(k)
       callNode = newCall(drawName, renderer, newDotExpr(game, ident("entities")))
@@ -321,5 +312,11 @@ macro defineSystemCalls*(gameType: typed, validArgs: varargs[untyped]): untyped 
     drawPairs.add((v.priority, callNode))
   drawPairs.sortCallPairs()
   for p in drawPairs:
-    drawDef.body.add p.callNode
+    drawDef.body.add newTree(
+      nnkWhenStmt,
+      newTree(nnkElifBranch,
+        newCall(!"compiles", p.callNode),
+        p.callNode,
+      ),
+    )
   result.add drawDef
