@@ -152,7 +152,9 @@ defineSystem:
 
       movement.onGround = false
       entity.withComponent Collider, collider:
-        if collider.layer.canCollideWith Layer.floor:
+        if not collider.layer.canCollideWith Layer.floor:
+          rect += toMove
+        else:
           while toMove.length2 > 0.001:
             proc rayFrom(offset: Vec): Ray =
               Ray(

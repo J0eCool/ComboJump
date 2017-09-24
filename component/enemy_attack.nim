@@ -17,8 +17,8 @@ import
 
 type
   EnemyAttackKind* = enum
-    melee
     ranged
+    melee
   EnemyAttack* = ref object of Component
     kind*: EnemyAttackKind
     damage*: int
@@ -27,6 +27,8 @@ type
     attackSpeed*: float
     bulletSpeed*: float
     cooldownTimer: float
+    isAttacking: bool
+    attackDir*: Vec
 
 defineComponent(EnemyAttack)
 
@@ -57,11 +59,20 @@ proc attackEntity*(enemyAttack: EnemyAttack, pos, dir: Vec): Entity =
           ])
 
 defineSystem:
-  components = [EnemyAttack, EnemyProximity, Transform]
+  components = [EnemyAttack, Transform]
   proc updateEnemyAttack*(dt: float) =
     enemyAttack.cooldownTimer -= dt
-    enemyProximity.isAttacking = enemyAttack.cooldownTimer > 0.0
-    if enemyProximity.isInAttackRange and not enemyProximity.isAttacking:
+    enemyAttack.isAttacking = enemyAttack.cooldownTimer > 0.0
+    var
+      shouldAttack = not enemyAttack.isAttacking
+      dir = enemyAttack.attackDir
+    entity.withComponent EnemyProximity, enemyProximity:
+      enemyProximity.isAttacking = enemyAttack.isAttacking
+      shouldAttack = shouldAttack and enemyProximity.isInAttackRange
+      if dir == vec():
+        dir = enemyProximity.dirToPlayer
+    dir = dir.unit
+    if shouldAttack:
       enemyAttack.cooldownTimer = 1.0 / enemyAttack.attackSpeed
-      let attack = enemyAttack.attackEntity(transform.pos, enemyProximity.dirToPlayer)
+      let attack = enemyAttack.attackEntity(transform.pos, dir)
       result.add event.Event(kind: addEntity, entity: attack)

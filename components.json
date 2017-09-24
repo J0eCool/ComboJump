@@ -8,6 +8,7 @@
   "EnemyAttack": "19",
   "EnemyMoveTowards": "20",
   "EnemyProximity": "18",
+  "EnemyShooterMovement": "42",
   "EnemyStats": "21",
   "ExitZone": "31",
   "GridControl": "16",

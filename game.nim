@@ -42,13 +42,11 @@ method onRemove*(game: Game, entity: Entity) {.base.} =
 proc process*(game: Game, events: Events) =
   for event in events:
     case event.kind
-    of addEntity:
-      game.entities.add event.entity
     of removeEntity:
       game.onRemove(event.entity)
-      game.entities.remove event.entity
-    of loadStage:
-      game.entities = event.stage
+    else:
+      discard
+  game.entities.process(events)
 
 proc drawGame*(renderer: RendererPtr, game: Game) =
   game.entities.updateProgressBars()
