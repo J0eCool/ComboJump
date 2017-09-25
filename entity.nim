@@ -164,7 +164,7 @@ macro defineComponent*(component: untyped, jsonBlacklist: untyped = nil): untype
             a &= $v
           a &= "\n"
       return a
-    method debugStr(c: Component): string =
+    method debugStr*(c: Component): string =
       if c != nil:
         c[].debugStrImpl
       else:

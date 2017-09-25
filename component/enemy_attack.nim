@@ -5,6 +5,7 @@ import
     damage_component,
     enemy_proximity,
     movement,
+    remove_when_offscreen,
     sprite,
     transform,
   ],
@@ -44,6 +45,7 @@ proc attackEntity*(enemyAttack: EnemyAttack, pos, dir: Vec): Entity =
               size: vec(enemyAttack.size),
             ),
             Sprite(color: rgb(255, 0, 0)),
+            RemoveWhenOffscreen(),
           ])
   of ranged:
     newEntity("EnemyAttack", [
@@ -56,6 +58,7 @@ proc attackEntity*(enemyAttack: EnemyAttack, pos, dir: Vec): Entity =
             ),
             Movement(vel: dir * enemyAttack.bulletSpeed),
             Sprite(color: rgb(255, 0, 0)),
+            RemoveWhenOffscreen(),
           ])
 
 defineSystem:

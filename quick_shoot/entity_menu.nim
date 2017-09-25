@@ -9,6 +9,7 @@ import
     grid_control,
     health,
     movement,
+    remove_when_offscreen,
     sprite,
     transform,
   ],
@@ -45,8 +46,7 @@ proc process(model: EntityModel, events: Events) =
 defineSystemCalls(EntityModel)
 
 proc newEntityModel(): EntityModel =
-  new(result)
-  result.player = newEntity("Player", [
+  let player = newEntity("Player", [
     Transform(pos: vec(300, 300), size: vec(80, 36)),
     Movement(),
     Collider(layer: Layer.player),
@@ -56,11 +56,15 @@ proc newEntityModel(): EntityModel =
       followMouse: true,
     ),
   ])
-  result.entities = @[result.player]
+  EntityModel(
+    entities: @[player],
+    player: player,
+    camera: Camera(screenSize: vec(1200, 900)),
+  )
 
 proc spawnEnemy(model: EntityModel) =
   model.entities.add newEntity("Goblin", [
-    Transform(pos: vec(1000, 0), size: vec(50, 50)),
+    Transform(pos: vec(1000, -100), size: vec(50, 50)),
     Movement(),
     Collider(layer: Layer.enemy),
     Sprite(textureName: "Goblin.png"),
@@ -72,6 +76,7 @@ proc spawnEnemy(model: EntityModel) =
       attackDir: vec(-1, 0),
     ),
     EnemyShooterMovement(moveSpeed: 120),
+    RemoveWhenOffscreen(buffer: 100),
   ])
 
 method pushMenus(controller: EntityController): seq[MenuBase] =

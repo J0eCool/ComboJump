@@ -517,6 +517,19 @@
         "var N10nManager"
       ]
     },
+    "updateRemoveWhenOffscreen": {
+      "args": [
+        "dt",
+        "camera"
+      ],
+      "filename": "component/remove_when_offscreen.nim",
+      "id": "54",
+      "priority": "0",
+      "types": [
+        "float",
+        "Camera"
+      ]
+    },
     "updateRepeatShooter": {
       "args": [
         "dt"

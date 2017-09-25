@@ -30,6 +30,7 @@
   "PopupText": "12",
   "ProgressBar": "17",
   "QuestMenu": "37",
+  "RemoveWhenOffscreen": "43",
   "RepeatShooter": "3",
   "RoomCameraTarget": "33",
   "RoomViewer": "41",
