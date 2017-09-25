@@ -476,6 +476,21 @@
         "PlayerStats"
       ]
     },
+    "updatePlayerShooterAttack": {
+      "args": [
+        "stats",
+        "dt",
+        "input"
+      ],
+      "filename": "component/player_shooter_attack.nim",
+      "id": "55",
+      "priority": "0",
+      "types": [
+        "ShooterStats",
+        "float",
+        "InputManager"
+      ]
+    },
     "updatePopupText": {
       "args": [
         "dt"

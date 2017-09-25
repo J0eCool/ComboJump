@@ -27,6 +27,7 @@
   "PlatformerControl": "32",
   "PlayerHealth": "27",
   "PlayerMana": "28",
+  "PlayerShooterAttack": "44",
   "PopupText": "12",
   "ProgressBar": "17",
   "QuestMenu": "37",

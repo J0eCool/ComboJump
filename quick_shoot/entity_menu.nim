@@ -9,12 +9,17 @@ import
     grid_control,
     health,
     movement,
+    player_shooter_attack,
     remove_when_offscreen,
     sprite,
     transform,
   ],
+  quick_shoot/[
+    shooter_stats,
+  ],
   system/[
     bullet_update,
+    collisions,
     physics,
     render,
   ],
@@ -25,6 +30,7 @@ import
   input,
   menu,
   entity,
+  notifications,
   resources,
   transition,
   vec
@@ -37,6 +43,8 @@ type
     camera: Camera
     spawnTimer: float
     player: Entity
+    stats: ShooterStats
+    notifications: N10nManager
   EntityController = ref object of Controller
     bufferClose: bool
 
@@ -55,11 +63,16 @@ proc newEntityModel(): EntityModel =
       moveSpeed: 300,
       followMouse: true,
     ),
+    PlayerShooterAttack(),
   ])
   EntityModel(
     entities: @[player],
     player: player,
     camera: Camera(screenSize: vec(1200, 900)),
+    notifications: newN10nManager(),
+    stats: ShooterStats(
+      attackSpeed: 1.4,
+    ),
   )
 
 proc spawnEnemy(model: EntityModel) =
@@ -68,6 +81,7 @@ proc spawnEnemy(model: EntityModel) =
     Movement(),
     Collider(layer: Layer.enemy),
     Sprite(textureName: "Goblin.png"),
+    newHealth(3),
     EnemyAttack(
       damage: 1,
       size: 25,
