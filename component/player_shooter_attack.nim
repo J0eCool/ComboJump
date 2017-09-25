@@ -1,3 +1,5 @@
+import math
+
 import
   component/[
     bullet,
@@ -16,7 +18,8 @@ import
   event,
   game_system,
   input,
-  vec
+  vec,
+  util
 
 type
   PlayerShooterAttackObj* = object of ComponentObj
@@ -25,22 +28,32 @@ type
 
 defineComponent(PlayerShooterAttack, @[])
 
-proc bulletsToFire(transform: Transform): Events =
+proc bulletsToFire(transform: Transform, stats: ShooterStats): Events =
   let
-    dir = vec(1, 0)
     bulletSpeed = 500.0
-  result = @[Event(kind: addEntity, entity: newEntity("Bullet", [
-    Damage(damage: 1),
-    Bullet(liveTime: 3.0),
-    Collider(layer: Layer.bullet),
-    Transform(
-      pos: transform.pos,
-      size: vec(24),
-    ),
-    Movement(vel: dir * bulletSpeed),
-    Sprite(color: rgb(0, 255, 72)),
-    RemoveWhenOffscreen(),
-  ]))]
+    num = stats.numBullets
+    totalAngle = degToRad(15.0 + 8.0 * num.float)
+  result = @[]
+  for i in 0..<num:
+    let
+      angle =
+        if num == 1:
+          0.0
+        else:
+          lerp(i / (num - 1), -1.0, 1.0) * totalAngle / 2.0
+      dir = unitVec(angle)
+    result.add Event(kind: addEntity, entity: newEntity("Bullet", [
+      Damage(damage: stats.damage),
+      Bullet(liveTime: 3.0),
+      Collider(layer: Layer.bullet),
+      Transform(
+        pos: transform.pos,
+        size: vec(16),
+      ),
+      Movement(vel: dir * bulletSpeed),
+      Sprite(color: rgb(0, 255, 72)),
+      RemoveWhenOffscreen(),
+    ]))
 
 defineSystem:
   components = [PlayerShooterAttack, Transform]
@@ -49,4 +62,4 @@ defineSystem:
     attack.shotCooldown -= dt
     if input.isMouseHeld and attack.shotCooldown <= 0.0:
       attack.shotCooldown = 1.0 / stats.attackSpeed
-      result &= bulletsToFire(transform)
+      result &= bulletsToFire(transform, stats)

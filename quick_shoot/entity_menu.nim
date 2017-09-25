@@ -72,6 +72,8 @@ proc newEntityModel(): EntityModel =
     notifications: newN10nManager(),
     stats: ShooterStats(
       attackSpeed: 1.4,
+      damage: 3,
+      numBullets: 1,
     ),
   )
 
@@ -81,7 +83,7 @@ proc spawnEnemy(model: EntityModel) =
     Movement(),
     Collider(layer: Layer.enemy),
     Sprite(textureName: "Goblin.png"),
-    newHealth(3),
+    newHealth(8),
     EnemyAttack(
       damage: 1,
       size: 25,
