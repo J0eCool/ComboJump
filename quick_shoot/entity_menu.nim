@@ -29,6 +29,7 @@ import
   event,
   input,
   menu,
+  menu_widgets,
   entity,
   notifications,
   resources,
@@ -57,6 +58,7 @@ proc newEntityModel(): EntityModel =
   let player = newEntity("Player", [
     Transform(pos: vec(300, 300), size: vec(80, 36)),
     Movement(),
+    newHealth(10),
     Collider(layer: Layer.player),
     Sprite(textureName: "Ship.png"),
     GridControl(
@@ -115,6 +117,8 @@ proc entityModelUpdate(model: EntityModel, controller: EntityController,
   model.dt = dt
   model.input = input
   model.updateSystems()
+  if model.player.getComponent(Health).cur <= 0:
+    controller.bufferClose = true
 
 type EntityRenderNode = ref object of Node
   entities: Entities
@@ -135,6 +139,7 @@ method drawSelf(node: EntityRenderNode, renderer: RendererPtr, resources: Resour
   renderer.drawSystems(node)
 
 proc entityModelView(model: EntityModel, controller: EntityController): Node {.procvar.} =
+  let health = model.player.getComponent(Health)
   nodes(@[
     SpriteNode(
       size: vec(2400, 2400),
@@ -150,6 +155,13 @@ proc entityModelView(model: EntityModel, controller: EntityController): Node {.p
       onClick: (proc() =
         controller.bufferClose = true
       ),
+    ),
+    quantityBarNode(
+      health.cur.int,
+      health.max.int,
+      vec(220, 50),
+      vec(400, 30),
+      red,
     ),
   ])
 
