@@ -7,6 +7,7 @@ import
   entity,
   event,
   game_system,
+  util,
   vec
 
 type
@@ -22,19 +23,14 @@ defineComponent(GridControl, @[])
 proc mouseDist(transform: Transform, input: InputManager): Vec =
   input.mousePos - transform.globalPos
 
-proc getRawInput(grid: GridControl, transform: Transform, input: InputManager): Vec =
-  if not grid.followMouse:
-    vec(input.getAxis(Axis.horizontal),
-        input.getAxis(Axis.vertical)).unit
-  else:
-    mouseDist(transform, input).unit
-
 defineSystem:
   components = [GridControl, Movement, Transform]
   proc gridControl*(dt: float, input: InputManager) =
-    let
-      raw = gridControl.getRawInput(transform, input)
-      spd = gridControl.moveSpeed
-      vel = raw * spd
-    movement.vel = vel
-    gridControl.dir = raw
+    if not gridControl.followMouse:
+      let raw = vec(input.getAxis(Axis.horizontal),
+                    input.getAxis(Axis.vertical)).unit
+      movement.vel = raw * gridControl.moveSpeed
+      gridControl.dir = raw
+    else:
+      movement.vel = transform.mouseDist(input)
+      movement.vel.length = lerp(movement.vel.length / 100.0, 0.0, gridControl.moveSpeed)
