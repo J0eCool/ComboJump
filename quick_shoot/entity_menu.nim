@@ -11,6 +11,7 @@ import
     movement,
     player_shooter_attack,
     remove_when_offscreen,
+    shooter_reward_on_death,
     sprite,
     transform,
   ],
@@ -91,6 +92,10 @@ proc spawnEnemy(model: EntityModel) =
     ),
     EnemyShooterMovement(moveSpeed: 120),
     RemoveWhenOffscreen(buffer: 100),
+    ShooterRewardOnDeath(
+      xp: 3,
+      gold: 2,
+    ),
   ])
 
 method pushMenus(controller: EntityController): seq[MenuBase] =
@@ -151,6 +156,10 @@ proc entityModelView(model: EntityModel, controller: EntityController): Node {.p
       onClick: (proc() =
         controller.bufferClose = true
       ),
+    ),
+    BorderedTextNode(
+      pos: vec(200, 700),
+      text: "G: " & $model.stats.gold,
     ),
     quantityBarNode(
       health.cur.int,

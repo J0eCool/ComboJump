@@ -614,6 +614,19 @@
         "var PlayerStats"
       ]
     },
+    "updateShooterRewardOnDeath": {
+      "args": [
+        "notifications",
+        "stats"
+      ],
+      "filename": "component/shooter_reward_on_death.nim",
+      "id": "56",
+      "priority": "0",
+      "types": [
+        "N10nManager",
+        "ShooterStats"
+      ]
+    },
     "updateSpellCreator": {
       "args": [
         "input",
