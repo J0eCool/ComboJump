@@ -3,7 +3,7 @@ import tables
 import
   jsonparse
 
-type PlayerStats* = object
+type PlayerStats* = ref object
   level*: int
   xp*: int
   shouldSave*: bool

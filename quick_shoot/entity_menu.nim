@@ -54,7 +54,7 @@ proc process(model: EntityModel, events: Events) =
 
 defineSystemCalls(EntityModel)
 
-proc newEntityModel(): EntityModel =
+proc newEntityModel(stats: ShooterStats): EntityModel =
   let player = newEntity("Player", [
     Transform(pos: vec(300, 300), size: vec(80, 36)),
     Movement(),
@@ -72,11 +72,7 @@ proc newEntityModel(): EntityModel =
     player: player,
     camera: Camera(screenSize: vec(1200, 900)),
     notifications: newN10nManager(),
-    stats: ShooterStats(
-      attackSpeed: 1.4,
-      damage: 3,
-      numBullets: 1,
-    ),
+    stats: stats,
   )
 
 proc spawnEnemy(model: EntityModel) =
@@ -165,9 +161,9 @@ proc entityModelView(model: EntityModel, controller: EntityController): Node {.p
     ),
   ])
 
-proc newEntityMenu*(): Menu[EntityModel, EntityController] =
+proc newEntityMenu*(stats: ShooterStats): Menu[EntityModel, EntityController] =
   Menu[EntityModel, EntityController](
-    model: newEntityModel(),
+    model: newEntityModel(stats),
     view: entityModelView,
     update: entityModelUpdate,
     controller: EntityController(),

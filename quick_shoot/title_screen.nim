@@ -1,6 +1,7 @@
 import
   quick_shoot/[
     entity_menu,
+    shop_menu,
   ],
   menu,
   transition,
@@ -15,8 +16,8 @@ type
 method pushMenus(controller: TitleScreenController): seq[MenuBase] =
   if controller.start:
     controller.start = false
-    let levelSelect = downcast(newEntityMenu())
-    result = @[downcast(newTransitionMenu(levelSelect))]
+    let shop = downcast(newShopMenu())
+    result = @[downcast(newTransitionMenu(shop))]
 
 proc titleScreenView(menu: TitleScreen, controller: TitleScreenController): Node {.procvar.} =
   Node(
