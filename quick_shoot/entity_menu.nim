@@ -35,6 +35,7 @@ import
   notifications,
   resources,
   transition,
+  util,
   vec
 
 type
@@ -77,8 +78,16 @@ proc newEntityModel(stats: ShooterStats): EntityModel =
   )
 
 proc spawnEnemy(model: EntityModel) =
+  let
+    moveKind = random[EnemyShooterMovementKind]()
+    pos =
+      case moveKind
+      of moveDown:
+        vec(1000, -100)
+      of moveUp:
+        vec(1000, 1000)
   model.entities.add newEntity("Goblin", [
-    Transform(pos: vec(1000, -100), size: vec(50, 50)),
+    Transform(pos: pos, size: vec(50, 50)),
     Movement(),
     Collider(layer: Layer.enemy),
     Sprite(textureName: "Goblin.png"),
@@ -90,7 +99,10 @@ proc spawnEnemy(model: EntityModel) =
       bulletSpeed: 400,
       attackDir: vec(-1, 0),
     ),
-    EnemyShooterMovement(moveSpeed: 120),
+    EnemyShooterMovement(
+      kind: moveKind,
+      moveSpeed: 120,
+    ),
     RemoveWhenOffscreen(buffer: 100),
     ShooterRewardOnDeath(
       xp: 3,

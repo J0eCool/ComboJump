@@ -44,6 +44,9 @@ proc randomBool*(probability = 0.5): bool =
 proc random*[T](list: seq[T]): T =
   list[random(0, list.len - 1)]
 
+proc random*[T: enum](): T =
+  T(random(ord(low(T)), ord(high(T))))
+
 proc randomSubset*[T](list: seq[T], count: int): seq[T] =
   let clampedCount = min(list.len, count)
   var copied: seq[T]
