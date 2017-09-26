@@ -17,9 +17,18 @@ type
 proc newShopController(): ShopController =
   ShopController(
     stats: ShooterStats(
-      attackSpeed: 1.4,
-      damage: 3,
-      numBullets: 1,
+      leftClickWeapon: ShooterWeapon(
+        name: "Gun",
+        attackSpeed: 4.8,
+        damage: 1,
+        numBullets: 1,
+      ),
+      qWeapon: ShooterWeapon(
+        name: "Spread",
+        attackSpeed: 1.4,
+        damage: 1,
+        numBullets: 5,
+      ),
       gold: 100,
     ),
   )
@@ -38,49 +47,55 @@ type ShopItem = object
 proc `==`(a, b: ShopItem): bool =
   a.label == b.label and a.cost == b.cost
 
-proc shopNodes(stats: ShooterStats): Node =
-  List[ShopItem](
-    pos: vec(200, 300),
-    spacing: vec(0, 50),
-    listNodes: (proc(item: ShopItem): Node =
-      nodes(@[
-        BorderedTextNode(text: item.label),
-        Button(
-          pos: vec(200, 0),
-          size: vec(80, 40),
-          label: $item.cost & " G",
-          onClick: (proc() =
-            if stats.gold >= item.cost:
-              stats.gold -= item.cost
-              item.onBuy()
+proc shopNodes(pos: Vec, stats: ShooterStats, weapon: ptr ShooterWeapon): Node =
+  nodes(@[
+    BorderedTextNode(text: weapon.name, pos: pos),
+    List[ShopItem](
+      pos: pos + vec(0, 30),
+      spacing: vec(0, 50),
+      listNodes: (proc(item: ShopItem): Node =
+        nodes(@[
+          BorderedTextNode(
+            text: item.label,
+            fontSize: 14,
+          ),
+          Button(
+            pos: vec(140, 0),
+            size: vec(80, 40),
+            label: $item.cost & " G",
+            onClick: (proc() =
+              if stats.gold >= item.cost:
+                stats.gold -= item.cost
+                item.onBuy()
+            ),
+          ),
+        ])
+      ),
+      items: @[
+        ShopItem(
+          label: "Damage: " & $weapon.damage,
+          cost: 10,
+          onBuy: (proc() =
+            weapon.damage += 1
           ),
         ),
-      ])
+        ShopItem(
+          label: "Attack Speed: " & $weapon.attackSpeed,
+          cost: 20,
+          onBuy: (proc() =
+            weapon.attackSpeed += 0.2
+          ),
+        ),
+        ShopItem(
+          label: "Bullets: " & $weapon.numBullets,
+          cost: 50,
+          onBuy: (proc() =
+            weapon.numBullets += 1
+          ),
+        ),
+      ],
     ),
-    items: @[
-      ShopItem(
-        label: "Damage: " & $stats.damage,
-        cost: 10,
-        onBuy: (proc() =
-          stats.damage += 1
-        ),
-      ),
-      ShopItem(
-        label: "Attack Speed: " & $stats.attackSpeed,
-        cost: 20,
-        onBuy: (proc() =
-          stats.attackSpeed += 0.2
-        ),
-      ),
-      ShopItem(
-        label: "Bullets: " & $stats.numBullets,
-        cost: 50,
-        onBuy: (proc() =
-          stats.numBullets += 1
-        ),
-      ),
-    ],
-  )
+  ])
 
 proc shopView(menu: Shop, controller: ShopController): Node {.procvar.} =
   let stats = controller.stats
@@ -95,7 +110,8 @@ proc shopView(menu: Shop, controller: ShopController): Node {.procvar.} =
         pos: vec(200, 700),
         text: "G: " & $stats.gold,
       ),
-      shopNodes(stats),
+      shopNodes(vec(200, 300), stats, addr stats.leftClickWeapon),
+      shopNodes(vec(500, 300), stats, addr stats.qWeapon),
       Button(
         pos: vec(600, 700),
         size: vec(300, 120),
