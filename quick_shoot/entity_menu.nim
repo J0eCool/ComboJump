@@ -49,7 +49,6 @@ type
     stats: ShooterStats
     notifications: N10nManager
   EntityController = ref object of Controller
-    bufferClose: bool
 
 proc process(model: EntityModel, events: Events) =
   model.entities.process(events)
@@ -110,17 +109,9 @@ proc spawnEnemy(model: EntityModel) =
     ),
   ])
 
-method pushMenus(controller: EntityController): seq[MenuBase] =
-  if controller.bufferClose:
-    result = @[downcast(newFadeOnlyOut())]
 
 proc entityModelUpdate(model: EntityModel, controller: EntityController,
                        dt: float, input: InputManager) {.procvar.} =
-  if controller.bufferClose:
-    controller.bufferClose = false
-    controller.shouldPop = true
-    return
-
   model.spawnTimer += dt
   let timeToSpawn = 1.5
   if model.spawnTimer >= timeToSpawn:
@@ -131,7 +122,8 @@ proc entityModelUpdate(model: EntityModel, controller: EntityController,
   model.input = input
   model.updateSystems()
   if model.player.getComponent(Health).cur <= 0:
-    controller.bufferClose = true
+    controller.shouldPop = true
+    controller.queueMenu downcast(newFadeOnlyOut())
 
 type EntityRenderNode = ref object of Node
   entities: Entities
@@ -166,7 +158,8 @@ proc entityModelView(model: EntityModel, controller: EntityController): Node {.p
       label: "Exit",
       hotkey: escape,
       onClick: (proc() =
-        controller.bufferClose = true
+        controller.shouldPop = true
+        controller.queueMenu downcast(newFadeOnlyOut())
       ),
     ),
     BorderedTextNode(

@@ -11,13 +11,6 @@ import
 type
   TitleScreen = ref object of RootObj
   TitleScreenController = ref object of Controller
-    start: bool
-
-method pushMenus(controller: TitleScreenController): seq[MenuBase] =
-  if controller.start:
-    controller.start = false
-    let shop = downcast(newShopMenu())
-    result = @[downcast(newTransitionMenu(shop))]
 
 proc titleScreenView(menu: TitleScreen, controller: TitleScreenController): Node {.procvar.} =
   Node(
@@ -32,7 +25,8 @@ proc titleScreenView(menu: TitleScreen, controller: TitleScreenController): Node
         size: vec(300, 120),
         children: @[BorderedTextNode(text: "START").Node],
         onClick: (proc() =
-          controller.start = true
+          let shop = downcast(newShopMenu())
+          controller.queueMenu downcast(newTransitionMenu(shop))
         ),
       ),
     ],

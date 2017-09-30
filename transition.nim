@@ -10,8 +10,8 @@ type
     menu: MenuBase
     onlyFadeOut: bool
     t: float
-    shouldPush: bool
     reverse: bool
+  TransitionMenu = Menu[Transition, TransitionController]
 
 const transitionDuration = 0.3
 
@@ -27,6 +27,8 @@ proc transitionView(transition: Transition, controller: TransitionController): N
     pos: vec(controller.percentDone.lerp(-0.5, 0.5) * size.x, size.y / 2),
   )
 
+proc newFadeOnlyIn*(): TransitionMenu
+
 proc transitionUpdate(transition: Transition, controller: TransitionController,
                       dt: float, input: InputManager) {.procvar.} =
   controller.t += dt
@@ -34,12 +36,14 @@ proc transitionUpdate(transition: Transition, controller: TransitionController,
     if controller.reverse or controller.onlyFadeOut:
       controller.shouldPop = true
     else:
-      controller.shouldPush = true
+      if controller.menu != nil:
+        controller.queueMenu controller.menu
+        controller.queueMenu downcast(newFadeOnlyIn())
       controller.reverse = true
       controller.t = 0.0
 
-proc newTransitionMenu*(menu: MenuBase): Menu[Transition, TransitionController] =
-  Menu[Transition, TransitionController](
+proc newTransitionMenu*(menu: MenuBase): TransitionMenu =
+  TransitionMenu(
     model: Transition(),
     view: transitionView,
     update: transitionUpdate,
@@ -49,8 +53,8 @@ proc newTransitionMenu*(menu: MenuBase): Menu[Transition, TransitionController] 
     ),
   )
 
-proc newFadeOnlyOut*(): Menu[Transition, TransitionController] =
-  Menu[Transition, TransitionController](
+proc newFadeOnlyOut*(): TransitionMenu =
+  TransitionMenu(
     model: Transition(),
     view: transitionView,
     update: transitionUpdate,
@@ -60,8 +64,8 @@ proc newFadeOnlyOut*(): Menu[Transition, TransitionController] =
     ),
   )
 
-proc newFadeOnlyIn*(): Menu[Transition, TransitionController] =
-  Menu[Transition, TransitionController](
+proc newFadeOnlyIn*(): TransitionMenu =
+  TransitionMenu(
     model: Transition(),
     view: transitionView,
     update: transitionUpdate,
@@ -70,14 +74,6 @@ proc newFadeOnlyIn*(): Menu[Transition, TransitionController] =
       reverse: true,
     ),
   )
-
-method pushMenus(controller: TransitionController): seq[MenuBase] =
-  if controller.shouldPush and controller.menu != nil:
-    result = @[
-      controller.menu,
-      downcast(newFadeOnlyIn()),
-    ]
-  controller.shouldPush = false
 
 method shouldDrawBelow(controller: TransitionController): bool =
   true

@@ -12,7 +12,6 @@ type
   Shop = ref object of RootObj
   ShopController = ref object of Controller
     stats: ShooterStats
-    start: bool
 
 proc newShopController(): ShopController =
   ShopController(
@@ -32,12 +31,6 @@ proc newShopController(): ShopController =
       gold: 100,
     ),
   )
-
-method pushMenus(controller: ShopController): seq[MenuBase] =
-  if controller.start:
-    controller.start = false
-    let levelSelect = downcast(newEntityMenu(controller.stats))
-    result = @[downcast(newTransitionMenu(levelSelect))]
 
 type ShopItem = object
   label: string
@@ -117,7 +110,8 @@ proc shopView(menu: Shop, controller: ShopController): Node {.procvar.} =
         size: vec(300, 120),
         children: @[BorderedTextNode(text: "START").Node],
         onClick: (proc() =
-          controller.start = true
+          let levelSelect = downcast(newEntityMenu(controller.stats))
+          controller.queueMenu downcast(newTransitionMenu(levelSelect))
         ),
       ),
     ],

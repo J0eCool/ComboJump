@@ -1,5 +1,7 @@
 from sdl2 import RendererPtr
-import typetraits
+import
+  strutils,
+  typetraits
 
 import
   component/sprite,
@@ -24,8 +26,9 @@ type
   Controller* = ref object of RootObj
     name*: string
     shouldPop*: bool
+    queuedMenus: seq[proc(m: var MenuManager)]
 
-  Menu*[M, C] = ref object
+  Menu*[M, C] = ref object of RootObj
     model*: M
     controller*: C
     view*: proc(model: M, controller: C): Node
@@ -33,6 +36,7 @@ type
     node: Node
 
   MenuBase* = Menu[ref RootObj, Controller]
+
   MenuManager* = object
     focusedNode*: Node
     menus*: Stack[MenuBase]
@@ -429,14 +433,16 @@ method shouldDrawBelow*(controller: Controller): bool {.base.} =
 method shouldUpdateBelow*(controller: Controller): bool {.base.} =
   false
 
-method pushMenus*(controller: Controller): seq[MenuBase] {.base.} =
-  nil
-
 proc push*[M, C](menus: var MenuManager, menu: Menu[M, C]) =
   menus.menus.push(downcast[M, C](menu))
 
 proc pop*(menus: var MenuManager) =
   discard menus.menus.pop()
+
+proc queueMenu*(controller: Controller, menu: MenuBase) =
+  controller.queuedMenus.safeAdd(proc(menus: var MenuManager) =
+    menus.push(menu)
+  )
 
 proc runUpdate*(menu: Menu, manager: var MenuManager, dt: float, input: InputManager) =
   menu.update(menu.model, menu.controller, dt, input)
@@ -458,19 +464,20 @@ proc update*(menus: var MenuManager, dt: float, input: InputManager) =
     menu.runUpdate(menus, dt, input)
 
     let
-      toPush = menu.controller.pushMenus()
+      toPush = menu.controller.queuedMenus
       isTop = menu == menus.menus.peek()
-      shouldPop = menu.controller.shouldPop and isTop
+      shouldPop = menu.controller.shouldPop and isTop and toPush.len == 0
     if shouldPop:
       menus.pop()
       menus.menus.mpeek().runUpdate(menus, 0.0, input)
     if toPush != nil:
       for p in toPush:
-        menus.push(p)
+        p(menus)
         menus.menus.mpeek().runUpdate(menus, 0.0, input)
       break
     if shouldPop or not menu.controller.shouldUpdateBelow:
       break
+    menu.controller.queuedMenus = @[]
   while menus.menus.peek().controller.shouldPop:
     menus.pop()
 
