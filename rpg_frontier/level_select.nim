@@ -20,7 +20,6 @@ type
     levels: seq[Level]
   LevelSelectController = ref object of Controller
     stats: PlayerStats
-    nextMenu: MenuBase
 
 proc newLevelSelect(): LevelSelect =
   LevelSelect(
@@ -31,11 +30,6 @@ proc newLevelSelectController(): LevelSelectController =
   LevelSelectController(
     stats: newPlayerStats(),
   )
-
-method pushMenus(controller: LevelSelectController): seq[MenuBase] =
-  if controller.nextMenu != nil:
-    result = @[controller.nextMenu]
-    controller.nextMenu = nil
 
 proc levelSelectView(levels: LevelSelect, controller: LevelSelectController): Node {.procvar.} =
   Node(
@@ -51,7 +45,7 @@ proc levelSelectView(levels: LevelSelect, controller: LevelSelectController): No
         label: "Skill Select",
         onClick: (proc() =
           let skillSelectMenu = downcast(newSkillSelectMenu(controller.stats))
-          controller.nextMenu = downcast(newTransitionMenu(skillSelectMenu))
+          controller.queueMenu downcast(newTransitionMenu(skillSelectMenu))
         ),
       ),
       Button(
@@ -60,7 +54,7 @@ proc levelSelectView(levels: LevelSelect, controller: LevelSelectController): No
         label: "Inventory",
         onClick: (proc() =
           let inventoryMenu = downcast(newInventoryMenu(controller.stats))
-          controller.nextMenu = downcast(newTransitionMenu(inventoryMenu))
+          controller.queueMenu downcast(newTransitionMenu(inventoryMenu))
         ),
       ),
       List[Level](
@@ -75,7 +69,7 @@ proc levelSelectView(levels: LevelSelect, controller: LevelSelectController): No
               let
                 battle = newBattleData(controller.stats, level)
                 battleMenu = downcast(newBattleMenu(battle))
-              controller.nextMenu = downcast(newTransitionMenu(battleMenu))
+              controller.queueMenu downcast(newTransitionMenu(battleMenu))
             ),
           ),
         ),

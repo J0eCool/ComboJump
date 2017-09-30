@@ -16,7 +16,6 @@ import
 
 type
   InventoryController = ref object of Controller
-    bufferClose: bool
 
 type Weapon = object
   name: string
@@ -24,16 +23,6 @@ type Weapon = object
 
 proc newInventoryController(): InventoryController =
   InventoryController()
-
-method pushMenus(controller: InventoryController): seq[MenuBase] =
-  if controller.bufferClose:
-    result = @[downcast(newFadeOnlyOut())]
-
-proc inventoryUpdate(stats: PlayerStats, controller: InventoryController,
-                     dt: float, input: InputManager) {.procvar.} =
-  if controller.bufferClose:
-    controller.shouldPop = true
-    controller.bufferClose = false
 
 proc inventoryView(stats: PlayerStats, controller: InventoryController): Node {.procvar.} =
   nodes(@[
@@ -47,7 +36,8 @@ proc inventoryView(stats: PlayerStats, controller: InventoryController): Node {.
       size: vec(90, 60),
       label: "Back",
       onClick: (proc() =
-        controller.bufferClose = true
+        controller.shouldPop = true
+        controller.queueMenu downcast(newFadeOnlyOut())
       ),
     ),
     BorderedTextNode(
@@ -87,6 +77,5 @@ proc newInventoryMenu*(stats: PlayerStats): Menu[PlayerStats, InventoryControlle
   Menu[PlayerStats, InventoryController](
     model: stats,
     view: inventoryView,
-    update: inventoryUpdate,
     controller: newInventoryController(),
   )

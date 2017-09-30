@@ -29,13 +29,16 @@ import
 type
   BattleController* = ref object of Controller
     animation*: AnimationCollection
-    bufferClose*: bool
 
 proc newBattleController*(): BattleController =
   BattleController(
     name: "Battle",
     animation: newAnimationCollection(),
   )
+
+proc popWithTransition*(controller: BattleController) =
+  controller.shouldPop = true
+  controller.queueMenu downcast(newFadeOnlyOut())
 
 proc processAilmentDamage*(controller: BattleController, target: BattleEntity,
                         damage: Damage, color: Color) =
@@ -46,7 +49,6 @@ proc processAilmentDamage*(controller: BattleController, target: BattleEntity,
       startPos: target.pos + randomVec(10.0) + vec(30.0),
       color: color,
     )
-
 
 proc processAttackDamage*(controller: BattleController, target: BattleEntity,
                           damage: Damage) =
@@ -59,7 +61,7 @@ proc processAttackDamage*(controller: BattleController, target: BattleEntity,
 
 proc advanceStage(battle: BattleData, controller: BattleController) =
   if battle.curStageIndex + 1 >= battle.stages.len:
-    controller.bufferClose = true
+    controller.popWithTransition()
   else:
     battle.curStageIndex += 1
     battle.spawnCurrentStage()
@@ -83,7 +85,7 @@ proc killEnemy(battle: BattleData, controller: BattleController, target: BattleE
   controller.animation.wait(0.3)
 
 proc killPlayer(battle: BattleData, controller: BattleController) =
-  controller.bufferClose = true
+  controller.popWithTransition()
 
 proc updateMaybeKill(battle: BattleData, controller: BattleController,
                      target: BattleEntity) =
@@ -196,11 +198,6 @@ proc beginTurn(battle: BattleData, controller: BattleController) =
 
 proc battleUpdate*(battle: BattleData, controller: BattleController,
                    dt: float, input: InputManager) =
-  if controller.bufferClose:
-    controller.shouldPop = true
-    controller.bufferClose = false
-    return
-
   controller.animation.update(dt)
 
   if controller.animation.notBlocking() and battle.activeEntity == nil:
@@ -209,7 +206,3 @@ proc battleUpdate*(battle: BattleData, controller: BattleController,
       battle.beginTurn(controller)
 
   battle.clampResources()
-
-method pushMenus(controller: BattleController): seq[MenuBase] =
-  if controller.bufferClose:
-    result = @[downcast(newFadeOnlyOut())]

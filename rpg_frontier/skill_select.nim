@@ -16,20 +16,9 @@ import
 
 type
   SkillSelectController = ref object of Controller
-    bufferClose: bool
 
 proc newSkillSelectController(): SkillSelectController =
   SkillSelectController()
-
-method pushMenus(controller: SkillSelectController): seq[MenuBase] =
-  if controller.bufferClose:
-    result = @[downcast(newFadeOnlyOut())]
-
-proc skillSelectUpdate(stats: PlayerStats, controller: SkillSelectController,
-                       dt: float, input: InputManager) {.procvar.} =
-  if controller.bufferClose:
-    controller.shouldPop = true
-    controller.bufferClose = false
 
 proc skillSelectView(stats: PlayerStats, controller: SkillSelectController): Node {.procvar.} =
   nodes(@[
@@ -43,7 +32,8 @@ proc skillSelectView(stats: PlayerStats, controller: SkillSelectController): Nod
       size: vec(90, 60),
       label: "Back",
       onClick: (proc() =
-        controller.bufferClose = true
+        controller.shouldPop = true
+        controller.queueMenu downcast(newFadeOnlyOut())
       ),
     ),
     List[SkillID](
@@ -112,6 +102,5 @@ proc newSkillSelectMenu*(stats: PlayerStats): Menu[PlayerStats, SkillSelectContr
   Menu[PlayerStats, SkillSelectController](
     model: stats,
     view: skillSelectView,
-    update: skillSelectUpdate,
     controller: newSkillSelectController(),
   )

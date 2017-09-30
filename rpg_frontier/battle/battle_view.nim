@@ -323,7 +323,7 @@ proc battleView(battle: BattleData, controller: BattleController): Node {.procva
         size: vec(60, 60),
         label: "Exit",
         onClick: (proc() =
-          controller.bufferClose = true
+          controller.popWithTransition()
         ),
       ),
       attackTargetsNode(battle, controller),
