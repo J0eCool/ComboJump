@@ -77,3 +77,7 @@ proc newFadeOnlyIn*(): TransitionMenu =
 
 method shouldDrawBelow(controller: TransitionController): bool =
   true
+
+proc popWithTransition*(controller: Controller) =
+  controller.shouldPop = true
+  controller.queueMenu downcast(newFadeOnlyOut())

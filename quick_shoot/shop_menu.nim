@@ -13,23 +13,9 @@ type
   ShopController = ref object of Controller
     stats: ShooterStats
 
-proc newShopController(): ShopController =
+proc newShopController(stats: ShooterStats): ShopController =
   ShopController(
-    stats: ShooterStats(
-      leftClickWeapon: ShooterWeapon(
-        name: "Gun",
-        attackSpeed: 4.8,
-        damage: 1,
-        numBullets: 1,
-      ),
-      qWeapon: ShooterWeapon(
-        name: "Spread",
-        attackSpeed: 1.4,
-        damage: 1,
-        numBullets: 5,
-      ),
-      gold: 100,
-    ),
+    stats: stats,
   )
 
 type ShopItem = object
@@ -108,18 +94,17 @@ proc shopView(menu: Shop, controller: ShopController): Node {.procvar.} =
       Button(
         pos: vec(600, 700),
         size: vec(300, 120),
-        children: @[BorderedTextNode(text: "START").Node],
+        children: @[BorderedTextNode(text: "Back").Node],
         onClick: (proc() =
-          let levelSelect = downcast(newEntityMenu(controller.stats))
-          controller.queueMenu downcast(newTransitionMenu(levelSelect))
+          controller.popWithTransition()
         ),
       ),
     ],
   )
 
-proc newShopMenu*(): Menu[Shop, ShopController] =
+proc newShopMenu*(stats: ShooterStats): Menu[Shop, ShopController] =
   Menu[Shop, ShopController](
     model: Shop(),
     view: shopView,
-    controller: newShopController(),
+    controller: newShopController(stats),
   )

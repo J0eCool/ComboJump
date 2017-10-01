@@ -36,10 +36,6 @@ proc newBattleController*(): BattleController =
     animation: newAnimationCollection(),
   )
 
-proc popWithTransition*(controller: BattleController) =
-  controller.shouldPop = true
-  controller.queueMenu downcast(newFadeOnlyOut())
-
 proc processAilmentDamage*(controller: BattleController, target: BattleEntity,
                         damage: Damage, color: Color) =
   let taken = target.takeDamage(damage)

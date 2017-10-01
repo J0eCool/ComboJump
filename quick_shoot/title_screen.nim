@@ -1,7 +1,7 @@
 import
   quick_shoot/[
     entity_menu,
-    shop_menu,
+    level_select,
   ],
   menu,
   transition,
@@ -25,8 +25,8 @@ proc titleScreenView(menu: TitleScreen, controller: TitleScreenController): Node
         size: vec(300, 120),
         children: @[BorderedTextNode(text: "START").Node],
         onClick: (proc() =
-          let shop = downcast(newShopMenu())
-          controller.queueMenu downcast(newTransitionMenu(shop))
+          let levelSelect = downcast(newLevelSelectMenu())
+          controller.queueMenu downcast(newTransitionMenu(levelSelect))
         ),
       ),
     ],
