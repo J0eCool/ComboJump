@@ -1,8 +1,8 @@
 import
   quick_shoot/[
     # inventory_menu,
-    # level,
     entity_menu,
+    level,
     shooter_stats,
     shop_menu,
   ],
@@ -10,10 +10,7 @@ import
   transition,
   vec
 
-
 type
-  Level = object
-    name: string
   LevelSelect = ref object of RootObj
     levels: seq[Level]
   LevelSelectController = ref object of Controller
@@ -21,11 +18,7 @@ type
 
 proc newLevelSelect(): LevelSelect =
   LevelSelect(
-    levels: @[
-      Level(name: "Level 1"),
-      Level(name: "Level 2"),
-      Level(name: "Level 3?"),
-    ],
+    levels: allLevels,
   )
 
 proc newLevelSelectController(): LevelSelectController =
@@ -68,7 +61,7 @@ proc levelSelectView(levels: LevelSelect, controller: LevelSelectController): No
             size: vec(200, 60),
             label: level.name,
             onClick: (proc() =
-              let battleMenu = downcast(newEntityMenu(controller.stats))
+              let battleMenu = downcast(newEntityMenu(controller.stats, level))
               controller.queueMenu downcast(newTransitionMenu(battleMenu))
             ),
           ),

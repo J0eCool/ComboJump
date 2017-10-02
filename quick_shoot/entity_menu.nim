@@ -16,6 +16,7 @@ import
     transform,
   ],
   quick_shoot/[
+    level,
     shooter_stats,
   ],
   system/[
@@ -47,6 +48,7 @@ type
     spawnTimer: float
     player: Entity
     stats: ShooterStats
+    level: Level
     notifications: N10nManager
   EntityController = ref object of Controller
 
@@ -55,7 +57,7 @@ proc process(model: EntityModel, events: Events) =
 
 defineSystemCalls(EntityModel)
 
-proc newEntityModel(stats: ShooterStats): EntityModel =
+proc newEntityModel(stats: ShooterStats, level: Level): EntityModel =
   let player = newEntity("Player", [
     Transform(pos: vec(300, 300), size: vec(80, 36)),
     Movement(),
@@ -74,49 +76,14 @@ proc newEntityModel(stats: ShooterStats): EntityModel =
     camera: Camera(screenSize: vec(1200, 900)),
     notifications: newN10nManager(),
     stats: stats,
+    level: level,
   )
-
-proc spawnEnemy(model: EntityModel) =
-  let
-    moveKind = random[EnemyShooterMovementKind]()
-    pos =
-      case moveKind
-      of moveDown:
-        vec(1000, -100)
-      of moveUp:
-        vec(1000, 1000)
-  model.entities.add newEntity("Goblin", [
-    Transform(pos: pos, size: vec(50, 50)),
-    Movement(),
-    Collider(layer: Layer.enemy),
-    Sprite(textureName: "Goblin.png"),
-    newHealth(8),
-    EnemyAttack(
-      damage: 1,
-      size: 25,
-      attackSpeed: 1.2,
-      bulletSpeed: 400,
-      attackDir: vec(-1, 0),
-    ),
-    EnemyShooterMovement(
-      kind: moveKind,
-      moveSpeed: 120,
-    ),
-    RemoveWhenOffscreen(buffer: 100),
-    ShooterRewardOnDeath(
-      xp: 3,
-      gold: 2,
-    ),
-  ])
-
 
 proc entityModelUpdate(model: EntityModel, controller: EntityController,
                        dt: float, input: InputManager) {.procvar.} =
+  for enemy in model.level.toSpawn(model.spawnTimer, model.spawnTimer + dt):
+    model.entities.add enemy
   model.spawnTimer += dt
-  let timeToSpawn = 1.5
-  if model.spawnTimer >= timeToSpawn:
-    model.spawnTimer -= timeToSpawn
-    model.spawnEnemy()
 
   model.dt = dt
   model.input = input
@@ -166,6 +133,10 @@ proc entityModelView(model: EntityModel, controller: EntityController): Node {.p
       pos: vec(200, 700),
       text: "G: " & $model.stats.gold,
     ),
+    BorderedTextNode(
+      pos: vec(600, 100),
+      text: model.level.name,
+    ),
     quantityBarNode(
       health.cur.int,
       health.max.int,
@@ -175,9 +146,9 @@ proc entityModelView(model: EntityModel, controller: EntityController): Node {.p
     ),
   ])
 
-proc newEntityMenu*(stats: ShooterStats): Menu[EntityModel, EntityController] =
+proc newEntityMenu*(stats: ShooterStats, level: Level): Menu[EntityModel, EntityController] =
   Menu[EntityModel, EntityController](
-    model: newEntityModel(stats),
+    model: newEntityModel(stats, level),
     view: entityModelView,
     update: entityModelUpdate,
     controller: EntityController(),

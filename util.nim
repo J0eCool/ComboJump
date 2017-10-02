@@ -116,6 +116,14 @@ proc formatFloat*(num: float): string =
 proc approxEq*(a, b: float, epsilon=0.00001): bool =
   abs(a - b) <= epsilon
 
+proc approxEq*(a, b: seq[float], epsilon=0.00001): bool =
+  if a.len != b.len:
+    return false
+  for i in 0..<a.len:
+    if not a[i].approxEq(b[i]):
+      return false
+  return true
+
 proc newOf*[T](item: T): ref T =
   new(result)
   result[] = item
