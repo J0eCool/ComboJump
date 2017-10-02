@@ -18,14 +18,14 @@ import
 
 type
   EnemyKind* = enum
-    goblinDown
-    goblinUp
+    goblin
 
   SpawnData* = tuple
     startTime: float
     interval: float
     count: int
     enemy: EnemyKind
+    movement: EnemyShooterMovementData
     pos: Vec
 
   Level* = object
@@ -43,15 +43,19 @@ let allLevels* = @[
   Level(
     name: "Level 1",
     spawns: @[
-      (1.0, 0.75, 3, goblinDown, vec(1200, top)),
-      (5.0, 0.75, 3, goblinUp, vec(1200, bottom)),
-      (11.0, 2.0, 7, goblinDown, vec(1100, top)),
-      (15.0, 0.75, 3, goblinUp, vec(600, bottom)),
+      (1.0, 0.75, 3, goblin, straight(vec(-1, 3).unit, 140), vec(1100, top)),
+      (5.0, 0.75, 3, goblin, straight(vec(-1, -3).unit, 140), vec(1100, bottom)),
+      (11.0, 2.0, 7, goblin, straight(vec(-1, 3).unit, 140), vec(1000, top)),
+      (15.0, 0.75, 3, goblin, straight(vec(-1, -3).unit, 140), vec(600, bottom)),
     ],
   ),
   Level(
     name: "Level 2!",
     spawns: @[
+      (1.0, 0.75, 3, goblin, sine(vec(-1, 3).unit, 140, vec(2.0, 0.7), 3.5), vec(1000, top)),
+      (5.0, 0.75, 3, goblin, sine(vec(-1, -3).unit, 140, vec(-2.0, 0.7), 3.5), vec(1000, bottom)),
+      (11.0, 2.0, 7, goblin, sine(vec(-1, 3).unit, 140, vec(2.0, -0.7), 3.5), vec(800, top)),
+      (15.0, 0.75, 3, goblin, sine(vec(-1, -3).unit, 140, vec(-2.0, -0.7), 3.5), vec(600, bottom)),
     ],
   ),
   Level(
@@ -62,12 +66,6 @@ let allLevels* = @[
 ]
 
 proc spawnEnemy(spawn: SpawnData): Entity =
-  let moveKind =
-    case spawn.enemy
-    of goblinUp:
-      moveUp
-    of goblinDown:
-      moveDown
   newEntity("Goblin", [
     Transform(pos: spawn.pos, size: vec(50, 50)),
     Movement(),
@@ -82,10 +80,9 @@ proc spawnEnemy(spawn: SpawnData): Entity =
       attackDir: vec(-1, 0),
     ),
     EnemyShooterMovement(
-      kind: moveKind,
-      moveSpeed: 120,
+      data: spawn.movement,
     ),
-    RemoveWhenOffscreen(buffer: 100),
+    RemoveWhenOffscreen(buffer: 300),
     ShooterRewardOnDeath(
       xp: 3,
       gold: 2,
