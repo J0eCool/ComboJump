@@ -60,11 +60,21 @@ defineSystem:
   components = [PlayerShooterAttack, Transform]
   proc updatePlayerShooterAttack*(stats: ShooterStats, dt: float, input: InputManager) =
     proc updateWeapon(wep: var ShooterWeapon, isHeld: bool): Events =
+      let info = wep.info
       wep.cooldown -= dt
-      if isHeld and wep.cooldown <= 0.0:
-        wep.cooldown = 1.0 / wep.info.attackSpeed
-        wep.info.bulletsToFire(transform.pos + playerShooterAttack.shotOffset)
-      else:
+      wep.reload -= dt
+      if wep.reload <= 0.0:
+        wep.ammo = info.maxAmmo
+      let
+        hasAmmo = wep.ammo > 0 or info.maxAmmo <= 0
+        shouldShoot = isHeld and wep.cooldown <= 0.0 and hasAmmo
+      if not shouldShoot:
         @[]
+      else:
+        wep.cooldown = 1.0 / info.attackSpeed
+        wep.reload = info.reloadTime
+        wep.ammo -= 1
+        wep.info.bulletsToFire(transform.pos + playerShooterAttack.shotOffset)
+
     result &= updateWeapon(stats.leftClickWeapon, input.isMouseHeld)
     result &= updateWeapon(stats.qWeapon, input.isHeld(keyQ))

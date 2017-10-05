@@ -70,6 +70,7 @@ proc newEntityModel(stats: ShooterStats, level: Level): EntityModel =
     ),
     PlayerShooterAttack(shotOffset: vec(30, 3)),
   ])
+  stats.resetWeapons()
   EntityModel(
     entities: @[player],
     player: player,
@@ -110,6 +111,35 @@ method drawSelf(node: EntityRenderNode, renderer: RendererPtr, resources: Resour
   node.resources = resources
   renderer.drawSystems(node)
 
+proc weaponNode(label: string, weapon: ShooterWeapon, pos: Vec): Node =
+  Node(
+    pos: pos,
+    children: @[
+      BorderedTextNode(
+        text: label,
+        fontSize: 16,
+      ),
+      if not weapon.isReloading:
+        quantityBarNode(
+          weapon.ammo,
+          weapon.info.maxAmmo,
+          vec(140, 0),
+          vec(250, 25),
+          yellow,
+          showText = false,
+        )
+      else:
+        quantityBarNode(
+          int(100 * (weapon.info.reloadTime - weapon.reload)),
+          int(100 * weapon.info.reloadTime),
+          vec(140, 0),
+          vec(250, 25),
+          white,
+          showText = false,
+        ),
+    ],
+  )
+
 proc entityModelView(model: EntityModel, controller: EntityController): Node {.procvar.} =
   let health = model.player.getComponent(Health)
   nodes(@[
@@ -144,6 +174,8 @@ proc entityModelView(model: EntityModel, controller: EntityController): Node {.p
       vec(400, 30),
       red,
     ),
+    weaponNode("LC", model.stats.leftClickWeapon, vec(40, 80)),
+    weaponNode("Q", model.stats.qWeapon, vec(40, 120)),
   ])
 
 proc newEntityMenu*(stats: ShooterStats, level: Level): Menu[EntityModel, EntityController] =
