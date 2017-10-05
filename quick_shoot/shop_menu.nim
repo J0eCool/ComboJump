@@ -26,7 +26,7 @@ type ShopItem = object
 proc `==`(a, b: ShopItem): bool =
   a.label == b.label and a.cost == b.cost
 
-proc shopNodes(pos: Vec, stats: ShooterStats, weapon: ptr ShooterWeapon): Node =
+proc shopNodes(pos: Vec, stats: ShooterStats, weapon: ptr ShooterWeaponInfo): Node =
   nodes(@[
     BorderedTextNode(text: weapon.name, pos: pos),
     List[ShopItem](
@@ -89,8 +89,8 @@ proc shopView(menu: Shop, controller: ShopController): Node {.procvar.} =
         pos: vec(200, 700),
         text: "G: " & $stats.gold,
       ),
-      shopNodes(vec(200, 300), stats, addr stats.leftClickWeapon),
-      shopNodes(vec(500, 300), stats, addr stats.qWeapon),
+      shopNodes(vec(200, 300), stats, addr stats.leftClickWeapon.info),
+      shopNodes(vec(500, 300), stats, addr stats.qWeapon.info),
       Button(
         pos: vec(600, 700),
         size: vec(300, 120),

@@ -23,13 +23,11 @@ import
 
 type
   PlayerShooterAttackObj* = object of ComponentObj
-    leftClickCooldown: float
-    qCooldown: float
   PlayerShooterAttack* = ref PlayerShooterAttackObj
 
 defineComponent(PlayerShooterAttack, @[])
 
-proc bulletsToFire(transform: Transform, weapon: ShooterWeapon): Events =
+proc bulletsToFire(transform: Transform, weapon: ShooterWeaponInfo): Events =
   let
     bulletSpeed = 500.0
     num = weapon.numBullets
@@ -56,15 +54,16 @@ proc bulletsToFire(transform: Transform, weapon: ShooterWeapon): Events =
       RemoveWhenOffscreen(),
     ]))
 
+
 defineSystem:
   components = [PlayerShooterAttack, Transform]
   proc updatePlayerShooterAttack*(stats: ShooterStats, dt: float, input: InputManager) =
-    let attack = playerShooterAttack
-    attack.leftClickCooldown -= dt
-    attack.qCooldown -= dt
-    if input.isMouseHeld and attack.leftClickCooldown <= 0.0:
-      attack.leftClickCooldown = 1.0 / stats.leftClickWeapon.attackSpeed
-      result &= bulletsToFire(transform, stats.leftClickWeapon)
-    if input.isHeld(Input.keyQ) and attack.qCooldown <= 0.0:
-      attack.qCooldown = 1.0 / stats.qWeapon.attackSpeed
-      result &= bulletsToFire(transform, stats.qWeapon)
+    proc updateWeapon(wep: var ShooterWeapon, isHeld: bool): Events =
+      wep.cooldown -= dt
+      if isHeld and wep.cooldown <= 0.0:
+        wep.cooldown = 1.0 / wep.info.attackSpeed
+        bulletsToFire(transform, wep.info)
+      else:
+        @[]
+    result &= updateWeapon(stats.leftClickWeapon, input.isMouseHeld)
+    result &= updateWeapon(stats.qWeapon, input.isHeld(keyQ))
