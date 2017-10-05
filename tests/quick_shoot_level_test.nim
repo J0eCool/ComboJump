@@ -1,6 +1,9 @@
 import unittest
 
 import
+  component/[
+    enemy_shooter_movement,
+  ],
   quick_shoot/[
     level,
   ],
@@ -8,10 +11,17 @@ import
   vec
 
 suite "Levels - Spawns":
-  proc testSpawn(start, interval: float, count: int): SpawnData =
-    (start, interval, count, goblinUp, vec())
-  proc testLevel(start, interval: float, count: int): Level =
-    Level(spawns: @[testSpawn(start, interval, count)])
+  proc testSpawn(delay, interval: float, count: int): SpawnData =
+    (delay, interval, count, goblin, straight(vec(), 0.0), vec())
+  proc testLevel(delay, interval: float, count: int): Level =
+    Level(spawns: @[testSpawn(delay, interval, count)])
+
+  let multiLevel = Level(
+    spawns: @[
+      testSpawn(1.0, 0.0, 1),
+      testSpawn(2.0, 0.0, 1),
+    ],
+  )
 
   test "No spawns before start":
     check testLevel(1.0, 2.0, 1).toSpawn(0.0, 0.5).len == 0
@@ -20,13 +30,10 @@ suite "Levels - Spawns":
     check testLevel(1.0, 2.0, 1).toSpawn(3.0, 3.5).len == 0
 
   test "No spawns between multiple spawn windows times":
-    let level = Level(
-      spawns: @[
-        (1.0, 0.0, 1, goblinUp, vec()),
-        (3.0, 5.0, 1, goblinUp, vec()),
-      ],
-    )
-    check level.toSpawn(2.0, 2.5).len == 0
+    check multiLevel.toSpawn(1.5, 2.5).len == 0
+
+  test "Second spawn in multiple windows is delayed by first":
+    check multiLevel.toSpawn(2.5, 3.5).len == 1
 
   test "Single spawns use only the start time":
     check testSpawn(1.0, 0.0, 1).spawnTimes.approxEq(@[1.0])

@@ -21,7 +21,7 @@ type
     goblin
 
   SpawnData* = tuple
-    startTime: float
+    delay: float
     interval: float
     count: int
     enemy: EnemyKind
@@ -44,18 +44,18 @@ let allLevels* = @[
     name: "Level 1",
     spawns: @[
       (1.0, 0.75, 3, goblin, straight(vec(-1, 3).unit, 140), vec(1100, top)),
-      (5.0, 0.75, 3, goblin, straight(vec(-1, -3).unit, 140), vec(1100, bottom)),
-      (11.0, 2.0, 7, goblin, straight(vec(-1, 3).unit, 140), vec(1000, top)),
-      (15.0, 0.75, 3, goblin, straight(vec(-1, -3).unit, 140), vec(600, bottom)),
+      (4.0, 0.75, 3, goblin, straight(vec(-1, -3).unit, 140), vec(1100, bottom)),
+      (6.0, 2.0, 7, goblin, straight(vec(-1, 3).unit, 140), vec(1000, top)),
+      (4.0, 0.75, 3, goblin, straight(vec(-1, -3).unit, 140), vec(600, bottom)),
     ],
   ),
   Level(
     name: "Level 2!",
     spawns: @[
       (1.0, 0.75, 3, goblin, sine(vec(-1, 3).unit, 140, vec(2.0, 0.7), 3.5), vec(1000, top)),
-      (5.0, 0.75, 3, goblin, sine(vec(-1, -3).unit, 140, vec(-2.0, 0.7), 3.5), vec(1000, bottom)),
-      (11.0, 2.0, 7, goblin, sine(vec(-1, 3).unit, 140, vec(2.0, -0.7), 3.5), vec(800, top)),
-      (15.0, 0.75, 3, goblin, sine(vec(-1, -3).unit, 140, vec(-2.0, -0.7), 3.5), vec(600, bottom)),
+      (4.0, 0.75, 3, goblin, sine(vec(-1, -3).unit, 140, vec(-2.0, 0.7), 3.5), vec(1000, bottom)),
+      (6.0, 2.0, 7, goblin, sine(vec(-1, 3).unit, 140, vec(2.0, -0.7), 3.5), vec(800, top)),
+      (4.0, 0.75, 3, goblin, sine(vec(-1, -3).unit, 140, vec(-2.0, -0.7), 3.5), vec(600, bottom)),
     ],
   ),
   Level(
@@ -91,20 +91,21 @@ proc spawnEnemy(spawn: SpawnData): Entity =
 
 proc spawnTimes*(spawn: SpawnData): seq[float] =
   if spawn.count == 1:
-    return @[spawn.startTime]
+    return @[spawn.delay]
   if spawn.count == 2:
-    return @[spawn.startTime, spawn.startTime + spawn.interval]
+    return @[spawn.delay, spawn.delay + spawn.interval]
   result = @[]
-  var next = spawn.startTime
+  var next = spawn.delay
   for _ in 0..<spawn.count:
     result.add next
     next += spawn.interval
 
 proc toSpawn*(level: Level, prev, cur: float): seq[Entity] =
   result = @[]
+  var baseDelay = 0.0
   for spawn in level.spawns:
-    # if cur < spawn.startTime or prev > spawn.endTime:
-    #   continue
-    for t in spawn.spawnTimes:
+    for delay in spawn.spawnTimes:
+      let t = baseDelay + delay
       if t > prev and t <= cur:
         result.add spawn.spawnEnemy()
+    baseDelay += spawn.delay
