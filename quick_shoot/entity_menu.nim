@@ -68,7 +68,7 @@ proc newEntityModel(stats: ShooterStats, level: Level): EntityModel =
       moveSpeed: 300,
       followMouse: true,
     ),
-    PlayerShooterAttack(),
+    PlayerShooterAttack(shotOffset: vec(30, 3)),
   ])
   EntityModel(
     entities: @[player],

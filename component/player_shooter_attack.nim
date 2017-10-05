@@ -23,11 +23,12 @@ import
 
 type
   PlayerShooterAttackObj* = object of ComponentObj
+    shotOffset*: Vec
   PlayerShooterAttack* = ref PlayerShooterAttackObj
 
 defineComponent(PlayerShooterAttack, @[])
 
-proc bulletsToFire(transform: Transform, weapon: ShooterWeaponInfo): Events =
+proc bulletsToFire(weapon: ShooterWeaponInfo, pos: Vec): Events =
   let
     bulletSpeed = 500.0
     num = weapon.numBullets
@@ -46,7 +47,7 @@ proc bulletsToFire(transform: Transform, weapon: ShooterWeaponInfo): Events =
       Bullet(liveTime: 3.0),
       Collider(layer: Layer.bullet),
       Transform(
-        pos: transform.pos,
+        pos: pos,
         size: vec(16),
       ),
       Movement(vel: dir * bulletSpeed),
@@ -62,7 +63,7 @@ defineSystem:
       wep.cooldown -= dt
       if isHeld and wep.cooldown <= 0.0:
         wep.cooldown = 1.0 / wep.info.attackSpeed
-        bulletsToFire(transform, wep.info)
+        wep.info.bulletsToFire(transform.pos + playerShooterAttack.shotOffset)
       else:
         @[]
     result &= updateWeapon(stats.leftClickWeapon, input.isMouseHeld)
