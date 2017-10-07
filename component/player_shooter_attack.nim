@@ -12,6 +12,7 @@ import
   ],
   quick_shoot/[
     shooter_stats,
+    weapon,
   ],
   color,
   entity,

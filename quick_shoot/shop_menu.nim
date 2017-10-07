@@ -2,6 +2,7 @@ import
   quick_shoot/[
     entity_menu,
     shooter_stats,
+    weapon,
   ],
   menu,
   transition,

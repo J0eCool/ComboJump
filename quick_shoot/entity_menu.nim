@@ -18,6 +18,7 @@ import
   quick_shoot/[
     level,
     shooter_stats,
+    weapon,
   ],
   system/[
     bullet_update,
