@@ -1,5 +1,9 @@
 type
+  ShooterWeaponKind* = enum
+    straight
+    spread
   ShooterWeaponInfo* = object
+    kind*: ShooterWeaponKind
     name*: string
     attackSpeed*: float
     damage*: int

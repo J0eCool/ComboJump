@@ -24,6 +24,7 @@ proc newShooterStats*(): ShooterStats =
   result = ShooterStats(
     leftClickWeapon: ShooterWeapon(info:
       ShooterWeaponInfo(
+        kind: straight,
         name: "Gun",
         attackSpeed: 4.8,
         damage: 1,
@@ -33,6 +34,7 @@ proc newShooterStats*(): ShooterStats =
     )),
     qWeapon: ShooterWeapon(info:
       ShooterWeaponInfo(
+        kind: spread,
         name: "Spread",
         attackSpeed: 1.4,
         damage: 1,
