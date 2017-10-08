@@ -43,8 +43,10 @@ proc spawnBullet(weapon: ShooterWeaponInfo, pos, vel: Vec): Entity =
     RemoveWhenOffscreen(),
   ])
 
-proc bulletsToFire(weapon: ShooterWeaponInfo, pos: Vec): Events =
-  let num = weapon.numBullets
+proc bulletsToFire(weapon: ShooterWeapon, pos: Vec): Events =
+  let
+    info = weapon.info
+    num = info.numBullets
   result = @[]
   for i in 0..<num:
     let t =
@@ -52,25 +54,32 @@ proc bulletsToFire(weapon: ShooterWeaponInfo, pos: Vec): Events =
         0.0
       else:
         lerp(i / (num - 1), -1.0, 1.0)
-    case weapon.kind
+    case info.kind
     of straight:
       let
-        p = pos + t * weapon.totalSpacing * vec(-sqrt(abs(t)) * sign(t).float, 0.0)
-        vel = vec(weapon.bulletSpeed, 0.0)
-      result.add Event(kind: addEntity, entity: weapon.spawnBullet(p, vel))
+        off = t * info.totalSpacing * vec(-sqrt(abs(t)) * sign(t).float, 0.0)
+        vel = vec(info.bulletSpeed, 0.0)
+      result.add Event(kind: addEntity, entity: info.spawnBullet(pos + off, vel))
     of spread:
       let
-        angle = t * weapon.totalAngle.degToRad / 2.0
-        dir = unitVec(angle)
-        vel = dir * weapon.bulletSpeed
-      result.add Event(kind: addEntity, entity: weapon.spawnBullet(pos, vel))
-
+        angle = t * info.totalAngle.degToRad / 2.0
+        vel = info.bulletSpeed * unitVec(angle)
+      result.add Event(kind: addEntity, entity: info.spawnBullet(pos, vel))
+    of gatling:
+      let
+        n = (weapon.numFired + i * info.numBarrels div num) / info.numBarrels
+        barrelAngle = 2 * PI * n + info.barrelOffset.degToRad
+        ang = weapon.t * info.barrelRotateSpeed.degToRad + barrelAngle
+        off = info.barrelSize * unitVec(ang)
+        vel = vec(info.bulletSpeed, 0.0)
+      result.add Event(kind: addEntity, entity: info.spawnBullet(pos + off, vel))
 
 defineSystem:
   components = [PlayerShooterAttack, Transform]
   proc updatePlayerShooterAttack*(stats: ShooterStats, dt: float, input: InputManager) =
     proc updateWeapon(wep: var ShooterWeapon, isHeld: bool): Events =
       let info = wep.info
+      wep.t += dt
       wep.cooldown -= dt
       wep.reload -= dt
       if wep.reload <= 0.0:
@@ -79,12 +88,13 @@ defineSystem:
         hasAmmo = wep.ammo > 0 or info.maxAmmo <= 0
         shouldShoot = isHeld and wep.cooldown <= 0.0 and hasAmmo
       if not shouldShoot:
-        @[]
-      else:
-        wep.cooldown = 1.0 / info.attackSpeed
-        wep.reload = info.reloadTime
-        wep.ammo -= 1
-        wep.info.bulletsToFire(transform.pos + playerShooterAttack.shotOffset)
+        return @[]
+      wep.cooldown = 1.0 / info.attackSpeed
+      wep.reload = info.reloadTime
+      wep.ammo -= 1
+      wep.numFired += 1
+      wep.bulletsToFire(transform.pos + playerShooterAttack.shotOffset)
 
     result &= updateWeapon(stats.leftClickWeapon, input.isMouseHeld)
     result &= updateWeapon(stats.qWeapon, input.isHeld(keyQ))
+    result &= updateWeapon(stats.wWeapon, input.isHeld(keyW))

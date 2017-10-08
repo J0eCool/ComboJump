@@ -92,6 +92,7 @@ proc shopView(menu: Shop, controller: ShopController): Node {.procvar.} =
       ),
       shopNodes(vec(200, 300), stats, addr stats.leftClickWeapon.info),
       shopNodes(vec(500, 300), stats, addr stats.qWeapon.info),
+      shopNodes(vec(800, 300), stats, addr stats.wWeapon.info),
       Button(
         pos: vec(600, 700),
         size: vec(300, 120),
