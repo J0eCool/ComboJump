@@ -3,13 +3,18 @@ type
     straight
     spread
   ShooterWeaponInfo* = object
-    kind*: ShooterWeaponKind
     name*: string
-    attackSpeed*: float
-    damage*: int
-    numBullets*: int
     maxAmmo*: int
     reloadTime*: float
+    damage*: int
+    attackSpeed*: float
+    numBullets*: int
+    bulletSpeed*: float
+    case kind*: ShooterWeaponKind
+    of straight:
+      totalSpacing*: float
+    of spread:
+      totalAngle*: float
   ShooterWeapon* = ref object
     info*: ShooterWeaponInfo
     cooldown*: float

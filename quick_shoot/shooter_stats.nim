@@ -24,23 +24,27 @@ proc newShooterStats*(): ShooterStats =
   result = ShooterStats(
     leftClickWeapon: ShooterWeapon(info:
       ShooterWeaponInfo(
-        kind: straight,
         name: "Gun",
-        attackSpeed: 4.8,
+        maxAmmo: 16,
+        reloadTime: 1.5,
         damage: 1,
+        attackSpeed: 6.0,
         numBullets: 1,
-        maxAmmo: 12,
-        reloadTime: 1.25,
+        bulletSpeed: 800.0,
+        kind: straight,
+        totalSpacing: 15.0,
     )),
     qWeapon: ShooterWeapon(info:
       ShooterWeaponInfo(
-        kind: spread,
         name: "Spread",
-        attackSpeed: 1.4,
-        damage: 1,
-        numBullets: 5,
         maxAmmo: 3,
-        reloadTime: 2.4,
+        reloadTime: 3.0,
+        damage: 1,
+        attackSpeed: 1.6,
+        numBullets: 7,
+        bulletSpeed: 500.0,
+        kind: spread,
+        totalAngle: 60.0,
     )),
     gold: 100,
   )

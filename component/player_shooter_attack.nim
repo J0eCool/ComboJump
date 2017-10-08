@@ -44,9 +44,7 @@ proc spawnBullet(weapon: ShooterWeaponInfo, pos, vel: Vec): Entity =
   ])
 
 proc bulletsToFire(weapon: ShooterWeaponInfo, pos: Vec): Events =
-  let
-    bulletSpeed = 500.0
-    num = weapon.numBullets
+  let num = weapon.numBullets
   result = @[]
   for i in 0..<num:
     let t =
@@ -57,16 +55,14 @@ proc bulletsToFire(weapon: ShooterWeaponInfo, pos: Vec): Events =
     case weapon.kind
     of straight:
       let
-        totalDist = 5.0 * num.float
-        p = pos + t * vec(-sqrt(abs(t)) * sign(t).float * totalDist, totalDist)
-        vel = vec(bulletSpeed, 0.0)
+        p = pos + t * weapon.totalSpacing * vec(-sqrt(abs(t)) * sign(t).float, 0.0)
+        vel = vec(weapon.bulletSpeed, 0.0)
       result.add Event(kind: addEntity, entity: weapon.spawnBullet(p, vel))
     of spread:
       let
-        totalAngle = degToRad(15.0 + 8.0 * num.float)
-        angle = t * totalAngle / 2.0
+        angle = t * weapon.totalAngle.degToRad / 2.0
         dir = unitVec(angle)
-        vel = dir * bulletSpeed
+        vel = dir * weapon.bulletSpeed
       result.add Event(kind: addEntity, entity: weapon.spawnBullet(pos, vel))
 
 
