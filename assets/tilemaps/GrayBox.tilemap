@@ -1,0 +1,7 @@
+{
+    "name": "GrayBox",
+    "textures": [
+        "GrayBox/GrayBox.png",
+    ],
+    "decorationGroups": []
+}
