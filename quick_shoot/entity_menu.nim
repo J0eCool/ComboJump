@@ -40,6 +40,14 @@ import
   util,
   vec
 
+const buildDebugMenu = false
+when buildDebugMenu:
+  import
+    sdl2,
+    sdl2.ttf,
+    strutils,
+    times
+
 type
   EntityModel = ref object of RootObj
     entities: Entities
@@ -51,7 +59,12 @@ type
     stats: ShooterStats
     level: Level
     notifications: N10nManager
+
   EntityController = ref object of Controller
+    when buildDebugMenu:
+      window: WindowPtr
+      renderer: RendererPtr
+      resources: ResourceManager
 
 proc process(model: EntityModel, events: Events) =
   model.entities.process(events)
@@ -81,6 +94,31 @@ proc newEntityModel(stats: ShooterStats, level: Level): EntityModel =
     level: level,
   )
 
+proc newEntityController(): EntityController =
+  result = EntityController()
+  when buildDebugMenu:
+    result.window = createWindow(
+      title = "DEBUG WINDOW",
+      x = SDL_WINDOWPOS_CENTERED,
+      y = SDL_WINDOWPOS_CENTERED,
+      w = 600,
+      h = 900,
+      flags = SDL_WINDOW_SHOWN,
+    )
+    result.renderer = result.window.createRenderer(
+      index = -1,
+      flags = Renderer_Accelerated,
+    )
+    result.resources = newResourceManager()
+
+proc closeEntityMenu(controller: EntityController) =
+  controller.shouldPop = true
+  controller.queueMenu downcast(newFadeOnlyOut())
+
+  when buildDebugMenu:
+    controller.window.destroy()
+    controller.renderer.destroy()
+
 proc entityModelUpdate(model: EntityModel, controller: EntityController,
                        dt: float, input: InputManager) {.procvar.} =
   for enemy in model.level.toSpawn(model.spawnTimer, model.spawnTimer + dt):
@@ -91,8 +129,20 @@ proc entityModelUpdate(model: EntityModel, controller: EntityController,
   model.input = input
   model.updateSystems()
   if model.player.getComponent(Health).cur <= 0:
-    controller.shouldPop = true
-    controller.queueMenu downcast(newFadeOnlyOut())
+    controller.closeEntityMenu()
+
+  when buildDebugMenu:
+    let renderer = controller.renderer    
+    renderer.setDrawColor(128, 128, 128)
+    renderer.clear()
+
+    var strs: seq[string] = @[]
+    for e in model.entities:
+      strs &= e.debugStr.split("\n")
+    let node = stringListNode(strs, vec(300, 30), 14)
+    renderer.draw(node, controller.resources)
+
+    renderer.present()
 
 type EntityRenderNode = ref object of Node
   entities: Entities
@@ -154,10 +204,9 @@ proc entityModelView(model: EntityModel, controller: EntityController): Node {.p
       pos: vec(1100, 100),
       size: vec(80, 50),
       label: "Exit",
-      hotkey: escape,
+      hotkey: Input.escape,
       onClick: (proc() =
-        controller.shouldPop = true
-        controller.queueMenu downcast(newFadeOnlyOut())
+        controller.closeEntityMenu()
       ),
     ),
     BorderedTextNode(
@@ -185,5 +234,5 @@ proc newEntityMenu*(stats: ShooterStats, level: Level): Menu[EntityModel, Entity
     model: newEntityModel(stats, level),
     view: entityModelView,
     update: entityModelUpdate,
-    controller: EntityController(),
+    controller: newEntityController(),
   )
