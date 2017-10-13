@@ -72,7 +72,7 @@ proc spawnEnemy(spawn: SpawnData): Entity =
     Movement(),
     Collider(layer: Layer.enemy),
     Sprite(textureName: "Goblin.png"),
-    newHealth(8),
+    newHealth(5),
     EnemyAttack(
       damage: 1,
       size: 25,

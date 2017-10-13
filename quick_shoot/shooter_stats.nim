@@ -28,10 +28,10 @@ proc newShooterStats*(): ShooterStats =
     leftClickWeapon: ShooterWeapon(info:
       ShooterWeaponInfo(
         name: "Gun",
-        maxAmmo: 16,
-        reloadTime: 1.5,
+        maxAmmo: 12,
+        reloadTime: 2.0,
         damage: 1,
-        attackSpeed: 6.0,
+        attackSpeed: 3.0,
         numBullets: 1,
         bulletSpeed: 800.0,
         kind: straight,
