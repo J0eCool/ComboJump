@@ -7,6 +7,7 @@ import
 type
   ShooterStats* = ref object
     leftClickWeapon*: ShooterWeapon
+    rightClickWeapon*: ShooterWeapon
     qWeapon*: ShooterWeapon
     wWeapon*: ShooterWeapon
     gold*: int
@@ -37,9 +38,21 @@ proc newShooterStats*(): ShooterStats =
         kind: straight,
         totalSpacing: 15.0,
     )),
-    qWeapon: ShooterWeapon(info:
+    rightClickWeapon: ShooterWeapon(info:
       ShooterWeaponInfo(
         name: "Spread",
+        maxAmmo: 6,
+        reloadTime: 3.0,
+        damage: 2,
+        attackSpeed: 2.5,
+        numBullets: 4,
+        bulletSpeed: 500.0,
+        kind: spread,
+        totalAngle: 50.0,
+    )),
+    qWeapon: ShooterWeapon(info:
+      ShooterWeaponInfo(
+        name: "OtherSpread",
         maxAmmo: 3,
         reloadTime: 3.0,
         damage: 1,

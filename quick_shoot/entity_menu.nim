@@ -225,8 +225,9 @@ proc entityModelView(model: EntityModel, controller: EntityController): Node {.p
       red,
     ),
     weaponNode("LC", model.stats.leftClickWeapon, vec(40, 80)),
-    weaponNode("Q", model.stats.qWeapon, vec(40, 120)),
-    weaponNode("W", model.stats.wWeapon, vec(40, 160)),
+    weaponNode("RC", model.stats.rightClickWeapon, vec(40, 120)),
+    weaponNode("Q", model.stats.qWeapon, vec(40, 160)),
+    weaponNode("W", model.stats.wWeapon, vec(40, 200)),
   ])
 
 proc newEntityMenu*(stats: ShooterStats, level: Level): Menu[EntityModel, EntityController] =

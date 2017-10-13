@@ -95,6 +95,7 @@ defineSystem:
       wep.numFired += 1
       wep.bulletsToFire(transform.pos + playerShooterAttack.shotOffset)
 
-    result &= updateWeapon(stats.leftClickWeapon, input.isMouseHeld)
+    result &= updateWeapon(stats.leftClickWeapon, input.isMouseHeld(mouseLeft))
+    result &= updateWeapon(stats.rightClickWeapon, input.isMouseHeld(mouseRight))
     result &= updateWeapon(stats.qWeapon, input.isHeld(keyQ))
     result &= updateWeapon(stats.wWeapon, input.isHeld(keyW))
