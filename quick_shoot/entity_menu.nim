@@ -132,7 +132,7 @@ proc entityModelUpdate(model: EntityModel, controller: EntityController,
     controller.closeEntityMenu()
 
   when buildDebugMenu:
-    let renderer = controller.renderer    
+    let renderer = controller.renderer
     renderer.setDrawColor(128, 128, 128)
     renderer.clear()
 

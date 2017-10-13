@@ -38,15 +38,16 @@ proc `==`*(a, b: Level): bool =
 const
   top = -100
   bottom = 1000
+  right = 1300
 
 let allLevels* = @[
   Level(
     name: "Level 1",
     spawns: @[
-      (1.0, 0.75, 3, goblin, straight(vec(-1, 3).unit, 140), vec(1100, top)),
-      (4.0, 0.75, 3, goblin, straight(vec(-1, -3).unit, 140), vec(1100, bottom)),
-      (6.0, 2.0, 7, goblin, straight(vec(-1, 3).unit, 140), vec(1000, top)),
-      (4.0, 0.75, 3, goblin, straight(vec(-1, -3).unit, 140), vec(600, bottom)),
+      (1.0, 0.75, 3, goblin, straight(vec(-2, 1).unit, 140), vec(right, 50)),
+      (4.0, 0.75, 3, goblin, straight(vec(-2, -1).unit, 140), vec(right, 850)),
+      (6.0, 2.0, 7, goblin, straight(vec(-3, 1).unit, 140), vec(right, 200)),
+      (4.0, 0.75, 3, goblin, straight(vec(-1, -3).unit, 140), vec(900, bottom)),
     ],
   ),
   Level(
