@@ -85,6 +85,12 @@ let allLevels* = @[
       (4.0, 0.75, 3, blueGoblin, curve(vec(0, -1), 220, vec(-1.5, -0.5), 4.0), spawnOnBottom(900)),
     ],
   ),
+  Level(
+    name: "Level 4",
+    spawns: @[
+      (1.0, 0.75, 3, blueGoblin, curve(vec(0,  1), 220, vec(-1.5,  0.5), 4.0), spawnOnTop(1200)),
+    ],
+  ),
 ]
 
 proc toPos(pos: SpawnPos): Vec =
@@ -140,3 +146,11 @@ proc toSpawn*(level: Level, prev, cur: float): seq[Entity] =
       if t > prev and t <= cur:
         result.add spawn.spawnEnemy()
     baseDelay += spawn.delay
+
+proc isDoneSpawning*(level: Level, t: float): bool =
+  var cur = 0.0
+  var lastSpawn = 0.0
+  for spawn in level.spawns:
+    cur += spawn.delay
+    lastSpawn.max = cur + spawn.count.float * spawn.interval
+  t > lastSpawn

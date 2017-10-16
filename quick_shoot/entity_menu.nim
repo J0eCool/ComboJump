@@ -54,7 +54,7 @@ type
     dt: float
     input: InputManager
     camera: Camera
-    spawnTimer: float
+    timer: float
     player: Entity
     stats: ShooterStats
     level: Level
@@ -121,14 +121,23 @@ proc closeEntityMenu(controller: EntityController) =
 
 proc entityModelUpdate(model: EntityModel, controller: EntityController,
                        dt: float, input: InputManager) {.procvar.} =
-  for enemy in model.level.toSpawn(model.spawnTimer, model.spawnTimer + dt):
+  for enemy in model.level.toSpawn(model.timer, model.timer + dt):
     model.entities.add enemy
-  model.spawnTimer += dt
+  model.timer += dt
 
   model.dt = dt
   model.input = input
   model.updateSystems()
   if model.player.getComponent(Health).cur <= 0:
+    controller.closeEntityMenu()
+
+  var enemiesLeft = false
+  for e in model.entities:
+    let col = e.getComponent(Collider)
+    if col != nil and col.layer == Layer.enemy:
+      enemiesLeft = true
+      break
+  if model.level.isDoneSpawning(model.timer - 2.5) and (not enemiesLeft):
     controller.closeEntityMenu()
 
   when buildDebugMenu:
