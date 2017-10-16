@@ -127,10 +127,6 @@ proc spawnEnemy(spawn: SpawnData): Entity =
   ])
 
 proc spawnTimes*(spawn: SpawnData): seq[float] =
-  if spawn.count == 1:
-    return @[spawn.delay]
-  if spawn.count == 2:
-    return @[spawn.delay, spawn.delay + spawn.interval]
   result = @[]
   var next = spawn.delay
   for _ in 0..<spawn.count:
