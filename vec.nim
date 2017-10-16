@@ -112,3 +112,9 @@ proc intersects*(a, b, c, d: Vec): bool =
 
 proc approxEq*(a, b: Vec): bool =
   a.x.approxEq(b.x) and a.y.approxEq(b.y)
+
+proc lerp*(t: float, lo, hi: Vec): Vec =
+  vec(
+    lerp(t, lo.x, hi.x),
+    lerp(t, lo.y, hi.y),
+  )

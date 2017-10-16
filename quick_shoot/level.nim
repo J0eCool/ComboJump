@@ -19,6 +19,7 @@ import
 type
   EnemyKind* = enum
     goblin
+    blueGoblin
 
   SpawnData* = tuple
     delay: float
@@ -53,25 +54,35 @@ let allLevels* = @[
   Level(
     name: "Level 2!",
     spawns: @[
-      (1.0, 0.75, 3, goblin, sine(vec(-1, 3).unit, 140, vec(2.0, 0.7), 3.5), vec(1000, top)),
-      (4.0, 0.75, 3, goblin, sine(vec(-1, -3).unit, 140, vec(-2.0, 0.7), 3.5), vec(1000, bottom)),
-      (6.0, 2.0, 7, goblin, sine(vec(-1, 3).unit, 140, vec(2.0, -0.7), 3.5), vec(800, top)),
-      (4.0, 0.75, 3, goblin, sine(vec(-1, -3).unit, 140, vec(-2.0, -0.7), 3.5), vec(600, bottom)),
+      (1.0, 0.75, 3, goblin, sine(vec(-1, 3).unit, 140, vec(2.0, 0.7).unit, 3.5), vec(1000, top)),
+      (4.0, 0.75, 3, goblin, sine(vec(-1, -3).unit, 140, vec(-2.0, 0.7).unit, 3.5), vec(1000, bottom)),
+      (6.0, 2.0, 7, goblin, sine(vec(-1, 3).unit, 140, vec(2.0, -0.7).unit, 3.5), vec(800, top)),
+      (4.0, 0.75, 3, goblin, sine(vec(-1, -3).unit, 140, vec(-2.0, -0.7).unit, 3.5), vec(600, bottom)),
     ],
   ),
   Level(
     name: "Level 3?",
     spawns: @[
+      (1.0, 0.75, 3, blueGoblin, curve(vec(0,  1), 220, vec(-1.5,  0.5), 4.0), vec(1200, top)),
+      (4.0, 0.75, 3, blueGoblin, curve(vec(0, -1), 220, vec(-1.5, -0.5), 4.0), vec(1200, bottom)),
+      (6.0, 2.00, 7, blueGoblin, curve(vec(0,  1), 220, vec(-1.5,  0.5), 4.0), vec(1000, top)),
+      (4.0, 0.75, 3, blueGoblin, curve(vec(0, -1), 220, vec(-1.5, -0.5), 4.0), vec(900, bottom)),
     ],
   ),
 ]
 
 proc spawnEnemy(spawn: SpawnData): Entity =
-  newEntity("Goblin", [
+  let texture =
+    case spawn.enemy
+    of goblin:
+      "Goblin.png"
+    of blueGoblin:
+      "BlueGoblin.png"
+  newEntity("Enemy", [
     Transform(pos: spawn.pos, size: vec(50, 50)),
     Movement(),
     Collider(layer: Layer.enemy),
-    Sprite(textureName: "Goblin.png"),
+    Sprite(textureName: texture),
     newHealth(5),
     EnemyAttack(
       damage: 1,

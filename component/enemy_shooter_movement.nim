@@ -8,12 +8,14 @@ import
   entity,
   event,
   game_system,
+  util,
   vec
 
 type
   EnemyShooterMovementKind* = enum
     moveStraight
     moveSine
+    moveCurve
   EnemyShooterMovementData* = object
     case kind: EnemyShooterMovementKind
     of moveStraight:
@@ -21,6 +23,9 @@ type
     of moveSine:
       period: float
       sineDir: Vec
+    of moveCurve:
+      curveTime: float
+      curveDir: Vec
     dir: Vec
     moveSpeed: float
   EnemyShooterMovementObj* = object of Component
@@ -44,6 +49,8 @@ defineSystem:
       of moveSine:
         let angle = 2 * PI * move.t / data.period
         data.sineDir * sin(angle) + data.dir
+      of moveCurve:
+        lerp(move.t / data.curveTime, data.dir, data.curveDir)
     )
 
 proc straight*(dir: Vec, speed: float): EnemyShooterMovementData =
@@ -56,8 +63,17 @@ proc straight*(dir: Vec, speed: float): EnemyShooterMovementData =
 proc sine*(dir: Vec, speed: float, sineDir: Vec, period: float): EnemyShooterMovementData =
   EnemyShooterMovementData(
     kind: moveSine,
-    sineDir: sineDir,
-    period: period,
     dir: dir,
     moveSpeed: speed,
+    sineDir: sineDir,
+    period: period,
+  )
+
+proc curve*(dir: Vec, speed: float, curveDir: Vec, curveTime: float): EnemyShooterMovementData =
+  EnemyShooterMovementData(
+    kind: moveCurve,
+    dir: dir,
+    moveSpeed: speed,
+    curveDir: curveDir,
+    curveTime: curveTime,
   )
