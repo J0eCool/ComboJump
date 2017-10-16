@@ -12,7 +12,7 @@ import
 
 suite "Levels - Spawns":
   proc testSpawn(delay, interval: float, count: int): SpawnData =
-    (delay, interval, count, goblin, straight(vec(), 0.0), vec())
+    (delay, interval, count, goblin, straight(vec(), 0.0), spawnOnRight(0.0))
   proc testLevel(delay, interval: float, count: int): Level =
     Level(spawns: @[testSpawn(delay, interval, count)])
 

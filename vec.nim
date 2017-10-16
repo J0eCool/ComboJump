@@ -41,6 +41,7 @@ template vecf(op, assignOp: untyped): untyped =
 
 vecUnary sign
 vecUnary abs
+vecUnary `-`
 
 vecf `+`, `+=`
 vecf `-`, `-=`

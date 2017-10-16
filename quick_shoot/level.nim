@@ -14,6 +14,7 @@ import
     transform,
   ],
   entity,
+  util,
   vec
 
 type
@@ -21,13 +22,17 @@ type
     goblin
     blueGoblin
 
+  SpawnPos* = object
+    pos: Vec
+    randomOffset: Vec
+
   SpawnData* = tuple
     delay: float
     interval: float
     count: int
     enemy: EnemyKind
     movement: EnemyShooterMovementData
-    pos: Vec
+    pos: SpawnPos
 
   Level* = object
     name*: string
@@ -36,40 +41,54 @@ type
 proc `==`*(a, b: Level): bool =
   a.name == b.name
 
-const
-  top = -100
-  bottom = 1000
-  right = 1300
+proc spawnOnRight*(y: float, offset = vec(25, 150)): SpawnPos =
+  SpawnPos(
+    pos: vec(1300.0, y),
+    randomOffset: offset,
+  )
+proc spawnOnTop*(x: float, offset = vec(150, 25)): SpawnPos =
+  SpawnPos(
+    pos: vec(x, -100.0),
+    randomOffset: offset,
+  )
+proc spawnOnBottom*(x: float, offset = vec(150, 25)): SpawnPos =
+  SpawnPos(
+    pos: vec(x, 1000.0),
+    randomOffset: offset,
+  )
 
 let allLevels* = @[
   Level(
     name: "Level 1",
     spawns: @[
-      (1.0, 0.75, 3, goblin, straight(vec(-2, 1).unit, 140), vec(right, 50)),
-      (4.0, 0.75, 3, goblin, straight(vec(-2, -1).unit, 140), vec(right, 850)),
-      (6.0, 2.0, 7, goblin, straight(vec(-3, 1).unit, 140), vec(right, 200)),
-      (4.0, 0.75, 3, goblin, straight(vec(-1, -3).unit, 140), vec(900, bottom)),
+      (1.0, 0.75, 3, goblin, straight(vec(-2,  1).unit, 140), spawnOnRight(50)),
+      (4.0, 0.75, 3, goblin, straight(vec(-2, -1).unit, 140), spawnOnRight(850)),
+      (6.0, 2.00, 7, goblin, straight(vec(-3,  1).unit, 140), spawnOnRight(200)),
+      (4.0, 0.75, 3, goblin, straight(vec(-1, -3).unit, 140), spawnOnBottom(900)),
     ],
   ),
   Level(
     name: "Level 2!",
     spawns: @[
-      (1.0, 0.75, 3, goblin, sine(vec(-1, 3).unit, 140, vec(2.0, 0.7).unit, 3.5), vec(1000, top)),
-      (4.0, 0.75, 3, goblin, sine(vec(-1, -3).unit, 140, vec(-2.0, 0.7).unit, 3.5), vec(1000, bottom)),
-      (6.0, 2.0, 7, goblin, sine(vec(-1, 3).unit, 140, vec(2.0, -0.7).unit, 3.5), vec(800, top)),
-      (4.0, 0.75, 3, goblin, sine(vec(-1, -3).unit, 140, vec(-2.0, -0.7).unit, 3.5), vec(600, bottom)),
+      (1.0, 0.75, 3, goblin, sine(vec(-1,  3).unit, 140, vec( 2.0,  0.7).unit, 3.5), spawnOnTop(1000)),
+      (4.0, 0.75, 3, goblin, sine(vec(-1, -3).unit, 140, vec(-2.0,  0.7).unit, 3.5), spawnOnBottom(1000)),
+      (6.0, 2.00, 7, goblin, sine(vec(-1,  3).unit, 140, vec( 2.0, -0.7).unit, 3.5), spawnOnTop(800)),
+      (4.0, 0.75, 3, goblin, sine(vec(-1, -3).unit, 140, vec(-2.0, -0.7).unit, 3.5), spawnOnBottom(600)),
     ],
   ),
   Level(
     name: "Level 3?",
     spawns: @[
-      (1.0, 0.75, 3, blueGoblin, curve(vec(0,  1), 220, vec(-1.5,  0.5), 4.0), vec(1200, top)),
-      (4.0, 0.75, 3, blueGoblin, curve(vec(0, -1), 220, vec(-1.5, -0.5), 4.0), vec(1200, bottom)),
-      (6.0, 2.00, 7, blueGoblin, curve(vec(0,  1), 220, vec(-1.5,  0.5), 4.0), vec(1000, top)),
-      (4.0, 0.75, 3, blueGoblin, curve(vec(0, -1), 220, vec(-1.5, -0.5), 4.0), vec(900, bottom)),
+      (1.0, 0.75, 3, blueGoblin, curve(vec(0,  1), 220, vec(-1.5,  0.5), 4.0), spawnOnTop(1200)),
+      (4.0, 0.75, 3, blueGoblin, curve(vec(0, -1), 220, vec(-1.5, -0.5), 4.0), spawnOnBottom(1200)),
+      (6.0, 2.00, 7, blueGoblin, curve(vec(0,  1), 220, vec(-1.5,  0.5), 4.0), spawnOnTop(1000)),
+      (4.0, 0.75, 3, blueGoblin, curve(vec(0, -1), 220, vec(-1.5, -0.5), 4.0), spawnOnBottom(900)),
     ],
   ),
 ]
+
+proc toPos(pos: SpawnPos): Vec =
+  pos.pos + random(-pos.randomOffset, pos.randomOffset) / 2.0
 
 proc spawnEnemy(spawn: SpawnData): Entity =
   let texture =
@@ -79,7 +98,7 @@ proc spawnEnemy(spawn: SpawnData): Entity =
     of blueGoblin:
       "BlueGoblin.png"
   newEntity("Enemy", [
-    Transform(pos: spawn.pos, size: vec(50, 50)),
+    Transform(pos: spawn.pos.toPos, size: vec(50, 50)),
     Movement(),
     Collider(layer: Layer.enemy),
     Sprite(textureName: texture),
