@@ -12,7 +12,7 @@ import
 
 type
   LevelSelect = ref object of RootObj
-    levels: seq[Level]
+    levels: seq[LevelInfo]
   LevelSelectController = ref object of Controller
     stats: ShooterStats
 
@@ -52,11 +52,11 @@ proc levelSelectView(levels: LevelSelect, controller: LevelSelectController): No
         #   controller.queueMenu downcast(newTransitionMenu(inventoryMenu))
         # ),
       ),
-      List[Level](
+      List[LevelInfo](
         pos: vec(200, 300),
         spacing: vec(5),
         items: levels.levels,
-        listNodes: (proc(level: Level): Node =
+        listNodes: (proc(level: LevelInfo): Node =
           Button(
             size: vec(200, 60),
             label: level.name,

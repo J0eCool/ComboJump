@@ -34,11 +34,23 @@ type
     movement: EnemyShooterMovementData
     pos: SpawnPos
 
-  Level* = object
-    name*: string
-    spawns*: seq[SpawnData]
+  LevelKind* = enum
+    levelStatic
+    levelRandom
 
-proc `==`*(a, b: Level): bool =
+  LevelInfo* = object
+    name*: string
+    case kind*: LevelKind
+    of levelStatic:
+      spawns*: seq[SpawnData]
+    of levelRandom:
+      numGroups*: int
+
+  Level* = object
+    info*: LevelInfo
+    spawns: seq[SpawnData]
+
+proc `==`*(a, b: LevelInfo): bool =
   a.name == b.name
 
 proc spawnOnRight*(y: float, offset = vec(25, 150)): SpawnPos =
@@ -58,8 +70,9 @@ proc spawnOnBottom*(x: float, offset = vec(150, 25)): SpawnPos =
   )
 
 let allLevels* = @[
-  Level(
+  LevelInfo(
     name: "Level 1",
+    kind: levelStatic,
     spawns: @[
       (1.0, 0.75, 3, goblin, straight(vec(-2,  1).unit, 140), spawnOnRight(50)),
       (4.0, 0.75, 3, goblin, straight(vec(-2, -1).unit, 140), spawnOnRight(850)),
@@ -67,8 +80,9 @@ let allLevels* = @[
       (4.0, 0.75, 3, goblin, straight(vec(-1, -3).unit, 140), spawnOnBottom(900)),
     ],
   ),
-  Level(
+  LevelInfo(
     name: "Level 2!",
+    kind: levelStatic,
     spawns: @[
       (1.0, 0.75, 3, goblin, sine(vec(-1,  3).unit, 140, vec( 2.0,  0.7).unit, 3.5), spawnOnTop(1000)),
       (4.0, 0.75, 3, goblin, sine(vec(-1, -3).unit, 140, vec(-2.0,  0.7).unit, 3.5), spawnOnBottom(1000)),
@@ -76,8 +90,9 @@ let allLevels* = @[
       (4.0, 0.75, 3, goblin, sine(vec(-1, -3).unit, 140, vec(-2.0, -0.7).unit, 3.5), spawnOnBottom(600)),
     ],
   ),
-  Level(
+  LevelInfo(
     name: "Level 3?",
+    kind: levelStatic,
     spawns: @[
       (1.0, 0.75, 3, blueGoblin, curve(vec(0,  1), 220, vec(-1.5,  0.5), 4.0), spawnOnTop(1200)),
       (4.0, 0.75, 3, blueGoblin, curve(vec(0, -1), 220, vec(-1.5, -0.5), 4.0), spawnOnBottom(1200)),
@@ -85,8 +100,9 @@ let allLevels* = @[
       (4.0, 0.75, 3, blueGoblin, curve(vec(0, -1), 220, vec(-1.5, -0.5), 4.0), spawnOnBottom(900)),
     ],
   ),
-  Level(
+  LevelInfo(
     name: "Level 4",
+    kind: levelStatic,
     spawns: @[
       (1.0, 0.75, 3, blueGoblin, curve(vec(0,  1), 220, vec(-1.5,  0.5), 4.0), spawnOnTop(1200)),
     ],
@@ -150,3 +166,13 @@ proc isDoneSpawning*(level: Level, t: float): bool =
     cur += spawn.delay
     lastSpawn.max = cur + spawn.count.float * spawn.interval
   t > lastSpawn
+
+proc toLevel*(info: LevelInfo): Level =
+  result = Level(
+    info: info,
+  )
+  case info.kind
+  of levelStatic:
+    result.spawns = info.spawns
+  of levelRandom:
+    result.spawns = @[]

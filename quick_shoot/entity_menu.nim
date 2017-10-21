@@ -71,7 +71,7 @@ proc process(model: EntityModel, events: Events) =
 
 defineSystemCalls(EntityModel)
 
-proc newEntityModel(stats: ShooterStats, level: Level): EntityModel =
+proc newEntityModel(stats: ShooterStats, levelInfo: LevelInfo): EntityModel =
   let player = newEntity("Player", [
     Transform(pos: vec(300, 300), size: vec(80, 36)),
     Movement(),
@@ -91,7 +91,7 @@ proc newEntityModel(stats: ShooterStats, level: Level): EntityModel =
     camera: Camera(screenSize: vec(1200, 900)),
     notifications: newN10nManager(),
     stats: stats,
-    level: level,
+    level: levelInfo.toLevel(),
   )
 
 proc newEntityController(): EntityController =
@@ -224,7 +224,7 @@ proc entityModelView(model: EntityModel, controller: EntityController): Node {.p
     ),
     BorderedTextNode(
       pos: vec(600, 100),
-      text: model.level.name,
+      text: model.level.info.name,
     ),
     quantityBarNode(
       health.cur.int,
@@ -239,7 +239,7 @@ proc entityModelView(model: EntityModel, controller: EntityController): Node {.p
     weaponNode("W", model.stats.wWeapon, vec(40, 200)),
   ])
 
-proc newEntityMenu*(stats: ShooterStats, level: Level): Menu[EntityModel, EntityController] =
+proc newEntityMenu*(stats: ShooterStats, level: LevelInfo): Menu[EntityModel, EntityController] =
   Menu[EntityModel, EntityController](
     model: newEntityModel(stats, level),
     view: entityModelView,
