@@ -107,6 +107,11 @@ let allLevels* = @[
       (1.0, 0.75, 3, blueGoblin, curve(vec(0,  1), 220, vec(-1.5,  0.5), 4.0), spawnOnTop(1200)),
     ],
   ),
+  LevelInfo(
+    name: "RandoLev",
+    kind: levelRandom,
+    numGroups: 5,
+  ),
 ]
 
 proc toPos(pos: SpawnPos): Vec =
@@ -176,3 +181,15 @@ proc toLevel*(info: LevelInfo): Level =
     result.spawns = info.spawns
   of levelRandom:
     result.spawns = @[]
+    for i in 0..info.numGroups:
+      let
+        numEnemies = random(2, 4)
+        y = 450.0 + random(-1.0, 1.0) * 300.0
+      var spawn: SpawnData
+      spawn.delay = randomNormal(1.0, 5.0)
+      spawn.interval = randomNormal(0.5, 2.0)
+      spawn.count = random(random(3, 5), random(5, 7))
+      spawn.enemy = goblin
+      spawn.movement = straight(vec(-1, 0), random(150.0, 225.0))
+      spawn.pos = spawnOnRight(y)
+      result.spawns.add spawn
