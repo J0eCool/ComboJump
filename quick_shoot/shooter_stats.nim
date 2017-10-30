@@ -10,6 +10,8 @@ type
     rightClickWeapon*: ShooterWeapon
     qWeapon*: ShooterWeapon
     wWeapon*: ShooterWeapon
+    maxAmmo*: int
+
     gold*: int
     xp*: int
 
@@ -29,8 +31,7 @@ proc newShooterStats*(): ShooterStats =
     leftClickWeapon: ShooterWeapon(info:
       ShooterWeaponInfo(
         name: "Gun",
-        maxAmmo: 12,
-        reloadTime: 2.0,
+        ammoCost: 1,
         damage: 1,
         attackSpeed: 3.0,
         numBullets: 1,
@@ -41,8 +42,7 @@ proc newShooterStats*(): ShooterStats =
     rightClickWeapon: ShooterWeapon(info:
       ShooterWeaponInfo(
         name: "Spread",
-        maxAmmo: 6,
-        reloadTime: 3.0,
+        ammoCost: 2,
         damage: 2,
         attackSpeed: 2.5,
         numBullets: 4,
@@ -53,8 +53,7 @@ proc newShooterStats*(): ShooterStats =
     qWeapon: ShooterWeapon(info:
       ShooterWeaponInfo(
         name: "OtherSpread",
-        maxAmmo: 3,
-        reloadTime: 3.0,
+        ammoCost: 1,
         damage: 1,
         attackSpeed: 1.6,
         numBullets: 7,
@@ -65,8 +64,7 @@ proc newShooterStats*(): ShooterStats =
     wWeapon: ShooterWeapon(info:
       ShooterWeaponInfo(
         name: "Gatling",
-        maxAmmo: 60,
-        reloadTime: 3.0,
+        ammoCost: 1,
         damage: 1,
         attackSpeed: 12.0,
         numBullets: 1,
@@ -77,6 +75,7 @@ proc newShooterStats*(): ShooterStats =
         barrelOffset: 45.0,
         barrelSize: vec(5, 20),
     )),
+    maxAmmo: 100,
     gold: 100,
   )
   result.resetWeapons()

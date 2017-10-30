@@ -82,7 +82,10 @@ proc newEntityModel(stats: ShooterStats, levelInfo: LevelInfo): EntityModel =
       moveSpeed: 300,
       followMouse: true,
     ),
-    PlayerShooterAttack(shotOffset: vec(30, 3)),
+    PlayerShooterAttack(
+      shotOffset: vec(30, 3),
+      ammo: stats.maxAmmo,
+    ),
   ])
   stats.resetWeapons()
   EntityModel(
@@ -171,37 +174,10 @@ method drawSelf(node: EntityRenderNode, renderer: RendererPtr, resources: Resour
   node.resources = resources
   renderer.drawSystems(node)
 
-proc weaponNode(label: string, weapon: ShooterWeapon, pos: Vec): Node =
-  Node(
-    pos: pos,
-    children: @[
-      BorderedTextNode(
-        text: label,
-        fontSize: 16,
-      ),
-      if not weapon.isReloading:
-        quantityBarNode(
-          weapon.ammo,
-          weapon.info.maxAmmo,
-          vec(140, 0),
-          vec(250, 25),
-          yellow,
-          showText = false,
-        )
-      else:
-        quantityBarNode(
-          int(100 * (weapon.info.reloadTime - weapon.reload)),
-          int(100 * weapon.info.reloadTime),
-          vec(140, 0),
-          vec(250, 25),
-          white,
-          showText = false,
-        ),
-    ],
-  )
-
 proc entityModelView(model: EntityModel, controller: EntityController): Node {.procvar.} =
-  let health = model.player.getComponent(Health)
+  let
+    health = model.player.getComponent(Health)
+    attack = model.player.getComponent(PlayerShooterAttack)
   nodes(@[
     SpriteNode(
       size: vec(2400, 2400),
@@ -233,10 +209,13 @@ proc entityModelView(model: EntityModel, controller: EntityController): Node {.p
       vec(400, 30),
       red,
     ),
-    weaponNode("LC", model.stats.leftClickWeapon, vec(40, 80)),
-    weaponNode("RC", model.stats.rightClickWeapon, vec(40, 120)),
-    weaponNode("Q", model.stats.qWeapon, vec(40, 160)),
-    weaponNode("W", model.stats.wWeapon, vec(40, 200)),
+    quantityBarNode(
+      attack.ammo,
+      model.stats.maxAmmo,
+      vec(220, 90),
+      vec(340, 25),
+      yellow,
+    )
   ])
 
 proc newEntityMenu*(stats: ShooterStats, level: LevelInfo): Menu[EntityModel, EntityController] =

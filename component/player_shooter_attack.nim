@@ -25,6 +25,7 @@ import
 type
   PlayerShooterAttackObj* = object of ComponentObj
     shotOffset*: Vec
+    ammo*: int
   PlayerShooterAttack* = ref PlayerShooterAttackObj
 
 defineComponent(PlayerShooterAttack, @[])
@@ -81,17 +82,13 @@ defineSystem:
       let info = wep.info
       wep.t += dt
       wep.cooldown -= dt
-      wep.reload -= dt
-      if wep.reload <= 0.0:
-        wep.ammo = info.maxAmmo
       let
-        hasAmmo = wep.ammo > 0 or info.maxAmmo <= 0
+        hasAmmo = playerShooterAttack.ammo >= info.ammoCost
         shouldShoot = isHeld and wep.cooldown <= 0.0 and hasAmmo
       if not shouldShoot:
         return @[]
       wep.cooldown = 1.0 / info.attackSpeed
-      wep.reload = info.reloadTime
-      wep.ammo -= 1
+      playerShooterAttack.ammo -= info.ammoCost
       wep.numFired += 1
       wep.bulletsToFire(transform.pos + playerShooterAttack.shotOffset)
 
