@@ -75,7 +75,7 @@ proc newEntityModel(stats: ShooterStats, levelInfo: LevelInfo): EntityModel =
   let player = newEntity("Player", [
     Transform(pos: vec(300, 300), size: vec(80, 36)),
     Movement(),
-    newHealth(10),
+    newHealth(stats.maxHealth),
     Collider(layer: Layer.player),
     Sprite(textureName: "Ship.png"),
     GridControl(

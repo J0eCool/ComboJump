@@ -90,9 +90,9 @@ proc shopView(menu: Shop, controller: ShopController): Node {.procvar.} =
         pos: vec(200, 700),
         text: "G: " & $stats.gold,
       ),
-      shopNodes(vec(200, 300), stats, addr stats.leftClickWeapon.info),
-      shopNodes(vec(500, 300), stats, addr stats.qWeapon.info),
-      shopNodes(vec(800, 300), stats, addr stats.wWeapon.info),
+      shopNodes(vec(200, 300), stats, addr stats.equipment.weapons[0]),
+      shopNodes(vec(500, 300), stats, addr stats.equipment.weapons[1]),
+      shopNodes(vec(800, 300), stats, addr stats.equipment.weapons[2]),
       Button(
         pos: vec(600, 700),
         size: vec(300, 120),
