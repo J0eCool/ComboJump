@@ -49,6 +49,12 @@
             "--out:out/quick_shoot", "quick_shoot.nim"],
         "working_dir": "$project_path"
     }, {
+        "name": "Auto Clicker - Debug",
+        "cmd": ["nim", "c", "-r",
+            "-d:debug", "--parallelBuild:0",
+            "--out:out/auto_clicker", "auto_clicker.nim"],
+        "working_dir": "$project_path"
+    }, {
         "name": "NaNo Game - Debug",
         "env": {
             "NIMTEST_OUTPUT_LVL": "PRINT_FAILURES"

@@ -17,7 +17,6 @@ import
 
 
 type QuickShootGame* = ref object of Game
-  menu: Node
 
 proc newQuickShootGame*(screenSize: Vec): QuickShootGame =
   new result
