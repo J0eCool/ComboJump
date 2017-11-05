@@ -10,28 +10,51 @@ import
   input,
   menu,
   program,
+  util,
   vec
 
 type
-  Building = object
+  Building = enum
+    transistor
+    gate
+    bus
+  BuildingInfo = object
     name: string
     income: float
+    cost: int
     amount: int
-    baseCost: int
 
-proc cost(building: Building): int =
-  building.baseCost
+let allBuildingInfos: array[Building, BuildingInfo] = [
+  transistor: BuildingInfo(
+    name: "Transistor",
+    income: 0.5,
+    cost: 10,
+  ),
+  gate: BuildingInfo(
+    name: "Gate",
+    income: 2,
+    cost: 50,
+  ),
+  bus: BuildingInfo(
+    name: "Bus",
+    income: 9,
+    cost: 350,
+  ),
+]
 
 type
   AutoClickerGame* = ref object of Game
-    buildings: seq[Building]
+    buildings: array[Building, int]
     gold: int
     partial: float
   AutoClickerController = ref object of Controller
 
+proc cost(game: AutoClickerGame, building: Building): int =
+  allBuildingInfos[building].cost
+
 proc totalIncome(game: AutoClickerGame): float =
-  for building in game.buildings:
-    result += building.income * building.amount.float
+  for building, info in allBuildingInfos:
+    result += info.income * game.buildings[building].float
 
 proc gameView(game: AutoClickerGame, controller: AutoClickerController): Node {.procvar.} =
   nodes(@[
@@ -46,21 +69,22 @@ proc gameView(game: AutoClickerGame, controller: AutoClickerController): Node {.
     List[Building](
       pos: vec(800, 50),
       spacing: vec(10),
-      items: game.buildings,
-      listNodesIdx: (proc(building: Building, idx: int): Node =
+      items: allOf[Building](),
+      listNodes: (proc(building: Building): Node =
         let
-          cost = building.cost
+          info = allBuildingInfos[building]
+          cost = game.cost(building)
           onClick =
             if game.gold < cost:
               nil
             else:
               (proc() =
                 game.gold -= cost
-                game.buildings[idx].amount += 1
+                game.buildings[building] += 1
               )
         Button(
           size: vec(200, 50),
-          label: $building.amount & " - " & building.name & " : " & $cost & "G",
+          label: $game.buildings[building] & " - " & info.name & " : " & $cost & "G",
           onClick: onClick,
         )
       ),
@@ -85,19 +109,7 @@ proc newAutoClickerGame*(screenSize: Vec): AutoClickerGame =
   new result
   result.camera.screenSize = screenSize
   result.title = "Auto Clicker"
-  result.buildings = @[
-    Building(
-      name: "Hut",
-      income: 0.5,
-      baseCost: 10,
-    ),
-    Building(
-      name: "House",
-      income: 2,
-      baseCost: 50,
-    ),
-  ]
-  result.buildings[0].amount = 1
+  result.buildings[transistor] = 1
 
 method loadEntities*(game: AutoClickerGame) =
   game.entities = @[]
