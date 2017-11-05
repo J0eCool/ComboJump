@@ -7,7 +7,6 @@ import
     element,
     enemy,
     enemy_id,
-    percent,
     player_stats,
     skill_id,
     stance,
@@ -16,6 +15,7 @@ import
   rpg_frontier/battle/[
     battle_ai,
   ],
+  percent,
   vec
 
 type

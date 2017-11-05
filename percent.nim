@@ -18,3 +18,5 @@ proc `+`*(n: int, pct: Percent): int =
 proc `-`*(n: int, pct: Percent): int =
   n * (100 - pct.int) div 100
 
+proc toFloat*(pct: Percent): float =
+  pct.int / 100

@@ -1,8 +1,8 @@
 import
   rpg_frontier/[
     element,
-    percent,
-  ]
+  ],
+  percent
 
 type
   Damage* = object

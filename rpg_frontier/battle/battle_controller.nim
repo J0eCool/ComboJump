@@ -7,7 +7,6 @@ import
     damage,
     enemy,
     level,
-    percent,
     player_stats,
     potion,
     skill,
@@ -22,6 +21,7 @@ import
   color,
   input,
   menu,
+  percent,
   transition,
   util,
   vec

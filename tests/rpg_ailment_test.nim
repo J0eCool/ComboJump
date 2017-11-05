@@ -5,8 +5,8 @@ import
     ailment,
     damage,
     element,
-    percent,
-  ]
+  ],
+  percent
 
 {.push hint[XDeclaredButNotUsed]: off.}
 suite "Ailments":

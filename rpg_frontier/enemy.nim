@@ -4,12 +4,12 @@ import
     element,
     enemy_id,
     skill_id,
-    percent,
     stance,
   ],
   rpg_frontier/battle/[
     battle_ai,
-  ]
+  ],
+  percent
 
 type
   EnemyInfo* = object

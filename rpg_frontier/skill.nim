@@ -5,13 +5,13 @@ import
     animation,
     damage,
     element,
-    percent,
     skill_id,
     status_effect,
   ],
   rpg_frontier/battle/[
     battle_entity,
   ],
+  percent,
   util,
   vec
 

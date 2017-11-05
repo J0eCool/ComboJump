@@ -1,7 +1,5 @@
 import
-  rpg_frontier/[
-    percent,
-  ]
+  percent
 
 type
   Element* = enum

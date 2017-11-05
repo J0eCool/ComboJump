@@ -2,9 +2,9 @@ import
   rpg_frontier/[
     damage,
     element,
-    percent,
   ],
-  color
+  color,
+  percent
 
 type
   Ailments* = ElementSet[AilmentState]
