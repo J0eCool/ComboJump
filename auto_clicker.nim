@@ -70,11 +70,22 @@ let allUpgrades: array[Upgrade, UpgradeInfo] = [
 ]
 
 type
+  StrategyNodeKind = enum
+    buyBuilding
+  StrategyNode = object
+    case kind: StrategyNodeKind
+    of buyBuilding:
+      building: Building
+  Strategy = object
+    nodes: seq[StrategyNode]
+
+type
   AutoClickerGame* = ref object of Game
     buildings: array[Building, int]
     upgrades: array[Upgrade, int]
+    strategy: Strategy
     gold: int
-    partial: float
+    partialGold: float
   AutoClickerController = ref object of Controller
 
 proc cost(game: AutoClickerGame, building: Building): int =
@@ -96,6 +107,12 @@ proc totalIncome(game: AutoClickerGame): float =
   for building in Building:
     result += game.totalIncome(building)
 
+proc tryBuy(game: AutoClickerGame, building: Building) =
+  let cost = game.cost(building)
+  if game.gold >= cost:
+    game.gold -= cost
+    game.buildings[building] += 1
+
 proc buildingNode(game: AutoClickerGame, building: Building): Node =
   let
     info = allBuildings[building]
@@ -107,8 +124,7 @@ proc buildingNode(game: AutoClickerGame, building: Building): Node =
         nil
       else:
         (proc() =
-          game.gold -= cost
-          game.buildings[building] += 1
+          game.tryBuy(building)
         )
   Button(
     size: vec(350, 80),
@@ -166,15 +182,15 @@ proc upgradeNode(game: AutoClickerGame, upgrade: Upgrade): Node =
 proc gameView(game: AutoClickerGame, controller: AutoClickerController): Node {.procvar.} =
   nodes(@[
     BorderedTextNode(
-      pos: vec(100, 50),
+      pos: vec(140, 50),
       text: "Gold: " & $game.gold,
     ),
     BorderedTextNode(
-      pos: vec(100, 90),
+      pos: vec(140, 90),
       text: "Income: " & $game.totalIncome & "/s",
     ),
     List[Upgrade](
-      pos: vec(300, 50),
+      pos: vec(360, 50),
       spacing: vec(10),
       items: allOf[Upgrade]().filterIt(game.upgrades[it] == 0),
       listNodes: (proc(upgrade: Upgrade): Node =
@@ -182,7 +198,7 @@ proc gameView(game: AutoClickerGame, controller: AutoClickerController): Node {.
       ),
     ),
     List[Building](
-      pos: vec(700, 50),
+      pos: vec(800, 50),
       spacing: vec(10),
       items: allOf[Building](),
       listNodes: (proc(building: Building): Node =
@@ -192,9 +208,15 @@ proc gameView(game: AutoClickerGame, controller: AutoClickerController): Node {.
   ])
 
 proc updateIncome(game: AutoClickerGame, dt: float) =
-  game.partial += dt * game.totalIncome
-  game.gold += game.partial.round.int
-  game.partial -= game.partial.round
+  game.partialGold += dt * game.totalIncome
+  game.gold += game.partialGold.round.int
+  game.partialGold -= game.partialGold.round
+
+proc updateStrategy(game: AutoClickerGame) =
+  for node in game.strategy.nodes:
+    case node.kind
+    of buyBuilding:
+      game.tryBuy(node.building)
 
 proc newGameMenu(game: AutoClickerGame): Menu[AutoClickerGame, AutoClickerController] =
   Menu[AutoClickerGame, AutoClickerController](
@@ -208,6 +230,9 @@ proc newAutoClickerGame*(screenSize: Vec): AutoClickerGame =
   result.camera.screenSize = screenSize
   result.title = "Auto Clicker"
   result.buildings[transistor] = 1
+  result.strategy = Strategy(nodes: @[
+    StrategyNode(kind: buyBuilding, building: transistor),
+  ])
 
 method loadEntities*(game: AutoClickerGame) =
   game.entities = @[]
@@ -222,6 +247,7 @@ method update*(game: AutoClickerGame, dt: float) =
   game.dt = dt
 
   game.updateIncome(dt)
+  game.updateStrategy()
 
   game.menus.update(dt, game.input)
 
