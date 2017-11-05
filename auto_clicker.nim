@@ -1,4 +1,4 @@
-import math, macros, times
+import math, macros, sequtils, times
 from sdl2 import RendererPtr
 
 const Profile {.intdefine.}: int = 0
@@ -6,6 +6,7 @@ when Profile != 0:
   import nimprof
 
 import
+  color,
   game,
   input,
   menu,
@@ -82,13 +83,85 @@ proc cost(game: AutoClickerGame, building: Building): int =
 proc cost(game: AutoClickerGame, upgrade: Upgrade): int =
   allUpgrades[upgrade].cost
 
+proc upgradedIncome(game: AutoClickerGame, building: Building): float =
+  result = allBuildings[building].income
+  for upgrade, upInfo in allUpgrades:
+    if upInfo.target == building:
+      result = result * pow(1.0 + upInfo.boost.toFloat, game.upgrades[upgrade].float)
+
+proc totalIncome(game: AutoClickerGame, building: Building): float =
+  game.upgradedIncome(building) * game.buildings[building].float
+
 proc totalIncome(game: AutoClickerGame): float =
-  for building, info in allBuildings:
-    var income = info.income * game.buildings[building].float
-    for upgrade, upInfo in allUpgrades:
-      if upInfo.target == building:
-        income = income * pow(1.0 + upInfo.boost.toFloat, game.upgrades[upgrade].float)
-    result += income
+  for building in Building:
+    result += game.totalIncome(building)
+
+proc buildingNode(game: AutoClickerGame, building: Building): Node =
+  let
+    info = allBuildings[building]
+    cost = game.cost(building)
+    count = game.buildings[building]
+    canAfford = game.gold >= cost
+    onClick =
+      if not canAfford:
+        nil
+      else:
+        (proc() =
+          game.gold -= cost
+          game.buildings[building] += 1
+        )
+  Button(
+    size: vec(350, 80),
+    onClick: onClick,
+    children: @[
+      SpriteNode(
+        pos: vec(-130, 0),
+        size: vec(64),
+        color: if canAfford: green else: red,
+      ),
+      BorderedTextNode(
+        pos: vec(-40, -20),
+        text: info.name,
+      ),
+      BorderedTextNode(
+        pos: vec(110, -20),
+        text: $count,
+      ),
+      BorderedTextNode(
+        pos: vec(110, 20),
+        text: $cost & "G",
+      ),
+      BorderedTextNode(
+        pos: vec(0, 5),
+        text: "+" & $game.upgradedIncome(building) & "/s (each)",
+        fontSize: 14,
+      ),
+      BorderedTextNode(
+        pos: vec(0, 25),
+        text: "+" & $game.totalIncome(building) & "/s (total)",
+        fontSize: 14,
+      ),
+    ],
+  )
+
+proc upgradeNode(game: AutoClickerGame, upgrade: Upgrade): Node =
+  let
+    info = allUpgrades[upgrade]
+    cost = game.cost(upgrade)
+    onClick =
+      if game.gold < cost:
+        nil
+      else:
+        (proc() =
+          game.gold -= cost
+          game.upgrades[upgrade] += 1
+        )
+  Button(
+    size: vec(300, 50),
+    label: info.name & " : " & $cost & "G",
+    onClick: onClick,
+  )
+
 
 proc gameView(game: AutoClickerGame, controller: AutoClickerController): Node {.procvar.} =
   nodes(@[
@@ -101,49 +174,19 @@ proc gameView(game: AutoClickerGame, controller: AutoClickerController): Node {.
       text: "Income: " & $game.totalIncome & "/s",
     ),
     List[Upgrade](
-      pos: vec(500, 50),
+      pos: vec(300, 50),
       spacing: vec(10),
-      items: allOf[Upgrade](),
+      items: allOf[Upgrade]().filterIt(game.upgrades[it] == 0),
       listNodes: (proc(upgrade: Upgrade): Node =
-        let
-          info = allUpgrades[upgrade]
-          cost = game.cost(upgrade)
-          onClick =
-            if game.gold < cost:
-              nil
-            else:
-              (proc() =
-                game.gold -= cost
-                game.upgrades[upgrade] += 1
-              )
-        Button(
-          size: vec(200, 50),
-          label: $game.upgrades[upgrade] & " - " & info.name & " : " & $cost & "G",
-          onClick: onClick,
-        )
+        game.upgradeNode(upgrade)
       ),
     ),
     List[Building](
-      pos: vec(800, 50),
+      pos: vec(700, 50),
       spacing: vec(10),
       items: allOf[Building](),
       listNodes: (proc(building: Building): Node =
-        let
-          info = allBuildings[building]
-          cost = game.cost(building)
-          onClick =
-            if game.gold < cost:
-              nil
-            else:
-              (proc() =
-                game.gold -= cost
-                game.buildings[building] += 1
-              )
-        Button(
-          size: vec(200, 50),
-          label: $game.buildings[building] & " - " & info.name & " : " & $cost & "G",
-          onClick: onClick,
-        )
+        game.buildingNode(building)
       ),
     ),
   ])
@@ -167,7 +210,6 @@ proc newAutoClickerGame*(screenSize: Vec): AutoClickerGame =
   result.camera.screenSize = screenSize
   result.title = "Auto Clicker"
   result.buildings[transistor] = 1
-  result.gold = 1000
 
 method loadEntities*(game: AutoClickerGame) =
   game.entities = @[]
@@ -182,6 +224,9 @@ method update*(game: AutoClickerGame, dt: float) =
   game.dt = dt
 
   game.menus.update(dt, game.input)
+
+  if game.input.isPressed(Input.quit):
+    echo "QUITTIN" #TODO: save here
 
 when isMainModule:
   let screenSize = vec(1200, 900)

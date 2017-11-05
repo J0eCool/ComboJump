@@ -35,7 +35,6 @@ proc updateBase(program: Program, dt: float) =
   program.input.update()
   if program.input.isPressed(Input.quit):
     program.shouldExit = true
-    return
 
   program.update(dt)
 
