@@ -191,8 +191,7 @@ proc gameView(game: AutoClickerGame, controller: AutoClickerController): Node {.
     ),
   ])
 
-proc gameUpdate(game: AutoClickerGame, controller: AutoClickerController,
-                dt: float, input: InputManager) {.procvar.} =
+proc updateIncome(game: AutoClickerGame, dt: float) =
   game.partial += dt * game.totalIncome
   game.gold += game.partial.round.int
   game.partial -= game.partial.round
@@ -201,7 +200,6 @@ proc newGameMenu(game: AutoClickerGame): Menu[AutoClickerGame, AutoClickerContro
   Menu[AutoClickerGame, AutoClickerController](
     model: game,
     view: gameView,
-    update: gameUpdate,
     controller: AutoClickerController(),
   )
 
@@ -222,6 +220,8 @@ method draw*(renderer: RendererPtr, game: AutoClickerGame) =
 
 method update*(game: AutoClickerGame, dt: float) =
   game.dt = dt
+
+  game.updateIncome(dt)
 
   game.menus.update(dt, game.input)
 
