@@ -48,7 +48,7 @@ type
 
   Level* = object
     info*: LevelInfo
-    spawns: seq[SpawnData]
+    spawns*: seq[SpawnData]
 
 proc `==`*(a, b: LevelInfo): bool =
   a.name == b.name

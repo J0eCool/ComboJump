@@ -269,6 +269,8 @@ proc fromJson*[T: tuple](obj: var T, json: Json) =
     val.fromJson(json.obj[field])
 proc fromJson*[T](json: Json): T =
   var x: T
+  when compiles(new(x)):
+    new(x)
   x.fromJson(json)
   return x
 

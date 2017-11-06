@@ -4,8 +4,8 @@ import
   rpg_frontier/[
     damage,
     element,
-    percent,
-  ]
+  ],
+  percent
 
 suite "Damage":
   test "ElementSets initialize properly":

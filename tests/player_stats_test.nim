@@ -17,7 +17,9 @@ suite "PlayerStats":
       )
       json = before.toJson()
       after = fromJson[PlayerStats](json)
-    check before == after
+    check:
+      before.level == after.level
+      before.xp == after.xp
 
   test "Sanity - new stats start at level 1":
     check stats.level == 1
