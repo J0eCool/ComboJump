@@ -50,6 +50,7 @@ const
   yellow*      = rgb(240, 240,  55)
   red*         = rgb(200,  40,  40)
   pureRed*     = rgb(255,   0,   0)
+  lightRed*    = rgb(248, 120, 150)
   darkRed*     = rgb(140,  16,  16)
   orange*      = rgb(210, 140,  30)
   blue*        = rgb( 40,  40, 200)

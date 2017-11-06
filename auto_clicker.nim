@@ -79,6 +79,13 @@ type
   Strategy = object
     nodes: seq[StrategyNode]
 
+proc `==`(a, b: StrategyNode): bool =
+  a.kind == b.kind and (
+    case a.kind
+    of buyBuilding:
+      a.building == b.building
+  )
+
 type
   AutoClickerGame* = ref object of Game
     buildings: array[Building, int]
@@ -178,6 +185,40 @@ proc upgradeNode(game: AutoClickerGame, upgrade: Upgrade): Node =
     onClick: onClick,
   )
 
+proc strategyNode(game: AutoClickerGame, pos: Vec): Node =
+  List[StrategyNode](
+    pos: pos,
+    spacing: vec(10),
+    items: game.strategy.nodes,
+    listNodesIdx: (proc(node: StrategyNode, idx: int): Node =
+      case node.kind
+      of buyBuilding:
+        SpriteNode(
+          size: vec(400, 40),
+          color: gray,
+          children: @[
+            BorderedTextNode(
+              text: "Buy building:",
+              pos: vec(-140, 0),
+              fontSize: 18,
+            ),
+            Button(
+              pos: vec(100, 0),
+              size: vec(180, 36),
+              label: allBuildings[node.building].name,
+              color: lightRed,
+              onClick: (proc() =
+                let
+                  i = ord(node.building)
+                  j = (i + 1) mod (Building.high.ord + 1)
+                  next = Building(j)
+                game.strategy.nodes[idx].building = next
+              ),
+            ),
+          ],
+        )
+    ),
+  )
 
 proc gameView(game: AutoClickerGame, controller: AutoClickerController): Node {.procvar.} =
   nodes(@[
@@ -205,6 +246,7 @@ proc gameView(game: AutoClickerGame, controller: AutoClickerController): Node {.
         game.buildingNode(building)
       ),
     ),
+    game.strategyNode(vec(100, 400)),
   ])
 
 proc updateIncome(game: AutoClickerGame, dt: float) =
