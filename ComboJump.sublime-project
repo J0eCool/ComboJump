@@ -55,6 +55,12 @@
             "--out:out/auto_clicker", "auto_clicker.nim"],
         "working_dir": "$project_path"
     }, {
+        "name": "Cave Lunk - Debug",
+        "cmd": ["nim", "c", "-r",
+            "-d:debug", "--parallelBuild:0",
+            "--out:out/cave_lunk", "cave_lunk.nim"],
+        "working_dir": "$project_path"
+    }, {
         "name": "NaNo Game - Debug",
         "env": {
             "NIMTEST_OUTPUT_LVL": "PRINT_FAILURES"

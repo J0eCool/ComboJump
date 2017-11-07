@@ -24,12 +24,11 @@ import
     bullet_update,
     collisions,
     physics,
-    render,
   ],
   camera,
   color,
-  game_system,
   event,
+  game_system,
   input,
   menu,
   menu_widgets,
@@ -39,6 +38,9 @@ import
   transition,
   util,
   vec
+
+# Imported last because of system rebuild determinism
+import menu/entity_render_node
 
 const buildDebugMenu = false
 when buildDebugMenu:
@@ -155,24 +157,6 @@ proc entityModelUpdate(model: EntityModel, controller: EntityController,
     renderer.draw(node, controller.resources)
 
     renderer.present()
-
-type EntityRenderNode = ref object of Node
-  entities: Entities
-  resources: ResourceManager
-  camera: Camera
-
-proc process(node: EntityRenderNode, events: Events) =
-  node.entities.process(events)
-
-method diffSelf(node, newVal: EntityRenderNode) =
-  node.entities = newVal.entities
-
-defineSystemCalls(EntityRenderNode)
-
-method drawSelf(node: EntityRenderNode, renderer: RendererPtr, resources: ResourceManager) =
-  loadResources(node.entities, resources, renderer)
-  node.resources = resources
-  renderer.drawSystems(node)
 
 proc entityModelView(model: EntityModel, controller: EntityController): Node {.procvar.} =
   let
