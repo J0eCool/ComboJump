@@ -23,6 +23,7 @@ type
     delete
     quit
     escape
+    enter
 
     z
     x
@@ -130,6 +131,7 @@ proc inputFromPairs*(statePairs: seq[InputPair]): InputManager =
 proc keyToInputs(key: Scancode): seq[Input] =
   case key
   of SDL_SCANCODE_ESCAPE:    @[escape, menu]
+  of SDL_SCANCODE_RETURN:    @[enter]
   of SDL_SCANCODE_SPACE:     @[space]
   of SDL_SCANCODE_BACKSPACE: @[backspace]
   of SDL_SCANCODE_DELETE:    @[delete]
@@ -319,8 +321,7 @@ proc letterKeyStr*(button: Input): string =
   else:
     ""
 
-proc handleTextInput*(text: var string, input: InputManager,
-                      ignoreLetters = false, ignoreNumbers = false): bool =
+proc handleTextInput*(text: var string, input: InputManager, ignoreLetters = false): bool =
   # Returns true when text is modified
   template handleArray(arr: seq[Input]) =
     for key in arr:
@@ -329,8 +330,7 @@ proc handleTextInput*(text: var string, input: InputManager,
         result = true
   if not ignoreLetters:
     handleArray(allLetters)
-  if not ignoreNumbers:
-    handleArray(allNumbers)
+  handleArray(allNumbers)
   if input.isPressed(Input.backspace):
     text = text[0..<text.len-1]
     result = true

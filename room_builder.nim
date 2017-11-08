@@ -47,6 +47,7 @@ type
   EditorMenuMode = enum
     roomSelectMode
     tilesetSelectMode
+    roomStatsMode
   GridEditor = ref object of Node
     grid: ptr RoomGrid
     clickId: int
@@ -57,6 +58,7 @@ type
     entities: seq[Entity]
     mode: EditorMenuMode
     filename: string
+    roomW: int
 
 proc updateRoom(editor: GridEditor) =
   editor.entities = @[buildRoomEntity(editor.grid[], editor.pos, editor.tileSize)]
@@ -81,6 +83,7 @@ proc newGridEditor(grid: ptr RoomGrid): GridEditor =
     drawGridLines: true,
     drawRoom: false,
     filename: "",
+    roomW: 19,
   )
   result.resetGrid()
 
@@ -256,7 +259,7 @@ proc roomSelectionNode(editor: GridEditor): Node =
       InputTextNode(
         pos: vec(120, 20),
         size: vec(240, 40),
-        text: addr editor.filename,
+        str: addr editor.filename,
       ),
       Button(
         pos: vec(60, 70),
@@ -296,6 +299,24 @@ proc roomSelectionNode(editor: GridEditor): Node =
             ),
             children: @[BorderedTextNode(text: pair.name).Node],
           )
+        ),
+      ),
+    ],
+  )
+
+proc roomStatsNode(editor: GridEditor): Node =
+  Node(
+    children: @[
+      BorderedTextNode(
+        pos: vec(80, 20),
+        text: "W",
+      ),
+      InputTextNode(
+        pos: vec(160, 20),
+        size: vec(80, 40),
+        num: addr editor.roomW,
+        onChange: (proc() =
+          # TODO: grid.resizeTo(w,h)
         ),
       ),
     ],
@@ -346,6 +367,7 @@ proc sidebarNode(editor: GridEditor): Node =
   tabSelectNode[EditorMenuMode](addr editor.mode, [
     roomSelectMode: ("File", roomSelectionNode(editor)),
     tilesetSelectMode: ("Tile", tilemapSelectionNode(editor)),
+    roomStatsMode: ("Stats", roomStatsNode(editor)),
   ])
 
 type
@@ -358,13 +380,13 @@ type
     gridEditor: GridEditor
     map: MapData
     mode: MainMenuMode
-    mapLenStr: string
+    mapLen: int
 
 proc refreshMapRooms(roomBuilder: RoomBuilderMenu) =
   randomize()
   roomBuilder.map.entities = @[]
   let
-    numRooms = roomBuilder.mapLenStr.parseInt
+    numRooms = roomBuilder.mapLen
     rooms = allRoomPairs()
   var prevExitHeight = -1
   for x in 0..<numRooms:
@@ -390,8 +412,10 @@ proc mapEditNode(roomBuilder: RoomBuilderMenu): Node =
       InputTextNode(
         pos: vec(120, 20),
         size: vec(240, 40),
-        text: addr roomBuilder.mapLenStr,
-        ignoreLetters: true,
+        num: addr roomBuilder.mapLen,
+        onChange: (proc() =
+          roomBuilder.refreshMapRooms()
+        ),
       ),
       Button(
         pos: vec(120, 70),
@@ -446,7 +470,7 @@ proc newRoomBuilder(screenSize: Vec): RoomBuilder =
   gridEditor.resetGrid()
   let menu = RoomBuilderMenu(
     gridEditor: gridEditor,
-    mapLenStr: "4",
+    mapLen: 4,
   )
   menu.refreshMapRooms()
   menu.children = @[mainSidebarNode(menu)]

@@ -352,27 +352,47 @@ method getChildren[T](list: List[T]): seq[Node] =
 # ------
 
 type InputTextNode* = ref object of Node
-  text*: ptr string
-  ignoreLetters*: bool
-  ignoreNumbers*: bool
+  str*: ptr string
+  num*: ptr int
+  onChange*: proc()
+  buffer: string
   isFocused: bool
+
+proc focus(manager: var MenuManager, text: InputTextNode) =
+  manager.focusedNode = text
+  if text.str != nil:
+    text.buffer = text.str[]
+  else:
+    text.buffer = $text.num[]
+
+proc unfocus(manager: var MenuManager, text: InputTextNode) =
+  manager.focusedNode = nil
+  text.buffer = nil
 
 method updateSelf(text: InputTextNode, manager: var MenuManager, input: InputManager) =
   let r = text.rect
   input.clickPressedPos.bindAs click:
     if r.contains click:
-      manager.focusedNode = text
+      manager.focus(text)
     elif manager.focusedNode == text:
-      manager.focusedNode = nil
-  if manager.focusedNode == text and input.isPressed(Input.escape):
-    manager.focusedNode = nil
+      manager.unfocus(text)
+  if manager.focusedNode == text:
+    if input.isPressed(Input.escape):
+      manager.unfocus(text)
+    if input.isPressed(Input.enter):
+      if text.str != nil:
+        text.str[] = text.buffer
+      else:
+        text.num[] = text.buffer.parseInt
+      if text.onChange != nil:
+        text.onChange()
+      manager.unfocus(text)
 
   text.isFocused = (manager.focusedNode == text)
   if text.isFocused:
     discard handleTextInput(
-        text.text[], input,
-        ignoreLetters = text.ignoreLetters,
-        ignoreNumbers = text.ignoreNumbers
+        text.buffer, input,
+        ignoreLetters = (text.str == nil),
       )
 
 method drawSelf(text: InputTextNode, renderer: RendererPtr, resources: ResourceManager) =
@@ -381,9 +401,11 @@ method drawSelf(text: InputTextNode, renderer: RendererPtr, resources: ResourceM
     font = resources.loadFont("nevis.ttf")
     str =
       if text.isFocused:
-        text.text[] & "|"
+        text.buffer & "|"
+      elif text.str != nil:
+        text.str[]
       else:
-        text.text[]
+        $text.num[]
     borderWidth = 2.0
     inBorderRect = rect(baseRect.pos, baseRect.size - vec(borderWidth * 2.0))
     borderColor =
