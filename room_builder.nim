@@ -214,6 +214,11 @@ method updateSelf(editor: GridEditor, manager: var MenuManager, input: InputMana
     if input.isPressed(Input.keyS):
       editor.saveCurrentRoom()
 
+  if input.mouseWheel == 1:
+    editor.tileSize = editor.tileSize * 1.1
+  elif input.mouseWheel == -1:
+    editor.tileSize = editor.tileSize / 1.1
+
   if input.isMouseHeld(mouseMiddle):
      let delta = input.mousePos - editor.lastMousePos
      editor.offset += delta
