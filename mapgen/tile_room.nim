@@ -60,6 +60,20 @@ proc newGrid*(w, h: int): RoomGrid =
     result.data.add line
   result.recalculateExits()
 
+proc resizeTo*(grid: var RoomGrid, w, h: int) =
+  let addW = w > grid.w
+  while grid.w != w:
+    if not addW:
+      grid.data.del(grid.data.len - 1)
+      grid.w -= 1
+    else:
+      var line: seq[GridTile] = @[]
+      for _ in 0..<grid.h:
+        line.add tileEmpty
+      grid.data.add line
+      grid.w += 1
+  grid.w = w
+
 proc decorate(room: var TileRoom, groups: seq[DecorationGroup]) =
   for group in groups:
     let possibleTextures = group.textures & newSeqOf[string](nil)

@@ -316,7 +316,7 @@ proc roomStatsNode(editor: GridEditor): Node =
         size: vec(80, 40),
         num: addr editor.roomW,
         onChange: (proc() =
-          # TODO: grid.resizeTo(w,h)
+          editor.grid[].resizeTo(editor.roomW, editor.grid.h)
         ),
       ),
     ],
