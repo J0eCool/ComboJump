@@ -59,14 +59,16 @@ type
     mode: EditorMenuMode
     filename: string
     roomW: int
+    offset: Vec
+    lastMousePos: Vec
 
 proc updateRoom(editor: GridEditor) =
   editor.entities = @[buildRoomEntity(editor.grid[], editor.pos, editor.tileSize)]
-  for i in 0..<3:
-    var grid = editor.grid[]
-    grid.seed = randomSeed()
-    let pos = vec(50.0 + 360.0 * i.float, 600.0)
-    editor.entities.add buildRoomEntity(grid, pos, vec(16))
+  # for i in 0..<3:
+  #   var grid = editor.grid[]
+  #   grid.seed = randomSeed()
+  #   let pos = vec(50.0 + 360.0 * i.float, 600.0)
+  #   editor.entities.add buildRoomEntity(grid, pos, vec(16))
   editor.grid[].recalculateExits()
 
 proc resetGrid(editor: GridEditor) =
@@ -90,7 +92,7 @@ proc newGridEditor(grid: ptr RoomGrid): GridEditor =
 
 proc posToCoord(editor: GridEditor, pos: Vec): Coord =
   let
-    local = pos - editor.globalPos + editor.tileSize / 2
+    local = pos - editor.globalPos + editor.tileSize / 2 - editor.offset
     scaled = local / editor.tileSize
   if scaled.x < 0 or scaled.y < 0:
     # Float to int conversion rounds toward zero, so e.g. -0.8 becomes 0, which lets
@@ -107,7 +109,8 @@ proc isCoordInRange(editor: GridEditor, coord: Coord): bool =
 proc setTile(editor: GridEditor, coord: Coord, state: GridTile) =
   if editor.isCoordInRange(coord):
     editor.grid.data[coord.x][coord.y] = state
-    editor.updateRoom()
+    if editor.drawRoom:
+      editor.updateRoom()
 
 proc tileColor(tile: GridTile): Color =
   case tile
@@ -139,7 +142,7 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: ResourceMa
       for y in 0..<grid.h:
         let tile = grid.data[x][y]
         if tile != tileEmpty:
-          let r = editor.tileSize.gridRect(x, y) + editor.globalPos
+          let r = editor.tileSize.gridRect(x, y) + editor.globalPos + editor.offset
           renderer.fillRect r, tile.tileColor
 
   # Draw hovered tile
@@ -149,7 +152,7 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: ResourceMa
       y = editor.hovered.y
     let
       tile = grid.data[x][y]
-      r = editor.tileSize.gridRect(x, y) + editor.globalPos
+      r = editor.tileSize.gridRect(x, y) + editor.globalPos + editor.offset
       color =
         if tile != tileEmpty:
           average(tile.tileColor, hoverColor)
@@ -161,7 +164,7 @@ method drawSelf(editor: GridEditor, renderer: RendererPtr, resources: ResourceMa
   if editor.drawGridLines:
     let
       totalSize = vec(grid.w, grid.h) * editor.tileSize
-      offset = editor.pos - editor.tileSize / 2
+      offset = editor.pos - editor.tileSize / 2 + editor.offset
       lineWidth = 2.0
       lineColor = darkGray
     for x in 0..grid.w:
@@ -210,6 +213,11 @@ method updateSelf(editor: GridEditor, manager: var MenuManager, input: InputMana
       editor.resetGrid()
     if input.isPressed(Input.keyS):
       editor.saveCurrentRoom()
+
+  if input.isMouseHeld(mouseMiddle):
+     let delta = input.mousePos - editor.lastMousePos
+     editor.offset += delta
+  editor.lastMousePos = input.mousePos
 
 proc tilemapSelectionNode(editor: GridEditor): Node =
   List[Tilemap](
@@ -486,5 +494,5 @@ method draw*(renderer: RendererPtr, program: RoomBuilder) =
   renderer.draw(program.menu, program.resources)
 
 when isMainModule:
-  let screenSize = vec(1200, 900)
+  let screenSize = vec(1600, 900)
   main(newRoomBuilder(screenSize), screenSize)
