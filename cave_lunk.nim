@@ -7,6 +7,7 @@ when Profile != 0:
 
 import
   component/[
+    camera_target,
     collider,
     movement,
     platformer_control,
@@ -46,6 +47,7 @@ type
 proc caveLunkView(game: CaveLunkGame, controller: CaveLunkController): Node {.procvar.} =
   EntityRenderNode(
     entities: game.entities,
+    camera: game.camera,
   )
 
 proc newCaveLunkMenu(game: CaveLunkGame): MenuBase =
@@ -76,6 +78,7 @@ proc newPlayer(): Entity =
     Sprite(
       textureName: "Wizard2.png",
     ),
+    CameraTarget(verticallyLocked: true),
   ])
 
 proc roomEntities(room: RoomGrid, screenSize, pos: Vec): Entities =

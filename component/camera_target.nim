@@ -13,10 +13,11 @@ type CameraTarget* = ref object of Component
 defineComponent(CameraTarget)
 
 defineSystem:
+  priority = -100
   components = [CameraTarget, Transform]
   proc updateCamera*(camera: var Camera) =
     let diff = camera.screenSize / 2 - transform.globalPos + cameraTarget.offset
+    let pre = camera.offset
+    camera.offset = diff
     if cameraTarget.verticallyLocked:
-      camera.offset.y = diff.y
-    else:
-      camera.offset = diff
+      camera.offset.y = pre.y

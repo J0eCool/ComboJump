@@ -24,6 +24,7 @@ method typeName(node: EntityRenderNode): string =
 
 method diffSelf(node, newVal: EntityRenderNode) =
   node.entities = newVal.entities
+  node.camera = newVal.camera
 
 defineSystemCalls(EntityRenderNode)
 

@@ -277,7 +277,7 @@
       ],
       "filename": "component/camera_target.nim",
       "id": "23",
-      "priority": "0",
+      "priority": "-100",
       "types": [
         "var Camera"
       ]
