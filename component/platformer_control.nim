@@ -1,7 +1,7 @@
 import
   component/[
     movement,
-    spell_shooter,
+    sprite,
   ],
   input,
   entity,
@@ -14,12 +14,13 @@ type
     moveSpeed*: float
     jumpHeight*: float
     dropDownTimer: float
+    facingSign*: float
   PlatformerControl* = ref PlatformerControlObj
 
 defineComponent(PlatformerControl, @["dropDownTimer"])
 
 const
-  jumpReleaseMultiplier = 0.25
+  jumpReleaseMultiplier = 0.1
   timeToDropDown = 0.25
 
 defineSystem:
@@ -44,3 +45,11 @@ defineSystem:
       movement.vel.y *= jumpReleaseMultiplier
 
     movement.canDropDown = platformerControl.dropDownTimer > 0.0
+
+    if platformerControl.facingSign == 0:
+      platformerControl.facingSign = 1.0
+    if raw.x != 0:
+      platformerControl.facingSign = raw.x
+      let sprite = entity.getComponent(Sprite)
+      if sprite != nil:
+        sprite.flipX = raw.x < 0

@@ -6,6 +6,7 @@ import
     collider,
     damage_component,
     movement,
+    platformer_control,
     remove_when_offscreen,
     sprite,
     transform,
@@ -34,7 +35,7 @@ proc spawnBullet(pos, vel: Vec): Entity =
     Collider(layer: Layer.bullet),
     Transform(
       pos: pos,
-      size: vec(24, 16),
+      size: vec(32, 20),
     ),
     Movement(vel: vel),
     Sprite(color: yellow),
@@ -42,7 +43,7 @@ proc spawnBullet(pos, vel: Vec): Entity =
   ])
 
 defineSystem:
-  components = [CavePlayerShooter, Transform]
+  components = [CavePlayerShooter, PlatformerControl, Transform]
   proc updateCavePlayerShooter*(dt: float, input: InputManager) =
     let shoot = cavePlayerShooter
     shoot.cooldown -= dt
@@ -53,5 +54,5 @@ defineSystem:
     shoot.cooldown = 1.0 / shoot.fireRate
     let
       pos = transform.pos + shoot.shotOffset
-      vel = vec(500, 0)
+      vel = vec(1000 * platformerControl.facingSign, 0)
     result.add Event(kind: addEntity, entity: spawnBullet(pos, vel))
