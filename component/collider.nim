@@ -35,8 +35,8 @@ const layerMask: array[Layer, set[Layer]] = [
   oneWayPlatform: {},
   player: { floor, oneWayPlatform, enemy, enemyBullet },
   enemy: { floor, oneWayPlatform, player, bullet },
-  bullet: { enemy },
-  enemyBullet: { player },
+  bullet: { floor, enemy },
+  enemyBullet: { floor, player },
   playerTrigger: { player },
 ]
 

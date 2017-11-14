@@ -15,7 +15,7 @@ import
   vec
 
 type
-  ColliderData = tuple[entity: Entity, rect: Rect, collider: Collider]
+  ColliderData = tuple[entity: Entity, rect: Rect]
   Ray* = object
     pos*: Vec
     dir*: Vec
@@ -108,7 +108,7 @@ proc raycast*(ray: Ray, colliders: seq[Rect]): Option[RaycastHit] =
     col.bindAs hit:
       result.setShortest hit
 
-proc collectTerrain(entities: Entities): seq[Rect] =
+proc collectTerrain(entities: Entities): seq[ColliderData] =
   result = @[]
   entities.forComponents entity, [
     Collider, collider,
@@ -117,7 +117,7 @@ proc collectTerrain(entities: Entities): seq[Rect] =
     let roomViewer = entity.getComponent(RoomViewer)
     if roomViewer == nil:
       if collider.layer == Layer.floor:
-        result.add transform.globalRect
+        result.add((entity, transform.globalRect))
       continue
 
     let
@@ -127,18 +127,18 @@ proc collectTerrain(entities: Entities): seq[Rect] =
       for y in 0..<data[x].len:
         if data[x][y]:
           let pos = transform.globalPos + vec(x, y) * size
-          result.add rect(pos, size)
+          result.add((entity, rect(pos, size)))
 
 defineSystem:
   priority = -1
   proc physics*(dt: float) =
     # Collect colliders once
-    let floorRects: seq[Rect] = collectTerrain(entities)
-    proc doesCollide(cur: Rect): bool =
-      for r in floorRects:
-        if r.intersects(cur):
-          return true
-      return false
+    let floorData: seq[ColliderData] = collectTerrain(entities)
+    proc collidedEntity(cur: Rect): Entity =
+      for col in floorData:
+        if col.rect.intersects(cur):
+          return col.entity
+      return nil
 
     proc binarySearch(rect: var Rect, pre: Vec, startedCollided: bool) =
       var
@@ -146,11 +146,11 @@ defineSystem:
         hi = rect.pos
       for _ in 0..<10:
         rect.pos = (hi + lo) / 2
-        if rect.doesCollide xor startedCollided:
+        if rect.collidedEntity != nil xor startedCollided:
           hi = rect.pos
         else:
           lo = rect.pos
-      if rect.doesCollide:
+      if rect.collidedEntity != nil:
         if startedCollided:
           rect.pos = hi
         else:
@@ -176,7 +176,7 @@ defineSystem:
           transform.pos += toMove
           continue
 
-        if rect.doesCollide:
+        if rect.collidedEntity != nil:
           # If starting in ground, need to fix
           var fixes = [
             vec(1, 0),
@@ -189,7 +189,7 @@ defineSystem:
           while colliding:
             for i in 0..<4:
               rect.pos = pre + fixes[i]
-              if not rect.doesCollide:
+              if rect.collidedEntity == nil:
                 colliding = false
                 break
               fixes[i] = fixes[i] * 2
@@ -200,12 +200,12 @@ defineSystem:
           atMost -= 1
           let pre = rect.pos
           rect += toMove
-          let collided = rect.doesCollide
-          if collided:
+          let collided = rect.collidedEntity
+          if collided != nil:
             rect.binarySearch(pre, startedCollided=false)
           toMove -= rect.pos - pre
-          if collided:
-            let hitX = rect(rect.pos + vec(1 * sign(toMove.x), 0), size).doesCollide
+          if collided != nil:
+            let hitX = rect(rect.pos + vec(1 * sign(toMove.x), 0), size).collidedEntity != nil
             if hitX:
               toMove.x = 0.0
               movement.vel.x = 0.0
@@ -213,6 +213,7 @@ defineSystem:
               toMove.y = 0.0
               movement.vel.y = 0.0
               movement.onGround = true
+            collider.bufferedCollisions.add collided
 
         transform.globalPos = rect.pos
 
