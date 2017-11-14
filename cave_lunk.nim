@@ -8,11 +8,14 @@ when Profile != 0:
 import
   component/[
     camera_target,
+    cave_player_shooter,
     collider,
+    damage_component,
+    health,
     movement,
     platformer_control,
+    remove_when_offscreen,
     room_viewer,
-    spell_shooter,
     sprite,
     transform,
   ],
@@ -74,7 +77,9 @@ proc newPlayer(): Entity =
       moveSpeed: 400,
       jumpHeight: 240,
     ),
-    SpellShooter(),
+    CavePlayerShooter(
+      fireRate: 3.0,
+    ),
     Sprite(
       textureName: "Wizard2.png",
     ),

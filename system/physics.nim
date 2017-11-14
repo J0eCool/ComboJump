@@ -173,7 +173,7 @@ defineSystem:
         let size = rect.size
 
         if not collider.layer.canCollideWith Layer.floor:
-          rect += toMove
+          transform.pos += toMove
           continue
 
         if rect.doesCollide:

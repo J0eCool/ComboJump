@@ -1,64 +1,14 @@
 {
   "draw": {
-    "drawBackground": {
-      "args": [
-        "background",
-        "camera"
-      ],
-      "filename": "scrolling_background.nim",
-      "id": "29",
-      "priority": "100",
-      "types": [
-        "ScrollingBackground",
-        "Camera"
-      ]
-    },
     "drawColliders": {
       "args": [
         "camera"
       ],
       "filename": "system/collisions.nim",
-      "id": "51",
+      "id": "18",
       "priority": "0",
       "types": [
         "Camera"
-      ]
-    },
-    "drawHealthBarNodes": {
-      "args": [
-        "resources",
-        "camera"
-      ],
-      "filename": "component/health_bar.nim",
-      "id": "16",
-      "priority": "-100",
-      "types": [
-        "ResourceManager",
-        "Camera"
-      ]
-    },
-    "drawHudMenu": {
-      "args": [
-        "resources",
-        "camera"
-      ],
-      "filename": "component/hud_menu.nim",
-      "id": "20",
-      "priority": "-100",
-      "types": [
-        "ResourceManager",
-        "Camera"
-      ]
-    },
-    "drawMapMenu": {
-      "args": [
-        "resources"
-      ],
-      "filename": "menu/map_menu.nim",
-      "id": "34",
-      "priority": "-100",
-      "types": [
-        "ResourceManager"
       ]
     },
     "drawPopupText": {
@@ -66,23 +16,12 @@
         "resources",
         "camera"
       ],
-      "filename": "popup_text.nim",
-      "id": "3",
+      "filename": "component/popup_text.nim",
+      "id": "4",
       "priority": "-50",
       "types": [
         "ResourceManager",
         "Camera"
-      ]
-    },
-    "drawQuestMenu": {
-      "args": [
-        "resources"
-      ],
-      "filename": "menu/quest_menu.nim",
-      "id": "36",
-      "priority": "-100",
-      "types": [
-        "ResourceManager"
       ]
     },
     "drawRoomViewers": {
@@ -90,64 +29,20 @@
         "resources",
         "camera"
       ],
-      "filename": "room_builder.nim",
-      "id": "52",
+      "filename": "component/room_viewer.nim",
+      "id": "14",
       "priority": "0",
       "types": [
         "ResourceManager",
         "Camera"
       ]
     },
-    "drawRuneMenu": {
-      "args": [
-        "resources"
-      ],
-      "filename": "menu/rune_menu.nim",
-      "id": "38",
-      "priority": "-100",
-      "types": [
-        "ResourceManager"
-      ]
-    },
-    "drawSpellHudMenu": {
-      "args": [
-        "resources"
-      ],
-      "filename": "menu/spell_hud_menu.nim",
-      "id": "40",
-      "priority": "-100",
-      "types": [
-        "ResourceManager"
-      ]
-    },
-    "drawStageSelectMenu": {
-      "args": [
-        "resources"
-      ],
-      "filename": "menu/level_menu.nim",
-      "id": "32",
-      "priority": "-100",
-      "types": [
-        "ResourceManager"
-      ]
-    },
-    "drawStatsMenu": {
-      "args": [
-        "resources"
-      ],
-      "filename": "menu/stats_menu.nim",
-      "id": "42",
-      "priority": "-100",
-      "types": [
-        "ResourceManager"
-      ]
-    },
     "drawTargeting": {
       "args": [
         "camera"
       ],
-      "filename": "targeting.nim",
-      "id": "5",
+      "filename": "component/targeting.nim",
+      "id": "8",
       "priority": "0",
       "types": [
         "Camera"
@@ -157,8 +52,8 @@
       "args": [
         "camera"
       ],
-      "filename": "C:/Programming/Nim/ComboJump/system/render.nim",
-      "id": "7",
+      "filename": "system/render.nim",
+      "id": "10",
       "priority": "0",
       "types": [
         "Camera"
@@ -170,29 +65,7 @@
       "args": [
       ],
       "filename": "system/collisions.nim",
-      "id": "47",
-      "priority": "0",
-      "types": [
-      ]
-    },
-    "gridControl": {
-      "args": [
-        "dt",
-        "input"
-      ],
-      "filename": "grid_control.nim",
-      "id": "10",
-      "priority": "0",
-      "types": [
-        "float",
-        "InputManager"
-      ]
-    },
-    "initEnemyStats": {
-      "args": [
-      ],
-      "filename": "component/enemy_stats.nim",
-      "id": "14",
+      "id": "19",
       "priority": "0",
       "types": [
       ]
@@ -202,51 +75,10 @@
         "dt"
       ],
       "filename": "system/physics.nim",
-      "id": "48",
+      "id": "20",
       "priority": "-1",
       "types": [
         "float"
-      ]
-    },
-    "regenLimitedQuantities": {
-      "args": [
-        "dt"
-      ],
-      "filename": "system/quantity_regen.nim",
-      "id": "49",
-      "priority": "0",
-      "types": [
-        "float"
-      ]
-    },
-    "stageSelect": {
-      "args": [
-        "player",
-        "input",
-        "stageData",
-        "shouldExit"
-      ],
-      "filename": "system/update_stage_select.nim",
-      "id": "50",
-      "priority": "100",
-      "types": [
-        "Entity",
-        "InputManager",
-        "var StageData",
-        "var bool"
-      ]
-    },
-    "updateBackground": {
-      "args": [
-        "background",
-        "camera"
-      ],
-      "filename": "scrolling_background.nim",
-      "id": "30",
-      "priority": "0",
-      "types": [
-        "var ScrollingBackground",
-        "Camera"
       ]
     },
     "updateBulletN10ns": {
@@ -254,7 +86,7 @@
         "notifications"
       ],
       "filename": "system/bullet_update.nim",
-      "id": "46",
+      "id": "17",
       "priority": "0",
       "types": [
         "N10nManager"
@@ -265,7 +97,7 @@
         "dt"
       ],
       "filename": "system/bullet_update.nim",
-      "id": "44",
+      "id": "15",
       "priority": "0",
       "types": [
         "float"
@@ -276,177 +108,53 @@
         "camera"
       ],
       "filename": "component/camera_target.nim",
-      "id": "23",
+      "id": "0",
       "priority": "-100",
       "types": [
         "var Camera"
+      ]
+    },
+    "updateCavePlayerShooter": {
+      "args": [
+        "dt",
+        "input"
+      ],
+      "filename": "component/cave_player_shooter.nim",
+      "id": "7",
+      "priority": "0",
+      "types": [
+        "float",
+        "InputManager"
       ]
     },
     "updateDamage": {
       "args": [
         "player"
       ],
-      "filename": "damage_component.nim",
-      "id": "4",
+      "filename": "component/damage_component.nim",
+      "id": "5",
       "priority": "0",
       "types": [
         "Entity"
-      ]
-    },
-    "updateEnemyAttack": {
-      "args": [
-        "dt"
-      ],
-      "filename": "component/enemy_attack.nim",
-      "id": "12",
-      "priority": "0",
-      "types": [
-        "float"
-      ]
-    },
-    "updateEnemyMoveTowards": {
-      "args": [
-        "dt"
-      ],
-      "filename": "component/enemy_movement.nim",
-      "id": "13",
-      "priority": "0",
-      "types": [
-        "float"
-      ]
-    },
-    "updateEnemyProximity": {
-      "args": [
-        "player"
-      ],
-      "filename": "component/enemy_proximity.nim",
-      "id": "11",
-      "priority": "0",
-      "types": [
-        "Entity"
-      ]
-    },
-    "updateEnemyShooterMovement": {
-      "args": [
-        "dt"
-      ],
-      "filename": "component/enemy_shooter_movement.nim",
-      "id": "53",
-      "priority": "0",
-      "types": [
-        "float"
-      ]
-    },
-    "updateEnemyStatsN10ns": {
-      "args": [
-        "notifications",
-        "stats"
-      ],
-      "filename": "component/enemy_stats.nim",
-      "id": "15",
-      "priority": "0",
-      "types": [
-        "N10nManager",
-        "var PlayerStats"
-      ]
-    },
-    "updateExitZones": {
-      "args": [
-        "stageData"
-      ],
-      "filename": "component/exit_zone.nim",
-      "id": "24",
-      "priority": "0",
-      "types": [
-        "var StageData"
       ]
     },
     "updateHealth": {
       "args": [
         "notifications"
       ],
-      "filename": "health.nim",
-      "id": "1",
+      "filename": "component/health.nim",
+      "id": "2",
       "priority": "0",
       "types": [
         "var N10nManager"
-      ]
-    },
-    "updateHealthBarNodes": {
-      "args": [
-        "menus",
-        "input"
-      ],
-      "filename": "component/health_bar.nim",
-      "id": "17",
-      "priority": "0",
-      "types": [
-        "var MenuManager",
-        "InputManager"
-      ]
-    },
-    "updateHudMenu": {
-      "args": [
-        "menus",
-        "input",
-        "stats",
-        "stageData",
-        "player"
-      ],
-      "filename": "component/hud_menu.nim",
-      "id": "21",
-      "priority": "0",
-      "types": [
-        "var MenuManager",
-        "InputManager",
-        "var PlayerStats",
-        "var StageData",
-        "Entity"
-      ]
-    },
-    "updateLockedDoors": {
-      "args": [
-        "player"
-      ],
-      "filename": "component/locked_door.nim",
-      "id": "19",
-      "priority": "0",
-      "types": [
-        "Entity"
-      ]
-    },
-    "updateLocks": {
-      "args": [
-        "player"
-      ],
-      "filename": "component/locked_door.nim",
-      "id": "18",
-      "priority": "0",
-      "types": [
-        "Entity"
-      ]
-    },
-    "updateMapMenu": {
-      "args": [
-        "menus",
-        "input",
-        "player"
-      ],
-      "filename": "menu/map_menu.nim",
-      "id": "35",
-      "priority": "0",
-      "types": [
-        "var MenuManager",
-        "InputManager",
-        "Entity"
       ]
     },
     "updateN10nManager": {
       "args": [
         "notifications"
       ],
-      "filename": "C:/Programming/Nim/ComboJump/notifications.nim",
-      "id": "0",
+      "filename": "notifications.nim",
+      "id": "1",
       "priority": "0",
       "types": [
         "var N10nManager"
@@ -458,35 +166,9 @@
         "input"
       ],
       "filename": "component/platformer_control.nim",
-      "id": "25",
+      "id": "13",
       "priority": "0",
       "types": [
-        "float",
-        "InputManager"
-      ]
-    },
-    "updatePlayerHealth": {
-      "args": [
-        "stats"
-      ],
-      "filename": "component/player_health.nim",
-      "id": "22",
-      "priority": "5",
-      "types": [
-        "PlayerStats"
-      ]
-    },
-    "updatePlayerShooterAttack": {
-      "args": [
-        "stats",
-        "dt",
-        "input"
-      ],
-      "filename": "component/player_shooter_attack.nim",
-      "id": "55",
-      "priority": "0",
-      "types": [
-        "ShooterStats",
         "float",
         "InputManager"
       ]
@@ -495,41 +177,11 @@
       "args": [
         "dt"
       ],
-      "filename": "popup_text.nim",
-      "id": "2",
+      "filename": "component/popup_text.nim",
+      "id": "3",
       "priority": "0",
       "types": [
         "float"
-      ]
-    },
-    "updateQuestMenu": {
-      "args": [
-        "menus",
-        "input",
-        "questData",
-        "notifications"
-      ],
-      "filename": "menu/quest_menu.nim",
-      "id": "37",
-      "priority": "0",
-      "types": [
-        "var MenuManager",
-        "InputManager",
-        "var QuestData",
-        "var N10nManager"
-      ]
-    },
-    "updateQuests": {
-      "args": [
-        "questData",
-        "notifications"
-      ],
-      "filename": "quests.nim",
-      "id": "27",
-      "priority": "0",
-      "types": [
-        "var QuestData",
-        "var N10nManager"
       ]
     },
     "updateRemoveWhenOffscreen": {
@@ -538,7 +190,7 @@
         "camera"
       ],
       "filename": "component/remove_when_offscreen.nim",
-      "id": "54",
+      "id": "6",
       "priority": "0",
       "types": [
         "float",
@@ -550,81 +202,10 @@
         "dt"
       ],
       "filename": "system/bullet_update.nim",
-      "id": "45",
+      "id": "16",
       "priority": "0",
       "types": [
         "float"
-      ]
-    },
-    "updateRewards": {
-      "args": [
-        "notifications",
-        "stats",
-        "spellData"
-      ],
-      "filename": "system/update_rewards.nim",
-      "id": "31",
-      "priority": "0",
-      "types": [
-        "var N10nManager",
-        "var PlayerStats",
-        "var SpellData"
-      ]
-    },
-    "updateRoomCamera": {
-      "args": [
-        "player",
-        "camera"
-      ],
-      "filename": "component/room_camera_target.nim",
-      "id": "26",
-      "priority": "-10",
-      "types": [
-        "Entity",
-        "var Camera"
-      ]
-    },
-    "updateRuneMenu": {
-      "args": [
-        "menus",
-        "input",
-        "spellData"
-      ],
-      "filename": "menu/rune_menu.nim",
-      "id": "39",
-      "priority": "0",
-      "types": [
-        "var MenuManager",
-        "InputManager",
-        "var SpellData"
-      ]
-    },
-    "updateSaveSystem": {
-      "args": [
-        "spellData",
-        "stageData",
-        "stats"
-      ],
-      "filename": "save.nim",
-      "id": "28",
-      "priority": "0",
-      "types": [
-        "var SpellData",
-        "var StageData",
-        "var PlayerStats"
-      ]
-    },
-    "updateShooterRewardOnDeath": {
-      "args": [
-        "notifications",
-        "stats"
-      ],
-      "filename": "component/shooter_reward_on_death.nim",
-      "id": "56",
-      "priority": "0",
-      "types": [
-        "N10nManager",
-        "ShooterStats"
       ]
     },
     "updateSpellCreator": {
@@ -632,29 +213,12 @@
         "input",
         "spellData"
       ],
-      "filename": "C:/Programming/Nim/ComboJump/spell_creator.nim",
-      "id": "8",
+      "filename": "spell_creator.nim",
+      "id": "11",
       "priority": "0",
       "types": [
         "InputManager",
         "var SpellData"
-      ]
-    },
-    "updateSpellHudMenu": {
-      "args": [
-        "menus",
-        "input",
-        "spellData",
-        "stats"
-      ],
-      "filename": "menu/spell_hud_menu.nim",
-      "id": "41",
-      "priority": "0",
-      "types": [
-        "var MenuManager",
-        "InputManager",
-        "var SpellData",
-        "var PlayerStats"
       ]
     },
     "updateSpellShooter": {
@@ -664,8 +228,8 @@
         "dt",
         "stats"
       ],
-      "filename": "spell_shooter.nim",
-      "id": "9",
+      "filename": "component/spell_shooter.nim",
+      "id": "12",
       "priority": "0",
       "types": [
         "InputManager",
@@ -674,41 +238,11 @@
         "PlayerStats"
       ]
     },
-    "updateStageSelectMenu": {
-      "args": [
-        "menus",
-        "input",
-        "stageData"
-      ],
-      "filename": "menu/level_menu.nim",
-      "id": "33",
-      "priority": "0",
-      "types": [
-        "var MenuManager",
-        "InputManager",
-        "var StageData"
-      ]
-    },
-    "updateStatsMenu": {
-      "args": [
-        "menus",
-        "input",
-        "stats"
-      ],
-      "filename": "menu/stats_menu.nim",
-      "id": "43",
-      "priority": "0",
-      "types": [
-        "var MenuManager",
-        "InputManager",
-        "var PlayerStats"
-      ]
-    },
     "updateTargeting": {
       "args": [
       ],
-      "filename": "targeting.nim",
-      "id": "6",
+      "filename": "component/targeting.nim",
+      "id": "9",
       "priority": "0",
       "types": [
       ]

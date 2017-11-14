@@ -18,7 +18,7 @@ type
 defineComponent(RemoveWhenOffscreen, @[])
 
 proc rect(camera: Camera, buffer: float): Rect =
-  rect(camera.offset + camera.screenSize / 2, camera.screenSize + 2 * vec(buffer))
+  rect(camera.screenSize / 2 - camera.offset, camera.screenSize + 2 * vec(buffer))
 
 defineSystem:
   components = [RemoveWhenOffscreen, Transform]

@@ -19,23 +19,17 @@ type
 defineComponent(PlatformerControl, @["dropDownTimer"])
 
 const
-  castingMoveSpeedMultiplier = 0.3
   jumpReleaseMultiplier = 0.25
   timeToDropDown = 0.25
 
 defineSystem:
-  components = [PlatformerControl, SpellShooter, Movement]
+  components = [PlatformerControl, Movement]
   proc updatePlatformerControl*(dt: float, input: InputManager) =
     let
       raw = vec(input.getAxis(Axis.horizontal),
                 input.getAxis(Axis.vertical))
       dir = vec(raw.x, 0.0)
-      mult =
-        if spellShooter.isCasting:
-          castingMoveSpeedMultiplier
-        else:
-          1.0
-      spd = platformerControl.moveSpeed * mult
+      spd = platformerControl.moveSpeed
       vel = dir * spd
     movement.vel.x = vel.x
 
