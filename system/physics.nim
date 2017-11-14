@@ -108,35 +108,53 @@ proc raycast*(ray: Ray, colliders: seq[Rect]): Option[RaycastHit] =
     col.bindAs hit:
       result.setShortest hit
 
+proc collectTerrain(entities: Entities): seq[Rect] =
+  result = @[]
+  entities.forComponents entity, [
+    Collider, collider,
+    Transform, transform,
+  ]:
+    let roomViewer = entity.getComponent(RoomViewer)
+    if roomViewer == nil:
+      if collider.layer == Layer.floor:
+        result.add transform.globalRect
+      continue
+
+    let
+      data = roomViewer.data
+      size = roomViewer.tileSize
+    for x in 0..<data.len:
+      for y in 0..<data[x].len:
+        if data[x][y]:
+          let pos = transform.globalPos + vec(x, y) * size
+          result.add rect(pos, size)
+
 defineSystem:
   priority = -1
   proc physics*(dt: float) =
     # Collect colliders once
-    var
-      floorTransforms: seq[Rect] = @[]
-      platformTransforms: seq[Rect] = @[]
-    entities.forComponents entity, [
-      Collider, collider,
-      Transform, transform,
-    ]:
-      proc add(rect: Rect) =
-        if collider.layer == Layer.floor:
-          floorTransforms.add(rect)
-        elif collider.layer == Layer.oneWayPlatform:
-          platformTransforms.add(rect)
-      let roomViewer = entity.getComponent(RoomViewer)
-      if roomViewer == nil:
-        add(transform.globalRect)
-        continue
+    let floorRects: seq[Rect] = collectTerrain(entities)
+    proc doesCollide(cur: Rect): bool =
+      for r in floorRects:
+        if r.intersects(cur):
+          return true
+      return false
 
-      let
-        data = roomViewer.data
-        size = roomViewer.tileSize
-      for x in 0..<data.len:
-        for y in 0..<data[x].len:
-          if data[x][y]:
-            let pos = transform.globalPos + vec(x, y) * size
-            add(rect(pos, size))
+    proc binarySearch(rect: var Rect, pre: Vec, startedCollided: bool) =
+      var
+        lo = pre
+        hi = rect.pos
+      for _ in 0..<10:
+        rect.pos = (hi + lo) / 2
+        if rect.doesCollide xor startedCollided:
+          hi = rect.pos
+        else:
+          lo = rect.pos
+      if rect.doesCollide:
+        if startedCollided:
+          rect.pos = hi
+        else:
+          rect.pos = lo
 
     # Do collisions
     entities.forComponents entity, [
@@ -146,51 +164,55 @@ defineSystem:
       if movement.usesGravity:
         movement.vel.y += gravity * dt
 
-      var
-        rect = transform.globalRect
-        toMove = movement.vel * dt
-
       movement.onGround = false
+
       entity.withComponent Collider, collider:
+        var
+          rect = transform.globalRect
+          toMove = movement.vel * dt
+        let size = rect.size
+
         if not collider.layer.canCollideWith Layer.floor:
           rect += toMove
-        else:
-          while toMove.length2 > 0.001:
-            proc rayFrom(offset: Vec): Ray =
-              Ray(
-                pos: rect.pos + offset,
-                dir: toMove,
-                dist: toMove.length,
-              )
-            let
-              xNum = 4
-              yNum = 4
-            var col = makeNone[RaycastHit]()
-            if toMove.y != 0.0:
-              for x in 0..<xNum:
-                let
-                  t = x / (xNum - 1)
-                  offset = vec(t - 0.5, toMove.y.sign / 2) * rect.size
-                col.setShortest rayFrom(offset).raycast(floorTransforms)
-            if toMove.x != 0.0:
-              for y in 0..<yNum:
-                let
-                  t = y / (yNum - 1)
-                  offset = vec(toMove.x.sign / 2, t - 0.5) * rect.size
-                col.setShortest rayFrom(offset).raycast(floorTransforms)
-            if col.isNone:
-              rect += toMove
-              break
-            col.bindAs hit:
-              let delta = hit.normal * hit.distance * hit.normal.dot(toMove.unit)
-              rect += delta
-              toMove += hit.normal * toMove.abs
-              if hit.normal.y < 0:
-                movement.onGround = true
-              if hit.normal.x == 0.0:
-                movement.vel.y = 0.0
-              else:
-                movement.vel.x = 0.0
-        # TODO: one way platforms
-      transform.globalPos = rect.pos
+          continue
+
+        if rect.doesCollide:
+          # If starting in ground, need to fix
+          var fixes = [
+            vec(1, 0),
+            vec(-1, 0),
+            vec(0, 1),
+            vec(0, -1),
+          ]
+          let pre = rect.pos
+          var colliding = true
+          while colliding:
+            for i in 0..<4:
+              rect.pos = pre + fixes[i]
+              if not rect.doesCollide:
+                colliding = false
+                break
+              fixes[i] = fixes[i] * 2
+          rect.binarySearch(pre, startedCollided=true)
+
+        var atMost = 2
+        while toMove.length2 > 0.001:
+          atMost -= 1
+          let pre = rect.pos
+          rect += toMove
+          let collided = rect.doesCollide
+          if collided:
+            rect.binarySearch(pre, startedCollided=false)
+          toMove -= rect.pos - pre
+          if collided:
+            let hitX = rect(rect.pos + vec(1 * sign(toMove.x), 0), size).doesCollide
+            if hitX:
+              toMove.x = 0.0
+              movement.vel.x = 0.0
+            else:
+              toMove.y = 0.0
+              movement.vel.y = 0.0
+              movement.onGround = true
+
+        transform.globalPos = rect.pos
 

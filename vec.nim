@@ -111,8 +111,8 @@ proc intersects*(a, b, c, d: Vec): bool =
   (orientation(a, b, c) != orientation(a, b, d) and
    orientation(c, d, a) != orientation(c, d, b))
 
-proc approxEq*(a, b: Vec): bool =
-  a.x.approxEq(b.x) and a.y.approxEq(b.y)
+proc approxEq*(a, b: Vec, epsilon = 0.00001): bool =
+  a.x.approxEq(b.x, epsilon) and a.y.approxEq(b.y, epsilon)
 
 proc lerp*(t: float, lo, hi: Vec): Vec =
   vec(

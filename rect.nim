@@ -68,6 +68,9 @@ proc intersects*(a, b: Rect): bool =
 
 proc pos*(rect: Rect): Vec =
   vec(rect.x, rect.y)
+proc `pos=`*(rect: var Rect, pos: Vec) =
+  rect.x = pos.x
+  rect.y = pos.y
 proc size*(rect: Rect): Vec =
   vec(rect.w, rect.h)
 
