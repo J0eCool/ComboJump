@@ -18,4 +18,4 @@ defineSystem:
   components = [RoomCameraTarget, Collider, Transform]
   proc updateRoomCamera*(player: Entity, camera: var Camera) =
     if player in collider.collisions:
-      camera.offset = camera.screenSize / 2 - transform.globalPos
+      camera.pos = camera.screenSize / 2 - transform.globalPos

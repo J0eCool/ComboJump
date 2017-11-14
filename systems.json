@@ -117,14 +117,16 @@
     "updateCavePlayerShooter": {
       "args": [
         "dt",
-        "input"
+        "input",
+        "shake"
       ],
       "filename": "component/cave_player_shooter.nim",
       "id": "7",
       "priority": "0",
       "types": [
         "float",
-        "InputManager"
+        "InputManager",
+        "var ScreenShake"
       ]
     },
     "updateDamage": {
@@ -206,6 +208,21 @@
       "priority": "0",
       "types": [
         "float"
+      ]
+    },
+    "updateScreenShake": {
+      "args": [
+        "dt",
+        "camera",
+        "shake"
+      ],
+      "filename": "screen_shake.nim",
+      "id": "21",
+      "priority": "-1000",
+      "types": [
+        "float",
+        "var Camera",
+        "var ScreenShake"
       ]
     },
     "updateSpellCreator": {

@@ -17,7 +17,7 @@ defineSystem:
   components = [CameraTarget, Transform]
   proc updateCamera*(camera: var Camera) =
     let diff = camera.screenSize / 2 - transform.globalPos + cameraTarget.offset
-    let pre = camera.offset
-    camera.offset = diff
+    let pre = camera.pos
+    camera.pos = diff
     if cameraTarget.verticallyLocked:
-      camera.offset.y = pre.y
+      camera.pos.y = pre.y

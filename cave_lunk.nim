@@ -35,12 +35,14 @@ import
   jsonparse,
   menu,
   program,
+  screen_shake,
   vec
 
 # Imported last because of system rebuild determinism
 import menu/entity_render_node
 
 type CaveLunkGame* = ref object of Game
+  shake: ScreenShake
 
 defineSystemCalls(CaveLunkGame)
 
