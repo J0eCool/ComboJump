@@ -39,7 +39,7 @@ defineSystem:
 
     if movement.onGround and input.isHeld(Input.jump) and raw.y > 0.0:
       platformerControl.dropDownTimer = timeToDropDown
-    elif input.isPressed(Input.jump):
+    elif movement.onGround and input.isPressed(Input.jump):
       movement.vel.y = jumpSpeed(platformerControl.jumpHeight)
     elif input.isReleased(Input.jump) and (not movement.isFalling):
       movement.vel.y *= jumpReleaseMultiplier
