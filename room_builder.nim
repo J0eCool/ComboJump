@@ -59,6 +59,7 @@ type
     mode: EditorMenuMode
     filename: string
     roomW: int
+    tileW, tileH: int
     offset: Vec
     lastMousePos: Vec
 
@@ -86,6 +87,8 @@ proc newGridEditor(grid: ptr RoomGrid): GridEditor =
     drawRoom: false,
     filename: "",
     roomW: 19,
+    tileW: 64,
+    tileH: 64,
   )
   result.resetGrid()
 
@@ -100,6 +103,11 @@ proc posToCoord(editor: GridEditor, pos: Vec): Coord =
     (-1, -1)
   else:
     (scaled.x.int, scaled.y.int)
+
+proc coordToMapPos(editor: GridEditor, coord: Coord): Vec =
+  # Position within the map, so coord(0, 0) -> vec(0, 0), regardless of editor offset
+  vec(coord.x * editor.tileW, coord.y * editor.tileH)
+
 
 proc isCoordInRange(editor: GridEditor, coord: Coord): bool =
   let grid = editor.grid[]
@@ -317,21 +325,30 @@ proc roomSelectionNode(editor: GridEditor): Node =
     ],
   )
 
-proc roomStatsNode(editor: GridEditor): Node =
+proc labelNode(label: string, pos: Vec, numPtr: ptr int, onChange: proc() = nil): Node =
   Node(
     children: @[
       BorderedTextNode(
-        pos: vec(80, 20),
-        text: "W",
+        pos: pos,
+        text: label,
       ),
       InputTextNode(
-        pos: vec(160, 20),
-        size: vec(80, 40),
-        num: addr editor.roomW,
-        onChange: (proc() =
-          editor.grid[].resizeTo(editor.roomW, editor.grid.h)
-        ),
+        pos: pos + vec(120, 0),
+        size: vec(80, 36),
+        num: numPtr,
+        onChange: onChange,
       ),
+    ],
+  )
+
+proc roomStatsNode(editor: GridEditor): Node =
+  Node(
+    children: @[
+      labelNode("Room W", vec(80,  20), addr editor.roomW, (proc() =
+        editor.grid[].resizeTo(editor.roomW, editor.grid.h)
+      )),
+      labelNode("Tile W", vec(80,  60), addr editor.tileW),
+      labelNode("Tile H", vec(80, 100), addr editor.tileH),
     ],
   )
 
@@ -459,6 +476,9 @@ method drawSelf(roomBuilder: RoomBuilderMenu, renderer: RendererPtr, resources: 
     renderer.draw(roomBuilder.gridEditor, resources)
   of mapEditMode:
     renderer.drawRoomViewers(roomBuilder.map.entities, resources, camera)
+
+  let hoverPos = roomBuilder.gridEditor.coordToMapPos(roomBuilder.gridEditor.hovered)
+  renderer.drawBorderedText($hoverPos, vec(1100, 850), resources.loadFont("nevis.ttf"))
 
 method updateSelf(roomBuilder: RoomBuilderMenu, manager: var MenuManager, input: InputManager) =
   case roomBuilder.mode
