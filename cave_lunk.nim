@@ -11,6 +11,7 @@ import
     cave_player_shooter,
     collider,
     damage_component,
+    enemy_movement,
     health,
     movement,
     platformer_control,
@@ -91,9 +92,29 @@ proc newPlayer(): Entity =
 proc roomEntities(room: RoomGrid, screenSize, pos: Vec): Entities =
   @[room.buildRoomEntity(pos, vec(64))]
 
+proc newEnemy(pos: Vec, stayOn: bool): Entity =
+  newEntity("Enemy", [
+    Transform(
+      pos: pos,
+      size: vec(48, 64),
+    ),
+    Movement(usesGravity: true),
+    Collider(layer: Layer.enemy),
+    EnemyMovePacing(
+      moveSpeed: 200,
+      facingSign: -1.0,
+      stayOnPlatforms: stayOn,
+    ),
+    Sprite(
+      color: red,
+    ),
+  ])
+
 method loadEntities*(game: CaveLunkGame) =
   game.entities = @[
     newPlayer(),
+    newEnemy(vec(256, 216), false),
+    newEnemy(vec(768, 216), true),
   ] & roomEntities(
     fromJson[RoomGrid](readJsonFile("assets/rooms/testbox.room")),
     game.camera.screenSize,

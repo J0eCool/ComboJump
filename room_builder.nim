@@ -519,5 +519,5 @@ method draw*(renderer: RendererPtr, program: RoomBuilder) =
   renderer.draw(program.menu, program.resources)
 
 when isMainModule:
-  let screenSize = vec(1600, 900)
+  let screenSize = vec(1200, 900)
   main(newRoomBuilder(screenSize), screenSize)

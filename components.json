@@ -7,6 +7,7 @@
   "Component": "1",
   "Damage": "13",
   "EnemyAttack": "19",
+  "EnemyMovePacing": "47",
   "EnemyMoveTowards": "20",
   "EnemyProximity": "18",
   "EnemyShooterMovement": "42",

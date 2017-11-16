@@ -153,6 +153,41 @@
         "Entity"
       ]
     },
+    "updateEnemyMovePacing": {
+      "args": [
+        "dt",
+        "terrain"
+      ],
+      "filename": "component/enemy_movement.nim",
+      "id": "25",
+      "priority": "0",
+      "types": [
+        "float",
+        "TerrainData"
+      ]
+    },
+    "updateEnemyMoveTowards": {
+      "args": [
+        "dt"
+      ],
+      "filename": "component/enemy_movement.nim",
+      "id": "24",
+      "priority": "0",
+      "types": [
+        "float"
+      ]
+    },
+    "updateEnemyProximity": {
+      "args": [
+        "player"
+      ],
+      "filename": "component/enemy_proximity.nim",
+      "id": "23",
+      "priority": "0",
+      "types": [
+        "Entity"
+      ]
+    },
     "updateHealth": {
       "args": [
         "notifications"
