@@ -5,8 +5,11 @@ when Profile != 0:
   import nimprof
 
 import
-  system/render,
-  system/update_progress_bar,
+  system/[
+    physics,
+    render,
+    update_progress_bar,
+  ],
   camera,
   entity,
   event,
@@ -22,6 +25,7 @@ type Game* = ref object of Program
   entities*: Entities
   camera*: Camera
   dt*: float
+  terrain*: TerrainData
 
 method loadEntities*(game: Game) {.base.} =
   discard

@@ -70,15 +70,28 @@
       "types": [
       ]
     },
+    "collectTerrain": {
+      "args": [
+        "terrain"
+      ],
+      "filename": "system/physics.nim",
+      "id": "22",
+      "priority": "-2",
+      "types": [
+        "var TerrainData"
+      ]
+    },
     "physics": {
       "args": [
-        "dt"
+        "dt",
+        "terrain"
       ],
       "filename": "system/physics.nim",
       "id": "20",
       "priority": "-1",
       "types": [
-        "float"
+        "float",
+        "TerrainData"
       ]
     },
     "updateBulletN10ns": {

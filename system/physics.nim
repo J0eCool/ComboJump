@@ -15,7 +15,10 @@ import
   vec
 
 type
-  ColliderData = tuple[entity: Entity, rect: Rect]
+  TerrainData* = object
+    rects: seq[Rect]
+    entities: seq[Entity]
+
   Ray* = object
     pos*: Vec
     dir*: Vec
@@ -102,42 +105,50 @@ proc intersection*(ray: Ray, rect: Rect): Option[RaycastHit] =
   if hitEdgeX xor hitEdgeY:
     result = makeNone[RaycastHit]()
 
-proc raycast*(ray: Ray, colliders: seq[Rect]): Option[RaycastHit] =
-  for collider in colliders:
+proc raycast*(terrain: TerrainData, ray: Ray): Option[RaycastHit] =
+  for collider in terrain.rects:
     let col = ray.intersection(collider)
     col.bindAs hit:
       result.setShortest hit
 
-proc collectTerrain(entities: Entities): seq[ColliderData] =
-  result = @[]
-  entities.forComponents entity, [
-    Collider, collider,
-    Transform, transform,
-  ]:
-    let roomViewer = entity.getComponent(RoomViewer)
-    if roomViewer == nil:
-      if collider.layer == Layer.floor:
-        result.add((entity, transform.globalRect))
-      continue
+defineSystem:
+  priority = -2
+  proc collectTerrain*(terrain: var TerrainData) =
+    terrain = TerrainData(
+      rects: @[],
+      entities: @[],
+    )
+    entities.forComponents entity, [
+      Collider, collider,
+      Transform, transform,
+    ]:
+      let roomViewer = entity.getComponent(RoomViewer)
+      if roomViewer == nil:
+        if collider.layer == Layer.floor:
+          terrain.rects.add transform.globalRect
+          terrain.entities.add entity
+        continue
 
-    let
-      data = roomViewer.data
-      size = roomViewer.tileSize
-    for x in 0..<data.len:
-      for y in 0..<data[x].len:
-        if data[x][y]:
-          let pos = transform.globalPos + vec(x, y) * size
-          result.add((entity, rect(pos, size)))
+      let
+        data = roomViewer.data
+        size = roomViewer.tileSize
+      for x in 0..<data.len:
+        for y in 0..<data[x].len:
+          if data[x][y]:
+            let pos = transform.globalPos + vec(x, y) * size
+            terrain.rects.add rect(pos, size)
+            terrain.entities.add entity
+
+    assert terrain.rects.len == terrain.entities.len
 
 defineSystem:
   priority = -1
-  proc physics*(dt: float) =
-    # Collect colliders once
-    let floorData: seq[ColliderData] = collectTerrain(entities)
+  proc physics*(dt: float, terrain: TerrainData) =
     proc collidedEntity(cur: Rect): Entity =
-      for col in floorData:
-        if col.rect.intersects(cur):
-          return col.entity
+      for i in 0..<terrain.rects.len:
+        let col = terrain.rects[i]
+        if col.intersects(cur):
+          return terrain.entities[i]
       return nil
 
     proc binarySearch(rect: var Rect, pre: Vec, startedCollided: bool) =

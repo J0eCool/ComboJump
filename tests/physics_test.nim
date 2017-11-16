@@ -12,7 +12,10 @@ import
     tilemap,
     tile_room,
   ],
-  system/physics,
+  system/[
+    collisions,
+    physics,
+  ],
   entity,
   option,
   rect,
@@ -154,61 +157,66 @@ proc isCloseTo(a, b: Vec): bool =
   if not result:
     echo "Playpos = ", a
 
+proc doUpdate(entities: Entities) =
+  let dt = 1.0
+  var terrain: TerrainData
+  discard checkCollisions(entities)
+  discard collectTerrain(entities, terrain)
+  discard physics(entities, dt, terrain)
+
 suite "Physics - Movement":
-  let
-    singleBlock = testBlock(vec(0), vec(40))
-    dt = 1.0
+  let singleBlock = testBlock(vec(0), vec(40))
 
   test "No movement with no velocity":
     let player = testPlayer(vec(50, 0), vec(0))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.pos.isCloseTo(vec(50, 0))
 
   test "Velocity moves":
     let player = testPlayer(vec(50, 0), vec(50, 0))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.pos.isCloseTo(vec(100, 0))
 
   test "Collision stops X movement":
     let player = testPlayer(vec(-50, 0), vec(50, 0))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.pos.isCloseTo(vec(-30, 0))
 
   test "Collision stops Y movement":
     let player = testPlayer(vec(0, -50), vec(0, 50))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.pos.isCloseTo(vec(0, -30))
 
   test "Y collision maintains X velocity":
     let player = testPlayer(vec(0, -50), vec(10, 50))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.pos.isCloseTo(vec(10, -30))
 
   test "Partial collision stops X movement":
     let player = testPlayer(vec(-50, 25), vec(50, 0))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.pos.isCloseTo(vec(-30, 25))
 
   # test "Can't skip collision with excessive velocity":
   #   let player = testPlayer(vec(0, -50), vec(0, 5000))
-  #   discard physics(@[player, singleBlock], dt)
+  #   doUpdate(@[player, singleBlock])
   #   check player.pos.isCloseTo(vec(0, -30))
 
   test "onGround false when not on ground":
     let player = testPlayer(vec(50, 0), vec(0))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check(not player.onGround)
 
   test "Falling onto platform sets onGround":
     let player = testPlayer(
       vec(0.0, -50 * gravitySign),
       vec(0.0, 50 * gravitySign))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.onGround
 
   test "Fixes self when starting in ground":
     let player = testPlayer(vec(0, -25), vec(0, 0))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.pos.isCloseTo(vec(0, -30))
 
 # Transpose test grids because Rooms are indexed [x][y], but literal
@@ -266,76 +274,76 @@ suite "Physics - TileRoom movement":
 
   test "No movement with no velocity":
     let player = testPlayer(vec(50, 0), vec(0))
-    discard physics(@[player], dt)
+    doUpdate(@[player])
     check player.pos.isCloseTo(vec(50, 0))
 
   test "Velocity moves":
     let player = testPlayer(vec(50, 0), vec(50, 0))
-    discard physics(@[player], dt)
+    doUpdate(@[player])
     check player.pos.isCloseTo(vec(100, 0))
 
   test "Collision stops X movement":
     let player = testPlayer(vec(-50, 0), vec(50, 0))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.pos.isCloseTo(vec(-30, 0))
 
   test "Collision stops Y movement":
     let player = testPlayer(vec(0, -50), vec(0, 50))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.pos.isCloseTo(vec(0, -30))
 
   test "Y collision maintains X velocity":
     let player = testPlayer(vec(0, -50), vec(10, 50))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.pos.isCloseTo(vec(10, -30))
 
   test "Partial collision stops X movement":
     let player = testPlayer(vec(-50, 25), vec(50, 0))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.pos.isCloseTo(vec(-30, 25))
 
   test "Can't get stuck on corners when moving straight":
     let player = testPlayer(vec(-29, -50), vec(0, 50))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.pos.isCloseTo(vec(-29, -30))
 
   test "Can't get stuck on corners when moving diagonally":
     let player = testPlayer(vec(-50, -50), vec(50, 50))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.pos.isCloseTo(vec(0, -30))
 
   test "Can't get stuck on corners when moving diagonally, offset slightly in X":
     let player = testPlayer(vec(-49, -50), vec(50, 50))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.pos.isCloseTo(vec(1, -30))
 
   test "Can't get stuck on corners when moving diagonally, offset slightly in Y":
     let player = testPlayer(vec(-50, -49), vec(50, 50))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.pos.isCloseTo(vec(-30, 1))
 
   # test "Can't skip collision with excessive velocity":
   #   let player = testPlayer(vec(0, -50), vec(0, 5000))
-  #   discard physics(@[player, singleBlock], dt)
+  #   doUpdate(@[player, singleBlock])
   #   check player.pos.isCloseTo(vec(0, -30))
 
   test "onGround false when not on ground":
     let player = testPlayer(vec(50, 0), vec(0))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check(not player.onGround)
 
   test "Falling onto platform sets onGround":
     let player = testPlayer(
       vec(0.0, -50 * gravitySign),
       vec(0.0, 50 * gravitySign))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.onGround
 
   test "Falling onto platform zeroes Y velocity":
     let player = testPlayer(
       vec(0.0, -50 * gravitySign),
       vec(0.0, 50 * gravitySign))
-    discard physics(@[player, singleBlock], dt)
+    doUpdate(@[player, singleBlock])
     check player.vel.y == 0.0
 
   test "Multiple tiles don't stop movement":
@@ -351,7 +359,7 @@ suite "Physics - TileRoom movement":
         playerDown,
         playerUp,
       ]
-    discard physics(entities, dt)
+    doUpdate(entities)
     check:
       playerRight.pos.isCloseTo vec( 10,  20)
       playerLeft.pos.isCloseTo  vec(-10, -20)
