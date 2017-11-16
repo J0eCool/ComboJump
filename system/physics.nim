@@ -164,9 +164,12 @@ defineSystem:
       if movement.usesGravity:
         movement.vel.y += gravity * dt
 
-      movement.onGround = false
 
       entity.withComponent Collider, collider:
+        collider.touchingDown = false
+        collider.touchingRight = false
+        collider.touchingLeft = false
+
         var
           rect = transform.globalRect
           toMove = movement.vel * dt
@@ -207,12 +210,17 @@ defineSystem:
           if collided != nil:
             let hitX = rect(rect.pos + vec(1 * sign(toMove.x), 0), size).collidedEntity != nil
             if hitX:
+              if movement.vel.x > 0:
+                collider.touchingRight = true
+              elif movement.vel.x < 0:
+                collider.touchingLeft = true
               toMove.x = 0.0
               movement.vel.x = 0.0
             else:
+              if movement.vel.y >= 0:
+                collider.touchingDown = true
               toMove.y = 0.0
               movement.vel.y = 0.0
-              movement.onGround = true
             collider.bufferedCollisions.add collided
 
         transform.globalPos = rect.pos

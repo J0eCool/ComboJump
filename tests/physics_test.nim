@@ -147,7 +147,7 @@ proc vel(entity: Entity): Vec =
   entity.getComponent(Movement).vel
 
 proc onGround(entity: Entity): bool =
-  entity.getComponent(Movement).onGround
+  entity.getComponent(Collider).touchingDown
 
 proc isCloseTo(a, b: Vec): bool =
   result = approxEq(a, b, 0.1)

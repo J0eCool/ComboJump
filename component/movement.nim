@@ -10,7 +10,6 @@ type
   MovementObj* = object of ComponentObj
     vel*: Vec
     usesGravity*: bool
-    onGround*: bool
     canDropDown*: bool
   Movement* = ref MovementObj
 

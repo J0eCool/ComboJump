@@ -21,12 +21,18 @@ type
     collisions*: seq[Entity]
     collisionBlacklist: seq[Entity]
     bufferedCollisions*: seq[Entity]
+    touchingDown*: bool
+    touchingRight*: bool
+    touchingLeft*: bool
   Collider* = ref ColliderObj
 
 defineComponent(Collider, @[
   "collisions",
   "collisionBlacklist",
   "bufferedCollisions",
+  "touchingDown",
+  "touchingRight",
+  "touchingLeft",
 ])
 
 const layerMask: array[Layer, set[Layer]] = [
