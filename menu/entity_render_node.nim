@@ -2,6 +2,7 @@ from sdl2 import RendererPtr
 
 import
   component/[
+    popup_text,
     room_viewer,
   ],
   system/[

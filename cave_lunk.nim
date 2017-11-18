@@ -15,6 +15,7 @@ import
     health,
     movement,
     platformer_control,
+    popup_text,
     remove_when_offscreen,
     room_viewer,
     sprite,
@@ -35,6 +36,7 @@ import
   game_system,
   jsonparse,
   menu,
+  notifications,
   program,
   screen_shake,
   vec
@@ -43,7 +45,9 @@ import
 import menu/entity_render_node
 
 type CaveLunkGame* = ref object of Game
+  player: Entity
   shake: ScreenShake
+  notifications: N10nManager
 
 defineSystemCalls(CaveLunkGame)
 
@@ -67,6 +71,7 @@ proc newCaveLunkGame*(screenSize: Vec): CaveLunkGame =
   new result
   result.camera.screenSize = screenSize
   result.title = "Cavelunk"
+  result.notifications = newN10nManager()
 
 proc newPlayer(): Entity =
   newEntity("Player", [
@@ -98,6 +103,7 @@ proc newEnemy(pos: Vec, stayOn: bool): Entity =
       pos: pos,
       size: vec(48, 64),
     ),
+    newHealth(5),
     Movement(usesGravity: true),
     Collider(layer: Layer.enemy),
     EnemyMovePacing(
@@ -111,10 +117,12 @@ proc newEnemy(pos: Vec, stayOn: bool): Entity =
   ])
 
 method loadEntities*(game: CaveLunkGame) =
+  game.player = newPlayer()
   game.entities = @[
-    newPlayer(),
+    game.player,
     newEnemy(vec(256, 216), false),
     newEnemy(vec(768, 216), true),
+    newEnemy(vec(1208, 716), true),
   ] & roomEntities(
     fromJson[RoomGrid](readJsonFile("assets/rooms/testbox.room")),
     game.camera.screenSize,
