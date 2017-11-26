@@ -273,6 +273,17 @@
         "var ScreenShake"
       ]
     },
+    "updateSineMovement": {
+      "args": [
+        "dt"
+      ],
+      "filename": "component/sine_movement.nim",
+      "id": "26",
+      "priority": "0",
+      "types": [
+        "float"
+      ]
+    },
     "updateSpellCreator": {
       "args": [
         "input",
