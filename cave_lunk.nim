@@ -86,7 +86,7 @@ proc newPlayer(): Entity =
       jumpHeight: 240,
     ),
     CavePlayerShooter(
-      fireRate: 3.0,
+      fireRate: 5.0,
     ),
     Sprite(
       textureName: "Wizard2.png",
@@ -112,7 +112,8 @@ proc newEnemy(pos: Vec, stayOn: bool): Entity =
       stayOnPlatforms: stayOn,
     ),
     Sprite(
-      color: red,
+      textureName: "Goblin.png",
+      flipAssetX: true,
     ),
   ])
 
@@ -122,7 +123,6 @@ method loadEntities*(game: CaveLunkGame) =
     game.player,
     newEnemy(vec(256, 216), false),
     newEnemy(vec(768, 216), true),
-    newEnemy(vec(1208, 716), true),
   ] & roomEntities(
     fromJson[RoomGrid](readJsonFile("assets/rooms/testbox.room")),
     game.camera.screenSize,

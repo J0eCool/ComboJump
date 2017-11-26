@@ -67,6 +67,5 @@ defineSystem:
       platformerControl.facingSign = raw.x
     if platformerControl.wallJumpTimer > 0.0:
       platformerControl.facingSign = sign(movement.vel.x).float
-    let sprite = entity.getComponent(Sprite)
-    if sprite != nil:
+    entity.withComponent Sprite, sprite:
       sprite.flipX = platformerControl.facingSign < 0

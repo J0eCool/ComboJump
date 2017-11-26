@@ -3,6 +3,7 @@ import
     collider,
     enemy_proximity,
     movement,
+    sprite,
     transform,
   ],
   system/[
@@ -58,3 +59,6 @@ defineSystem:
       if hitLeft.isJust xor hitRight.isJust:
         move.facingSign = if hitLeft.isJust: -1.0 else: 1.0
     movement.vel.x = move.moveSpeed * move.facingSign
+
+    entity.withComponent Sprite, sprite:
+      sprite.flipX = movement.vel.x < 0.0

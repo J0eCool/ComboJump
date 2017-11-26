@@ -16,6 +16,7 @@ type
     textureName*: string
     sprite*: SpriteData
     flipX*: bool
+    flipAssetX*: bool
     angle*: float
   Sprite* = ref object of SpriteObj
 

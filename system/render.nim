@@ -23,7 +23,8 @@ defineDrawSystem:
     ]:
       let r = t.globalRect + (if s.ignoresCamera: vec() else: camera.offset)
       if s.sprite != nil:
-        renderer.draw s.sprite, r, s.flipX, s.angle
+        let flip = s.flipX xor s.flipAssetX
+        renderer.draw s.sprite, r, flip, s.angle
       else:
         renderer.fillRect r, s.color
 
