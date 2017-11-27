@@ -17,12 +17,10 @@ type
     jumpHeight*: float
     dropDownTimer: float
     facingSign*: float
-    wallJumpTimer: float
   PlatformerControl* = ref PlatformerControlObj
 
 defineComponent(PlatformerControl, @[
   "dropDownTimer",
-  "wallJumpTimer",
 ])
 
 const
@@ -38,11 +36,7 @@ defineSystem:
       dir = vec(raw.x, 0.0)
       spd = platformerControl.moveSpeed
       vel = dir * spd
-    platformerControl.wallJumpTimer -= dt
-    if collider.touchingDown:
-      platformerControl.wallJumpTimer = 0.0
-    if platformerControl.wallJumpTimer <= 0.0:
-      movement.vel.x = vel.x
+    movement.vel.x = vel.x
 
     if platformerControl.dropDownTimer > 0.0:
       platformerControl.dropDownTimer -= dt
@@ -51,13 +45,6 @@ defineSystem:
       platformerControl.dropDownTimer = timeToDropDown
     elif collider.touchingDown and input.isPressed(Input.jump):
       movement.vel.y = jumpSpeed(platformerControl.jumpHeight)
-    elif collider.touchingLeft and input.isPressed(Input.jump):
-      # TODO: this is kinda hacky fix it proper later
-      movement.vel = vec(spd * 1.25, jumpSpeed(platformerControl.jumpHeight * 0.75))
-      platformerControl.wallJumpTimer = 0.5
-    elif collider.touchingRight and input.isPressed(Input.jump):
-      movement.vel = vec(-spd * 1.25, jumpSpeed(platformerControl.jumpHeight * 0.75))
-      platformerControl.wallJumpTimer = 0.5
     elif input.isReleased(Input.jump) and (not movement.isFalling):
       movement.vel.y *= jumpReleaseMultiplier
 
@@ -65,7 +52,5 @@ defineSystem:
       platformerControl.facingSign = 1.0
     if raw.x != 0:
       platformerControl.facingSign = raw.x
-    if platformerControl.wallJumpTimer > 0.0:
-      platformerControl.facingSign = sign(movement.vel.x).float
     entity.withComponent Sprite, sprite:
       sprite.flipX = platformerControl.facingSign < 0
