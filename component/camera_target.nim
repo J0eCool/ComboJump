@@ -6,11 +6,13 @@ import
   game_system,
   vec
 
-type CameraTarget* = ref object of Component
-  verticallyLocked*: bool
-  offset*: Vec
+type
+  CameraTargetObj* = object of ComponentObj
+    verticallyLocked*: bool
+    offset*: Vec
+  CameraTarget* = ref object of CameraTargetObj
 
-defineComponent(CameraTarget)
+defineComponent(CameraTarget, @[])
 
 defineSystem:
   priority = -100

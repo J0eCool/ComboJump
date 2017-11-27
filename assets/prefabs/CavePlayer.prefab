@@ -1,0 +1,30 @@
+{
+  "name": "CavePlayer",
+  "components": {
+    "Transform": {
+      "size": {
+        "x": "76",
+        "y": "68"
+      }
+    },
+    "Movement": {
+      "usesGravity": "true"
+    },
+    "Collider": {
+      "layer": "player"
+    },
+    "PlatformerControl": {
+      "moveSpeed": "400.0",
+      "jumpHeight": "240.0"
+    },
+    "CavePlayerShooter": {
+      "fireRate": "5.0"
+    },
+    "Sprite": {
+      "textureName": "Wizard2.png"
+    },
+    "CameraTarget": {
+      "verticallyLocked": "true"
+    }
+  }
+}

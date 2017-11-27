@@ -21,6 +21,8 @@ macro declareToJsonMethods(): untyped =
   var data = readComponentData()
 
   const implementedNames = [
+    "CavePlayerShooter",
+    "CameraTarget",
     "Collider",
     "Component",
     "Damage",
@@ -108,3 +110,10 @@ proc fromJson*(entity: var Entity, json: Json) =
     components.add c
   let name = json.obj["name"].str
   entity = newEntity(name, components)
+
+
+proc loadPrefab*(name: string): Entity =
+  let
+    path = "assets/prefabs/" & name & ".prefab"
+    json = readJsonFile(path)
+  fromJson(result, json)

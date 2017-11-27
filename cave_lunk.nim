@@ -31,6 +31,7 @@ import
   ],
   color,
   entity,
+  entity_json,
   event,
   game,
   game_system,
@@ -74,25 +75,8 @@ proc newCaveLunkGame*(screenSize: Vec): CaveLunkGame =
   result.notifications = newN10nManager()
 
 proc newPlayer(): Entity =
-  newEntity("Player", [
-    Transform(
-      pos: vec(500, 500),
-      size: vec(76, 68),
-    ),
-    Movement(usesGravity: true),
-    Collider(layer: Layer.player),
-    PlatformerControl(
-      moveSpeed: 400,
-      jumpHeight: 240,
-    ),
-    CavePlayerShooter(
-      fireRate: 5.0,
-    ),
-    Sprite(
-      textureName: "Wizard2.png",
-    ),
-    CameraTarget(verticallyLocked: true),
-  ])
+  result = loadPrefab("CavePlayer")
+  result.getComponent(Transform).pos = vec(500, 500)
 
 proc roomEntities(room: RoomGrid, screenSize, pos: Vec): Entities =
   @[room.buildRoomEntity(pos, vec(64))]
