@@ -15,6 +15,7 @@ import
     health,
     limited_time,
     movement,
+    particle_effect,
     platformer_control,
     popup_text,
     remove_when_offscreen,

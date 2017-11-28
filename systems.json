@@ -37,6 +37,19 @@
         "Camera"
       ]
     },
+    "drawParticleEffect": {
+      "args": [
+        "resources",
+        "camera"
+      ],
+      "filename": "component/particle_effect.nim",
+      "id": "40",
+      "priority": "-50",
+      "types": [
+        "ResourceManager",
+        "Camera"
+      ]
+    },
     "drawPopupText": {
       "args": [
         "resources",
@@ -367,6 +380,17 @@
       "priority": "0",
       "types": [
         "var N10nManager"
+      ]
+    },
+    "updateParticleEffect": {
+      "args": [
+        "dt"
+      ],
+      "filename": "component/particle_effect.nim",
+      "id": "39",
+      "priority": "0",
+      "types": [
+        "float"
       ]
     },
     "updatePlatformerControl": {

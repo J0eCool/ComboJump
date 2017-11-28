@@ -27,6 +27,7 @@
   "MapContainer": "35",
   "MapMenu": "36",
   "Movement": "4",
+  "ParticleEffect": "50",
   "PlatformerControl": "32",
   "PlayerHealth": "27",
   "PlayerMana": "28",

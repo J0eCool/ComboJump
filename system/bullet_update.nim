@@ -2,12 +2,17 @@ import math
 from sdl2 import color
 
 import
-  component/bullet,
-  component/collider,
-  component/health,
-  component/movement,
-  component/transform,
-  component/sprite,
+  component/[
+    bullet,
+    collider,
+    health,
+    limited_time,
+    movement,
+    particle_effect,
+    sprite,
+    transform,
+  ],
+  color,
   entity,
   event,
   game_system,
@@ -16,18 +21,21 @@ import
   vec
 
 defineSystem:
+  components = [Bullet, Collider, Transform]
   proc updateBullets*(dt: float) =
-    result = @[]
-    entities.forComponents e, [
-      Bullet, b,
-      Collider, c,
-    ]:
-      b.timeSinceSpawn += dt
-      if b.onUpdate != nil:
-        b.onUpdate(e, dt)
-        
-      if b.lifePct <= 0.0 or (c.collisions.len > 0 and not b.stayOnHit):
-        result.add(Event(kind: removeEntity, entity: e))
+    bullet.timeSinceSpawn += dt
+    if bullet.onUpdate != nil:
+      bullet.onUpdate(entity, dt)
+      
+    if bullet.lifePct <= 0.0 or (collider.collisions.len > 0 and not bullet.stayOnHit):
+      result.add(Event(kind: removeEntity, entity: entity))
+      result.add(Event(kind: addEntity, entity: newEntity("Particles", [
+        Transform(pos: transform.pos),
+        ParticleEffect(
+          color: yellow,
+        ),
+        LimitedTime(limit: 0.1),
+      ])))
 
 defineSystem:
   components = [RepeatShooter, Transform]
