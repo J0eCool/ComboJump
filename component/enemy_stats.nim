@@ -4,6 +4,7 @@ import
   component/[
     enemy_attack,
     health,
+    limited_time,
     popup_text,
     transform,
   ],
@@ -63,5 +64,6 @@ defineSystem:
           let popup = newEntity("XpPopup", [
             Transform(pos: transform.pos - vec(0, 75)),
             PopupText(text: "+" & $enemyStats.xp & " XP", color: rgb(0, 255, 0)),
+            LimitedTime(limit: 1.5),
           ])
           result.add event.Event(kind: addEntity, entity: popup)

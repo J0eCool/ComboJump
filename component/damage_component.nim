@@ -2,6 +2,7 @@ import
   component/[
     collider,
     health,
+    limited_time,
     popup_text,
     transform,
   ],
@@ -33,7 +34,12 @@ defineSystem:
               rgb(255, 255, 0)
           popup = newEntity("DamagePopup", [
             Transform(pos: transform.pos + randomVec(50.0)),
-            PopupText(text: $damage.damage, color: popupColor),
+            PopupText(
+              text: $damage.damage,
+              height: 125,
+              color: popupColor,
+            ),
+            LimitedTime(limit: 0.75),
           ])
         result.add event.Event(kind: addEntity, entity: popup)
         collider.addToBlacklist(col)

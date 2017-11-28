@@ -11,6 +11,32 @@
         "Camera"
       ]
     },
+    "drawHealthBarNodes": {
+      "args": [
+        "resources",
+        "camera"
+      ],
+      "filename": "component/health_bar.nim",
+      "id": "33",
+      "priority": "-100",
+      "types": [
+        "ResourceManager",
+        "Camera"
+      ]
+    },
+    "drawHudMenu": {
+      "args": [
+        "resources",
+        "camera"
+      ],
+      "filename": "component/hud_menu.nim",
+      "id": "37",
+      "priority": "-100",
+      "types": [
+        "ResourceManager",
+        "Camera"
+      ]
+    },
     "drawPopupText": {
       "args": [
         "resources",
@@ -79,6 +105,28 @@
       "priority": "-2",
       "types": [
         "var TerrainData"
+      ]
+    },
+    "gridControl": {
+      "args": [
+        "dt",
+        "input"
+      ],
+      "filename": "component/grid_control.nim",
+      "id": "32",
+      "priority": "0",
+      "types": [
+        "float",
+        "InputManager"
+      ]
+    },
+    "initEnemyStats": {
+      "args": [
+      ],
+      "filename": "component/enemy_stats.nim",
+      "id": "29",
+      "priority": "0",
+      "types": [
       ]
     },
     "physics": {
@@ -153,6 +201,17 @@
         "Entity"
       ]
     },
+    "updateEnemyAttack": {
+      "args": [
+        "dt"
+      ],
+      "filename": "component/enemy_attack.nim",
+      "id": "27",
+      "priority": "0",
+      "types": [
+        "float"
+      ]
+    },
     "updateEnemyMovePacing": {
       "args": [
         "dt",
@@ -188,6 +247,41 @@
         "Entity"
       ]
     },
+    "updateEnemyShooterMovement": {
+      "args": [
+        "dt"
+      ],
+      "filename": "component/enemy_shooter_movement.nim",
+      "id": "28",
+      "priority": "0",
+      "types": [
+        "float"
+      ]
+    },
+    "updateEnemyStatsN10ns": {
+      "args": [
+        "notifications",
+        "stats"
+      ],
+      "filename": "component/enemy_stats.nim",
+      "id": "30",
+      "priority": "0",
+      "types": [
+        "N10nManager",
+        "var PlayerStats"
+      ]
+    },
+    "updateExitZones": {
+      "args": [
+        "stageData"
+      ],
+      "filename": "component/exit_zone.nim",
+      "id": "31",
+      "priority": "0",
+      "types": [
+        "var StageData"
+      ]
+    },
     "updateHealth": {
       "args": [
         "notifications"
@@ -197,6 +291,71 @@
       "priority": "0",
       "types": [
         "var N10nManager"
+      ]
+    },
+    "updateHealthBarNodes": {
+      "args": [
+        "menus",
+        "input"
+      ],
+      "filename": "component/health_bar.nim",
+      "id": "34",
+      "priority": "0",
+      "types": [
+        "var MenuManager",
+        "InputManager"
+      ]
+    },
+    "updateHudMenu": {
+      "args": [
+        "menus",
+        "input",
+        "stats",
+        "stageData",
+        "player"
+      ],
+      "filename": "component/hud_menu.nim",
+      "id": "38",
+      "priority": "0",
+      "types": [
+        "var MenuManager",
+        "InputManager",
+        "var PlayerStats",
+        "var StageData",
+        "Entity"
+      ]
+    },
+    "updateLimitedTime": {
+      "args": [
+        "dt"
+      ],
+      "filename": "component/limited_time.nim",
+      "id": "3",
+      "priority": "0",
+      "types": [
+        "float"
+      ]
+    },
+    "updateLockedDoors": {
+      "args": [
+        "player"
+      ],
+      "filename": "component/locked_door.nim",
+      "id": "36",
+      "priority": "0",
+      "types": [
+        "Entity"
+      ]
+    },
+    "updateLocks": {
+      "args": [
+        "player"
+      ],
+      "filename": "component/locked_door.nim",
+      "id": "35",
+      "priority": "0",
+      "types": [
+        "Entity"
       ]
     },
     "updateN10nManager": {
@@ -223,15 +382,30 @@
         "InputManager"
       ]
     },
-    "updatePopupText": {
+    "updatePlayerHealth": {
       "args": [
-        "dt"
+        "stats"
       ],
-      "filename": "component/popup_text.nim",
-      "id": "3",
+      "filename": "component/player_health.nim",
+      "id": "41",
+      "priority": "5",
+      "types": [
+        "PlayerStats"
+      ]
+    },
+    "updatePlayerShooterAttack": {
+      "args": [
+        "stats",
+        "dt",
+        "input"
+      ],
+      "filename": "component/player_shooter_attack.nim",
+      "id": "42",
       "priority": "0",
       "types": [
-        "float"
+        "ShooterStats",
+        "float",
+        "InputManager"
       ]
     },
     "updateRemoveWhenOffscreen": {
@@ -258,6 +432,19 @@
         "float"
       ]
     },
+    "updateRoomCamera": {
+      "args": [
+        "player",
+        "camera"
+      ],
+      "filename": "component/room_camera_target.nim",
+      "id": "43",
+      "priority": "-10",
+      "types": [
+        "Entity",
+        "var Camera"
+      ]
+    },
     "updateScreenShake": {
       "args": [
         "dt",
@@ -271,6 +458,19 @@
         "float",
         "var Camera",
         "var ScreenShake"
+      ]
+    },
+    "updateShooterRewardOnDeath": {
+      "args": [
+        "notifications",
+        "stats"
+      ],
+      "filename": "component/shooter_reward_on_death.nim",
+      "id": "44",
+      "priority": "0",
+      "types": [
+        "N10nManager",
+        "ShooterStats"
       ]
     },
     "updateSineMovement": {

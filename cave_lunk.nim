@@ -13,6 +13,7 @@ import
     damage_component,
     enemy_movement,
     health,
+    limited_time,
     movement,
     platformer_control,
     popup_text,
@@ -116,6 +117,7 @@ method loadEntities*(game: CaveLunkGame) =
     game.player,
     newEnemy(vec(256, 216), false),
     newEnemy(vec(768, 216), true),
+    newEnemy(vec(1100, 616), true),
   ] & roomEntities(
     fromJson[RoomGrid](readJsonFile("assets/rooms/testbox.room")),
     game.camera.screenSize,

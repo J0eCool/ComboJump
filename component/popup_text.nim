@@ -2,6 +2,7 @@ from sdl2 import RendererPtr
 
 import
   component/[
+    limited_time,
     transform,
   ],
   camera,
@@ -14,29 +15,20 @@ import
   vec
 
 type
-  PopupText* = ref object of Component
+  PopupTextObj* = object of ComponentObj
     text*: string
+    height*: float
     color*: Color
-    liveTime: float
+  PopupText* = ref object of PopupTextObj
 
-defineComponent(PopupText)
-
-const
-  timeToLive = 1.5
-  popupDist = 300
-
-defineSystem:
-  components = [PopupText]
-  proc updatePopupText*(dt: float) =
-    popupText.liveTime += dt
-    if popupText.liveTime >= timeToLive:
-      result.add event.Event(kind: removeEntity, entity: entity)
+defineComponent(PopupText, @[])
 
 defineDrawSystem:
   priority = -50
-  components = [PopupText, Transform]
+  components = [PopupText, LimitedTime, Transform]
   proc drawPopupText*(resources: ResourceManager, camera: Camera) =
     let
       font = resources.loadFont("nevis.ttf")
-      pos = transform.globalPos - vec(0.0, popupDist * popupText.liveTime / timeToLive) + camera.offset
+      height = popupText.height * limitedTime.pct
+      pos = transform.globalPos - vec(0.0, height) + camera.offset
     renderer.drawBorderedText(popupText.text, pos, font, popupText.color)
