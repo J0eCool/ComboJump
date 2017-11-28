@@ -24,6 +24,9 @@ import
   mapgen/[
     tile_room,
   ],
+  menu/[
+    title_menu,
+  ],
   system/[
     bullet_update,
     collisions,
@@ -35,6 +38,7 @@ import
   event,
   game,
   game_system,
+  input,
   jsonparse,
   menu,
   notifications,
@@ -59,6 +63,11 @@ proc caveLunkView(game: CaveLunkGame, controller: CaveLunkController): Node {.pr
   EntityRenderNode(
     entities: game.entities,
     camera: game.camera,
+    update: (proc() =
+      if game.input.isPressed(Input.escape):
+        controller.shouldPop = true
+      game.updateSystems()
+    ),
   )
 
 proc newCaveLunkMenu(game: CaveLunkGame): MenuBase =
@@ -111,7 +120,12 @@ method loadEntities*(game: CaveLunkGame) =
     fromJson[RoomGrid](readJsonFile("assets/rooms/testbox.room")),
     game.camera.screenSize,
     vec(0, 0))
-  game.menus.push newCaveLunkMenu(game)
+  game.menus.push newTitleMenu("CaveLunk", proc(): MenuBase =
+    newCaveLunkMenu(game)
+  )
+
+  # Work through any first-frame jank during transition. Kinda hacky.
+  game.updateSystems()
 
 method draw*(renderer: RendererPtr, game: CaveLunkGame) =
   renderer.drawGame(game)
@@ -120,8 +134,6 @@ method draw*(renderer: RendererPtr, game: CaveLunkGame) =
 
 method update*(game: CaveLunkGame, dt: float) =
   game.dt = dt
-
-  game.updateSystems()
 
   game.menus.update(dt, game.input)
 

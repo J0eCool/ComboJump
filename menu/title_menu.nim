@@ -1,4 +1,5 @@
 import
+  input,
   menu,
   transition,
   vec
@@ -24,6 +25,7 @@ proc titleScreenView(menu: TitleScreen, controller: TitleScreenController): Node
         pos: vec(600, 700),
         size: vec(300, 120),
         children: @[BorderedTextNode(text: "START").Node],
+        hotkey: Input.enter,
         onClick: (proc() =
           controller.queueMenu downcast(newTransitionMenu(menu.toLoad()))
         ),
