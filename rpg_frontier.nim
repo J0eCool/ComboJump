@@ -6,9 +6,11 @@ when Profile != 0:
   import nimprof
 
 import
-  component/collider,
+  menu/[
+    title_menu,
+  ],
   rpg_frontier/[
-    title_screen,
+    level_select,
   ],
   game,
   menu,
@@ -26,7 +28,9 @@ proc newRpgFrontierGame*(screenSize: Vec): RpgFrontierGame =
 
 method loadEntities*(game: RpgFrontierGame) =
   game.entities = @[]
-  game.menus.push newTitleMenu()
+  game.menus.push newTitleMenu("RPG Frontier", (proc(): MenuBase =
+    downcast(newLevelSelectMenu())
+  ))
 
 method draw*(renderer: RendererPtr, game: RpgFrontierGame) =
   renderer.drawGame(game)

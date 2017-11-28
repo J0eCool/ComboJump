@@ -6,9 +6,11 @@ when Profile != 0:
   import nimprof
 
 import
-  component/collider,
+  menu/[
+    title_menu,
+  ],
   quick_shoot/[
-    title_screen,
+    level_select,
   ],
   game,
   menu,
@@ -25,7 +27,9 @@ proc newQuickShootGame*(screenSize: Vec): QuickShootGame =
 
 method loadEntities*(game: QuickShootGame) =
   game.entities = @[]
-  game.menus.push newTitleMenu()
+  game.menus.push newTitleMenu("Quick Shooter", (proc(): MenuBase =
+    downcast(newLevelSelectMenu())
+  ))
 
 method draw*(renderer: RendererPtr, game: QuickShootGame) =
   renderer.drawGame(game)

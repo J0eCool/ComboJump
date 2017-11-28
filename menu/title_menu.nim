@@ -1,14 +1,14 @@
 import
-  rpg_frontier/[
-    level_select,
-  ],
   menu,
   transition,
   vec
 
 
 type
+  MenuProc = proc(): MenuBase
   TitleScreen = ref object of RootObj
+    titleText: string
+    toLoad: MenuProc
   TitleScreenController = ref object of Controller
 
 
@@ -17,7 +17,7 @@ proc titleScreenView(menu: TitleScreen, controller: TitleScreenController): Node
     children: @[
       BorderedTextNode(
         pos: vec(600, 150),
-        text: "RPG Frontier",
+        text: menu.titleText,
         fontSize: 72,
       ),
       Button(
@@ -25,16 +25,18 @@ proc titleScreenView(menu: TitleScreen, controller: TitleScreenController): Node
         size: vec(300, 120),
         children: @[BorderedTextNode(text: "START").Node],
         onClick: (proc() =
-          let levelSelect = downcast(newLevelSelectMenu())
-          controller.queueMenu downcast(newTransitionMenu(levelSelect))
+          controller.queueMenu downcast(newTransitionMenu(menu.toLoad()))
         ),
       ),
     ],
   )
 
-proc newTitleMenu*(): Menu[TitleScreen, TitleScreenController] =
-  Menu[TitleScreen, TitleScreenController](
-    model: TitleScreen(),
+proc newTitleMenu*(title: string, toLoad: MenuProc): MenuBase =
+  downcast(Menu[TitleScreen, TitleScreenController](
+    model: TitleScreen(
+      titleText: title,
+      toLoad: toLoad,
+    ),
     view: titleScreenView,
     controller: TitleScreenController(),
-  )
+  ))
