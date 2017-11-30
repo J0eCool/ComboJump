@@ -266,9 +266,9 @@ method updateSelf(button: Button, manager: var MenuManager, input: InputManager)
   if button.hotkey != Input.none and button.onClick != nil:
     if not button.isKeyHeld and input.isPressed(button.hotkey):
       button.isKeyHeld = true
-      button.onClick()
     elif button.isKeyHeld and input.isReleased(button.hotkey):
       button.isKeyHeld = false
+      button.onClick()
 
 
 # ------
