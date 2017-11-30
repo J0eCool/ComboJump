@@ -112,7 +112,7 @@ proc newEnemy(pos: Vec, stayOn: bool): Entity =
     ),
   ])
 
-method loadEntities*(game: CaveLunkGame) =
+proc initEntities(game: CaveLunkGame) =
   game.player = newPlayer()
   game.entities = @[
     game.player,
@@ -123,12 +123,15 @@ method loadEntities*(game: CaveLunkGame) =
     fromJson[RoomGrid](readJsonFile("assets/rooms/testbox.room")),
     game.camera.screenSize,
     vec(0, 0))
-  game.menus.push newTitleMenu("CaveLunk", proc(): MenuBase =
-    newCaveLunkMenu(game)
-  )
-
   # Work through any first-frame jank during transition. Kinda hacky.
   game.updateSystems()
+
+method loadEntities*(game: CaveLunkGame) =
+  game.entities = @[]
+  game.menus.push newTitleMenu("CaveLunk", proc(): MenuBase =
+    game.initEntities()
+    newCaveLunkMenu(game)
+  )
 
 method draw*(renderer: RendererPtr, game: CaveLunkGame) =
   renderer.drawGame(game)
