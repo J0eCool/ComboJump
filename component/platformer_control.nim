@@ -35,10 +35,17 @@ defineSystem:
       control = platformerControl
       raw = vec(input.getAxis(Axis.horizontal),
                 input.getAxis(Axis.vertical))
-      dir = vec(raw.x, 0.0)
+      acc = control.acceleration
       spd = control.moveSpeed
-      vel = dir * spd
-    movement.vel.x = vel.x
+    var vel = movement.vel
+    vel.x += raw.x * acc * dt
+    let sgn = sign(vel.x).float
+    if raw.x != sgn:
+      vel.x -= sgn * acc * dt
+      if sign(vel.x).float != sgn:
+        vel.x = 0.0
+    vel.x = clamp(vel.x, -spd, spd)
+    movement.vel = vel
 
     if control.dropDownTimer > 0.0:
       control.dropDownTimer -= dt
