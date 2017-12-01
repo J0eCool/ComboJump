@@ -116,6 +116,7 @@ proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
     sysProc: NimNode = nil
     components: seq[string] = nil
     priority = 0
+    rebuild = false
   for n in body:
     if n.kind == nnkProcDef:
       assert sysProc == nil, "Only expecting one proc per system"
@@ -138,17 +139,25 @@ proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
           priority = -val[1].intVal.int
         else:
           assert false, "Invalid priority:\n" & val.treeRepr
+      of "rebuild":
+        # In theory this should be if `rebuild == true`
+        # In practice this is only set at build time, so it's always true.
+        rebuild = true
       else:
         assert false, "Unrecognized system metadata: " & metaKind
   assert sysProc != nil, "Must find proc in system"
+  let shouldRebuild = proc(): bool =
+    RebuildSystems != 0 or rebuild
 
-  when RebuildSystems != 0:
-    var
+  var
+    data: Data
+    systems: SysTable
+  if shouldRebuild():
       data = readData()
       systems = if sysType == "update": data.update else: data.draw
 
   let key = ($sysProc.name)[0..^2]
-  when RebuildSystems != 0:
+  if shouldRebuild():
     if not systems.hasKey(key):
       let nextId = getNextId(data)
       systems[key] = System()
@@ -164,7 +173,7 @@ proc defineSystem_impl(body: NimNode, sysType: string): NimNode =
   if sysType == "draw":
     params.insert 1, newIdentDefs(ident("renderer"), ident("RendererPtr"))
     paramStart += 1
-  when RebuildSystems != 0:
+  if shouldRebuild():
     var
       args: seq[string] = @[]
       types: seq[string] = @[]
