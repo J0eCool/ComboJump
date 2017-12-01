@@ -18,9 +18,15 @@ import
   ],
   entity,
   option,
+  project_config,
   rect,
   util,
   vec
+
+let
+  testConfig = ProjectConfig(gravity: 2100.0)
+  gravity = testConfig.gravity
+  gravitySign = sign(gravity).float
 
 suite "Physics - Raycasting":
   proc fromOrigin(dir: Vec): Ray =
@@ -162,7 +168,7 @@ proc doUpdate(entities: Entities) =
   var terrain: TerrainData
   discard checkCollisions(entities)
   discard collectTerrain(entities, terrain)
-  discard physics(entities, dt, terrain)
+  discard physics(entities, dt, terrain, testConfig)
 
 suite "Physics - Movement":
   let singleBlock = testBlock(vec(0), vec(40))

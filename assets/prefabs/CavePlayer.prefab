@@ -14,8 +14,8 @@
       "layer": "player"
     },
     "PlatformerControl": {
-      "moveSpeed": "360.0",
-      "acceleration": "1100.0",
+      "moveSpeed": "350.0",
+      "acceleration": "1000.0",
       "jumpHeight": "240.0"
     },
     "CavePlayerShooter": {

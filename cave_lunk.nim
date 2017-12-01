@@ -45,6 +45,7 @@ import
   menu,
   notifications,
   program,
+  project_config,
   screen_shake,
   vec
 
@@ -55,6 +56,7 @@ type CaveLunkGame* = ref object of Game
   player: Entity
   shake: ScreenShake
   notifications: N10nManager
+  config: ProjectConfig
 
 defineSystemCalls(CaveLunkGame)
 
@@ -84,6 +86,7 @@ proc newCaveLunkGame*(screenSize: Vec): CaveLunkGame =
   result.camera.screenSize = screenSize
   result.title = "Cavelunk"
   result.notifications = newN10nManager()
+  result.config = newProjectConfig("CaveLunk")
 
 proc newPlayer(): Entity =
   result = loadPrefab("CavePlayer")

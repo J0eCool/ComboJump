@@ -8,6 +8,7 @@ import
   entity,
   event,
   game_system,
+  project_config,
   util,
   vec
 
@@ -30,7 +31,7 @@ const
 
 defineSystem:
   components = [PlatformerControl, Collider, Movement]
-  proc updatePlatformerControl*(dt: float, input: InputManager) =
+  proc updatePlatformerControl*(dt: float, input: InputManager, config: ProjectConfig) =
     let
       control = platformerControl
       raw = vec(input.getAxis(Axis.horizontal),
@@ -53,8 +54,8 @@ defineSystem:
     if collider.touchingDown and input.isHeld(Input.jump) and raw.y > 0.0:
       control.dropDownTimer = timeToDropDown
     elif collider.touchingDown and input.isPressed(Input.jump):
-      movement.vel.y = jumpSpeed(control.jumpHeight)
-    elif input.isReleased(Input.jump) and (not movement.isFalling):
+      movement.vel.y = config.jumpSpeed(control.jumpHeight)
+    elif input.isReleased(Input.jump) and (not movement.isFalling(config)):
       movement.vel.y *= jumpReleaseMultiplier
 
     if control.facingSign == 0:

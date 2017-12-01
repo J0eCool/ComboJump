@@ -9,6 +9,7 @@ import
   entity,
   event,
   game_system,
+  project_config,
   option,
   rect,
   util,
@@ -143,7 +144,7 @@ defineSystem:
 
 defineSystem:
   priority = -1
-  proc physics*(dt: float, terrain: TerrainData) =
+  proc physics*(dt: float, terrain: TerrainData, config: ProjectConfig) =
     proc collidedEntity(cur: Rect): Entity =
       for i in 0..<terrain.rects.len:
         let col = terrain.rects[i]
@@ -173,7 +174,7 @@ defineSystem:
       Transform, transform,
     ]:
       if movement.usesGravity:
-        movement.vel.y += gravity * dt
+        movement.vel.y += config.gravity * dt
 
 
       entity.withComponent Collider, collider:

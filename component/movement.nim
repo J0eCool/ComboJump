@@ -3,6 +3,7 @@ import
 
 import
   entity,
+  project_config,
   util,
   vec
 
@@ -15,11 +16,8 @@ type
 
 defineComponent(Movement, @[])
 
-const
-  gravity* = 2_100.0
-  gravitySign* = gravity.sign.float
-proc jumpSpeed*(height: float): float =
-  -gravitySign * sqrt(2 * height * abs(gravity))
+proc jumpSpeed*(config: ProjectConfig, height: float): float =
+  -sign(config.gravity).float * sqrt(2 * height * abs(config.gravity))
 
-proc isFalling*(movement: Movement): bool =
-  movement.vel.y * gravity > 0
+proc isFalling*(movement: Movement, config: ProjectConfig): bool =
+  movement.vel.y * config.gravity > 0
