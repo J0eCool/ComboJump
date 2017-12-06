@@ -14,6 +14,7 @@ import
     enemy_movement,
     health,
     limited_time,
+    mercy_invincibility,
     movement,
     particle_effect,
     platformer_control,
@@ -43,6 +44,7 @@ import
   input,
   jsonparse,
   menu,
+  menu_widgets,
   notifications,
   program,
   project_config,
@@ -64,15 +66,27 @@ type
   CaveLunkController = ref object of Controller
 
 proc caveLunkView(game: CaveLunkGame, controller: CaveLunkController): Node {.procvar.} =
-  EntityRenderNode(
-    entities: game.entities,
-    camera: game.camera,
-    update: (proc() =
-      if game.input.isPressed(Input.escape):
-        controller.shouldPop = true
-      game.updateSystems()
+  let
+    player = game.player
+    health = player.getComponent(Health)
+  nodes(@[
+    EntityRenderNode(
+      entities: game.entities,
+      camera: game.camera,
+      update: (proc() =
+        if game.input.isPressed(Input.escape):
+          controller.shouldPop = true
+        game.updateSystems()
+      ),
     ),
-  )
+    quantityBarNode(
+      health.cur.int,
+      health.max.int,
+      vec(170, 35),
+      vec(300, 30),
+      color.red,
+    ),
+  ])
 
 proc newCaveLunkMenu(game: CaveLunkGame): MenuBase =
   downcast(Menu[CaveLunkGame, CaveLunkController](
@@ -91,6 +105,8 @@ proc newCaveLunkGame*(screenSize: Vec): CaveLunkGame =
 proc newPlayer(): Entity =
   result = loadPrefab("CavePlayer")
   result.getComponent(Transform).pos = vec(500, 500)
+  let health = result.getComponent(Health)
+  health.cur = health.max
 
 proc roomEntities(room: RoomGrid, screenSize, pos: Vec): Entities =
   @[room.buildRoomEntity(pos, vec(64))]
@@ -112,6 +128,10 @@ proc newEnemy(pos: Vec, stayOn: bool): Entity =
     Sprite(
       textureName: "Goblin.png",
       flipAssetX: true,
+    ),
+    Damage(
+      damage: 1,
+      canRepeat: true,
     ),
   ])
 

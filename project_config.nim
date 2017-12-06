@@ -31,7 +31,6 @@ proc reload(config: var ProjectConfig) =
   if lastMod != config.lastModTime:
     let json = readJsonFile(config.filename)
     fromJson(config, json)
-    echo "Reloading " & config.filename & ", foo=", config.foo
     config.lastModTime = lastMod
 
 proc newProjectConfig*(filename: string): ProjectConfig =

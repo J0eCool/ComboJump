@@ -33,6 +33,7 @@ macro declareToJsonMethods(): untyped =
     "KeyCollection",
     "LockedDoor",
     "Mana",
+    "MercyInvincibility",
     "Movement",
     "PlayerHealth",
     "PlayerMana",

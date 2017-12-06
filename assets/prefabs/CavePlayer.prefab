@@ -21,6 +21,12 @@
     "CavePlayerShooter": {
       "fireRate": "5.0"
     },
+    "Health": {
+      "max": "10"
+    },
+    "MercyInvincibility": {
+      "duration": "0.8"
+    },
     "Sprite": {
       "textureName": "Wizard2.png"
     },

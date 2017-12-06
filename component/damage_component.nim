@@ -3,6 +3,7 @@ import
     collider,
     health,
     limited_time,
+    mercy_invincibility,
     popup_text,
     transform,
   ],
@@ -16,6 +17,7 @@ import
 type
   DamageObj* = object of Component
     damage*: int
+    canRepeat*: bool
   Damage* = ref DamageObj
 
 defineComponent(Damage, @[])
@@ -23,6 +25,9 @@ defineComponent(Damage, @[])
 defineSystem:
   components = [Health, Collider, Transform]
   proc updateDamage*(player: Entity) =
+    let mercy = entity.getComponent(MercyInvincibility)
+    if mercy != nil and mercy.isInvincible:
+      continue
     for col in collider.collisions:
       col.withComponent Damage, damage:
         health.cur -= damage.damage.float
@@ -42,4 +47,7 @@ defineSystem:
             LimitedTime(limit: 0.75),
           ])
         result.add event.Event(kind: addEntity, entity: popup)
-        collider.addToBlacklist(col)
+        if not damage.canRepeat:
+          collider.addToBlacklist(col)
+        if mercy != nil:
+          mercy.onHit()

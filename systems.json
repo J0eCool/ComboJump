@@ -373,6 +373,17 @@
         "Entity"
       ]
     },
+    "updateMercyInvincibility": {
+      "args": [
+        "dt"
+      ],
+      "filename": "component/mercy_invincibility.nim",
+      "id": "46",
+      "priority": "0",
+      "types": [
+        "float"
+      ]
+    },
     "updateN10nManager": {
       "args": [
         "notifications"
