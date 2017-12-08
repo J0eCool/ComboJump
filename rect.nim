@@ -3,9 +3,10 @@ import vec
 type Rect* {.pure, final.} =
   tuple[x, y, w, h: float]
 
+proc rect*(): Rect =
+  (0.0, 0.0, 0.0, 0.0)
 proc rect*[T: SomeNumber](x, y, w, h: T): Rect =
   (x.float, y.float, w.float, h.float)
-
 proc rect*(pos, size: Vec): Rect =
   rect(
     pos.x, pos.y,

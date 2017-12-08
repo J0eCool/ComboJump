@@ -18,6 +18,7 @@ type
     flipX*: bool
     flipAssetX*: bool
     angle*: float
+    clipRect*: Rect
   Sprite* = ref object of SpriteObj
 
 defineComponent(Sprite, @["sprite"])
