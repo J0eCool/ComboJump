@@ -24,7 +24,7 @@ type
     case kind: JsonTokenKind
     of literal, error:
       value: string
-    of comma, colon, arrayStart, arrayEnd, objectStart, objectEnd, null:
+    else:
       discard
 
   JsonKind* = enum
@@ -265,8 +265,16 @@ proc fromJson*[K, V](table: var Table[K, V], json: Json) =
     v.fromJson(rawV)
     table[k] = v
 proc fromJson*[T: tuple](obj: var T, json: Json) =
-  for field, val in obj.fieldPairs:
-    val.fromJson(json.obj[field])
+  if json.kind == jsObject:
+    for field, val in obj.fieldPairs:
+      val.fromJson(json.obj[field])
+  elif json.kind == jsArray:
+    var i = 0
+    for field, val in obj.fieldPairs:
+      val.fromJson(json.arr[i])
+      i += 1
+  else:
+    assert false, "Tuple fromJson must be object or array"
 proc fromJson*[T](json: Json): T =
   var x: T
   when compiles(new(x)):

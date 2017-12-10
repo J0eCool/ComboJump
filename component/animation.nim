@@ -28,14 +28,6 @@ proc pct(animation: Animation): float =
 defineSystem:
   components = [Animation, Sprite]
   proc updateAnimation*(dt: float) =
-    if animation.data.frames == nil:
-      animation.data = AnimationData(
-        frames: @[
-          rect( 8, 0, 8, 8),
-          rect(16, 0, 8, 8),
-        ],
-        duration: 0.2,
-      )
     animation.timer += dt
     if animation.timer >= animation.data.duration:
       let numTimes = animation.pct.int

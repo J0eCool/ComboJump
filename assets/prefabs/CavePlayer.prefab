@@ -2,43 +2,42 @@
   "name": "CavePlayer",
   "components": {
     "Transform": {
-      "size": {
-        "x": "76",
-        "y": "68"
-      }
+      "size": ["76", "68"],
     },
     "Movement": {
-      "usesGravity": "true"
+      "usesGravity": "true",
     },
     "Collider": {
-      "layer": "player"
+      "layer": "player",
     },
     "PlatformerControl": {
       "moveSpeed": "350.0",
       "acceleration": "1000.0",
-      "jumpHeight": "240.0"
+      "jumpHeight": "240.0",
     },
     "CavePlayerShooter": {
-      "fireRate": "5.0"
+      "fireRate": "5.0",
     },
     "Health": {
-      "max": "10"
+      "max": "10",
     },
     "MercyInvincibility": {
-      "duration": "0.8"
+      "duration": "0.8",
     },
     "Sprite": {
       "textureName": "GunRun.png",
-      "clipRect": {
-        "x": "0.0",
-        "y": "0.0",
-        "w": "8.0",
-        "h": "8.0"
-      }
     },
-    "Animation": {},
+    "Animation": {
+      "data": {
+        "duration": "0.3",
+        "frames": [
+          [ "8", "0", "8", "8"],
+          ["16", "0", "8", "8"],
+        ],
+      },
+    },
     "CameraTarget": {
       "verticallyLocked": "true"
-    }
+    },
   }
 }
