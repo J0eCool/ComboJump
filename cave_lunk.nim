@@ -7,6 +7,7 @@ when Profile != 0:
 
 import
   component/[
+    animation,
     camera_target,
     cave_player_shooter,
     collider,

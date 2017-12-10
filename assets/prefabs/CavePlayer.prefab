@@ -36,6 +36,7 @@
         "h": "8.0"
       }
     },
+    "Animation": {},
     "CameraTarget": {
       "verticallyLocked": "true"
     }

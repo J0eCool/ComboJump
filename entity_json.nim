@@ -21,6 +21,7 @@ macro declareToJsonMethods(): untyped =
   var data = readComponentData()
 
   const implementedNames = [
+    "Animation",
     "CavePlayerShooter",
     "CameraTarget",
     "Collider",

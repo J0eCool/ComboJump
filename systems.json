@@ -157,6 +157,17 @@
         "ProjectConfig"
       ]
     },
+    "updateAnimation": {
+      "args": [
+        "dt"
+      ],
+      "filename": "component/animation.nim",
+      "id": "47",
+      "priority": "0",
+      "types": [
+        "float"
+      ]
+    },
     "updateBulletN10ns": {
       "args": [
         "notifications"
