@@ -22,6 +22,7 @@ macro declareToJsonMethods(): untyped =
 
   const implementedNames = [
     "Animation",
+    "AnimationBank",
     "CavePlayerShooter",
     "CameraTarget",
     "Collider",

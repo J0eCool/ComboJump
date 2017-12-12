@@ -1,5 +1,7 @@
 import
   component/[
+    animation,
+    animation_bank,
     collider,
     movement,
     sprite,
@@ -30,7 +32,7 @@ const
   timeToDropDown = 0.25
 
 defineSystem:
-  components = [PlatformerControl, Collider, Movement]
+  components = [PlatformerControl, Animation, AnimationBank, Collider, Movement]
   proc updatePlatformerControl*(dt: float, input: InputManager, config: ProjectConfig) =
     let
       control = platformerControl
@@ -47,6 +49,13 @@ defineSystem:
         vel.x = 0.0
     vel.x = clamp(vel.x, -spd, spd)
     movement.vel = vel
+
+    let toPlay =
+      if vel.x != 0.0:
+        "Run"
+      else:
+        "Idle"
+    animationBank.setAnimation(animation, toPlay)
 
     if control.dropDownTimer > 0.0:
       control.dropDownTimer -= dt

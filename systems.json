@@ -163,7 +163,7 @@
       ],
       "filename": "component/animation.nim",
       "id": "47",
-      "priority": "0",
+      "priority": "-100",
       "types": [
         "float"
       ]

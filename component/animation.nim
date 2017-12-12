@@ -12,7 +12,7 @@ import
 type
   Animation* = ref AnimationObj
   AnimationObj* = object of Component
-    data*: AnimationData
+    data: AnimationData
     timer: float
 
   AnimationData* = object
@@ -20,14 +20,31 @@ type
     duration*: float
 
 autoObjectJsonProcs(AnimationData)
-defineComponent(Animation, @[])
+defineComponent(Animation, @["timer"])
+
+proc setAnimation*(animation: Animation, data: AnimationData) =
+  if animation.data != data:
+    animation.timer = 0.0
+  animation.data = data
+
+proc startAnimation*(animation: Animation, data: AnimationData) =
+  animation.data = data
+  animation.timer = 0.0
 
 proc pct(animation: Animation): float =
-  animation.timer / animation.data.duration
+  if animation.data.duration <= 0.0:
+    0.0
+  else:
+    animation.timer / animation.data.duration
 
 defineSystem:
+  priority = -100
   components = [Animation, Sprite]
   proc updateAnimation*(dt: float) =
+    let frames = animation.data.frames
+    if frames == nil or frames.len == 0:
+      continue
+
     animation.timer += dt
     if animation.timer >= animation.data.duration:
       let numTimes = animation.pct.int
@@ -36,4 +53,3 @@ defineSystem:
       frameIdx = (animation.data.frames.len.float * animation.pct).int
       frame = animation.data.frames[frameIdx]
     sprite.clipRect = frame
-

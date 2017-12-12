@@ -27,13 +27,21 @@
     "Sprite": {
       "textureName": "GunRun.png",
     },
-    "Animation": {
-      "data": {
-        "duration": "0.3",
-        "frames": [
-          [ "8", "0", "8", "8"],
-          ["16", "0", "8", "8"],
-        ],
+    "Animation": {},
+    "AnimationBank": {
+      "animations": {
+        "Idle": {
+          "frames": [
+            [ "0", "0", "8", "8"],
+          ],
+        },
+        "Run": {
+          "duration": "0.3",
+          "frames": [
+            [ "8", "0", "8", "8"],
+            ["16", "0", "8", "8"],
+          ],
+        },
       },
     },
     "CameraTarget": {
