@@ -187,7 +187,7 @@ defineSystem:
           toMove = movement.vel * dt
         let size = rect.size
 
-        if not collider.layer.canCollideWith Layer.floor:
+        if collider.ignoreFloor or not collider.layer.canCollideWith Layer.floor:
           transform.pos += toMove
           continue
 

@@ -9,6 +9,7 @@ import
   component/[
     animation,
     camera_target,
+    cave_enemy_shooter,
     cave_player_shooter,
     collider,
     damage_component,
@@ -125,6 +126,9 @@ proc newEnemy(pos: Vec, stayOn: bool): Entity =
       moveSpeed: 200,
       facingSign: -1.0,
       stayOnPlatforms: stayOn,
+    ),
+    CaveEnemyShooter(
+      fireRate: 0.8,
     ),
     Sprite(
       textureName: "Goblin.png",

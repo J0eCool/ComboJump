@@ -201,6 +201,17 @@
         "var Camera"
       ]
     },
+    "updateCaveEnemyShooter": {
+      "args": [
+        "dt"
+      ],
+      "filename": "component/cave_enemy_shooter.nim",
+      "id": "48",
+      "priority": "0",
+      "types": [
+        "float"
+      ]
+    },
     "updateCavePlayerShooter": {
       "args": [
         "dt",

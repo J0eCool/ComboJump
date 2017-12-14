@@ -16,15 +16,16 @@ type
     enemyBullet
     playerTrigger
 
+  Collider* = ref ColliderObj
   ColliderObj* = object of ComponentObj
     layer*: Layer
+    ignoreFloor*: bool
     collisions*: seq[Entity]
-    collisionBlacklist: seq[Entity]
     bufferedCollisions*: seq[Entity]
     touchingDown*: bool
     touchingRight*: bool
     touchingLeft*: bool
-  Collider* = ref ColliderObj
+    collisionBlacklist: seq[Entity]
 
 defineComponent(Collider, @[
   "collisions",
