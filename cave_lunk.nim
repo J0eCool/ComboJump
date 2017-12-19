@@ -30,6 +30,7 @@ import
     tile_room,
   ],
   menu/[
+    pause_menu,
     title_menu,
   ],
   system/[
@@ -76,8 +77,10 @@ proc caveLunkView(game: CaveLunkGame, controller: CaveLunkController): Node {.pr
       entities: game.entities,
       camera: game.camera,
       update: (proc() =
-        if game.input.isPressed(Input.escape):
-          controller.shouldPop = true
+        if game.input.isPressed(Input.enter):
+          game.menus.push(newPauseMenu(proc() =
+            controller.shouldPop = true
+          ))
         game.updateSystems()
       ),
     ),

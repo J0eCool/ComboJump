@@ -1,4 +1,5 @@
 import
+  color,
   input,
   menu,
   util,
@@ -25,6 +26,7 @@ proc transitionView(transition: Transition, controller: TransitionController): N
   SpriteNode(
     size: size,
     pos: vec(controller.percentDone.lerp(-0.5, 0.5) * size.x, size.y / 2),
+    color: black,
   )
 
 proc newFadeOnlyIn*(): TransitionMenu

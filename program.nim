@@ -74,6 +74,7 @@ proc main*(program: Program, screenSize: Vec) =
     flags = Renderer_Accelerated,
   )
   defer: renderer.destroy()
+  renderer.setDrawBlendMode(BlendMode_Blend)
 
   program.init()
 

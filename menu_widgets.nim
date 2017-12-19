@@ -16,6 +16,7 @@ proc quantityBarNode*(cur, max: int, pos, size: Vec, color: Color, showText = tr
   SpriteNode(
     pos: pos,
     size: size,
+    color: black,
     children: @[
       SpriteNode(
         pos: borderedSize * vec(percent / 2 - 0.5, 0.0),

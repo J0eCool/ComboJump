@@ -12,7 +12,6 @@ type
     toLoad: MenuProc
   TitleScreenController = ref object of Controller
 
-
 proc titleScreenView(menu: TitleScreen, controller: TitleScreenController): Node {.procvar.} =
   Node(
     children: @[
