@@ -2,6 +2,7 @@ import
   random,
   sdl2,
   sdl2.image,
+  sdl2.joystick,
   sdl2.ttf,
   times
 
@@ -49,7 +50,7 @@ proc drawBase(renderer: RendererPtr, program: Program) =
 proc main*(program: Program, screenSize: Vec) =
   randomize()
 
-  sdl2.init(INIT_VIDEO or INIT_TIMER or INIT_EVENTS)
+  sdl2.init(INIT_VIDEO or INIT_TIMER or INIT_EVENTS or INIT_JOYSTICK)
   defer: sdl2.quit()
 
   ttf.ttfInit()
@@ -57,6 +58,13 @@ proc main*(program: Program, screenSize: Vec) =
 
   discard image.init()
   defer: image.quit()
+
+  var joystick: JoystickPtr
+  if numJoysticks() > 0:
+    joystick = joystickOpen(0)
+  defer:
+    if joystick != nil:
+      joystick.joystickClose()
 
   let
     window = createWindow(

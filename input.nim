@@ -114,6 +114,7 @@ type
     mouseState: array[MouseButton, InputState]
     mouseWheel: int
     bufferedEvents: seq[InputEvent]
+    lastEventWasJoystick: bool
 
   InputPair* = tuple[input: Input, state: InputState]
 
@@ -187,6 +188,21 @@ proc keyToInputs(key: Scancode): seq[Input] =
 
   else: @[]
 
+proc joystickButtonToInputs(event: JoyButtonEventPtr): seq[Input] =
+  case event.button       # Xbox controller
+  of 0: @[keyK, jump]     # A
+  of 1: @[keyL]           # B
+  of 2: @[keyJ, spell1]   # X
+  of 3: @[keyI]           # Y
+  of 4: @[]               # LB
+  of 5: @[]               # RB
+  of 6: @[escape]         # Back
+  of 7: @[enter]          # Start
+  of 8: @[]               # L3
+  of 9: @[]               # R3
+  # of 10:                # Home
+  else: @[]
+
 proc mouseEventToButton(event: MouseButtonEventPtr): MouseButton =
   case event.button
   of 1:
@@ -221,12 +237,12 @@ proc update*(manager: var InputManager) =
     if manager.isHeld(pos):
       val += 1
     manager.axes[a] = val
-  updateAxis(horizontal, left, right)
-  updateAxis(vertical, up, down)
+  if not manager.lastEventWasJoystick:
+    updateAxis(horizontal, left, right)
+    updateAxis(vertical, up, down)
 
-  template setForEvent(e, v) =
-    let inputs = keyToInputs e.key.keysym.scancode
-    for input in inputs:
+  template setForInputs(v, ins) =
+    for input in ins:
       if not (v == pressed and manager.inputs[input] == held):
         manager.inputs[input] = v
         manager.bufferedEvents.add InputEvent(
@@ -240,9 +256,11 @@ proc update*(manager: var InputManager) =
     of QuitEvent:
       manager.inputs[quit] = pressed
     of KeyDown:
-      setForEvent(event, pressed)
+      manager.lastEventWasJoystick = false
+      setForInputs(pressed, keyToInputs(event.key.keysym.scancode))
     of KeyUp:
-      setForEvent(event, released)
+      manager.lastEventWasJoystick = false
+      setForInputs(released, keyToInputs(event.key.keysym.scancode))
     of MouseMotion:
       let pos = vec(event.motion.x, event.motion.y)
       manager.mousePos = pos
@@ -257,7 +275,36 @@ proc update*(manager: var InputManager) =
       manager.mouseState[button] = released
     of MouseWheel:
       manager.mouseWheel = event.wheel.y.int
-    else: discard
+    of JoyAxisMotion:
+      let j = event.jaxis
+      if j.which != 0:
+        continue
+      # Joystick max value is +-2^15 (32k), so activate for over half of that
+      let activation = 16000
+      let sign =
+        if j.value < -activation:
+          -1
+        elif j.value > activation:
+          1
+        else:
+          0
+      var axis: Axis
+      if j.axis == 0:
+        axis = horizontal
+      elif j.axis == 1:
+        axis = vertical
+      else:
+        continue
+      manager.lastEventWasJoystick = true
+      manager.axes[axis] = sign
+    of JoyButtonDown, JoyButtonUp:
+      if event.jbutton.which != 0:
+        continue
+      manager.lastEventWasJoystick = true
+      let state = if event.jbutton.state == 0: released else: pressed
+      setForInputs(state, joystickButtonToInputs(event.jbutton))
+    else:
+      discard
 
 proc isPressed*(manager: InputManager, key: Input): bool =
   manager.inputs[key] == pressed
