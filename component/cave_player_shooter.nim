@@ -16,17 +16,21 @@ import
   event,
   game_system,
   input,
-  screen_shake,
+  jsonparse,
   vec,
   util
 
 type
-  CavePlayerShooterObj* = object of ComponentObj
-    shotOffset*: Vec
+  CaveWeapon = object
     fireRate*: float
     cooldown: float
+  CavePlayerShooterObj* = object of ComponentObj
+    shotOffset*: Vec
+    weapon*: CaveWeapon
+    weapon2*: CaveWeapon
   CavePlayerShooter* = ref CavePlayerShooterObj
 
+autoObjectJsonProcs(CaveWeapon)
 defineComponent(CavePlayerShooter, @[])
 
 proc spawnBullet(pos, vel: Vec): Entity =
@@ -43,15 +47,19 @@ proc spawnBullet(pos, vel: Vec): Entity =
     RemoveWhenOffscreen(),
   ])
 
+
 defineSystem:
   components = [CavePlayerShooter, PlatformerControl, Transform]
-  proc updateCavePlayerShooter*(dt: float, input: InputManager, shake: var ScreenShake) =
+  proc updateCavePlayerShooter*(dt: float, input: InputManager) =
     let shoot = cavePlayerShooter
-    shoot.cooldown -= dt
-    if input.isHeld(keyJ) and shoot.cooldown <= 0.0:
-      shoot.cooldown = 1.0 / shoot.fireRate
-      let
-        pos = transform.pos + shoot.shotOffset
-        vel = vec(1000.0 * platformerControl.facingSign, 0.0) + randomVec(20.0)
-      result.add Event(kind: addEntity, entity: spawnBullet(pos, vel))
-      shake.start(5.0, 0.04)
+    proc update(weapon: var CaveWeapon, key: Input): Events =
+      result = @[]
+      weapon.cooldown -= dt
+      if input.isHeld(key) and weapon.cooldown <= 0.0:
+        weapon.cooldown = 1.0 / weapon.fireRate
+        let
+          pos = transform.pos + shoot.shotOffset
+          vel = vec(1000.0 * platformerControl.facingSign, 0.0) + randomVec(20.0)
+        result.add Event(kind: addEntity, entity: spawnBullet(pos, vel))
+    result &= shoot.weapon.update(keyJ)
+    result &= shoot.weapon2.update(keyI)

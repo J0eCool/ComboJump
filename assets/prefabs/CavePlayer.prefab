@@ -16,7 +16,12 @@
       "jumpHeight": "240.0",
     },
     "CavePlayerShooter": {
-      "fireRate": "5.0",
+      "weapon": {
+        "fireRate": "5.0",
+      },
+      "weapon2": {
+        "fireRate": "15.0",
+      },
     },
     "Health": {
       "max": "10",

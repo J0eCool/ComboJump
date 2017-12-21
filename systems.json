@@ -215,16 +215,14 @@
     "updateCavePlayerShooter": {
       "args": [
         "dt",
-        "input",
-        "shake"
+        "input"
       ],
       "filename": "component/cave_player_shooter.nim",
       "id": "10",
       "priority": "0",
       "types": [
         "float",
-        "InputManager",
-        "var ScreenShake"
+        "InputManager"
       ]
     },
     "updateDamage": {
